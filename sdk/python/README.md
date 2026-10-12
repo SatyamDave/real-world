@@ -43,6 +43,7 @@ The method names and what they do match the TypeScript client.
 | `answer_daily(question_id, player_id, probability)` | Answers today's question once and returns the reveal. |
 | `receipts()` | Lists every day record with its root and record hash. |
 | `receipt_day(date)` | Returns one day record with each receipt's entry, salt and leaf hash. |
+| `question(id)` | Returns one question with every committed forecast by day and forecaster. |
 | `scores()` | Returns the skill of the simulation against each baseline. |
 
 ## Errors

@@ -17,6 +17,7 @@ export type SystemStatus = Schemas["SystemStatus"];
 export type Receipts = Schemas["Receipts"];
 export type ReceiptDay = Schemas["ReceiptDay"];
 export type LeafReceipt = Schemas["LeafReceipt"];
+export type QuestionPage = Schemas["QuestionPage"];
 export type BaselineSkill = Schemas["BaselineSkill"];
 export type Country = Schemas["Country"];
 export type PrefilledEvent = Schemas["PrefilledEvent"];
@@ -234,6 +235,13 @@ export class Client {
   receipt_leaf(date: string, leaf_hash: string): Promise<LeafReceipt> {
     const path = { day: date, leaf_hash };
     return ok(this.http.GET("/v1/receipts/{day}/leaves/{leaf_hash}", { params: { path } }));
+  }
+
+  /** Returns one question with every committed forecast by day and forecaster. */
+  question(id: string): Promise<QuestionPage> {
+    return ok(
+      this.http.GET("/v1/questions/{question_id}", { params: { path: { question_id: id } } }),
+    );
   }
 
   /** Returns the skill of the simulation against each baseline. */

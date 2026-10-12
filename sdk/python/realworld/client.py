@@ -19,6 +19,7 @@ from realworld.generated.models import (
     JobCreated,
     LeafReceipt,
     Population,
+    QuestionPage,
     ReceiptDay,
     Receipts,
     SimulateRequest,
@@ -201,6 +202,10 @@ class Client:
         """Returns one receipt with its inclusion proof up to the day record's root."""
         path = f"/v1/receipts/{date}/leaves/{leaf_hash}"
         return LeafReceipt.model_validate(self._send("GET", path))
+
+    def question(self, id: str) -> QuestionPage:
+        """Returns one question with every committed forecast by day and forecaster."""
+        return QuestionPage.model_validate(self._send("GET", f"/v1/questions/{id}"))
 
     def scores(self) -> dict[str, BaselineSkill]:
         """Returns the skill of the simulation against each baseline."""

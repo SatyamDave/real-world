@@ -942,6 +942,48 @@
           }
         }
       }
+    },
+    "/v1/questions/{question_id}": {
+      "get": {
+        "summary": "One question: every committed forecast by day and forecaster, its spread, its receipt and its score",
+        "operationId": "question_v1_questions__question_id__get",
+        "parameters": [
+          {
+            "name": "question_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Question Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionPage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such question"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1928,6 +1970,19 @@
         ],
         "title": "ExperimentResult"
       },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
       "Job": {
         "properties": {
           "id": {
@@ -2580,6 +2635,367 @@
         "required": ["position", "hash"],
         "title": "ProofStep"
       },
+      "QuestionCountry": {
+        "properties": {
+          "iso3": {
+            "type": "string",
+            "title": "Iso3"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "tier": {
+            "type": "string",
+            "title": "Tier"
+          }
+        },
+        "type": "object",
+        "required": ["iso3", "name", "tier"],
+        "title": "QuestionCountry"
+      },
+      "QuestionDay": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "snapshot_sha256": {
+            "type": "string",
+            "title": "Snapshot Sha256"
+          },
+          "forecasts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/QuestionForecast"
+            },
+            "type": "object",
+            "title": "Forecasts",
+            "description": "By forecaster."
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/SegmentAnswer"
+            },
+            "type": "array",
+            "title": "Segments",
+            "description": "The model's answer per segment behind the sim forecast; empty if not recorded."
+          },
+          "plain_samples": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Plain Samples",
+            "description": "Each plain LLM sample's yes share."
+          },
+          "headlines": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Headlines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "snapshot_sha256",
+          "forecasts",
+          "segments",
+          "plain_samples",
+          "headlines"
+        ],
+        "title": "QuestionDay"
+      },
+      "QuestionForecast": {
+        "properties": {
+          "probability": {
+            "type": "number",
+            "title": "Probability"
+          },
+          "p10": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P10",
+            "description": "Only the sim forecaster has a spread."
+          },
+          "p90": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P90"
+          },
+          "brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier",
+            "description": "Null until the question resolves."
+          },
+          "log_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Log Score"
+          },
+          "leaf_hash": {
+            "type": "string",
+            "title": "Leaf Hash"
+          },
+          "salt": {
+            "type": "string",
+            "title": "Salt"
+          },
+          "committed_at": {
+            "type": "string",
+            "title": "Committed At"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "market_price_at_commit": {
+            "type": "number",
+            "title": "Market Price At Commit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "probability",
+          "p10",
+          "p90",
+          "brier",
+          "log_score",
+          "leaf_hash",
+          "salt",
+          "committed_at",
+          "model",
+          "market_price_at_commit"
+        ],
+        "title": "QuestionForecast"
+      },
+      "QuestionInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "topic_label": {
+            "type": "string",
+            "title": "Topic Label"
+          },
+          "countries": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionCountry"
+            },
+            "type": "array",
+            "title": "Countries"
+          },
+          "opens": {
+            "type": "string",
+            "title": "Opens"
+          },
+          "closes": {
+            "type": "string",
+            "title": "Closes"
+          },
+          "resolves_by": {
+            "type": "string",
+            "title": "Resolves By"
+          },
+          "resolution_source": {
+            "type": "string",
+            "title": "Resolution Source"
+          },
+          "tie_break": {
+            "type": "string",
+            "title": "Tie Break"
+          },
+          "market_source": {
+            "type": "string",
+            "title": "Market Source"
+          },
+          "question_hash": {
+            "type": "string",
+            "title": "Question Hash",
+            "description": "sha256 of the question as committed in each forecast."
+          },
+          "question_set_hash": {
+            "type": "string",
+            "title": "Question Set Hash",
+            "description": "sha256 of the question list this question is in."
+          },
+          "daily_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daily On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "topic",
+          "topic_label",
+          "countries",
+          "opens",
+          "closes",
+          "resolves_by",
+          "resolution_source",
+          "tie_break",
+          "market_source",
+          "question_hash",
+          "question_set_hash",
+          "daily_on"
+        ],
+        "title": "QuestionInfo"
+      },
+      "QuestionOutcome": {
+        "properties": {
+          "outcome": {
+            "type": "integer",
+            "title": "Outcome"
+          },
+          "resolved_on": {
+            "type": "string",
+            "title": "Resolved On"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "read_on": {
+            "type": "string",
+            "title": "Read On"
+          }
+        },
+        "type": "object",
+        "required": ["outcome", "resolved_on", "source_url", "read_on"],
+        "title": "QuestionOutcome"
+      },
+      "QuestionPage": {
+        "properties": {
+          "question": {
+            "$ref": "#/components/schemas/QuestionInfo"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuestionOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "members": {
+            "type": "integer",
+            "title": "Members",
+            "description": "Bootstrap resamples behind each sim spread."
+          },
+          "plain_llm_samples": {
+            "type": "integer",
+            "title": "Plain Llm Samples"
+          },
+          "log_clip": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Log Clip"
+          },
+          "min_resolved": {
+            "type": "integer",
+            "title": "Min Resolved",
+            "description": "Resolved questions before a skill claim is reported."
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionDay"
+            },
+            "type": "array",
+            "title": "Days",
+            "description": "Oldest first."
+          }
+        },
+        "type": "object",
+        "required": [
+          "question",
+          "outcome",
+          "members",
+          "plain_llm_samples",
+          "log_clip",
+          "min_resolved",
+          "model",
+          "provider",
+          "days"
+        ],
+        "title": "QuestionPage"
+      },
       "ReceiptDay": {
         "properties": {
           "day": {
@@ -3013,6 +3429,30 @@
         "type": "object",
         "required": ["population", "attitudes", "markets", "news", "ground_truth", "score"],
         "title": "Rubric"
+      },
+      "SegmentAnswer": {
+        "properties": {
+          "segment": {
+            "type": "string",
+            "title": "Segment"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "prior_share": {
+            "type": "number",
+            "title": "Prior Share",
+            "description": "The segment's share saying yes before the model call."
+          },
+          "yes_share": {
+            "type": "number",
+            "title": "Yes Share"
+          }
+        },
+        "type": "object",
+        "required": ["segment", "description", "prior_share", "yes_share"],
+        "title": "SegmentAnswer"
       },
       "SegmentShift": {
         "properties": {
@@ -3552,6 +3992,42 @@
         "type": "object",
         "required": ["agent_id", "iso3", "segment", "belief_start", "belief_end", "steps"],
         "title": "TraceAgent"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
       },
       "WeekDay": {
         "properties": {

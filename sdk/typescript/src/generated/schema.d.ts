@@ -347,6 +347,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v1/questions/{question_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One question: every committed forecast by day and forecaster, its spread, its receipt and its score */
+    get: operations["question_v1_questions__question_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -749,6 +766,11 @@ export interface components {
       /** Outcome */
       outcome: string;
     };
+    /** HTTPValidationError */
+    HTTPValidationError: {
+      /** Detail */
+      detail?: components["schemas"]["ValidationError"][];
+    };
     /** Job */
     Job: {
       /** Id */
@@ -990,6 +1012,146 @@ export interface components {
       /** Hash */
       hash: string;
     };
+    /** QuestionCountry */
+    QuestionCountry: {
+      /** Iso3 */
+      iso3: string;
+      /** Name */
+      name: string;
+      /** Tier */
+      tier: string;
+    };
+    /** QuestionDay */
+    QuestionDay: {
+      /** Date */
+      date: string;
+      /** Snapshot Sha256 */
+      snapshot_sha256: string;
+      /**
+       * Forecasts
+       * @description By forecaster.
+       */
+      forecasts: {
+        [key: string]: components["schemas"]["QuestionForecast"];
+      };
+      /**
+       * Segments
+       * @description The model's answer per segment behind the sim forecast; empty if not recorded.
+       */
+      segments: components["schemas"]["SegmentAnswer"][];
+      /**
+       * Plain Samples
+       * @description Each plain LLM sample's yes share.
+       */
+      plain_samples: number[];
+      /** Headlines */
+      headlines: string[];
+    };
+    /** QuestionForecast */
+    QuestionForecast: {
+      /** Probability */
+      probability: number;
+      /**
+       * P10
+       * @description Only the sim forecaster has a spread.
+       */
+      p10: number | null;
+      /** P90 */
+      p90: number | null;
+      /**
+       * Brier
+       * @description Null until the question resolves.
+       */
+      brier: number | null;
+      /** Log Score */
+      log_score: number | null;
+      /** Leaf Hash */
+      leaf_hash: string;
+      /** Salt */
+      salt: string;
+      /** Committed At */
+      committed_at: string;
+      /** Model */
+      model: string;
+      /** Market Price At Commit */
+      market_price_at_commit: number;
+    };
+    /** QuestionInfo */
+    QuestionInfo: {
+      /** Id */
+      id: string;
+      /** Text */
+      text: string;
+      /** Topic */
+      topic: string;
+      /** Topic Label */
+      topic_label: string;
+      /** Countries */
+      countries: components["schemas"]["QuestionCountry"][];
+      /** Opens */
+      opens: string;
+      /** Closes */
+      closes: string;
+      /** Resolves By */
+      resolves_by: string;
+      /** Resolution Source */
+      resolution_source: string;
+      /** Tie Break */
+      tie_break: string;
+      /** Market Source */
+      market_source: string;
+      /**
+       * Question Hash
+       * @description sha256 of the question as committed in each forecast.
+       */
+      question_hash: string;
+      /**
+       * Question Set Hash
+       * @description sha256 of the question list this question is in.
+       */
+      question_set_hash: string;
+      /** Daily On */
+      daily_on: string | null;
+    };
+    /** QuestionOutcome */
+    QuestionOutcome: {
+      /** Outcome */
+      outcome: number;
+      /** Resolved On */
+      resolved_on: string;
+      /** Source Url */
+      source_url: string;
+      /** Read On */
+      read_on: string;
+    };
+    /** QuestionPage */
+    QuestionPage: {
+      question: components["schemas"]["QuestionInfo"];
+      outcome: components["schemas"]["QuestionOutcome"] | null;
+      /**
+       * Members
+       * @description Bootstrap resamples behind each sim spread.
+       */
+      members: number;
+      /** Plain Llm Samples */
+      plain_llm_samples: number;
+      /** Log Clip */
+      log_clip: [number, number];
+      /**
+       * Min Resolved
+       * @description Resolved questions before a skill claim is reported.
+       */
+      min_resolved: number;
+      /** Model */
+      model: string | null;
+      /** Provider */
+      provider: string | null;
+      /**
+       * Days
+       * @description Oldest first.
+       */
+      days: components["schemas"]["QuestionDay"][];
+    };
     /** ReceiptDay */
     ReceiptDay: {
       day: components["schemas"]["DayRecord"];
@@ -1154,6 +1316,20 @@ export interface components {
       ground_truth: number;
       /** Score */
       score: number;
+    };
+    /** SegmentAnswer */
+    SegmentAnswer: {
+      /** Segment */
+      segment: string;
+      /** Description */
+      description: string;
+      /**
+       * Prior Share
+       * @description The segment's share saying yes before the model call.
+       */
+      prior_share: number;
+      /** Yes Share */
+      yes_share: number;
     };
     /** SegmentShift */
     SegmentShift: {
@@ -1390,6 +1566,19 @@ export interface components {
       };
       /** Steps */
       steps: components["schemas"]["rw__simulate__Step"][];
+    };
+    /** ValidationError */
+    ValidationError: {
+      /** Location */
+      loc: (string | number)[];
+      /** Message */
+      msg: string;
+      /** Error Type */
+      type: string;
+      /** Input */
+      input?: unknown;
+      /** Context */
+      ctx?: Record<string, never>;
     };
     /** WeekDay */
     WeekDay: {
@@ -2264,6 +2453,44 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  question_v1_questions__question_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        question_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuestionPage"];
+        };
+      };
+      /** @description No such question */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
