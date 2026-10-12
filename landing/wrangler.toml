@@ -1,0 +1,7 @@
+# Cloudflare Pages config for the pre-launch landing page.
+# Preview deploys only tonight: wrangler pages deploy ./dist --branch <branch>.
+# Never attach a custom domain or deploy to the production branch from here (see landing/RUNBOOK.md).
+name = "real-world-landing"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-10-12"
+compatibility_flags = ["nodejs_compat"]

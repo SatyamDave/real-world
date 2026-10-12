@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help setup dev test lint typecheck check experiment daily daily-fixtures openapi sdk e2e
+.PHONY: help setup dev landing-dev test lint typecheck check experiment daily daily-fixtures openapi sdk e2e
 
 help: ## list every target
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-15s %s\n", $$1, $$2}'
@@ -11,6 +11,9 @@ setup: ## install Python and TypeScript dependencies from the lockfiles
 dev: ## seed the fixture days if var/ is empty, then run the API on :8000 and the web app on :5173
 	@test -d "$${RW_HOME:-var}/snapshots" || uv run python -m rw.daily --fixtures
 	trap 'kill 0' EXIT; uv run uvicorn rw_api.app:app --port 8000 & pnpm --filter web dev
+
+landing-dev: ## run the pre-launch landing page dev server (Vite, separate app)
+	pnpm --filter landing dev
 
 test: ## run pytest and every package's Vitest suite
 	uv run pytest -q

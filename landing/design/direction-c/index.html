@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Direction C — Almanac</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Spectral:ital,wght@0,400;0,500;1,400&family=Spline+Sans+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#E6E8EF; --card:#F4F5F8; --ink:#1B1E2B; --muted:#5A6075;
+    --indigo:#283A8C; --ochre:#C98A2B; --line:#C4C8D6;
+    --head:'Archivo',system-ui,sans-serif; --body:'Spectral',Georgia,serif; --mono:'Spline Sans Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1140px;margin:0 auto;padding:30px 24px 60px}
+  header{display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:34px}
+  .brand{font-family:var(--head);font-weight:800;font-size:22px;letter-spacing:-.02em}
+  .issue{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:52px;align-items:start}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;color:var(--indigo);margin-bottom:18px}
+  h1{font-family:var(--head);font-weight:800;font-size:58px;line-height:1.02;letter-spacing:-.025em;margin-bottom:20px}
+  .sub{font-size:19px;color:#2C3142;max-width:42ch;margin-bottom:28px;line-height:1.55}
+  form{display:flex;gap:10px;max-width:430px}
+  input{flex:1;font-family:var(--body);font-size:17px;padding:13px 15px;border:1.5px solid var(--ink);background:#fff;color:var(--ink);border-radius:0}
+  input::placeholder{color:#9398AB}
+  button{font-family:var(--head);font-weight:700;font-size:16px;padding:13px 22px;border:none;background:var(--indigo);color:#fff;border-radius:0;cursor:pointer}
+  .consent{font-size:13.5px;color:var(--muted);margin-top:12px;max-width:44ch}
+  /* almanac calendar of coming resolutions — a real sequence, so dates lead */
+  .cal{background:var(--card);border:1.5px solid var(--ink)}
+  .cal h2{font-family:var(--head);font-weight:600;font-size:13px;letter-spacing:.02em;padding:12px 16px;border-bottom:1.5px solid var(--ink);display:flex;justify-content:space-between}
+  .cal h2 span{font-family:var(--mono);font-weight:500;color:var(--muted)}
+  .row{display:grid;grid-template-columns:72px 1fr;gap:14px;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .date{font-family:var(--head);font-weight:800;line-height:1;color:var(--indigo)}
+  .date .d{font-size:26px} .date .mo{font-size:12px;color:var(--muted);font-weight:600}
+  .what{font-size:16px}
+  .what .src{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:3px}
+  .tag{font-family:var(--mono);font-size:10.5px;color:var(--ochre);border:1px solid var(--ochre);padding:1px 6px;margin-left:6px;white-space:nowrap}
+  @media (max-width:880px){
+    .hero{grid-template-columns:1fr;gap:30px}
+    h1{font-size:40px}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">Real World</div>
+      <div class="issue">Pre-launch almanac · simulations with receipts</div>
+    </header>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">A daily, public, scored forecast of the world — launching Oct 27.</p>
+        <h1>Forecasts, hashed before the outcome.</h1>
+        <p class="sub">We commit each day's forecast as a hash before the event happens, then score it in public when it resolves. Nothing is backfilled.</p>
+        <form onsubmit="return false">
+          <input type="email" placeholder="you@email.com" aria-label="Email address" />
+          <button type="submit">Join the waitlist</button>
+        </form>
+        <p class="consent">We'll email you about Real World's launch and your forecast. Unsubscribe anytime.</p>
+      </div>
+      <div class="cal">
+        <h2>The first receipts<span>hashes publish Oct 14</span></h2>
+        <div class="row">
+          <div class="date"><div class="d">25</div><div class="mo">OCT</div></div>
+          <div class="what">Brazil presidential runoff<span class="tag">pending</span><div class="src">resolution: electoral authority</div></div>
+        </div>
+        <div class="row">
+          <div class="date"><div class="d">28</div><div class="mo">OCT</div></div>
+          <div class="what">US Federal Reserve rate decision<span class="tag">pending</span><div class="src">resolution: federalreserve.gov</div></div>
+        </div>
+        <div class="row">
+          <div class="date"><div class="d">29</div><div class="mo">OCT</div></div>
+          <div class="what">ECB rate decision<span class="tag">pending</span><div class="src">resolution: ecb.europa.eu</div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

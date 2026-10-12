@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Direction B — Observatory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0E1726; --bg-2:#14203A; --ink:#E7ECF2; --muted:#93A3B8;
+    --amber:#E8B23A; --cyan:#6FA8C7; --slip:#F3EFE3; --slip-ink:#1E2636;
+    --disp:'Fraunces',Georgia,serif; --mono:'Spline Sans Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 700px at 70% -10%, #19294A 0%, var(--bg) 55%);color:var(--ink);font-family:var(--mono);line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1160px;margin:0 auto;padding:34px 24px 60px}
+  header{display:flex;align-items:center;justify-content:space-between;padding-bottom:26px}
+  .brand{font-family:var(--disp);font-weight:600;font-size:21px;letter-spacing:.2px}
+  nav{font-size:12.5px;color:var(--muted)}
+  nav b{color:var(--amber);font-weight:500}
+  .hero{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;min-height:62vh}
+  .eyebrow{font-size:13px;color:var(--cyan);margin-bottom:22px}
+  h1{font-family:var(--disp);font-weight:500;font-size:68px;line-height:1.0;letter-spacing:-.01em;margin-bottom:22px}
+  .sub{font-size:15.5px;color:var(--muted);max-width:44ch;margin-bottom:30px;line-height:1.7}
+  form{display:flex;gap:10px;max-width:440px}
+  input{flex:1;font-family:var(--mono);font-size:15px;padding:14px 16px;border:1px solid #33425E;background:#0C1422;color:var(--ink);border-radius:8px}
+  input::placeholder{color:#64748B}
+  button{font-family:var(--mono);font-weight:600;font-size:15px;padding:14px 22px;border:none;background:var(--amber);color:#1A1406;border-radius:8px;cursor:pointer}
+  .consent{font-size:12px;color:#64748B;margin-top:12px;max-width:46ch}
+  /* globe */
+  .stage{position:relative;display:flex;justify-content:center;align-items:center}
+  .orb{width:min(420px,78vw);aspect-ratio:1;border-radius:50%;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(232,178,58,.12), transparent 62%),
+      radial-gradient(var(--cyan) 1.3px, transparent 1.4px);
+    background-size:auto, 13px 13px;
+    -webkit-mask:radial-gradient(circle at 50% 46%, #000 56%, transparent 60%);
+    mask:radial-gradient(circle at 50% 46%, #000 56%, transparent 60%);
+    box-shadow:0 0 120px rgba(111,168,199,.18);position:relative}
+  .orb::after{content:"";position:absolute;inset:0;border-radius:50%;
+    background:radial-gradient(circle at 36% 34%, rgba(255,255,255,.14), transparent 42%)}
+  .chip{position:absolute;background:var(--slip);color:var(--slip-ink);border-radius:6px;padding:9px 11px;max-width:200px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);font-size:11.5px;line-height:1.35}
+  .chip .q{font-weight:500;margin-bottom:6px}
+  .chip .m{color:#6B7280;font-size:10.5px}
+  .chip .pend{color:#B23A2E;font-weight:600}
+  .c1{top:4%;left:-6%} .c2{bottom:8%;right:-4%}
+  @media (max-width:860px){
+    .hero{grid-template-columns:1fr;gap:28px;min-height:auto}
+    h1{font-size:44px} .stage{order:-1} .chip{display:none}
+    .orb{width:min(300px,70vw)}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">Real World</div>
+      <nav>simulations with <b>receipts</b></nav>
+    </header>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">A daily, public, scored forecast of the world — launching Oct 27.</p>
+        <h1>Watch the record start.</h1>
+        <p class="sub">Every morning we simulate how the world's population reacts to the day's news, hash the forecast before it resolves, and score it in public against the market — misses included.</p>
+        <form onsubmit="return false">
+          <input type="email" placeholder="you@email.com" aria-label="Email address" />
+          <button type="submit">Join the waitlist</button>
+        </form>
+        <p class="consent">We'll email you about Real World's launch and your forecast. Unsubscribe anytime.</p>
+      </div>
+      <div class="stage">
+        <div class="orb" aria-hidden="true"></div>
+        <div class="chip c1"><div class="q">Fed rate decision</div><div class="m">resolves 2026-10-28 · <span class="pend">hash pending</span></div></div>
+        <div class="chip c2"><div class="q">ECB rate decision</div><div class="m">resolves 2026-10-29 · <span class="pend">hash pending</span></div></div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

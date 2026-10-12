@@ -1,0 +1,423 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+* {
+  margin: 0;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+a {
+  color: inherit;
+}
+img,
+svg,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+/* Keyboard focus is always visible (AA). */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--ink);
+  color: var(--on-accent);
+  padding: 10px 14px;
+  z-index: 50;
+}
+.skip-link:focus {
+  left: 8px;
+  top: 8px;
+}
+
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Header */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px 0 8px;
+}
+.brand {
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+.brand .brand-dot {
+  color: var(--accent);
+}
+.site-header .tagline {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* Hero */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  align-items: center;
+  padding: 24px 0 56px;
+}
+.eyebrow {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 18px;
+  max-width: 36ch;
+}
+.hero h1 {
+  font-size: clamp(36px, 7vw, 60px);
+  line-height: 1.03;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 18px;
+}
+.hero .sub {
+  font-size: clamp(16px, 2.4vw, 18px);
+  color: color-mix(in srgb, var(--ink) 82%, var(--muted));
+  max-width: 48ch;
+  margin-bottom: 26px;
+}
+.try-link {
+  display: inline-block;
+  margin-top: 16px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Signup form */
+.signup {
+  max-width: 460px;
+}
+.signup .row {
+  display: flex;
+  gap: 10px;
+}
+.signup input[type="email"] {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--ink);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: var(--radius);
+}
+.signup input::placeholder {
+  color: var(--muted);
+}
+.btn {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 16px;
+  padding: 14px 22px;
+  border: 1.5px solid var(--ink);
+  background: var(--ink);
+  color: var(--on-accent);
+  border-radius: var(--radius);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.consent {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 12px;
+  max-width: 46ch;
+}
+.field-msg {
+  font-size: 13.5px;
+  margin-top: 10px;
+}
+.field-msg.error {
+  color: var(--accent-2);
+}
+.turnstile-note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 10px;
+}
+.signup-success h2,
+.signup-dup h2 {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+.signup-success p,
+.signup-dup p {
+  color: var(--muted);
+  max-width: 44ch;
+}
+.typeform-embed {
+  margin-top: 16px;
+  min-height: 420px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+}
+
+/* Globe stage + anchored receipt chips */
+.stage {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.globe-holder {
+  position: relative;
+  width: min(420px, 82vw);
+  aspect-ratio: 1;
+}
+.globe-poster,
+.globe-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.globe-canvas {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.globe-canvas.ready {
+  opacity: 1;
+}
+.chip {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  padding: 9px 11px;
+  max-width: 210px;
+  box-shadow: var(--card-shadow);
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+.chip .q {
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+.chip .m {
+  font-family: var(--font-mono);
+  color: var(--muted);
+  font-size: 10.5px;
+}
+.chip .pending {
+  color: var(--accent-2);
+  font-weight: 600;
+}
+.stage .chip {
+  position: absolute;
+}
+.stage .chip-1 {
+  top: 2%;
+  left: -2%;
+}
+.stage .chip-2 {
+  bottom: 4%;
+  right: -2%;
+}
+
+/* Section scaffold */
+.section {
+  padding: 56px 0;
+  border-top: 1.5px solid var(--line);
+}
+.section h2.section-title {
+  font-size: clamp(24px, 4vw, 32px);
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.section .section-note {
+  color: var(--muted);
+  max-width: 60ch;
+  margin-bottom: 28px;
+}
+
+/* How it works */
+.steps {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  list-style: none;
+  padding: 0;
+  counter-reset: step;
+}
+.steps li {
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  background: var(--surface);
+}
+.steps li .step-k {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.steps li h3 {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+.steps li p {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* Receipts preview */
+.receipts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+.receipt {
+  background: var(--surface);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+.receipt .top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1.5px dashed var(--line);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.receipt .stamp {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--accent-2);
+  border: 1.5px solid var(--accent-2);
+  padding: 2px 7px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.receipt .body {
+  padding: 16px;
+}
+.receipt .q {
+  font-size: 15.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  margin-bottom: 14px;
+}
+.receipt .kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.receipt .kv .k {
+  color: var(--muted);
+}
+.receipt .kv .v {
+  word-break: break-word;
+}
+.receipt .foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1.5px dashed var(--line);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+.receipt .foot .disc {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+/* Repeat CTA band */
+.cta-band {
+  text-align: center;
+  padding: 56px 0;
+  border-top: 1.5px solid var(--line);
+}
+.cta-band h2 {
+  font-size: clamp(24px, 4vw, 30px);
+  margin-bottom: 18px;
+}
+
+/* Footer */
+.site-footer {
+  border-top: 1.5px solid var(--line);
+  padding: 32px 0 56px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.site-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+.site-footer nav a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.site-footer .disclosure {
+  max-width: 70ch;
+  margin-bottom: 8px;
+}
+
+/* Desktop */
+@media (min-width: 820px) {
+  .hero {
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 48px;
+    padding: 40px 0 72px;
+  }
+  .steps {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .receipts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Respect reduced motion: the live globe never animates and the poster is the
+   only visual. The Globe component also checks this and skips initialising cobe,
+   so there is nothing else on the page that animates. */
+@media (prefers-reduced-motion: reduce) {
+  .globe-canvas {
+    display: none;
+    transition: none;
+  }
+}

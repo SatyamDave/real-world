@@ -1,0 +1,6 @@
+// The consent line shown at signup. Its version is stored with every signup row
+// so we know exactly what each person agreed to. Bump the version when the text
+// changes. See product/landing-page.md and landing/RUNBOOK.md.
+export const CONSENT_VERSION = "2026-10-12";
+export const CONSENT_TEXT =
+  "We'll email you about Real World's launch and your forecast. Unsubscribe anytime.";

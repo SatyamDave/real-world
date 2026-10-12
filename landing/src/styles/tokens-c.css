@@ -1,0 +1,25 @@
+/*
+ * Design tokens — Direction C, "Almanac" (alternate; not chosen).
+ * Swap in by changing the tokens import in src/main.tsx to this file.
+ * Pale periwinkle paper, forecast indigo and an ochre marker.
+ */
+:root {
+  --paper: #e6e8ef;
+  --paper-2: #dcdfea;
+  --surface: #f4f5f8;
+  --ink: #1b1e2b;
+  --muted: #5a6075;
+  --accent: #283a8c; /* forecast indigo */
+  --accent-2: #c98a2b; /* ochre */
+  --line: #c4c8d6;
+  --focus: #283a8c;
+  --on-accent: #ffffff;
+
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+
+  --radius: 0px;
+  --card-shadow: 4px 4px 0 var(--paper-2);
+  --globe-dot: #283a8c;
+  --globe-glow: 40, 58, 140;
+}
