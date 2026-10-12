@@ -20,6 +20,7 @@ from typing import Any, Literal
 from rw import db, settings
 
 GENESIS_ROOT = "0" * 64
+FIXTURE_PREFIX = "fx-"
 AnchorStatus = Literal["not_anchored", "pending", "anchored"]
 SHA256_OID = bytes.fromhex("608648016503040201")
 TSTINFO_OID = bytes.fromhex("2a864886f70d0109100104")
@@ -256,6 +257,19 @@ def entries(conn: sqlite3.Connection, date: str) -> list[dict[str, Any]]:
     ]
 
 
+def is_fixture(items: Sequence[dict[str, Any]]) -> bool:
+    """True when a day's {entry, ...} items name a fixture question. Such a day is illustrative:
+    it is never anchored or mirrored (product/world.md)."""
+    for item in items:
+        e = item["entry"]
+        if any(
+            q.startswith(FIXTURE_PREFIX)
+            for q in [e.get("question_id", "")] + e.get("question_ids", [])
+        ):
+            return True
+    return False
+
+
 def commit_day(
     conn: sqlite3.Connection, date: str, day_entries: Sequence[dict[str, Any]], protocol_hash: str
 ) -> dict[str, Any]:
@@ -396,8 +410,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("verify", "export", "anchor"):
         sub.add_parser(name).add_argument("--date", required=True)
+    sub.add_parser(
+        "fixture", help="print each exported receipt that is a fixture day"
+    ).add_argument("receipts", nargs="+", type=Path)
     args = parser.parse_args(argv)
 
+    if args.command == "fixture":
+        for path in args.receipts:
+            if is_fixture(json.loads(path.read_text())["entries"]):
+                print(path)
+        return 0
     conn = db.connect()
     if args.command == "anchor":
         try:

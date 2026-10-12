@@ -24,7 +24,7 @@ FIXTURE_DAYS = sorted(p.stem for p in (forecast.FIXTURES / "news").glob("*.csv")
 BIGGEST_MISSES = 5
 
 Detail = dict[str, Any]
-FIXTURE_ANCHOR = "fixture questions are not sent to public timestamp servers"
+FIXTURE_ANCHOR = "fixture days are not sent to public timestamp servers"
 
 
 class NotAnchored(Exception):
@@ -234,14 +234,8 @@ def publish(
     }
 
 
-def anchor(
-    conn: sqlite3.Connection,
-    date: str,
-    budget: llm.Budget,
-    world_agents: int,
-    questions: str = "fixtures",
-) -> Detail:
-    if questions == "fixtures":
+def anchor(conn: sqlite3.Connection, date: str, budget: llm.Budget, world_agents: int) -> Detail:
+    if ledger.is_fixture(ledger.entries(conn, date)):
         return {"skipped": FIXTURE_ANCHOR}
     failures = (
         [] if ledger.anchor_status(conn, date)[0] == "anchored" else ledger.anchor_day(conn, date)
@@ -336,6 +330,23 @@ STEP_FUNCS: dict[str, Callable[..., Detail]] = {
 }
 
 
+def drop_old_step_check(conn: sqlite3.Connection) -> None:
+    """A stage_runs made before the anchor step has a CHECK on step that refuses it, and CREATE
+    TABLE IF NOT EXISTS cannot drop it, so such a table is rebuilt with its rows."""
+    old = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'stage_runs'"
+    ).fetchone()
+    if old is None or "CHECK (step" not in old[0]:
+        return
+    cols = "date, step, status, started_at, finished_at, detail"
+    conn.executescript(
+        "BEGIN; ALTER TABLE stage_runs RENAME TO stage_runs_old;"
+        + (db.SQL_DIR / "daily.sql").read_text()
+        + f"INSERT INTO stage_runs ({cols}) SELECT {cols} FROM stage_runs_old;"
+        " DROP TABLE stage_runs_old; COMMIT;"
+    )
+
+
 def _finish(conn: sqlite3.Connection, date: str, step: str, status: str, detail: Detail) -> None:
     with conn:
         conn.execute(
@@ -357,6 +368,7 @@ def run(
     Any failure, including BudgetExceeded, marks the step failed and stops the run, except in
     anchor: it records what already happened, so score and learn still run; a rerun retries it."""
     conn = db.connect()
+    drop_old_step_check(conn)
     calls_before = conn.execute("SELECT count(*) FROM llm_calls").fetchone()[0]
     budget = llm.Budget(settings.NIGHTLY_BUDGET_USD - llm.spent_today(conn))
     spent_before = budget.spent_usd
@@ -371,7 +383,6 @@ def run(
         "ingest": partial(ingest, live=live_news),
         "forecast": partial(STEP_FUNCS["forecast"], questions=questions),
         "publish": partial(STEP_FUNCS["publish"], questions=questions),
-        "anchor": partial(STEP_FUNCS["anchor"], questions=questions),
     }
     ran = []
     for step in steps or STEPS:

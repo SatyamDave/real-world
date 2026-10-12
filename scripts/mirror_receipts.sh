@@ -15,12 +15,15 @@ remote="$RECEIPTS_MIRROR_REMOTE"
 home="${RW_HOME:-var}"
 mirror="$home/mirror"
 
-# Fixture days are illustrative, so they never reach the public mirror (product/receipts.md).
 shopt -s nullglob
+all=("$home"/receipts/*.json)
 files=()
-for f in "$home"/receipts/*.json; do
-  grep -q '"fx-' "$f" || files+=("$f")
-done
+if [ ${#all[@]} -gt 0 ]; then
+  fixtures=$(uv run --quiet python -m rw.ledger fixture "${all[@]}")
+  for f in "${all[@]}"; do
+    grep -qxF "$f" <<< "$fixtures" || files+=("$f")
+  done
+fi
 if [ ${#files[@]} -eq 0 ]; then
   echo "no receipts to mirror in $home/receipts; fixture days are never mirrored" >&2
   exit 1

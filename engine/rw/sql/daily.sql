@@ -1,7 +1,6 @@
 CREATE TABLE IF NOT EXISTS stage_runs (
     date TEXT NOT NULL,
-    step TEXT NOT NULL
-        CHECK (step IN ('ingest', 'assimilate', 'forecast', 'publish', 'anchor', 'score', 'learn')),
+    step TEXT NOT NULL,
     status TEXT NOT NULL CHECK (status IN ('running', 'ok', 'failed')),
     started_at TEXT NOT NULL,
     finished_at TEXT,
