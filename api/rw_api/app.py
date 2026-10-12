@@ -28,6 +28,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from rw import db, forecast, ledger, llm, policy, population, score, settings, simulate
 from rw_api import routes_research
+from rw_api import routes_cycle
 
 log = logging.getLogger("rw_api")
 SCHEMA = Path(__file__).parent / "schema.sql"
@@ -1249,6 +1250,9 @@ app.include_router(routes_research.router)
 from rw_api import routes_receipts  # noqa: E402
 
 app.include_router(routes_receipts.router)
+
+app.include_router(routes_cycle.router, responses={404: not_found("cycle"), 422: INVALID})
+
 
 if __name__ == "__main__":
     print(json.dumps(app.openapi(), indent=2))

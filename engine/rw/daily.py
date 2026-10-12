@@ -33,7 +33,8 @@ class NotAnchored(Exception):
 
 
 def _now() -> str:
-    return datetime.now(UTC).isoformat(timespec="seconds")
+    # Milliseconds, so the calls of one step fall inside its window and no other step's.
+    return datetime.now(UTC).isoformat(timespec="milliseconds")
 
 
 def _seed(text: str) -> int:
