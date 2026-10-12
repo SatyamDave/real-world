@@ -691,6 +691,24 @@
           }
         }
       }
+    },
+    "/v1/status": {
+      "get": {
+        "summary": "Live system status",
+        "operationId": "status_v1_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemStatus"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1960,6 +1978,118 @@
         "type": "object",
         "required": ["day", "topic", "delta", "cause"],
         "title": "Step"
+      },
+      "SystemStatus": {
+        "properties": {
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "cycle_finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cycle Finished At"
+          },
+          "cycle_status": {
+            "type": "string",
+            "enum": ["ok", "failed", "running", "not_run"],
+            "title": "Cycle Status"
+          },
+          "root": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Root"
+          },
+          "record_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Hash"
+          },
+          "anchor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["not_anchored", "pending", "anchored"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor"
+          },
+          "anchored_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchored At"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "spent_today_usd": {
+            "type": "number",
+            "title": "Spent Today Usd"
+          },
+          "nightly_budget_usd": {
+            "type": "number",
+            "title": "Nightly Budget Usd"
+          },
+          "engine_version": {
+            "type": "string",
+            "title": "Engine Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "cycle_finished_at",
+          "cycle_status",
+          "root",
+          "record_hash",
+          "anchor",
+          "anchored_at",
+          "model",
+          "provider",
+          "spent_today_usd",
+          "nightly_budget_usd",
+          "engine_version"
+        ],
+        "title": "SystemStatus"
       },
       "TopicOutput": {
         "properties": {

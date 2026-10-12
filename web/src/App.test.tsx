@@ -6,6 +6,7 @@ import {
   ApiError,
   type Daily,
   type Job,
+  type SystemStatus,
   type World,
 } from "@real-world/sdk";
 import type { ReactNode } from "react";
@@ -24,6 +25,7 @@ import agentFixture from "./fixtures/agent.json";
 import whyFixture from "./fixtures/agent_why.json";
 import dailyFixture from "./fixtures/daily.json";
 import jobFixture from "./fixtures/job.json";
+import statusFixture from "./fixtures/status.json";
 import worldFixture from "./fixtures/world.json";
 
 const world = worldFixture as World;
@@ -42,6 +44,7 @@ beforeEach(() => {
     "agent",
     "agent_why",
     "receipts",
+    "status",
     "receipt_day",
     "scores",
     "get_simulation",
@@ -423,7 +426,10 @@ test("the home page states the thesis with the record as proof", async () => {
   });
   const el = await render(<App path="/" />);
   await until(() => expect(el.textContent).toContain("Scored in public since"));
-  expect(el.querySelector("h1")?.textContent).toBe("Don't ask a model. Ask a world.");
+  expect(el.querySelector("h1")?.textContent).toBe("Simulations with receipts.");
+  expect(el.querySelector(".thesis p")?.textContent).toBe(
+    "AI simulates how the world reacts to the news. Every forecast is sealed before the outcome and scored in public.",
+  );
   expect(el.textContent).toContain(
     `Scored in public since Oct 1: 1 day, ${vector.day.leaf_count} receipts.`,
   );
@@ -525,4 +531,41 @@ test("a succeeded fork has one h1, its setup sentence", async () => {
   const h1 = el.querySelectorAll("h1");
   expect(h1).toHaveLength(1);
   expect(h1[0].textContent).toContain("A chip shortage doubles phone prices worldwide");
+});
+
+test("the nav lists the seven pages in order and marks the active section", async () => {
+  const links = (el: HTMLElement) =>
+    [...el.querySelectorAll("header nav a")].map((a) => [a.textContent, a.getAttribute("href")]);
+  let el = await render(<App path="/receipts" />);
+  expect(links(el)).toEqual([
+    ["Today", "/"],
+    ["World", "/world"],
+    ["Cycle", "/cycle"],
+    ["Scores", "/scores"],
+    ["Receipts", "/receipts"],
+    ["Research", "/research"],
+    ["API", "/docs"],
+  ]);
+  expect(el.querySelector("header nav [aria-current]")?.textContent).toBe("Receipts");
+  el.remove();
+  container = document.body.appendChild(document.createElement("div"));
+  el = await render(<App path="/cycle/2026-10-05" />);
+  expect(el.querySelector("header nav [aria-current]")?.textContent).toBe("Cycle");
+});
+
+test("the footer's status strip is one literal line from GET /v1/status", async () => {
+  vi.mocked(rw.status).mockResolvedValue(statusFixture as SystemStatus);
+  const el = await render(<App path="/acceptable-use" />);
+  await until(() => expect(el.querySelector(".status-strip")).not.toBeNull());
+  expect(el.querySelector(".status-strip")?.textContent).toBe(
+    "Last cycle 2026-10-05 ok · ledger head b885…6550 · anchor: not anchored · model: fake (nothing spent) · spend today $0.00 of $25.00",
+  );
+});
+
+test("a status that cannot load says so with a retry", async () => {
+  const el = await render(<App path="/acceptable-use" />);
+  await until(() => expect(el.querySelector("footer .load-error")).not.toBeNull());
+  expect(el.querySelector("footer .load-error")?.textContent).toContain(
+    "Could not load system status",
+  );
 });

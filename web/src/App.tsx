@@ -1,5 +1,5 @@
-import { ApiError, type Country, type World } from "@real-world/sdk";
-import { lazy, type ReactNode, Suspense, useEffect, useState } from "react";
+import { ApiError, type Country, type SystemStatus, type World } from "@real-world/sdk";
+import { type ComponentType, lazy, type ReactNode, Suspense, useEffect, useState } from "react";
 import { AcceptableUse } from "./AcceptableUse";
 import { AgentPanel } from "./AgentPanel";
 import { rw } from "./api";
@@ -12,6 +12,28 @@ import { ReceiptsPage, ReceiptsStrip } from "./Receipts";
 const Globe = lazy(() => import("./Globe"));
 // The docs page carries api/openapi.json, so it loads only on /docs.
 const Docs = lazy(() => import("./Docs").then((m) => ({ default: m.Docs })));
+// A file in pages/ is a route: `/<name>` and `/<name>/<param>`. Its default export is the page, and
+// its named export `title` is the document title, read once the module loads.
+type PageModule = { default: ComponentType<{ param?: string }>; title: string };
+const PAGES: Record<string, ComponentType<{ param?: string }>> = Object.fromEntries(
+  Object.entries(import.meta.glob("./pages/*.tsx")).map(([file, load]) => [
+    file.slice("./pages/".length, -".tsx".length),
+    lazy(async () => {
+      const m = (await load()) as PageModule;
+      document.title = `${m.title} · Real World`;
+      return { default: m.default };
+    }),
+  ]),
+);
+const NAV = [
+  ["Today", "/"],
+  ["World", "/world"],
+  ["Cycle", "/cycle"],
+  ["Scores", "/scores"],
+  ["Receipts", "/receipts"],
+  ["Research", "/research"],
+  ["API", "/docs"],
+] as const;
 const WIDE = "(min-width: 768px)";
 const FEATURED = ["USA", "BRA", "KEN"];
 
@@ -167,6 +189,8 @@ function useWide() {
 }
 
 function Header({ path, date }: { path: string; date?: string }) {
+  // /cycle/2026-10-05 highlights Cycle; a path with no nav item highlights nothing
+  const section = `/${path.split("/")[1]}`;
   return (
     <header className="topbar">
       <a href="#main" className="skip">
@@ -182,15 +206,11 @@ function Header({ path, date }: { path: string; date?: string }) {
         </span>
       </a>
       <nav aria-label="Pages">
-        <a href="/" aria-current={path === "/" ? "page" : undefined}>
-          Today
-        </a>
-        <a href="/receipts" aria-current={path === "/receipts" ? "page" : undefined}>
-          Receipts
-        </a>
-        <a href="/docs" aria-current={path === "/docs" ? "page" : undefined}>
-          API
-        </a>
+        {NAV.map(([label, href]) => (
+          <a key={href} href={href} aria-current={href === section ? "page" : undefined}>
+            {label}
+          </a>
+        ))}
       </nav>
     </header>
   );
@@ -204,10 +224,10 @@ function Thesis() {
   const leaves = days.reduce((n, d) => n + Number(d.leaf_count), 0);
   return (
     <section className="thesis" aria-labelledby="thesis">
-      <h1 id="thesis">Don't ask a model. Ask a world.</h1>
+      <h1 id="thesis">Simulations with receipts.</h1>
       <p>
-        Every morning a simulated population reacts to the day's news. Its forecasts are hashed
-        before anything resolves and scored in public against the markets, misses included.
+        AI simulates how the world reacts to the news. Every forecast is sealed before the outcome
+        and scored in public.
       </p>
       {r.error ? (
         <LoadError what="the record" error={r.error} retry={r.retry} />
@@ -328,9 +348,41 @@ export function NotFound() {
   );
 }
 
+const SPENT_NOTHING = "fake (nothing spent)";
+const head = (hash: string) => `${hash.slice(0, 4)}…${hash.slice(-4)}`;
+
+/** One mono line from GET /v1/status: the cycle, the ledger head, the model and today's spend. */
+export function statusLine(s: SystemStatus): string {
+  if (!s.date) return "No cycle has run yet";
+  const fake = s.provider === "fake";
+  const anchor =
+    s.anchor === "anchored" ? `anchored ${s.anchored_at}` : (s.anchor ?? "").replace("_", " ");
+  return [
+    `Last cycle ${s.date} ${s.cycle_status.replace("_", " ")}`,
+    `ledger head ${s.record_hash ? head(s.record_hash) : "none"}`,
+    `anchor: ${anchor || "none"}`,
+    `model: ${fake ? SPENT_NOTHING : s.model}`,
+    `spend today $${(fake ? 0 : s.spent_today_usd).toFixed(2)} of $${s.nightly_budget_usd.toFixed(2)}`,
+  ].join(" · ");
+}
+
+function StatusStrip() {
+  const r = useLoad(() => rw.status());
+  return r.error ? (
+    <LoadError what="system status" error={r.error} retry={r.retry} />
+  ) : !r.data ? (
+    <Loading what="system status" />
+  ) : (
+    <p className="status-strip" role="status">
+      {statusLine(r.data)}
+    </p>
+  );
+}
+
 function Footer() {
   return (
     <footer className="site-footer">
+      <StatusStrip />
       <nav aria-label="Footer">
         <a href="/receipts">Receipts</a>
         <a href="/acceptable-use">Acceptable use</a>
@@ -347,7 +399,7 @@ function Footer() {
 }
 
 const TITLES: Record<string, string> = {
-  "/": "Don't ask a model. Ask a world. · Real World",
+  "/": "Simulations with receipts. · Real World",
   "/receipts": "Receipts · Real World",
   "/acceptable-use": "Acceptable use · Real World",
   "/docs": "API · Real World",
@@ -357,14 +409,17 @@ export function App({ path = location.pathname }: { path?: string }) {
   const { data: w, error, retry } = useLoad(() => rw.world());
   const tiers = w?.countries.map((c) => c.tier) ?? [];
   const fork = path.match(/^\/fork\/([^/]+)$/);
-  const known = fork !== null || path in TITLES;
+  const page = path.match(/^\/([^/]+)(?:\/([^/]+))?\/?$/);
+  const Page = page && Object.hasOwn(PAGES, page[1]) ? PAGES[page[1]] : undefined;
+  const known = fork !== null || path in TITLES || Page !== undefined;
   const worldError = error && known && (
     <LoadError what="today's world" error={error} retry={retry} />
   );
   // A fork names itself once its event text has loaded.
   useEffect(() => {
-    if (!path.startsWith("/fork/")) document.title = TITLES[path] ?? "Page not found · Real World";
-  }, [path]);
+    if (!path.startsWith("/fork/") && !Page)
+      document.title = TITLES[path] ?? "Page not found · Real World";
+  }, [path, Page]);
   return (
     <>
       <Header path={path} date={w?.date} />
@@ -382,6 +437,10 @@ export function App({ path = location.pathname }: { path?: string }) {
           <AcceptableUse />
         ) : path === "/" ? (
           <Home w={w} tiers={tiers} alert={worldError} />
+        ) : Page && page ? (
+          <Suspense fallback={<Loading what="the page" />}>
+            <Page param={page[2] === undefined ? undefined : decodeURIComponent(page[2])} />
+          </Suspense>
         ) : (
           <NotFound />
         )}

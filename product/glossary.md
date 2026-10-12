@@ -20,3 +20,7 @@ One definition per term. Specs, code comments and UI copy use these words with t
 | Day record | The date, the Merkle root of that day's leaves, the previous day's root and the protocol hash. | |
 | Skill | Mean Brier difference between `sim` and one baseline over resolved questions, with n and an interval. Negative is better. | |
 | Agent-day | One agent simulated for one day. Fork cost is shown in dollars; agent-days are its unit of work. | |
+| Inclusion proof | The sibling hashes from one leaf up to the day's Merkle root; verifying it shows the leaf is in the day record. | |
+| Reliability diagram | Forecasts binned by stated probability against the share that resolved yes; the diagonal is perfect calibration. | |
+| Run log | The recorded steps, model calls, tokens and cost of one daily cycle, from `stage_runs` and `llm_calls`. | |
+| Replay | Re-running a step on the recorded model outputs in `llm_calls`; a differing result is shown as a diff. | |

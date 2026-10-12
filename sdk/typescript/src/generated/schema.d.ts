@@ -228,6 +228,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v1/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Live system status */
+    get: operations["status_v1_status_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -812,6 +829,36 @@ export interface components {
        * @enum {string}
        */
       cause: "event" | "anchor_pull";
+    };
+    /** SystemStatus */
+    SystemStatus: {
+      /** Date */
+      date: string | null;
+      /** Cycle Finished At */
+      cycle_finished_at: string | null;
+      /**
+       * Cycle Status
+       * @enum {string}
+       */
+      cycle_status: "ok" | "failed" | "running" | "not_run";
+      /** Root */
+      root: string | null;
+      /** Record Hash */
+      record_hash: string | null;
+      /** Anchor */
+      anchor: ("not_anchored" | "pending" | "anchored") | null;
+      /** Anchored At */
+      anchored_at: string | null;
+      /** Model */
+      model: string;
+      /** Provider */
+      provider: string;
+      /** Spent Today Usd */
+      spent_today_usd: number;
+      /** Nightly Budget Usd */
+      nightly_budget_usd: number;
+      /** Engine Version */
+      engine_version: string;
     };
     /** TopicOutput */
     TopicOutput: {
@@ -1414,6 +1461,26 @@ export interface operations {
           "application/json": {
             [key: string]: boolean;
           };
+        };
+      };
+    };
+  };
+  status_v1_status_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SystemStatus"];
         };
       };
     };
