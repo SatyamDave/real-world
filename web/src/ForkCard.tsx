@@ -140,7 +140,11 @@ export function ForkRun({ id }: { id: string }) {
         j = await rw.get_simulation(id);
         if (live) setJob(j);
       }
-    })().catch((e: Error) => live && setError(e));
+    })().catch((e: Error) => {
+      if (!live) return;
+      if (e instanceof ApiError && e.status === 404) document.title = "Fork not found · Real World";
+      setError(e);
+    });
     return () => {
       live = false;
     };
@@ -213,10 +217,10 @@ export function ForkCard({ job }: { job: Job }) {
         <span>Fork result</span>
         <span className="stamp">AI-simulated</span>
       </div>
-      <p className="setup" id={`fork-${job.id}`}>
+      <h1 className="setup" id={`fork-${job.id}`}>
         “{job.request.event.text.replace(/\.$/, "")}”, applied to the {r.world_snapshot_id} world
         and run for {r.days} days on {r.agents_sampled.toLocaleString()} sampled agents.
-      </p>
+      </h1>
       <p className="meaning">{forkSentence(r)}</p>
 
       <h3>Top shifts</h3>

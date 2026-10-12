@@ -34,6 +34,10 @@ const block = (md: string, marker: string) =>
   [...md.matchAll(/```[a-z]*\n([\s\S]*?)```/g)].map((m) => m[1]).find((b) => b.includes(marker)) ??
   "";
 
+/** The READMEs show a local API; the rendered snippet points at the API this app talks to. */
+export const atApi = (snippet: string, base = API_URL) =>
+  snippet.replace(/(http:\/\/)?localhost:8000/g, base.replace(/\/$/, ""));
+
 const REPO = "https://github.com/SatyamDave/real-world/blob/main";
 
 function Fields({ schema }: { schema: Schema }) {
@@ -110,7 +114,7 @@ export function Docs() {
 
       <section className="card first-call">
         <h2>First call</h2>
-        <pre>{block(readme, "curl")}</pre>
+        <pre>{atApi(block(readme, "curl"))}</pre>
         <p className="small">
           It returns <code>202</code> with a job id. Poll <code>GET /v1/simulations/{"{id}"}</code>{" "}
           until <code>status</code> is <code>succeeded</code>. The same request with the same{" "}
@@ -138,11 +142,11 @@ export function Docs() {
         <h3>
           Python: <a href={`${REPO}/sdk/python/README.md`}>sdk/python/README.md</a>
         </h3>
-        <pre>{block(pyReadme, "from realworld")}</pre>
+        <pre>{atApi(block(pyReadme, "from realworld"))}</pre>
         <h3>
           TypeScript: <a href={`${REPO}/sdk/typescript/README.md`}>sdk/typescript/README.md</a>
         </h3>
-        <pre>{block(tsReadme, "@real-world/sdk")}</pre>
+        <pre>{atApi(block(tsReadme, "@real-world/sdk"))}</pre>
       </section>
     </div>
   );
