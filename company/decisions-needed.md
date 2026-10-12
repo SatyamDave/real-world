@@ -1,0 +1,27 @@
+# Decisions needed
+
+Open product decisions only the founder can make, ordered by when they block work. Each lists the options the lenses argued for and what waits on it. When the founder decides, write a decision record in `research/decisions/` and remove the item in the same PR.
+
+## Before the first hash (by Oct 14)
+
+1. **Launch name.** "Real World" is weak as a primary brand and the trademark is unverified; a rename after the first hash splits the record. Options: keep "Real World" as the spoken name and launch under a qualified or distinct brand, or keep the bare name. Every lens that raised it says pick before the first hash. Blocks: the ledger's public mirror, the receipts page, the Show HN. ([naming](../research/product/085-naming-trademark.md), [red team](../research/lenses/red-team.md), [CRO lens](../research/lenses/cro.md), [CEO lens](../research/lenses/ceo.md))
+2. **Election questions in launch week.** Launch-week events are mostly elections, and the safety note bans election-result calls during voting. Options: allow aggregate election forecasts committed before polls open, or run launch week on central banks and data releases only. Blocks: the first question list. ([red team](../research/lenses/red-team.md), [abuse and safety](../research/engineering/074-abuse-and-safety.md), [events calendar](../research/data/059-resolvable-events-calendar.md), [political ICP](../research/product/082-icp-political.md))
+3. **Which forecast is the headline row.** Options: a blind forecast that never sees market prices, with the assimilated forecast as a labelled second row; or the assimilated forecast as headline. [E004](../experiments/E004/PREREG.md) is registered with the blind forecast as primary; choosing otherwise means registering a new experiment before any question resolves. ([red team](../research/lenses/red-team.md), [prediction markets](../research/market/005-prediction-markets-landscape.md), [data assimilation for ABMs](../research/science/022-data-assimilation-abm.md))
+
+## Before Gate 1 (Oct 17)
+
+4. **Showing market prices before the terms are read.** Options: show the price at commit as a number with a source link (CRO), or show nothing until someone has read the Kalshi and Polymarket terms (red team). ([CRO lens](../research/lenses/cro.md), [red team](../research/lenses/red-team.md), [prediction market APIs](../research/data/051-prediction-market-apis.md))
+5. **Spread audit threshold.** Options: flag or fail the run below 0.7 ([failure modes](../research/science/018-failure-modes.md), [red team](../research/lenses/red-team.md)), or require the band 0.8-1.2 ([CEO lens](../research/lenses/ceo.md), [CTO lens](../research/lenses/cto.md)). E002 reports both.
+6. **Retrospective hindcasts.** Some notes ban backtests because models have seen the past; others ask for a 90-day hindcast. Options: allow hindcasts in internal engineering only, labelled retrospective, or ban them. ([forecast scoring](../research/science/030-forecast-scoring.md), [benchmark design](../research/science/097-benchmark-design.md), [data assimilation for ABMs](../research/science/022-data-assimilation-abm.md), [red team](../research/lenses/red-team.md))
+
+## Before pricing is published (by Gate 2, Oct 22)
+
+7. **Free fork allowance.** Options: 3 a day ([CEO lens](../research/lenses/ceo.md), [CTO lens](../research/lenses/cto.md), [CRO lens](../research/lenses/cro.md)); 3 a month at 200 agents ([CFO lens](../research/lenses/cfo.md)); or a dollar cap per fork with the sample sized to fit ([CPO lens](../research/lenses/cpo.md)).
+8. **Pro plan at launch.** Options: $49 a month with 50,000 agent-steps ([pricing models](../research/product/079-pricing-models.md), [CRO lens](../research/lenses/cro.md)), or pay-as-you-go credits only until there is usage data ([CFO lens](../research/lenses/cfo.md), [CPO lens](../research/lenses/cpo.md)).
+9. **The insights-team pilot offer.** Approve or change $7,500 for 6 weeks, converting to $2,000 a month, before the first buyer call quotes it. ([CRO lens](../research/lenses/cro.md), [`gtm/pricing.md`](../gtm/pricing.md))
+
+## Before launch (Oct 27)
+
+10. **Paid human panel before YC.** Options: about $5k of Prolific completes from Oct 20 ([CFO lens](../research/lenses/cfo.md)), or none beyond a small retention pilot, with daily-question answers as the panel ([CEO lens](../research/lenses/ceo.md), [CPO lens](../research/lenses/cpo.md), [red team](../research/lenses/red-team.md)).
+11. **What daily-question data stays proprietary.** The panel is the one data asset that compounds; decide what is published and what is kept before the first answer is collected. ([VC lens](../research/lenses/vc.md), [moat theory](../research/business/092-moat-theory.md))
+12. **The north-star metric.** Confirm or replace the choice in [`north-star.md`](north-star.md).
