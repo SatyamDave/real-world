@@ -614,6 +614,30 @@
         "required": ["agent_id", "text"],
         "title": "AgentWhy"
       },
+      "Anchor": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["rfc3161", "opentimestamps"],
+            "title": "Kind"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service"
+          },
+          "requested_at": {
+            "type": "string",
+            "title": "Requested At"
+          },
+          "proof_base64": {
+            "type": "string",
+            "title": "Proof Base64"
+          }
+        },
+        "type": "object",
+        "required": ["kind", "service", "requested_at", "proof_base64"],
+        "title": "Anchor"
+      },
       "Answer": {
         "properties": {
           "question_id": {
@@ -983,9 +1007,21 @@
             "type": "string",
             "title": "Record Hash"
           },
-          "anchored": {
-            "type": "boolean",
-            "title": "Anchored"
+          "anchor": {
+            "type": "string",
+            "enum": ["not_anchored", "pending", "anchored"],
+            "title": "Anchor"
+          },
+          "anchored_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchored At"
           }
         },
         "type": "object",
@@ -997,7 +1033,8 @@
           "protocol_hash",
           "engine_version",
           "record_hash",
-          "anchored"
+          "anchor",
+          "anchored_at"
         ],
         "title": "DaySummary"
       },
@@ -1208,9 +1245,28 @@
             "type": "string",
             "title": "Record Hash"
           },
-          "anchored": {
-            "type": "boolean",
-            "title": "Anchored"
+          "anchor": {
+            "type": "string",
+            "enum": ["not_anchored", "pending", "anchored"],
+            "title": "Anchor"
+          },
+          "anchored_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchored At"
+          },
+          "anchors": {
+            "items": {
+              "$ref": "#/components/schemas/Anchor"
+            },
+            "type": "array",
+            "title": "Anchors"
           },
           "entries": {
             "items": {
@@ -1221,7 +1277,7 @@
           }
         },
         "type": "object",
-        "required": ["day", "record_hash", "anchored", "entries"],
+        "required": ["day", "record_hash", "anchor", "anchored_at", "anchors", "entries"],
         "title": "ReceiptDay"
       },
       "ReceiptEntry": {

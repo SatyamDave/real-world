@@ -288,6 +288,20 @@ export interface components {
        */
       simulated?: true;
     };
+    /** Anchor */
+    Anchor: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "rfc3161" | "opentimestamps";
+      /** Service */
+      service: string;
+      /** Requested At */
+      requested_at: string;
+      /** Proof Base64 */
+      proof_base64: string;
+    };
     /** Answer */
     Answer: {
       /** Question Id */
@@ -448,8 +462,13 @@ export interface components {
       engine_version: string;
       /** Record Hash */
       record_hash: string;
-      /** Anchored */
-      anchored: boolean;
+      /**
+       * Anchor
+       * @enum {string}
+       */
+      anchor: "not_anchored" | "pending" | "anchored";
+      /** Anchored At */
+      anchored_at: string | null;
     };
     /** Estimate */
     Estimate: {
@@ -534,8 +553,15 @@ export interface components {
       day: components["schemas"]["DayRecord"];
       /** Record Hash */
       record_hash: string;
-      /** Anchored */
-      anchored: boolean;
+      /**
+       * Anchor
+       * @enum {string}
+       */
+      anchor: "not_anchored" | "pending" | "anchored";
+      /** Anchored At */
+      anchored_at: string | null;
+      /** Anchors */
+      anchors: components["schemas"]["Anchor"][];
       /** Entries */
       entries: components["schemas"]["ReceiptEntry"][];
     };

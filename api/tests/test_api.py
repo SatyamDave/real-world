@@ -1,6 +1,8 @@
+import base64
 import json
 import time
 from datetime import UTC, datetime
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -9,6 +11,7 @@ from fastapi.testclient import TestClient
 from rw import daily, ledger, llm, policy, population, settings
 from rw_api import app as api
 
+ROOT = Path(__file__).resolve().parents[2]
 AGENTS = 2000
 CHIPS = {"event": {"text": "A chip shortage doubles phone prices worldwide."}, "days": 3}
 
@@ -368,11 +371,47 @@ def test_receipts_verify_with_the_ledger(client, conn):
         scored += [e for e in body["entries"] if e["brier"] is not None]
         assert ledger.receipt_problems(body) == []
         assert body["day"]["prev_root"] == prev and body["record_hash"] == summary["record_hash"]
-        assert summary["anchored"] is False
+        assert summary["anchor"] == "not_anchored" and summary["anchored_at"] is None
         prev = body["day"]["root"]
     assert ledger.verify_day(conn, days[0]["date"]) == []
     assert scored and all(e["outcome"] in (0, 1) for e in scored)
     assert client.get("/v1/receipts/2020-01-01").status_code == 404
+
+
+def test_receipts_show_a_day_anchored_only_when_its_token_verifies(tmp_path, monkeypatch):
+    monkeypatch.setenv("RW_HOME", str(tmp_path))
+    vector = json.loads((ROOT / "data/fixtures/receipts_test_vector.json").read_text())
+    tsr = (ROOT / "engine/tests/data/freetsa_2026-10-01.tsr").read_bytes()
+    ots = (ROOT / "engine/tests/data/ots_2026-10-01.bin").read_bytes()
+    salts = iter(item["salt"] for item in vector["entries"])
+    monkeypatch.setattr(ledger.secrets, "token_hex", lambda n: next(salts))
+    monkeypatch.setattr(
+        ledger, "_post", lambda url, body, h: tsr if url == settings.TSA_URL else ots
+    )
+    conn = api.connect()
+    day = vector["day"]
+    ledger.commit_day(
+        conn, day["date"], [e["entry"] for e in vector["entries"]], day["protocol_hash"]
+    )
+    assert ledger.anchor_day(conn, day["date"]) == []
+    monkeypatch.setattr(ledger.secrets, "token_hex", lambda n: n * "ab")
+    entry = {**vector["entries"][0]["entry"], "date": "2026-10-02"}
+    ledger.commit_day(conn, "2026-10-02", [entry], day["protocol_hash"])
+    with conn:
+        conn.execute(
+            "INSERT INTO ledger_anchors VALUES ('2026-10-02', 'rfc3161', 'x', 'x', ?)", (tsr,)
+        )
+
+    with TestClient(api.app) as client:
+        days = client.get("/v1/receipts").json()["days"]
+        assert [(d["date"], d["anchor"], d["anchored_at"]) for d in days] == [
+            ("2026-10-02", "not_anchored", None),
+            ("2026-10-01", "anchored", "2026-10-12T17:19:19Z"),
+        ]
+        body = client.get("/v1/receipts/2026-10-01").json()
+    assert body["anchor"] == "anchored"
+    proofs = {a["kind"]: base64.b64decode(a["proof_base64"]) for a in body["anchors"]}
+    assert proofs == {"rfc3161": tsr, "opentimestamps": ots}
 
 
 def test_scores_summarize_resolved_committed_forecasts(client):

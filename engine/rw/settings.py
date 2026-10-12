@@ -47,6 +47,10 @@ SCREEN_MAX_OUTPUT_TOKENS = 100
 # the day after, so late counts are covered. Both ends inclusive, in UTC.
 ELECTION_WINDOW = (date(2026, 10, 27), date(2026, 11, 4))
 
+TSA_URL = "https://freetsa.org/tsr"
+OTS_CALENDAR_URL = "https://a.pool.opentimestamps.org"
+ANCHOR_TIMEOUT_S = 30
+
 ENGINE_VERSION = "0.1.0"
 API_VERSION = "2026-10-27"
 

@@ -73,6 +73,7 @@ Each day prints the steps that ran, model calls, dollars, forecasts committed, t
 - The nightly budget is `NIGHTLY_BUDGET_USD` minus `llm.spent_today()`. `BudgetExceeded`, or any other error, marks the step `failed` and stops the run; the CLI exits 1. Rerun the same command once the cause is fixed.
 - To see what happened: `SELECT * FROM stage_runs WHERE date = '2026-10-01'` in `var/rw.sqlite`; `detail` holds the step's counts or its error.
 - To check a day's receipts: `uv run python -m rw.ledger verify --date 2026-10-01`.
+- To anchor a committed day: `uv run python -m rw.ledger anchor --date 2026-10-01`. It sends only the day's record hash to `settings.TSA_URL` and `settings.OTS_CALENDAR_URL`, prints `anchored <time>`, `pending` or `not_anchored`, and exits 1 if either service failed; rerun it to retry the one that failed.
 
 ## Test
 
