@@ -364,6 +364,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v1/scoreboard": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The scoreboard: Brier per forecaster, skill against each baseline, reliability bins and every resolved question */
+    get: operations["scoreboard_v1_scoreboard_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -524,6 +541,17 @@ export interface components {
       by_region: {
         [key: string]: components["schemas"]["Skill"];
       };
+    };
+    /** Bootstrap */
+    Bootstrap: {
+      /** Block */
+      block: string;
+      /** Resamples */
+      resamples: number;
+      /** Seed */
+      seed: number;
+      /** Interval */
+      interval: number;
     };
     /** Budget */
     Budget: {
@@ -766,6 +794,23 @@ export interface components {
       /** Outcome */
       outcome: string;
     };
+    /** ForecasterScore */
+    ForecasterScore: {
+      /** Forecaster */
+      forecaster: string;
+      /** N Questions */
+      n_questions: number;
+      /** N Forecasts */
+      n_forecasts: number;
+      /** Mean Brier */
+      mean_brier: number;
+      /** Mean Log Score */
+      mean_log_score: number;
+      /** Brier Low */
+      brier_low: number | null;
+      /** Brier High */
+      brier_high: number | null;
+    };
     /** Job */
     Job: {
       /** Id */
@@ -831,6 +876,23 @@ export interface components {
       self: string;
       /** Events */
       events: string;
+    };
+    /** Miss */
+    Miss: {
+      /** Question Id */
+      question_id: string;
+      /** Text */
+      text: string;
+      /** Date */
+      date: string;
+      /** Forecaster */
+      forecaster: string;
+      /** Probability */
+      probability: number;
+      /** Outcome */
+      outcome: number;
+      /** Brier */
+      brier: number;
     };
     /** News */
     News: {
@@ -1006,6 +1068,22 @@ export interface components {
       position: string;
       /** Hash */
       hash: string;
+    };
+    /** Protocol */
+    Protocol: {
+      /** Version */
+      version: string;
+      /** Hash */
+      hash: string;
+      /** Headline */
+      headline: string;
+      /** Log Clip */
+      log_clip: number[];
+      /** Coin Reference */
+      coin_reference: number;
+      /** Min Resolved For Claims */
+      min_resolved_for_claims: number;
+      bootstrap: components["schemas"]["Bootstrap"];
     };
     /** QuestionCountry */
     QuestionCountry: {
@@ -1233,6 +1311,19 @@ export interface components {
        */
       id?: string | null;
     };
+    /** ReliabilityBin */
+    ReliabilityBin: {
+      /** Bin Low */
+      bin_low: number;
+      /** Bin High */
+      bin_high: number;
+      /** N */
+      n: number;
+      /** Mean Probability */
+      mean_probability: number;
+      /** Observed Rate */
+      observed_rate: number;
+    };
     /** Replay */
     Replay: {
       /** Date */
@@ -1279,6 +1370,27 @@ export interface components {
       /** Commit */
       commit: string;
     };
+    /** ResolvedQuestion */
+    ResolvedQuestion: {
+      /** Question Id */
+      question_id: string;
+      /** Text */
+      text: string;
+      /** Date */
+      date: string;
+      /** Outcome */
+      outcome: number;
+      /** Resolved On */
+      resolved_on: string;
+      /** Tiers */
+      tiers: string[];
+      /** Region */
+      region: string;
+      /** Forecasts */
+      forecasts: {
+        [key: string]: components["schemas"]["Scored"];
+      };
+    };
     /** Reveal */
     Reveal: {
       /** You */
@@ -1314,6 +1426,37 @@ export interface components {
       ground_truth: number;
       /** Score */
       score: number;
+    };
+    /** Scoreboard */
+    Scoreboard: {
+      protocol: components["schemas"]["Protocol"];
+      /** Resolved Questions */
+      resolved_questions: number;
+      /** Open Questions */
+      open_questions: number;
+      /** First Commit */
+      first_commit: string | null;
+      /** Forecasters */
+      forecasters: components["schemas"]["ForecasterScore"][];
+      /** Skill */
+      skill: {
+        [key: string]: components["schemas"]["BaselineSkill"];
+      };
+      /** Reliability */
+      reliability: {
+        [key: string]: components["schemas"]["ReliabilityBin"][];
+      };
+      /** Resolved */
+      resolved: components["schemas"]["ResolvedQuestion"][];
+      /** Misses */
+      misses: components["schemas"]["Miss"][];
+    };
+    /** Scored */
+    Scored: {
+      /** Probability */
+      probability: number;
+      /** Brier */
+      brier: number;
     };
     /** SegmentAnswer */
     SegmentAnswer: {
@@ -2478,6 +2621,26 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  scoreboard_v1_scoreboard_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Scoreboard"];
         };
       };
     };

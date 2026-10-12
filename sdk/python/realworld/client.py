@@ -22,6 +22,7 @@ from realworld.generated.models import (
     QuestionPage,
     ReceiptDay,
     Receipts,
+    Scoreboard,
     SimulateRequest,
     SimulateResult,
     SystemStatus,
@@ -210,3 +211,7 @@ class Client:
     def scores(self) -> dict[str, BaselineSkill]:
         """Returns the skill of the simulation against each baseline."""
         return _SCORES.validate_python(self._send("GET", "/v1/scores"))
+
+    def scoreboard(self) -> Scoreboard:
+        """Returns the scoreboard: Brier per forecaster, skill, reliability bins and misses."""
+        return Scoreboard.model_validate(self._send("GET", "/v1/scoreboard"))

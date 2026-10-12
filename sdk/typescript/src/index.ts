@@ -14,6 +14,7 @@ export type Agent = Schemas["Agent"];
 export type AgentWhy = Schemas["AgentWhy"];
 export type Daily = Schemas["Daily"];
 export type SystemStatus = Schemas["SystemStatus"];
+export type Scoreboard = Schemas["Scoreboard"];
 export type Receipts = Schemas["Receipts"];
 export type ReceiptDay = Schemas["ReceiptDay"];
 export type LeafReceipt = Schemas["LeafReceipt"];
@@ -247,5 +248,10 @@ export class Client {
   /** Returns the skill of the simulation against each baseline. */
   scores(): Promise<Record<string, BaselineSkill>> {
     return ok(this.http.GET("/v1/scores"));
+  }
+
+  /** Returns the scoreboard: Brier per forecaster, skill, reliability bins and misses. */
+  scoreboard(): Promise<Scoreboard> {
+    return ok(this.http.GET("/v1/scoreboard"));
   }
 }

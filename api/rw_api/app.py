@@ -1257,5 +1257,10 @@ from rw_api import routes_questions  # noqa: E402  (it imports this module)
 
 app.include_router(routes_questions.router, responses={404: not_found("question"), 422: INVALID})
 
+from rw_api import routes_scores  # noqa: E402
+
+app.include_router(routes_scores.router)
+
+
 if __name__ == "__main__":
     print(json.dumps(app.openapi(), indent=2))

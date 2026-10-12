@@ -991,6 +991,24 @@
           }
         }
       }
+    },
+    "/v1/scoreboard": {
+      "get": {
+        "summary": "The scoreboard: Brier per forecaster, skill against each baseline, reliability bins and every resolved question",
+        "operationId": "scoreboard_v1_scoreboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Scoreboard"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1371,6 +1389,29 @@
         "type": "object",
         "required": ["n", "n_pairs", "mean_diff", "low", "high", "claim", "by_tier", "by_region"],
         "title": "BaselineSkill"
+      },
+      "Bootstrap": {
+        "properties": {
+          "block": {
+            "type": "string",
+            "title": "Block"
+          },
+          "resamples": {
+            "type": "integer",
+            "title": "Resamples"
+          },
+          "seed": {
+            "type": "integer",
+            "title": "Seed"
+          },
+          "interval": {
+            "type": "number",
+            "title": "Interval"
+          }
+        },
+        "type": "object",
+        "required": ["block", "resamples", "seed", "interval"],
+        "title": "Bootstrap"
       },
       "Budget": {
         "properties": {
@@ -1977,6 +2018,63 @@
         ],
         "title": "ExperimentResult"
       },
+      "ForecasterScore": {
+        "properties": {
+          "forecaster": {
+            "type": "string",
+            "title": "Forecaster"
+          },
+          "n_questions": {
+            "type": "integer",
+            "title": "N Questions"
+          },
+          "n_forecasts": {
+            "type": "integer",
+            "title": "N Forecasts"
+          },
+          "mean_brier": {
+            "type": "number",
+            "title": "Mean Brier"
+          },
+          "mean_log_score": {
+            "type": "number",
+            "title": "Mean Log Score"
+          },
+          "brier_low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier Low"
+          },
+          "brier_high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier High"
+          }
+        },
+        "type": "object",
+        "required": [
+          "forecaster",
+          "n_questions",
+          "n_forecasts",
+          "mean_brier",
+          "mean_log_score",
+          "brier_low",
+          "brier_high"
+        ],
+        "title": "ForecasterScore"
+      },
       "Job": {
         "properties": {
           "id": {
@@ -2164,6 +2262,49 @@
         "type": "object",
         "required": ["self", "events"],
         "title": "Links"
+      },
+      "Miss": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "forecaster": {
+            "type": "string",
+            "title": "Forecaster"
+          },
+          "probability": {
+            "type": "number",
+            "title": "Probability"
+          },
+          "outcome": {
+            "type": "integer",
+            "title": "Outcome"
+          },
+          "brier": {
+            "type": "number",
+            "title": "Brier"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question_id",
+          "text",
+          "date",
+          "forecaster",
+          "probability",
+          "outcome",
+          "brier"
+        ],
+        "title": "Miss"
       },
       "News": {
         "properties": {
@@ -2628,6 +2769,51 @@
         "type": "object",
         "required": ["position", "hash"],
         "title": "ProofStep"
+      },
+      "Protocol": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "hash": {
+            "type": "string",
+            "title": "Hash"
+          },
+          "headline": {
+            "type": "string",
+            "title": "Headline"
+          },
+          "log_clip": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Log Clip"
+          },
+          "coin_reference": {
+            "type": "number",
+            "title": "Coin Reference"
+          },
+          "min_resolved_for_claims": {
+            "type": "integer",
+            "title": "Min Resolved For Claims"
+          },
+          "bootstrap": {
+            "$ref": "#/components/schemas/Bootstrap"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "hash",
+          "headline",
+          "log_clip",
+          "coin_reference",
+          "min_resolved_for_claims",
+          "bootstrap"
+        ],
+        "title": "Protocol"
       },
       "QuestionCountry": {
         "properties": {
@@ -3170,6 +3356,33 @@
         "required": ["code", "detail"],
         "title": "Refused"
       },
+      "ReliabilityBin": {
+        "properties": {
+          "bin_low": {
+            "type": "number",
+            "title": "Bin Low"
+          },
+          "bin_high": {
+            "type": "number",
+            "title": "Bin High"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "mean_probability": {
+            "type": "number",
+            "title": "Mean Probability"
+          },
+          "observed_rate": {
+            "type": "number",
+            "title": "Observed Rate"
+          }
+        },
+        "type": "object",
+        "required": ["bin_low", "bin_high", "n", "mean_probability", "observed_rate"],
+        "title": "ReliabilityBin"
+      },
       "Replay": {
         "properties": {
           "date": {
@@ -3317,6 +3530,60 @@
         "required": ["experiments", "papers", "repo", "commit"],
         "title": "Research"
       },
+      "ResolvedQuestion": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "outcome": {
+            "type": "integer",
+            "title": "Outcome"
+          },
+          "resolved_on": {
+            "type": "string",
+            "title": "Resolved On"
+          },
+          "tiers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tiers"
+          },
+          "region": {
+            "type": "string",
+            "title": "Region"
+          },
+          "forecasts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Scored"
+            },
+            "type": "object",
+            "title": "Forecasts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question_id",
+          "text",
+          "date",
+          "outcome",
+          "resolved_on",
+          "tiers",
+          "region",
+          "forecasts"
+        ],
+        "title": "ResolvedQuestion"
+      },
       "Reveal": {
         "properties": {
           "you": {
@@ -3417,6 +3684,98 @@
         "type": "object",
         "required": ["population", "attitudes", "markets", "news", "ground_truth", "score"],
         "title": "Rubric"
+      },
+      "Scoreboard": {
+        "properties": {
+          "protocol": {
+            "$ref": "#/components/schemas/Protocol"
+          },
+          "resolved_questions": {
+            "type": "integer",
+            "title": "Resolved Questions"
+          },
+          "open_questions": {
+            "type": "integer",
+            "title": "Open Questions"
+          },
+          "first_commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Commit"
+          },
+          "forecasters": {
+            "items": {
+              "$ref": "#/components/schemas/ForecasterScore"
+            },
+            "type": "array",
+            "title": "Forecasters"
+          },
+          "skill": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BaselineSkill"
+            },
+            "type": "object",
+            "title": "Skill"
+          },
+          "reliability": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/ReliabilityBin"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Reliability"
+          },
+          "resolved": {
+            "items": {
+              "$ref": "#/components/schemas/ResolvedQuestion"
+            },
+            "type": "array",
+            "title": "Resolved"
+          },
+          "misses": {
+            "items": {
+              "$ref": "#/components/schemas/Miss"
+            },
+            "type": "array",
+            "title": "Misses"
+          }
+        },
+        "type": "object",
+        "required": [
+          "protocol",
+          "resolved_questions",
+          "open_questions",
+          "first_commit",
+          "forecasters",
+          "skill",
+          "reliability",
+          "resolved",
+          "misses"
+        ],
+        "title": "Scoreboard"
+      },
+      "Scored": {
+        "properties": {
+          "probability": {
+            "type": "number",
+            "title": "Probability"
+          },
+          "brier": {
+            "type": "number",
+            "title": "Brier"
+          }
+        },
+        "type": "object",
+        "required": ["probability", "brier"],
+        "title": "Scored"
       },
       "SegmentAnswer": {
         "properties": {

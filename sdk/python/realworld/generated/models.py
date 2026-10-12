@@ -85,6 +85,13 @@ class Claim(StrEnum):
     insufficient_n = "insufficient_n"
 
 
+class Bootstrap(BaseModel):
+    block: str = Field(..., title="Block")
+    resamples: int = Field(..., title="Resamples")
+    seed: int = Field(..., title="Seed")
+    interval: float = Field(..., title="Interval")
+
+
 class Budget(BaseModel):
     nightly_budget_usd: float = Field(..., title="Nightly Budget Usd")
     spent_usd: float = Field(..., title="Spent Usd")
@@ -194,6 +201,16 @@ class Event(BaseModel):
     countries: list[str] | None = Field(None, title="Countries")
 
 
+class ForecasterScore(BaseModel):
+    forecaster: str = Field(..., title="Forecaster")
+    n_questions: int = Field(..., title="N Questions")
+    n_forecasts: int = Field(..., title="N Forecasts")
+    mean_brier: float = Field(..., title="Mean Brier")
+    mean_log_score: float = Field(..., title="Mean Log Score")
+    brier_low: float | None = Field(..., title="Brier Low")
+    brier_high: float | None = Field(..., title="Brier High")
+
+
 class Status(StrEnum):
     queued = "queued"
     running = "running"
@@ -204,6 +221,16 @@ class Status(StrEnum):
 class Links(BaseModel):
     self: str = Field(..., title="Self")
     events: str = Field(..., title="Events")
+
+
+class Miss(BaseModel):
+    question_id: str = Field(..., title="Question Id")
+    text: str = Field(..., title="Text")
+    date: str = Field(..., title="Date")
+    forecaster: str = Field(..., title="Forecaster")
+    probability: float = Field(..., title="Probability")
+    outcome: int = Field(..., title="Outcome")
+    brier: float = Field(..., title="Brier")
 
 
 class Source(StrEnum):
@@ -277,6 +304,16 @@ class Primary(BaseModel):
 class ProofStep(BaseModel):
     position: str = Field(..., title="Position")
     hash: str = Field(..., title="Hash")
+
+
+class Protocol(BaseModel):
+    version: str = Field(..., title="Version")
+    hash: str = Field(..., title="Hash")
+    headline: str = Field(..., title="Headline")
+    log_clip: list[float] = Field(..., title="Log Clip")
+    coin_reference: float = Field(..., title="Coin Reference")
+    min_resolved_for_claims: int = Field(..., title="Min Resolved For Claims")
+    bootstrap: Bootstrap
 
 
 class QuestionCountry(BaseModel):
@@ -372,6 +409,14 @@ class Refused(BaseModel):
     )
 
 
+class ReliabilityBin(BaseModel):
+    bin_low: float = Field(..., title="Bin Low")
+    bin_high: float = Field(..., title="Bin High")
+    n: int = Field(..., title="N")
+    mean_probability: float = Field(..., title="Mean Probability")
+    observed_rate: float = Field(..., title="Observed Rate")
+
+
 class Forecaster(StrEnum):
     sim = "sim"
     plain_llm = "plain_llm"
@@ -396,6 +441,11 @@ class Rubric(BaseModel):
     news: int = Field(..., title="News")
     ground_truth: int = Field(..., title="Ground Truth")
     score: int = Field(..., title="Score")
+
+
+class Scored(BaseModel):
+    probability: float = Field(..., title="Probability")
+    brier: float = Field(..., title="Brier")
 
 
 class SegmentAnswer(BaseModel):
@@ -735,6 +785,17 @@ class Replay(BaseModel):
     missing: list[str] = Field(..., title="Missing")
 
 
+class ResolvedQuestion(BaseModel):
+    question_id: str = Field(..., title="Question Id")
+    text: str = Field(..., title="Text")
+    date: str = Field(..., title="Date")
+    outcome: int = Field(..., title="Outcome")
+    resolved_on: str = Field(..., title="Resolved On")
+    tiers: list[str] = Field(..., title="Tiers")
+    region: str = Field(..., title="Region")
+    forecasts: dict[str, Scored] = Field(..., title="Forecasts")
+
+
 class Reveal(BaseModel):
     you: float = Field(..., title="You")
     crowd: Crowd
@@ -746,6 +807,18 @@ class Reveal(BaseModel):
     week: list[WeekDay] = Field(
         ..., description="The seven days ending today, oldest first.", title="Week"
     )
+
+
+class Scoreboard(BaseModel):
+    protocol: Protocol
+    resolved_questions: int = Field(..., title="Resolved Questions")
+    open_questions: int = Field(..., title="Open Questions")
+    first_commit: str | None = Field(..., title="First Commit")
+    forecasters: list[ForecasterScore] = Field(..., title="Forecasters")
+    skill: dict[str, BaselineSkill] = Field(..., title="Skill")
+    reliability: dict[str, list[ReliabilityBin]] = Field(..., title="Reliability")
+    resolved: list[ResolvedQuestion] = Field(..., title="Resolved")
+    misses: list[Miss] = Field(..., title="Misses")
 
 
 class TraceAgent(BaseModel):
