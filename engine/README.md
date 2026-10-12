@@ -34,6 +34,31 @@ Beliefs are logits in an `(n_agents, n_topics)` array `B`; `B0` is each agent's 
 | `NUDGE_CAP_LOGIT` (0.3) | Largest shift one poll can apply to a group's mean in one day. |
 | `SPREAD_BAND` (0.8, 1.2) | Allowed range of simulated SD over survey SD; outside it the country is marked experimental. |
 
+## Daily cycle runbook
+
+`rw/daily.py` is the only place the day's steps are composed. Each step records `(date, step, status, started_at, finished_at, detail)` in `stage_runs` and is skipped once it is `ok`, so rerunning a day is free and a crashed run resumes at the step that failed.
+
+| Step | What it does |
+| --- | --- |
+| `ingest` | `news.ingest_day`: polls become observations, each news cluster becomes one signal call. |
+| `assimilate` | Loads the previous day's snapshot (or samples a fresh `WORLD_AGENTS` world on the first day), applies the day's signals through `news.exposure` and `beliefs.update_beliefs`, nudges each country toward the day's polls with `beliefs.nudge`, writes `var/snapshots/<date>/agents.parquet` and records each nudge in `nudges`. No market price is read. |
+| `forecast` | `forecast.forecast_day`: sim, plain-LLM and market forecasts for every open question. |
+| `publish` | `ledger.commit_day` with a `protocol` entry when the protocol hash is new, a `question_set` entry when the question file hash is new, and one 0002-format `forecast` entry per forecast row, carrying `snapshot_sha256` and the `config_hash` of `settings.py`. |
+| `score` | Records outcomes resolved on or before the date in `resolutions`, then scores every committed forecast entry on a resolved question into `scores`. |
+| `learn` | Spread audit against the survey SD in `data/sample/attitudes.csv` into `audits`, one `country_status` row per country (experimental when any topic is outside `SPREAD_BAND`), and the five biggest sim misses in the step's `detail`. |
+
+```
+make daily DATE=2026-10-01                               # one day, every step not yet ok
+uv run python -m rw.daily --date 2026-10-01 --step learn # one step
+make daily-fixtures                                      # the five fixture days in order
+```
+
+Each day prints the steps that ran, model calls, dollars, forecasts committed, the day's root hash, questions scored and countries marked experimental.
+
+- The nightly budget is `NIGHTLY_BUDGET_USD` minus `llm.spent_today()`. `BudgetExceeded`, or any other error, marks the step `failed` and stops the run; the CLI exits 1. Rerun the same command once the cause is fixed.
+- To see what happened: `SELECT * FROM stage_runs WHERE date = '2026-10-01'` in `var/rw.sqlite`; `detail` holds the step's counts or its error.
+- To check a day's receipts: `uv run python -m rw.ledger verify --date 2026-10-01`.
+
 ## Test
 
 ```
