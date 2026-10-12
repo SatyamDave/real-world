@@ -279,6 +279,57 @@ class ProofStep(BaseModel):
     hash: str = Field(..., title="Hash")
 
 
+class QuestionCountry(BaseModel):
+    iso3: str = Field(..., title="Iso3")
+    name: str = Field(..., title="Name")
+    tier: str = Field(..., title="Tier")
+
+
+class QuestionForecast(BaseModel):
+    probability: float = Field(..., title="Probability")
+    p10: float | None = Field(..., description="Only the sim forecaster has a spread.", title="P10")
+    p90: float | None = Field(..., title="P90")
+    brier: float | None = Field(..., description="Null until the question resolves.", title="Brier")
+    log_score: float | None = Field(..., title="Log Score")
+    leaf_hash: str = Field(..., title="Leaf Hash")
+    salt: str = Field(..., title="Salt")
+    committed_at: str = Field(..., title="Committed At")
+    model: str = Field(..., title="Model")
+    market_price_at_commit: float = Field(..., title="Market Price At Commit")
+
+
+class QuestionInfo(BaseModel):
+    id: str = Field(..., title="Id")
+    text: str = Field(..., title="Text")
+    topic: str = Field(..., title="Topic")
+    topic_label: str = Field(..., title="Topic Label")
+    countries: list[QuestionCountry] = Field(..., title="Countries")
+    opens: str = Field(..., title="Opens")
+    closes: str = Field(..., title="Closes")
+    resolves_by: str = Field(..., title="Resolves By")
+    resolution_source: str = Field(..., title="Resolution Source")
+    tie_break: str = Field(..., title="Tie Break")
+    market_source: str = Field(..., title="Market Source")
+    question_hash: str = Field(
+        ...,
+        description="sha256 of the question as committed in each forecast.",
+        title="Question Hash",
+    )
+    question_set_hash: str = Field(
+        ...,
+        description="sha256 of the question list this question is in.",
+        title="Question Set Hash",
+    )
+    daily_on: str | None = Field(..., title="Daily On")
+
+
+class QuestionOutcome(BaseModel):
+    outcome: int = Field(..., title="Outcome")
+    resolved_on: str = Field(..., title="Resolved On")
+    source_url: str = Field(..., title="Source Url")
+    read_on: str = Field(..., title="Read On")
+
+
 class ReceiptQuestion(BaseModel):
     text: str = Field(..., title="Text")
     resolution_source: str = Field(..., title="Resolution Source")
@@ -345,6 +396,17 @@ class Rubric(BaseModel):
     news: int = Field(..., title="News")
     ground_truth: int = Field(..., title="Ground Truth")
     score: int = Field(..., title="Score")
+
+
+class SegmentAnswer(BaseModel):
+    segment: str = Field(..., title="Segment")
+    description: str = Field(..., title="Description")
+    prior_share: float = Field(
+        ...,
+        description="The segment's share saying yes before the model call.",
+        title="Prior Share",
+    )
+    yes_share: float = Field(..., title="Yes Share")
 
 
 class SegmentShift(BaseModel):
@@ -615,6 +677,43 @@ class PopulationCountry(BaseModel):
     agent_count: int = Field(..., title="Agent Count")
     segments: list[PopulationSegment] = Field(..., title="Segments")
     topics: list[PopulationTopic] = Field(..., title="Topics")
+
+
+class QuestionDay(BaseModel):
+    date: str = Field(..., title="Date")
+    snapshot_sha256: str = Field(..., title="Snapshot Sha256")
+    forecasts: dict[str, QuestionForecast] = Field(
+        ..., description="By forecaster.", title="Forecasts"
+    )
+    segments: list[SegmentAnswer] = Field(
+        ...,
+        description="The model's answer per segment behind the sim forecast; empty if not recorded.",
+        title="Segments",
+    )
+    plain_samples: list[float] = Field(
+        ..., description="Each plain LLM sample's yes share.", title="Plain Samples"
+    )
+    headlines: list[str] = Field(..., title="Headlines")
+
+
+class QuestionPage(BaseModel):
+    question: QuestionInfo
+    outcome: QuestionOutcome | None
+    members: int = Field(
+        ..., description="Bootstrap resamples behind each sim spread.", title="Members"
+    )
+    plain_llm_samples: int = Field(..., title="Plain Llm Samples")
+    log_clip: list[float] = Field(
+        ..., description="Low and high clip on p before the log score.", title="Log Clip"
+    )
+    min_resolved: int = Field(
+        ...,
+        description="Resolved questions before a skill claim is reported.",
+        title="Min Resolved",
+    )
+    model: str | None = Field(..., title="Model")
+    provider: str | None = Field(..., title="Provider")
+    days: list[QuestionDay] = Field(..., description="Oldest first.", title="Days")
 
 
 class ReceiptEntry(BaseModel):

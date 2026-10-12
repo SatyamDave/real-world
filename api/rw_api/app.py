@@ -1253,6 +1253,9 @@ app.include_router(routes_receipts.router)
 
 app.include_router(routes_cycle.router, responses={404: not_found("cycle"), 422: INVALID})
 
+from rw_api import routes_questions  # noqa: E402  (it imports this module)
+
+app.include_router(routes_questions.router, responses={404: not_found("question"), 422: INVALID})
 
 if __name__ == "__main__":
     print(json.dumps(app.openapi(), indent=2))
