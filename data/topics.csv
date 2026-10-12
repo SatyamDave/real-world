@@ -1,0 +1,9 @@
+topic,label,question_text
+inflation_worry,Inflation worry,Are you worried that prices will rise faster than your income over the next 12 months?
+economy_optimism,Economic optimism,Do you expect your country's economy to be better in 12 months than it is today?
+spending_intent,Spending intent,Do you plan to spend more on non-essential purchases in the next three months?
+trust_government,Trust in government,Do you trust your national government to do what is right most of the time?
+climate_concern,Climate concern,Do you think climate change is a very serious threat to your country?
+tech_optimism,Tech optimism,Will new technology such as AI make life better for people like you?
+migration_openness,Openness to migration,Should your country accept more immigrants than it does now?
+conflict_worry,Conflict worry,Are you worried that your country will be drawn into an armed conflict in the next year?

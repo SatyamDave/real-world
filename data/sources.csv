@@ -1,0 +1,14 @@
+source_id,name,kind,licence,commercial_use,redistribution,citation,checked_on
+fixture_sample,Illustrative sample marginals (written for this repo),fixture,Repository content,n/a,n/a,Real World illustrative fixture,2026-10-11
+fixture_news,Illustrative news fixture in GDELT GKG shape,fixture,Repository content,n/a,n/a,Real World illustrative fixture,2026-10-11
+fixture_polls,Illustrative poll fixture,fixture,Repository content,n/a,n/a,Real World illustrative fixture,2026-10-11
+fixture_markets,Illustrative market price fixture,fixture,Repository content,n/a,n/a,Real World illustrative fixture,2026-10-11
+gdelt,The GDELT Project,news,"Unlimited and unrestricted use, citation with link required",yes,yes,"The GDELT Project, https://www.gdeltproject.org/",2026-10-11
+glopop_s,GLOPOP-S global synthetic population,population,CC BY 4.0 (commercial terms not confirmed in writing),unknown,unknown,"GLOPOP-S, Harvard Dataverse, doi:10.7910/DVN/KJC3RH",2026-10-11
+wvs,World Values Survey,survey,Non-redistribution data use licence (text not read),unknown,no,"World Values Survey Wave 7, doi:10.14281/18241.18",2026-10-11
+pew,Pew Research Center Global Attitudes,survey,"Pew terms section 13: revocable, non-sublicensable dataset licence",unknown,excerpts only,"Pew Research Center. Pew Research Center bears no responsibility for the analyses or interpretations of the data presented here.",2026-10-11
+kalshi,Kalshi market prices,market,Terms not read (rulebook fetch failed),unknown,unknown,Kalshi,2026-10-11
+polymarket,Polymarket market prices,market,Terms not read in full,unknown,unknown,Polymarket,2026-10-11
+ipums_international,IPUMS International census microdata,census,Commercial use and redistribution prohibited,no,no,"IPUMS International, University of Minnesota, https://international.ipums.org",2026-10-11
+gadm,GADM administrative boundaries,geodata,Non-commercial use only; commercial use and redistribution need permission,no,no,"GADM, https://gadm.org",2026-10-11
+natural_earth,Natural Earth,geodata,Public domain,yes,yes,"Made with Natural Earth, https://www.naturalearthdata.com",2026-10-11

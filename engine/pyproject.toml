@@ -1,0 +1,16 @@
+[project]
+name = "rw"
+version = "0.1.0"
+description = "Real World simulation engine"
+requires-python = ">=3.12"
+dependencies = ["numpy", "pyarrow", "pydantic", "anthropic"]
+
+[dependency-groups]
+dev = ["pytest", "ruff", "pyright"]
+
+[build-system]
+requires = ["uv_build>=0.11,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""

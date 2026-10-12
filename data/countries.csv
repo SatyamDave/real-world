@@ -1,0 +1,17 @@
+iso3,name,lat,lng,population_millions,region,population,attitudes,markets,news,ground_truth
+USA,United States,39.8,-98.6,340,North America,25,25,15,20,15
+GBR,United Kingdom,54.0,-2.0,69,Europe,25,25,5,20,15
+DEU,Germany,51.2,10.4,84,Europe,25,25,5,20,15
+FRA,France,46.6,2.4,68,Europe,25,25,0,20,15
+JPN,Japan,36.2,138.3,124,East Asia,25,12,5,20,15
+BRA,Brazil,-10.8,-52.9,212,Latin America,12,25,0,20,15
+MEX,Mexico,23.6,-102.6,131,Latin America,12,25,5,20,5
+IDN,Indonesia,-2.5,118.0,283,Southeast Asia,12,12,5,20,5
+ZAF,South Africa,-29.0,25.1,64,Sub-Saharan Africa,12,25,0,20,5
+TUR,Turkey,39.0,35.2,86,Middle East and North Africa,12,12,5,10,15
+ISR,Israel,31.4,35.0,10,Middle East and North Africa,12,12,15,20,15
+IND,India,22.9,79.6,1450,South Asia,0,12,5,20,5
+NGA,Nigeria,9.6,8.1,233,Sub-Saharan Africa,0,12,0,10,5
+KEN,Kenya,0.2,37.9,56,Sub-Saharan Africa,12,12,0,10,5
+EGY,Egypt,26.6,29.9,117,Middle East and North Africa,12,5,0,10,5
+CHN,China,35.0,103.8,1410,East Asia,12,5,0,0,5
