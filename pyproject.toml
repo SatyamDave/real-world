@@ -1,8 +1,8 @@
 [tool.uv.workspace]
-members = ["engine", "api"]
+members = ["engine", "api", "sdk/python"]
 
 [tool.pytest.ini_options]
-testpaths = ["engine/tests", "api/tests"]
+testpaths = ["engine/tests", "api/tests", "sdk/python/tests"]
 
 [tool.ruff]
 target-version = "py312"
@@ -12,10 +12,13 @@ line-length = 100
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.pyright]
-include = ["engine", "api"]
+include = ["engine", "api", "sdk/python"]
 pythonVersion = "3.12"
 venvPath = "."
 venv = ".venv"
 
 [tool.ruff.lint.isort]
-known-first-party = ["rw", "rw_api"]
+known-first-party = ["rw", "rw_api", "realworld"]
+
+[tool.ruff.lint.per-file-ignores]
+"sdk/python/realworld/generated/*" = ["E501"]
