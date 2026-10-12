@@ -1,0 +1,74 @@
+[
+  {
+    "headline_id": "receipts",
+    "size": "1080x1080",
+    "format": "square",
+    "file": "receipts-1080x1080.png"
+  },
+  {
+    "headline_id": "receipts",
+    "size": "1080x1350",
+    "format": "portrait",
+    "file": "receipts-1080x1350.png"
+  },
+  {
+    "headline_id": "receipts",
+    "size": "1080x1920",
+    "format": "story",
+    "file": "receipts-1080x1920.png"
+  },
+  {
+    "headline_id": "hashed",
+    "size": "1080x1080",
+    "format": "square",
+    "file": "hashed-1080x1080.png"
+  },
+  {
+    "headline_id": "hashed",
+    "size": "1080x1350",
+    "format": "portrait",
+    "file": "hashed-1080x1350.png"
+  },
+  {
+    "headline_id": "hashed",
+    "size": "1080x1920",
+    "format": "story",
+    "file": "hashed-1080x1920.png"
+  },
+  {
+    "headline_id": "public-score",
+    "size": "1080x1080",
+    "format": "square",
+    "file": "public-score-1080x1080.png"
+  },
+  {
+    "headline_id": "public-score",
+    "size": "1080x1350",
+    "format": "portrait",
+    "file": "public-score-1080x1350.png"
+  },
+  {
+    "headline_id": "public-score",
+    "size": "1080x1920",
+    "format": "story",
+    "file": "public-score-1080x1920.png"
+  },
+  {
+    "headline_id": "your-call",
+    "size": "1080x1080",
+    "format": "square",
+    "file": "your-call-1080x1080.png"
+  },
+  {
+    "headline_id": "your-call",
+    "size": "1080x1350",
+    "format": "portrait",
+    "file": "your-call-1080x1350.png"
+  },
+  {
+    "headline_id": "your-call",
+    "size": "1080x1920",
+    "format": "story",
+    "file": "your-call-1080x1920.png"
+  }
+]
