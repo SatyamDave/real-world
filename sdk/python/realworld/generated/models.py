@@ -174,6 +174,11 @@ class NotFound(BaseModel):
     detail: str = Field(..., title="Detail")
 
 
+class PaperPdf(BaseModel):
+    how: str = Field(..., title="How")
+    ci: str = Field(..., title="Ci")
+
+
 class Code(StrEnum):
     private_person = "private_person"
     election_persuasion = "election_persuasion"
@@ -189,6 +194,14 @@ class PrefilledEvent(BaseModel):
     id: str = Field(..., title="Id")
     text: str = Field(..., title="Text")
     countries: list[str] | None = Field(..., title="Countries")
+
+
+class Primary(BaseModel):
+    metric: str = Field(..., title="Metric")
+    value: float = Field(..., title="Value")
+    low: float = Field(..., title="Low")
+    high: float = Field(..., title="High")
+    n: int = Field(..., title="N")
 
 
 class ReceiptQuestion(BaseModel):
@@ -387,10 +400,34 @@ class BaselineSkill(BaseModel):
     by_region: dict[str, Skill] = Field(..., title="By Region")
 
 
+class ExperimentResult(BaseModel):
+    path: str = Field(..., title="Path")
+    date: str = Field(..., title="Date")
+    command: str = Field(..., title="Command")
+    commit: str = Field(..., title="Commit")
+    provider: str = Field(..., title="Provider")
+    model: str = Field(..., title="Model")
+    primary: Primary | None
+    outcome: str = Field(..., title="Outcome")
+
+
 class JobCreated(BaseModel):
     id: str = Field(..., title="Id")
     status: Status = Field(..., title="Status")
     links: Links
+
+
+class Paper(BaseModel):
+    slug: str = Field(..., title="Slug")
+    short_title: str = Field(..., title="Short Title")
+    title: str = Field(..., title="Title")
+    claim: str = Field(..., title="Claim")
+    stage: str = Field(..., title="Stage")
+    venue: str = Field(..., title="Venue")
+    pending: str = Field(..., title="Pending")
+    tex_url: str = Field(..., title="Tex Url")
+    status_url: str = Field(..., title="Status Url")
+    pdf: PaperPdf
 
 
 class ReceiptEntry(BaseModel):
@@ -429,6 +466,22 @@ class Daily(BaseModel):
     reveal: Reveal | None
 
 
+class Experiment(BaseModel):
+    id: str = Field(..., title="Id")
+    title: str = Field(..., title="Title")
+    registered: str = Field(..., title="Registered")
+    owner: str = Field(..., title="Owner")
+    status: str = Field(..., title="Status")
+    registry_sha256: str = Field(..., title="Registry Sha256")
+    prereg_sha256: str = Field(..., title="Prereg Sha256")
+    hash_matches: bool = Field(..., title="Hash Matches")
+    prereg_url: str = Field(..., title="Prereg Url")
+    hypothesis: str = Field(..., title="Hypothesis")
+    primary_metric: str = Field(..., title="Primary Metric")
+    kill_criterion: str = Field(..., title="Kill Criterion")
+    results: list[ExperimentResult] = Field(..., title="Results")
+
+
 class ReceiptDay(BaseModel):
     day: DayRecord
     record_hash: str = Field(..., title="Record Hash")
@@ -436,6 +489,13 @@ class ReceiptDay(BaseModel):
     anchored_at: str | None = Field(..., title="Anchored At")
     anchors: list[Anchor] = Field(..., title="Anchors")
     entries: list[ReceiptEntry] = Field(..., title="Entries")
+
+
+class Research(BaseModel):
+    experiments: list[Experiment] = Field(..., title="Experiments")
+    papers: list[Paper] = Field(..., title="Papers")
+    repo: str = Field(..., title="Repo")
+    commit: str = Field(..., title="Commit")
 
 
 class SimulateResult(BaseModel):

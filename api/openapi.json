@@ -709,6 +709,24 @@
           }
         }
       }
+    },
+    "/v1/research": {
+      "get": {
+        "summary": "The experiment registry with its pre-registration hashes and results, and the papers",
+        "operationId": "research_v1_research_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Research"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1276,6 +1294,136 @@
         "required": ["text"],
         "title": "Event"
       },
+      "Experiment": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "registered": {
+            "type": "string",
+            "title": "Registered"
+          },
+          "owner": {
+            "type": "string",
+            "title": "Owner"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "registry_sha256": {
+            "type": "string",
+            "title": "Registry Sha256"
+          },
+          "prereg_sha256": {
+            "type": "string",
+            "title": "Prereg Sha256"
+          },
+          "hash_matches": {
+            "type": "boolean",
+            "title": "Hash Matches"
+          },
+          "prereg_url": {
+            "type": "string",
+            "title": "Prereg Url"
+          },
+          "hypothesis": {
+            "type": "string",
+            "title": "Hypothesis"
+          },
+          "primary_metric": {
+            "type": "string",
+            "title": "Primary Metric"
+          },
+          "kill_criterion": {
+            "type": "string",
+            "title": "Kill Criterion"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ExperimentResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "registered",
+          "owner",
+          "status",
+          "registry_sha256",
+          "prereg_sha256",
+          "hash_matches",
+          "prereg_url",
+          "hypothesis",
+          "primary_metric",
+          "kill_criterion",
+          "results"
+        ],
+        "title": "Experiment"
+      },
+      "ExperimentResult": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "command": {
+            "type": "string",
+            "title": "Command"
+          },
+          "commit": {
+            "type": "string",
+            "title": "Commit"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "primary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Primary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "type": "string",
+            "title": "Outcome"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "date",
+          "command",
+          "commit",
+          "provider",
+          "model",
+          "primary",
+          "outcome"
+        ],
+        "title": "ExperimentResult"
+      },
       "Job": {
         "properties": {
           "id": {
@@ -1376,6 +1524,78 @@
         "required": ["detail"],
         "title": "NotFound"
       },
+      "Paper": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "short_title": {
+            "type": "string",
+            "title": "Short Title"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "claim": {
+            "type": "string",
+            "title": "Claim"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "venue": {
+            "type": "string",
+            "title": "Venue"
+          },
+          "pending": {
+            "type": "string",
+            "title": "Pending"
+          },
+          "tex_url": {
+            "type": "string",
+            "title": "Tex Url"
+          },
+          "status_url": {
+            "type": "string",
+            "title": "Status Url"
+          },
+          "pdf": {
+            "$ref": "#/components/schemas/PaperPdf"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "short_title",
+          "title",
+          "claim",
+          "stage",
+          "venue",
+          "pending",
+          "tex_url",
+          "status_url",
+          "pdf"
+        ],
+        "title": "Paper"
+      },
+      "PaperPdf": {
+        "properties": {
+          "how": {
+            "type": "string",
+            "title": "How"
+          },
+          "ci": {
+            "type": "string",
+            "title": "Ci"
+          }
+        },
+        "type": "object",
+        "required": ["how", "ci"],
+        "title": "PaperPdf"
+      },
       "PolicyRefused": {
         "properties": {
           "code": {
@@ -1420,6 +1640,33 @@
         "type": "object",
         "required": ["id", "text", "countries"],
         "title": "PrefilledEvent"
+      },
+      "Primary": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "low": {
+            "type": "number",
+            "title": "Low"
+          },
+          "high": {
+            "type": "number",
+            "title": "High"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          }
+        },
+        "type": "object",
+        "required": ["metric", "value", "low", "high", "n"],
+        "title": "Primary"
       },
       "ReceiptDay": {
         "properties": {
@@ -1606,6 +1853,35 @@
         "type": "object",
         "required": ["code", "detail"],
         "title": "Refused"
+      },
+      "Research": {
+        "properties": {
+          "experiments": {
+            "items": {
+              "$ref": "#/components/schemas/Experiment"
+            },
+            "type": "array",
+            "title": "Experiments"
+          },
+          "papers": {
+            "items": {
+              "$ref": "#/components/schemas/Paper"
+            },
+            "type": "array",
+            "title": "Papers"
+          },
+          "repo": {
+            "type": "string",
+            "title": "Repo"
+          },
+          "commit": {
+            "type": "string",
+            "title": "Commit"
+          }
+        },
+        "type": "object",
+        "required": ["experiments", "papers", "repo", "commit"],
+        "title": "Research"
       },
       "Reveal": {
         "properties": {
