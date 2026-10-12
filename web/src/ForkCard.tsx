@@ -1,7 +1,8 @@
 import { ApiError, type Estimate, type Job, type PrefilledEvent } from "@real-world/sdk";
 import { useEffect, useState } from "react";
-import { Disclosure, LoadError, pct, pts, TierBadge, topicLabel } from "./App";
+import { Disclosure, LoadError, pct, plural, pts, TierBadge, topicLabel, usd } from "./App";
 import { rw } from "./api";
+import { forkImage, forkSentence, forkShareText, segmentLabel } from "./share";
 
 const EVENT_MAX_CHARS = 500;
 
@@ -20,7 +21,7 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
     const t = setTimeout(() => {
       rw.estimate({ event: { text: trimmed } }).then(
         (value) => live && setEst({ for: trimmed, value }),
-        (e: Error) => live && setEst({ for: trimmed, error: e.message }),
+        () => live && setEst({ for: trimmed, error: "the server did not respond" }),
       );
     }, 300);
     return () => {
@@ -38,7 +39,13 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
       setStatus("");
     } catch (e) {
       const refused = e instanceof ApiError && e.status === 422 ? policyDetail(e.body) : null;
-      setStatus(refused ? `Refused: ${refused}` : `Not started: ${(e as Error).message}`);
+      setStatus(
+        refused
+          ? `Refused: ${refused}`
+          : e instanceof ApiError && e.status === 402
+            ? "Not started: the estimate is over the cost cap."
+            : "Not started: the server did not accept the fork. Try again.",
+      );
     }
   }
 
@@ -76,7 +83,7 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
         </span>
       </label>
       <div className="run-row">
-        <span className="muted small">
+        <span className="muted small" aria-live="polite">
           {!trimmed
             ? "Pick or write an event to see its estimated cost."
             : !current
@@ -84,8 +91,8 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
               : current.error
                 ? `Estimate failed: ${current.error}`
                 : current.value?.within_cap
-                  ? `Estimated $${current.value.estimated_cost_usd.toFixed(4)} · ${current.value.model_calls} model calls`
-                  : `Refused: estimated $${current.value?.estimated_cost_usd.toFixed(4)} is over the cost cap`}
+                  ? `Estimated ${usd(current.value.estimated_cost_usd)} · ${plural(current.value.model_calls, "model call")}`
+                  : `Refused: estimated ${usd(current.value?.estimated_cost_usd ?? 0)} is over the cost cap`}
         </span>
         <button
           type="button"
@@ -96,7 +103,11 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
           Run fork
         </button>
       </div>
-      {status && status !== "Starting" && <p className="muted small">{status}</p>}
+      {status && status !== "Starting" && (
+        <p className="muted small" role="alert">
+          {status}
+        </p>
+      )}
       {jobId && <ForkRun key={jobId} id={jobId} />}
     </section>
   );
@@ -110,7 +121,7 @@ function policyDetail(body: unknown): string | null {
 export function ForkRun({ id }: { id: string }) {
   const [job, setJob] = useState<Job | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -118,6 +129,7 @@ export function ForkRun({ id }: { id: string }) {
       let j = await rw.get_simulation(id);
       if (!live) return;
       setJob(j);
+      document.title = `${j.request.event.text} · Real World fork`;
       if (j.status === "queued" || j.status === "running") {
         for await (const e of rw.events(id)) {
           if (!live) return;
@@ -126,14 +138,25 @@ export function ForkRun({ id }: { id: string }) {
         j = await rw.get_simulation(id);
         if (live) setJob(j);
       }
-    })().catch((e: Error) => live && setError(e.message));
+    })().catch((e: Error) => live && setError(e));
     return () => {
       live = false;
     };
   }, [id]);
 
+  if (error instanceof ApiError && error.status === 404)
+    return (
+      <p className="muted">
+        This fork does not exist or has expired. <a href="/">Fork today's world</a>
+      </p>
+    );
   if (error) return <LoadError what="this fork" error={error} />;
-  if (job?.status === "failed") return <p className="muted">Fork failed: {job.error}</p>;
+  if (job?.status === "failed")
+    return (
+      <p className="muted" role="alert">
+        This fork did not finish. <a href="/">Fork today's world</a> to run it again.
+      </p>
+    );
   if (job?.status === "succeeded" && job.result) return <ForkCard job={job} />;
   return (
     <p className="progress" aria-live="polite">
@@ -147,61 +170,104 @@ export function ForkRun({ id }: { id: string }) {
   );
 }
 
+/** Band positions on an axis zoomed to one band's values, so a 1 pt move is visible. */
+function axis(values: number[]) {
+  const lo = Math.max(0, Math.floor((Math.min(...values) - 0.05) * 20) / 20);
+  const hi = Math.min(1, Math.ceil((Math.max(...values) + 0.05) * 20) / 20);
+  return { lo, hi, at: (v: number) => `${((v - lo) / (hi - lo)) * 100}%` };
+}
+
 export function ForkCard({ job }: { job: Job }) {
   const r = job.result;
-  const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState("");
   if (!r) return null;
   const link = `${location.origin}/fork/${job.id}`;
   const topics = Object.entries(r.outputs);
+  const copy = (what: string, text: string) =>
+    navigator.clipboard.writeText(text).then(
+      () => setShared(`${what} copied`),
+      () => setShared("Copy failed; select the link above"),
+    );
+  async function saveImage() {
+    try {
+      const url = URL.createObjectURL(await forkImage(job, link));
+      const a = Object.assign(document.createElement("a"), {
+        href: url,
+        download: `${job.id}.png`,
+      });
+      a.click();
+      URL.revokeObjectURL(url);
+      setShared("Image saved");
+    } catch (e) {
+      setShared((e as Error).message);
+    }
+  }
   return (
-    <article className="fork-card">
+    <article className="fork-card" aria-labelledby={`fork-${job.id}`}>
       <p className="eyebrow">Fork result</p>
-      <p className="setup">
+      <p className="setup" id={`fork-${job.id}`}>
         “{job.request.event.text}”, applied to the {r.world_snapshot_id} world and run for {r.days}{" "}
         days on {r.agents_sampled.toLocaleString()} sampled agents.
       </p>
+      <p className="meaning">{forkSentence(r)}</p>
 
       <h3>Top shifts</h3>
-      <ol className="shifts">
-        {r.top_shifts.slice(0, 3).map((s) => (
-          <li key={`${s.segment}-${s.topic}`}>
-            <span className="shift-who">
-              {s.segment.split("|").join(" · ")} <TierBadge tier={s.tier} />
-            </span>
-            <span className="shift-topic">{topicLabel(s.topic)}</span>
-            <span className={`shift-value ${s.shift_p50 >= 0 ? "up" : "down"}`}>
-              {pts(s.shift_p50)}
-            </span>
-          </li>
-        ))}
-      </ol>
+      {r.top_shifts.length ? (
+        <ol className="shifts">
+          {r.top_shifts.slice(0, 3).map((s) => (
+            <li key={`${s.segment}-${s.topic}`}>
+              <span className="shift-who">
+                {segmentLabel(s.segment)} <TierBadge tier={s.tier} />
+                <span className="muted small"> n = {plural(s.n_agents, "agent")}</span>
+              </span>
+              <span className="shift-topic">{topicLabel(s.topic)}</span>
+              <span className={`shift-value ${s.shift_p50 >= 0 ? "up" : "down"}`}>
+                {pts(s.shift_p50)}
+              </span>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="muted small">No segment moved more than the band.</p>
+      )}
 
       <h3>Share leaning yes, before and after</h3>
       <p className="muted small">
         Bars show the p10-p90 range across {r.members} simulated runs, not a confidence interval
-        yet. The tick is the share before the event.
+        yet. The tick is the share before the event. Each bar is zoomed to its own values; hover it
+        for the axis.
       </p>
       <ul className="bands">
-        {topics.map(([topic, o]) => (
-          <li key={topic}>
-            <span className="band-label">{topicLabel(topic)}</span>
-            <span className="band-track" aria-hidden="true">
+        {topics.map(([topic, o]) => {
+          const ax = axis([o.baseline_share, o.final.p10, o.final.p90]);
+          return (
+            <li key={topic}>
+              <span className="band-label">{topicLabel(topic)}</span>
               <span
-                className="band-range"
-                style={{ left: pct(o.final.p10), width: pct(o.final.p90 - o.final.p10) }}
-              />
-              <span className="band-base" style={{ left: pct(o.baseline_share) }} />
-              <span className="band-mid" style={{ left: pct(o.final.p50) }} />
-            </span>
-            <span className="band-value">
-              {pct(o.baseline_share)} → {pct(o.final.p50)}
-              <span className="muted">
-                {" "}
-                ({pct(o.final.p10)}–{pct(o.final.p90)})
+                className="band-track"
+                aria-hidden="true"
+                title={`Axis ${pct(ax.lo)} to ${pct(ax.hi)}`}
+              >
+                <span
+                  className="band-range"
+                  style={{
+                    left: ax.at(o.final.p10),
+                    width: `max(4px, ${((o.final.p90 - o.final.p10) / (ax.hi - ax.lo)) * 100}%)`,
+                  }}
+                />
+                <span className="band-base" style={{ left: ax.at(o.baseline_share) }} />
+                <span className="band-mid" style={{ left: ax.at(o.final.p50) }} />
               </span>
-            </span>
-          </li>
-        ))}
+              <span className="band-value">
+                {pct(o.baseline_share)} → {pct(o.final.p50)}
+                <span className="muted">
+                  {" "}
+                  ({pct(o.final.p10)}–{pct(o.final.p90)})
+                </span>
+              </span>
+            </li>
+          );
+        })}
       </ul>
 
       <dl className="facts">
@@ -218,8 +284,8 @@ export function ForkCard({ job }: { job: Job }) {
         <div>
           <dt>Cost</dt>
           <dd>
-            ${r.cost.actual_usd.toFixed(4)}{" "}
-            <span className="muted">(estimated ${r.cost.estimated_usd.toFixed(4)})</span>
+            {usd(r.cost.actual_usd)}{" "}
+            <span className="muted">(estimated {usd(r.cost.estimated_usd)})</span>
           </dd>
         </div>
         <div>
@@ -235,18 +301,21 @@ export function ForkCard({ job }: { job: Job }) {
           aria-label="Link to this fork"
           onFocus={(e) => e.target.select()}
         />
-        <button
-          type="button"
-          onClick={() =>
-            navigator.clipboard.writeText(link).then(
-              () => setCopied(true),
-              () => setCopied(false),
-            )
-          }
-        >
-          {copied ? "Copied" : "Copy link"}
+        <button type="button" onClick={() => copy("Link", link)}>
+          Copy link
+        </button>
+        <button type="button" onClick={() => copy("Text", forkShareText(job, link))}>
+          Copy text
+        </button>
+        <button type="button" onClick={saveImage}>
+          Save image
         </button>
       </div>
+      {shared && (
+        <p className="muted small" role="status">
+          {shared}
+        </p>
+      )}
       <Disclosure tiers={r.coverage.map((c) => c.tier)} />
     </article>
   );

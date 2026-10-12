@@ -606,6 +606,11 @@ export interface components {
       brier: number | null;
       /** Streak */
       streak: number;
+      /**
+       * Week
+       * @description The seven days ending today, oldest first.
+       */
+      week: components["schemas"]["WeekDay"][];
     };
     /** SegmentShift */
     SegmentShift: {
@@ -793,6 +798,21 @@ export interface components {
       input?: unknown;
       /** Context */
       ctx?: Record<string, never>;
+    };
+    /** WeekDay */
+    WeekDay: {
+      /** Date */
+      date: string;
+      /**
+       * Probability
+       * @description The player's answer that day; null if none.
+       */
+      probability: number | null;
+      /**
+       * Brier
+       * @description Its Brier score once the question resolved.
+       */
+      brier: number | null;
     };
     /** World */
     World: {

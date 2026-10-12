@@ -132,6 +132,12 @@ class Crowd(BaseModel):
     count: int
 
 
+class WeekDay(BaseModel):
+    date: str
+    probability: float | None = Field(description="The player's answer that day; null if none.")
+    brier: float | None = Field(description="Its Brier score once the question resolved.")
+
+
 class Reveal(BaseModel):
     you: float
     crowd: Crowd
@@ -140,6 +146,7 @@ class Reveal(BaseModel):
     outcome: int | None
     brier: float | None
     streak: int
+    week: list[WeekDay] = Field(description="The seven days ending today, oldest first.")
 
 
 class Daily(BaseModel):
@@ -653,6 +660,26 @@ def _streak(conn: sqlite3.Connection, player_id: str, day: str) -> int:
     return n
 
 
+def _week(conn: sqlite3.Connection, player_id: str, day: str) -> list[WeekDay]:
+    end = date.fromisoformat(day)
+    days = [(end - timedelta(days=i)).isoformat() for i in range(6, -1, -1)]
+    rows = {
+        r[0]: (r[1], r[2])
+        for r in conn.execute(
+            "SELECT a.date, a.probability, r.outcome FROM daily_answers a"
+            " LEFT JOIN resolutions r USING (question_id)"
+            " WHERE a.player_id = ? AND a.date BETWEEN ? AND ?",
+            (player_id, days[0], day),
+        )
+    }
+    week = []
+    for d in days:
+        p, outcome = rows.get(d, (None, None))
+        brier = None if p is None or outcome is None else score.brier(p, outcome)
+        week.append(WeekDay(date=d, probability=p, brier=brier))
+    return week
+
+
 def _daily(conn: sqlite3.Connection, player_id: str | None) -> Daily:
     day, q = _daily_question(conn)
     question = DailyQuestion(
@@ -695,6 +722,7 @@ def _daily(conn: sqlite3.Connection, player_id: str | None) -> Daily:
             outcome=outcome,
             brier=None if outcome is None else score.brier(you, outcome),
             streak=_streak(conn, player_id, day),
+            week=_week(conn, player_id, day),
         ),
     )
 

@@ -192,16 +192,6 @@ class Refused(BaseModel):
     estimate: Estimate
 
 
-class Reveal(BaseModel):
-    you: float = Field(..., title="You")
-    crowd: Crowd
-    sim: float | None = Field(..., title="Sim")
-    market: float | None = Field(..., title="Market")
-    outcome: int | None = Field(..., title="Outcome")
-    brier: float | None = Field(..., title="Brier")
-    streak: int = Field(..., title="Streak")
-
-
 class SegmentShift(BaseModel):
     segment: str = Field(..., title="Segment")
     topic: str = Field(..., title="Topic")
@@ -270,6 +260,16 @@ class ValidationError(BaseModel):
     ctx: dict[str, Any] | None = Field(None, title="Context")
 
 
+class WeekDay(BaseModel):
+    date: str = Field(..., title="Date")
+    probability: float | None = Field(
+        ..., description="The player's answer that day; null if none.", title="Probability"
+    )
+    brier: float | None = Field(
+        ..., description="Its Brier score once the question resolved.", title="Brier"
+    )
+
+
 class World(BaseModel):
     date: str = Field(..., title="Date")
     countries: list[Country] = Field(..., title="Countries")
@@ -298,12 +298,6 @@ class BaselineSkill(BaseModel):
     by_region: dict[str, Skill] = Field(..., title="By Region")
 
 
-class Daily(BaseModel):
-    date: str = Field(..., title="Date")
-    question: DailyQuestion
-    reveal: Reveal | None
-
-
 class HTTPValidationError(BaseModel):
     detail: list[ValidationError] | None = Field(None, title="Detail")
 
@@ -323,9 +317,28 @@ class ReceiptDay(BaseModel):
     entries: list[ReceiptEntry] = Field(..., title="Entries")
 
 
+class Reveal(BaseModel):
+    you: float = Field(..., title="You")
+    crowd: Crowd
+    sim: float | None = Field(..., title="Sim")
+    market: float | None = Field(..., title="Market")
+    outcome: int | None = Field(..., title="Outcome")
+    brier: float | None = Field(..., title="Brier")
+    streak: int = Field(..., title="Streak")
+    week: list[WeekDay] = Field(
+        ..., description="The seven days ending today, oldest first.", title="Week"
+    )
+
+
 class Trace(BaseModel):
     segment_signals: dict[str, dict[str, float]] = Field(..., title="Segment Signals")
     agents: list[TraceAgent] = Field(..., title="Agents")
+
+
+class Daily(BaseModel):
+    date: str = Field(..., title="Date")
+    question: DailyQuestion
+    reveal: Reveal | None
 
 
 class SimulateResult(BaseModel):

@@ -20,7 +20,9 @@ pnpm --filter web build    # type check and production build
 | `src/App.tsx` | Routes on `location.pathname` (`/`, `/fork/{id}`, `/receipts`) and the shared bits: disclosure line, tier badge, formatting. |
 | `src/DailyQuestion.tsx` | Slider, submit, four-way reveal and streak. The player id lives in `localStorage`. |
 | `src/ForkCard.tsx` | Fork box with cost estimate, SSE progress, and the fork card. |
-| `src/Globe.tsx` | react-globe.gl over `public/countries-110m.geojson` (Natural Earth 1:110m admin-0, public domain), loaded after first paint. |
+| `src/Globe.tsx` | Loaded only at 768 px and wider. react-globe.gl over `public/countries-110m.geojson` (Natural Earth 1:110m admin-0, public domain), loaded after first paint. |
+| `src/share.ts` | Pure share builders: the week grid and its text, the fork sentence, text and 1200x630 image, logit steps as share points, trait codes as words. |
+| `public/og.png`, `public/favicon.svg` | The static Open Graph image and the favicon. |
 | `src/AgentPanel.tsx` | One sampled agent: "What moved this agent" and "In its own words". |
 | `src/Receipts.tsx`, `src/verify.ts` | Receipts strip and page; the verifier recomputes leaves, roots and the chain with WebCrypto per [0002](../research/decisions/0002-benchmark-and-receipts.md). |
 | `src/fixtures/` | API responses in the generated SDK shapes, for the component tests. |
