@@ -204,10 +204,11 @@ test("the fork card renders a fixture SimulateResult", async () => {
   expect(text).toContain("+8.1 pts");
   expect(text).toContain("n = 14 agents");
   expect(text).toContain(
-    "Inflation worry rose 6 pts across 3 countries; the 5 runs agree within 5 pts.",
+    "Inflation worry rose 6.0 pts across 3 countries; all 5 members agree within 5.0 pts.",
   );
-  expect(text).toContain("range across 5 simulated runs, not a confidence interval yet");
-  expect(text).toContain("52% → 58%");
+  expect(text).toContain("p10-p90 range across 5 ensemble members, not a confidence interval yet");
+  expect(text).toContain("52% to 58% (56-61%)");
+  expect(el.querySelector(".card.receipt")?.closest(".card.fork")).toBeNull();
   expect(text).toContain("$0.01 (estimated $0.01)");
   expect(text).toContain("Counterfactual: not scored");
   expect(el.querySelector<HTMLInputElement>(".share input")?.value).toBe(
@@ -230,7 +231,7 @@ test("the fork form shows an acceptable-use refusal inline", async () => {
   await act(async () => button(world.prefilled_events[0].text).click());
   await until(() => expect(button("Run fork").disabled).toBe(false));
   await act(async () => button("Run fork").click());
-  await until(() => expect(el.textContent).toContain(`Refused: ${detail} See acceptable use.`));
+  await until(() => expect(el.textContent).toContain(`${detail} See acceptable use.`));
   expect(el.querySelector(".bad a")?.getAttribute("href")).toBe("/acceptable-use");
 });
 
@@ -249,7 +250,7 @@ test("the fork form shows a spend refusal's sentence", async () => {
   await act(async () => button(world.prefilled_events[0].text).click());
   await until(() => expect(button("Run fork").disabled).toBe(false));
   await act(async () => button("Run fork").click());
-  await until(() => expect(el.textContent).toContain(`Not started: ${detail}.`));
+  await until(() => expect(el.textContent).toContain(`${detail}.`));
 });
 
 test("a fake-model fork says nothing was spent and labels the estimate", async () => {
@@ -257,9 +258,7 @@ test("a fake-model fork says nothing was spent and labels the estimate", async (
   if (!r) throw new Error("fixture has a result");
   const fake = { ...r, provider: "fake", cost: { estimated_usd: 0.0061, actual_usd: 0 } };
   const el = await render(<ForkCard job={{ ...job, result: fake }} />);
-  expect(el.textContent).toContain(
-    "Fake model, nothing spent (a real run is estimated at $0.01 at Haiku prices)",
-  );
+  expect(el.textContent).toContain("Fake model, nothing spent (a real run is estimated at $0.01)");
 });
 
 test("a fork with no shift past the floor says so", async () => {
