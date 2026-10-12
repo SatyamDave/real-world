@@ -67,7 +67,11 @@ export function useTurnstile(siteKey: string) {
   // A Turnstile token is single-use; request a fresh one after each attempt.
   const reset = useCallback(() => {
     tokenRef.current = null;
-    if (widgetId.current) window.turnstile?.reset(widgetId.current);
+    if (!widgetId.current) return;
+    // After a successful signup the form's markup is replaced while this hook stays
+    // mounted; resetting a widget whose container left the page only logs a warning.
+    if (ref.current?.isConnected) window.turnstile?.reset(widgetId.current);
+    else widgetId.current = undefined;
   }, []);
   return { ref, token, reset };
 }
