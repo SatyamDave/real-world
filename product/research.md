@@ -23,4 +23,4 @@ Reviewers, forecasting builders and funders who ask "what did you register befor
 ## Where the code lives
 
 - `api/rw_api/routes_research.py`; readers in `engine/rw/experiments.py` and `engine/rw/papers.py`.
-- Rests on [experiments/README](../experiments/README.md) and [papers/INDEX](../papers/INDEX.md); decision [0002](../research/decisions/0002-benchmark-and-receipts.md) for the public-record rule.
+- Rests on [experiments/README](../experiments/README.md) and [papers/INDEX](../papers/INDEX.md); decisions [0006](../research/decisions/0006-engine-visible-surfaces.md) (the surface) and [0002](../research/decisions/0002-benchmark-and-receipts.md) (the public-record rule).
