@@ -1,7 +1,8 @@
 import type { Country } from "@real-world/sdk";
 import { useEffect, useRef } from "react";
-import { Disclosure, LoadError, pct, pts, TierBadge, topicLabel, useLoad } from "./App";
+import { Disclosure, LoadError, Loading, pct, pts, TierBadge, topicLabel, useLoad } from "./App";
 import { rw } from "./api";
+import { shareDeltas, traitWords } from "./share";
 
 export function AgentPanel({ country, onClose }: { country: Country; onClose: () => void }) {
   const id = country.sample_agent_id;
@@ -9,11 +10,18 @@ export function AgentPanel({ country, onClose }: { country: Country; onClose: ()
   const why = useLoad(() => rw.agent_why(id), id);
   const close = useRef<HTMLButtonElement>(null);
 
+  const deltas = a.data ? shareDeltas(a.data) : [];
+
+  // Focus moves into the panel on open and back to what opened it on close.
   useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
     close.current?.focus();
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     addEventListener("keydown", onKey);
-    return () => removeEventListener("keydown", onKey);
+    return () => {
+      removeEventListener("keydown", onKey);
+      opener?.focus();
+    };
   }, [onClose]);
 
   return (
@@ -33,24 +41,28 @@ export function AgentPanel({ country, onClose }: { country: Country; onClose: ()
         </button>
       </header>
 
-      {a.error && <LoadError what="this agent" error={a.error} />}
+      {a.error && <LoadError what="this agent" error={a.error} retry={a.retry} />}
+      {!a.data && !a.error && <Loading what="this agent" />}
       {a.data && (
         <p className="traits">
-          {Object.values(a.data.traits).join(" · ")}
+          {traitWords(a.data.traits).join(" · ")}
           <span className="muted"> · agent {a.data.agent_id}</span>
         </p>
       )}
 
       <section>
         <h3>What moved this agent</h3>
+        <p className="muted small">Change in its chance of leaning yes, in percentage points.</p>
         {a.data &&
           (a.data.moved.length ? (
             <ol className="moves">
-              {a.data.moved.map((m) => (
+              {a.data.moved.map((m, i) => (
                 <li key={`${m.date}-${m.topic}-${m.cause}`}>
                   <span className="move-head">
                     <span>{topicLabel(m.topic)}</span>
-                    <span className={m.delta >= 0 ? "up" : "down"}>{pts(m.delta)}</span>
+                    <span className={m.delta >= 0 ? "up" : "down"}>
+                      {deltas[i] === null ? `${m.delta.toFixed(2)} logit` : pts(deltas[i] ?? 0)}
+                    </span>
                   </span>
                   <span className="muted small">
                     {m.date} · {m.cause}
@@ -68,11 +80,15 @@ export function AgentPanel({ country, onClose }: { country: Country; onClose: ()
       <section>
         <h3>In its own words</h3>
         <p className="label-simulated">Simulated account, not the cause</p>
-        {why.error && <LoadError what="this account" error={why.error} />}
+        {why.error && <LoadError what="this account" error={why.error} retry={why.retry} />}
         {why.data ? (
           <blockquote>{why.data.text}</blockquote>
         ) : (
-          !why.error && <p className="muted small">Writing the account</p>
+          !why.error && (
+            <p className="muted small" role="status">
+              Writing the account
+            </p>
+          )
         )}
       </section>
 

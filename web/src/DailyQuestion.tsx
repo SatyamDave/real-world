@@ -1,7 +1,8 @@
 import { ApiError, type Reveal } from "@real-world/sdk";
 import { type CSSProperties, useState } from "react";
-import { Disclosure, LoadError, pct, useLoad } from "./App";
+import { Disclosure, LoadError, Loading, pct, plural, shortDate, useLoad } from "./App";
 import { rw } from "./api";
+import { SQUARES, square, weekShareText } from "./share";
 
 const PLAYER_KEY = "rw.player_id";
 
@@ -18,8 +19,13 @@ function playerId(): string {
   }
 }
 
-const day = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+const time = (iso: string) =>
+  new Date(iso).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 
 export function DailyQuestion({ tiers }: { tiers: string[] }) {
   const [player] = useState(playerId);
@@ -28,10 +34,22 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
   const [after, setAfter] = useState<Reveal | null>(null);
   const [status, setStatus] = useState("");
 
-  if (loaded.error) return <LoadError what="today's question" error={loaded.error} />;
+  if (loaded.error)
+    return (
+      <section className="card daily">
+        <LoadError what="today's question" error={loaded.error} retry={loaded.retry} />
+      </section>
+    );
   const q = loaded.data?.question;
   const reveal = after ?? loaded.data?.reveal;
-  if (!q) return <section className="card daily skeleton" aria-busy="true" />;
+  if (!q || !loaded.data)
+    return (
+      <section className="card daily skeleton" aria-busy="true">
+        <Loading what="today's question" />
+      </section>
+    );
+  const date = loaded.data.date;
+  const closed = Date.now() >= Date.parse(q.closes_at);
 
   async function submit() {
     if (!q) return;
@@ -40,16 +58,17 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
       setAfter((await rw.answer_daily(q.id, player, value / 100)).reveal);
       setStatus("");
     } catch (e) {
-      // 409 means this browser already answered; its reveal still applies.
+      // 409 means this browser already answered, and its reveal applies, or answers closed.
       if (!(e instanceof ApiError && e.status === 409)) {
-        setStatus(`Not submitted: ${(e as Error).message}`);
+        setStatus("Not submitted: the server did not accept the answer. Try again.");
         return;
       }
       try {
-        setAfter((await rw.daily(player)).reveal);
-        setStatus("");
-      } catch (e) {
-        setStatus(`Submitted. The reveal did not load: ${(e as Error).message}`);
+        const reveal = (await rw.daily(player)).reveal;
+        setAfter(reveal);
+        setStatus(reveal ? "" : "Not submitted: answers for this question are closed.");
+      } catch {
+        setStatus("Submitted. The reveal did not load; reload the page to see it.");
       }
     }
   }
@@ -57,9 +76,10 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
   return (
     <section className="card daily">
       <p className="eyebrow">
-        Today's question <span className="dot" /> resolves by {day(q.resolves_by)}
+        Today's question <span className="dot" aria-hidden="true" /> resolves by{" "}
+        {shortDate(q.resolves_by)}
       </p>
-      <h1 className="question">{q.text}</h1>
+      <h2 className="question">{q.text}</h2>
       <p className="muted small">
         Resolution source:{" "}
         <a href={q.resolution_source} target="_blank" rel="noreferrer">
@@ -67,7 +87,12 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
         </a>
       </p>
       {reveal ? (
-        <RevealView reveal={reveal} tiers={tiers} />
+        <RevealView reveal={reveal} date={date} tiers={tiers} />
+      ) : closed ? (
+        <p className="closed" role="status">
+          Answers closed {q.closes_at.includes("T") ? time(q.closes_at) : shortDate(q.closes_at)}.
+          The next question opens after the next daily run.
+        </p>
       ) : (
         <form
           className="answer"
@@ -84,6 +109,7 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
               min={0}
               max={100}
               value={value}
+              aria-valuetext={`${value}% chance of yes`}
               onChange={(e) => setValue(Number(e.target.value))}
               style={{ "--fill": `${value}%` } as CSSProperties}
             />
@@ -95,22 +121,27 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
           <button type="submit" className="primary" disabled={status === "Submitting"}>
             Submit {value}%
           </button>
-          {status && status !== "Submitting" && <p className="muted small">{status}</p>}
+          {status && status !== "Submitting" && (
+            <p className="muted small" role="alert">
+              {status}
+            </p>
+          )}
         </form>
       )}
     </section>
   );
 }
 
-function RevealView({ reveal, tiers }: { reveal: Reveal; tiers: string[] }) {
+function RevealView({ reveal, date, tiers }: { reveal: Reveal; date: string; tiers: string[] }) {
+  const { count } = reveal.crowd;
   const rows: [string, number | null, string][] = [
     ["You", reveal.you, "your answer"],
     [
       "Visitors",
       reveal.crowd.mean,
-      reveal.crowd.count === 0
+      count === 0
         ? "you are the first"
-        : `${reveal.crowd.count.toLocaleString()} other self-selected ${reveal.crowd.count === 1 ? "visitor" : "visitors"}`,
+        : `${plural(count, "other self-selected visitor")}${count < 20 ? " so far" : ""}`,
     ],
     ["Simulated world", reveal.sim, "committed forecast"],
     ["Market", reveal.market, reveal.market === null ? "no market price" : "price at commit"],
@@ -136,6 +167,7 @@ function RevealView({ reveal, tiers }: { reveal: Reveal; tiers: string[] }) {
       <p className="streak">
         <strong>{reveal.streak}</strong> {reveal.streak === 1 ? "day" : "days"} answered in a row
       </p>
+      <WeekGrid reveal={reveal} date={date} />
       {reveal.outcome !== null && reveal.brier !== null && (
         <p className="small">
           Resolved {reveal.outcome ? "yes" : "no"}. Your Brier score: {reveal.brier.toFixed(3)}{" "}
@@ -143,6 +175,50 @@ function RevealView({ reveal, tiers }: { reveal: Reveal; tiers: string[] }) {
         </p>
       )}
       <Disclosure tiers={tiers} />
+    </div>
+  );
+}
+
+function WeekGrid({ reveal, date }: { reveal: Reveal; date: string }) {
+  const [copied, setCopied] = useState<boolean | null>(null);
+  const text = weekShareText(reveal, date, location.origin);
+  return (
+    <div className="week">
+      <ol className="week-grid" aria-label="Your last seven days">
+        {reveal.week.map((w) => {
+          const s = square(w);
+          const meaning = SQUARES.find(([q]) => q === s)?.[1];
+          return (
+            <li key={w.date} title={`${shortDate(w.date)}: ${meaning}`}>
+              <span aria-hidden="true">{s}</span>
+              <span className="sr-only">
+                {shortDate(w.date)}: {meaning}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+      <button
+        type="button"
+        onClick={() =>
+          navigator.clipboard.writeText(text).then(
+            () => setCopied(true),
+            () => setCopied(false),
+          )
+        }
+      >
+        {copied ? "Copied" : "Copy your week"}
+      </button>
+      {copied === false && (
+        <textarea className="share-text" readOnly rows={4} value={text} aria-label="Your week" />
+      )}
+      <p className="muted small week-legend">
+        {SQUARES.map(([s, m]) => (
+          <span key={s}>
+            <span aria-hidden="true">{s}</span> {m}
+          </span>
+        ))}
+      </p>
     </div>
   );
 }

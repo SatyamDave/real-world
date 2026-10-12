@@ -1,6 +1,6 @@
 import type { ReceiptDay, ReceiptEntry, Skill } from "@real-world/sdk";
-import { useState } from "react";
-import { Disclosure, LoadError, useLoad } from "./App";
+import { useEffect, useState } from "react";
+import { Disclosure, LoadError, Loading, plural, useLoad } from "./App";
 import { rw } from "./api";
 import { verifyChain } from "./verify";
 
@@ -10,13 +10,30 @@ const FORECASTER: Record<string, string> = {
   market: "Market",
 };
 
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
-
 const short = (h: string) => `${h.slice(0, 8)}…${h.slice(-4)}`;
 
 // Entry values are canonical JSON: strings, or a list of question ids on the question_set leaf.
 const str = (v: unknown) => (typeof v === "string" ? v : "");
 const isForecast = (r: ReceiptEntry) => r.entry.kind === "forecast";
+
+/** "0.4139" as "41%"; an empty value as a dash. */
+const prob = (v: unknown) => (str(v) ? `${Math.round(Number(v) * 100)}%` : "—");
+
+/** Local time, with the committed UTC string on hover. */
+function Committed({ at }: { at: string }) {
+  if (!at) return <span className="muted">—</span>;
+  const local = new Date(at).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return (
+    <time dateTime={at} title={at}>
+      {local}
+    </time>
+  );
+}
 
 function Outcome({ r }: { r: ReceiptEntry }) {
   if (r.outcome === undefined || r.outcome === null) return <span className="muted">open</span>;
@@ -40,7 +57,7 @@ async function latestEntries(n: number): Promise<ReceiptEntry[]> {
 }
 
 export function ReceiptsStrip() {
-  const { data, error } = useLoad(() => latestEntries(10));
+  const { data, error, retry } = useLoad(() => latestEntries(10));
   return (
     <section className="card strip">
       <div className="strip-head">
@@ -49,7 +66,8 @@ export function ReceiptsStrip() {
           All receipts and verify →
         </a>
       </div>
-      {error && <LoadError what="receipts" error={error} />}
+      {error && <LoadError what="receipts" error={error} retry={retry} />}
+      {!data && !error && <Loading what="receipts" />}
       {data && !data.length && <p className="muted small">No forecasts committed yet.</p>}
       <ul className="strip-rows">
         {data?.map((r) => (
@@ -58,7 +76,7 @@ export function ReceiptsStrip() {
               {FORECASTER[str(r.entry.forecaster)] ?? str(r.entry.forecaster)}
             </span>
             <span className="strip-q">{str(r.entry.question_id)}</span>
-            <span className="num">{Math.round(Number(r.entry.probability) * 100)}%</span>
+            <span className="num">{prob(r.entry.probability)}</span>
             <Outcome r={r} />
           </li>
         ))}
@@ -67,30 +85,34 @@ export function ReceiptsStrip() {
   );
 }
 
+// Below this many resolved questions an interval says nothing, so none is shown.
+const MIN_N_FOR_INTERVAL = 10;
+
 function SkillCard({ name, s }: { name: string; s?: Skill }) {
+  if (!s) return <div className="skill" />;
+  const diff = s.mean_diff;
+  const detail =
+    diff === null
+      ? null
+      : `Mean Brier difference ${diff > 0 ? "+" : ""}${diff.toFixed(3)}${
+          s.n >= MIN_N_FOR_INTERVAL && s.low !== null && s.high !== null
+            ? `, 95% interval ${s.low.toFixed(3)} to ${s.high.toFixed(3)}`
+            : ""
+        }. Negative means the simulation scored better.`;
   return (
     <div className="skill">
       <h3>Simulation vs {name}</h3>
-      {!s ? null : s.mean_diff === null ? (
-        <p className="muted small">No resolved questions yet (n = {s.n}).</p>
+      {s.claim === "insufficient_n" ? (
+        <>
+          <p className="skill-value">No claim yet</p>
+          <p className="small">
+            n = {plural(s.n, "resolved question")}. A comparison is claimed only after 100 resolve.
+          </p>
+        </>
       ) : (
-        <p>
-          <span className="skill-value">
-            {s.mean_diff > 0 ? "+" : ""}
-            {s.mean_diff.toFixed(3)}
-          </span>
-          <span className="muted small">
-            {" "}
-            mean Brier difference, 95% interval {s.low?.toFixed(3)} to {s.high?.toFixed(3)}, n ={" "}
-            {s.n} questions. Negative means the simulation scored better.
-          </span>
-        </p>
+        <p className="skill-value">n = {s.n}</p>
       )}
-      {s?.claim === "insufficient_n" && (
-        <p className="small claim">
-          insufficient_n: fewer than 100 resolved questions, so no comparative claim is made.
-        </p>
-      )}
+      {detail && <p className="muted small">{detail}</p>}
     </div>
   );
 }
@@ -127,6 +149,12 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
   );
   const [result, setResult] = useState<Record<string, string[]> | null>(null);
   const [verifying, setVerifying] = useState(false);
+
+  // A shared "/receipts#<date>" link lands on its day once the days have loaded.
+  useEffect(() => {
+    if (all.data && location.hash)
+      document.getElementById(location.hash.slice(1))?.scrollIntoView();
+  }, [all.data]);
 
   async function verify(days: ReceiptDay[]) {
     setVerifying(true);
@@ -175,17 +203,19 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
         <p className="muted small">
           Brier score: lower is better. A constant 50% forecast scores 0.25 on every question.
         </p>
-        {sc.error && <LoadError what="scores" error={sc.error} />}
+        {sc.error && <LoadError what="scores" error={sc.error} retry={sc.retry} />}
+        {!sc.data && !sc.error && <Loading what="scores" />}
         <div className="skills">
           <SkillCard name="market" s={sc.data?.market} />
           <SkillCard name="plain LLM" s={sc.data?.plain_llm} />
         </div>
       </section>
 
-      {all.error && <LoadError what="receipts" error={all.error} />}
+      {all.error && <LoadError what="receipts" error={all.error} retry={all.retry} />}
+      {!all.data && !all.error && <Loading what="receipts" />}
       {all.data && !all.data.length && <p className="muted">No days committed yet.</p>}
       {all.data?.map((d) => (
-        <section key={d.day.date} className="card day">
+        <section key={d.day.date} id={d.day.date} className="card day">
           <div className="day-head">
             <h2>{d.day.date}</h2>
             <AnchorBadge d={d} />
@@ -236,9 +266,15 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
                         : `Question set, ${(r.entry.question_ids as string[])?.length ?? 0} questions`}
                     </td>
                     <td>{FORECASTER[str(r.entry.forecaster)] ?? str(r.entry.forecaster)}</td>
-                    <td className="num">{str(r.entry.probability)}</td>
-                    <td className="num">{str(r.entry.market_price_at_commit) || "—"}</td>
-                    <td>{str(r.entry.committed_at)}</td>
+                    <td className="num" title={str(r.entry.probability)}>
+                      {prob(r.entry.probability)}
+                    </td>
+                    <td className="num" title={str(r.entry.market_price_at_commit)}>
+                      {prob(r.entry.market_price_at_commit)}
+                    </td>
+                    <td>
+                      <Committed at={str(r.entry.committed_at)} />
+                    </td>
                     <td className="mono" title={r.leaf_hash}>
                       {short(r.leaf_hash)}
                     </td>

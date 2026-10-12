@@ -17,7 +17,7 @@ import { AgentPanel } from "./AgentPanel";
 import { App, DISCLOSURE } from "./App";
 import { rw } from "./api";
 import { DailyQuestion } from "./DailyQuestion";
-import { Fork, ForkCard } from "./ForkCard";
+import { Fork, ForkCard, ForkRun } from "./ForkCard";
 import agentFixture from "./fixtures/agent.json";
 import whyFixture from "./fixtures/agent_why.json";
 import dailyFixture from "./fixtures/daily.json";
@@ -42,12 +42,17 @@ beforeEach(() => {
     "receipts",
     "receipt_day",
     "scores",
+    "get_simulation",
   ] as const)
     vi.spyOn(rw, m).mockRejectedValue(new Error("not stubbed"));
+  // The daily fixture closes on Oct 6, 23:59 UTC.
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-06T12:00:00Z"));
 });
 
 afterEach(() => {
   container.remove();
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -90,6 +95,9 @@ test("the reveal shows you, visitors, the simulated world and the market after s
     expect(text).toContain(s);
   expect(text).toContain("Market61%");
   expect(text).toContain("3 days answered in a row");
+  const squares = [...el.querySelectorAll(".week-grid [aria-hidden]")].map((x) => x.textContent);
+  expect(squares.join("")).toBe("⬜⬜🟩🟥🟩🟦🟦");
+  expect(el.querySelector(".week-grid")?.textContent).toContain("Oct 2: Worse than a constant 50%");
   expect(text).toContain(DISCLOSURE);
 });
 
@@ -107,6 +115,24 @@ test("the visitors line names the first answer and does not pluralise one", asyn
     await until(() => expect(el.textContent).toContain(line));
     expect(el.textContent).not.toContain("visitors");
   }
+});
+
+test("a closed question shows when answers closed instead of the slider", async () => {
+  vi.setSystemTime(new Date("2026-10-07T00:00:00Z"));
+  vi.mocked(rw.daily).mockResolvedValue({ ...(dailyFixture as Daily), reveal: null });
+  const el = await render(<DailyQuestion tiers={[]} />);
+  expect(el.textContent).toContain("Answers closed");
+  expect(el.querySelector("input[type=range]")).toBeNull();
+});
+
+test("a failed load says what failed in words and retries", async () => {
+  vi.mocked(rw.daily).mockRejectedValueOnce(new ApiError(500, { detail: "boom" }));
+  const el = await render(<DailyQuestion tiers={[]} />);
+  expect(el.textContent).toContain("Could not load today's question. The server had an error.");
+  expect(el.textContent).not.toContain("boom");
+  vi.mocked(rw.daily).mockResolvedValue({ ...(dailyFixture as Daily), reveal: null });
+  await act(async () => button("Try again").click());
+  await until(() => expect(el.textContent).toContain((dailyFixture as Daily).question.text));
 });
 
 test("a repeat answer (409) still shows the reveal", async () => {
@@ -128,9 +154,13 @@ test("the fork card renders a fixture SimulateResult", async () => {
   expect(el.querySelectorAll(".shifts li")).toHaveLength(3);
   expect(text).toContain("USA · 25-34 · tertiary");
   expect(text).toContain("+8.1 pts");
+  expect(text).toContain("n = 14 agents");
+  expect(text).toContain(
+    "Inflation worry rose 6 pts across 3 countries; the 5 runs agree within 5 pts.",
+  );
   expect(text).toContain("range across 5 simulated runs, not a confidence interval yet");
   expect(text).toContain("52% → 58%");
-  expect(text).toContain("$0.0054");
+  expect(text).toContain("$0.01 (estimated $0.01)");
   expect(text).toContain("Counterfactual: not scored");
   expect(el.querySelector<HTMLInputElement>(".share input")?.value).toBe(
     `${location.origin}/fork/job_fixture1`,
@@ -155,6 +185,20 @@ test("the fork form shows an acceptable-use refusal inline", async () => {
   await until(() => expect(el.textContent).toContain(`Refused: ${detail}`));
 });
 
+test("a fork with no shift past the floor says so", async () => {
+  const r = job.result;
+  if (!r) throw new Error("fixture has a result");
+  const el = await render(<ForkCard job={{ ...job, result: { ...r, top_shifts: [] } }} />);
+  expect(el.textContent).toContain("No segment moved more than the band.");
+});
+
+test("a missing fork reads as missing, not as a response body", async () => {
+  vi.mocked(rw.get_simulation).mockRejectedValue(new ApiError(404, { detail: "no simulation" }));
+  const el = await render(<ForkRun id="job_doesnotexist" />);
+  expect(el.textContent).toContain("This fork does not exist or has expired.");
+  expect(el.textContent).not.toContain("detail");
+});
+
 test("the agent panel labels the trace and the simulated account", async () => {
   vi.mocked(rw.agent).mockResolvedValue(agentFixture as Agent);
   vi.mocked(rw.agent_why).mockResolvedValue(whyFixture as AgentWhy);
@@ -164,6 +208,9 @@ test("the agent panel labels the trace and the simulated account", async () => {
   expect(headings).toEqual(["What moved this agent", "In its own words"]);
   expect(rw.agent).toHaveBeenCalledWith(world.countries[0].sample_agent_id);
   expect(el.textContent).toContain("FIXTURE: Fuel prices rise for a third week");
+  expect(el.querySelector(".traits")?.textContent).toContain("female · 25-34 · tertiary · urban");
+  // 0.031 logit at a share of about 61% is under 1 point, never "+3.1 pts".
+  expect(el.querySelector(".moves .up")?.textContent).toBe("+0.7 pts");
   expect(el.querySelector(".label-simulated")?.textContent).toBe(
     "Simulated account, not the cause",
   );
@@ -201,8 +248,10 @@ test("the receipts page verifies the served chain and states the reference and c
   const text = el.textContent ?? "";
   expect(text).toContain("not yet anchored");
   expect(text).toContain("A constant 50% forecast scores 0.25");
-  expect(text).toContain("insufficient_n");
-  expect(text).toContain("n = 2 questions");
+  expect(text).toContain("No claim yet");
+  expect(text).toContain("n = 2 resolved questions");
+  expect(text).not.toContain("insufficient_n");
+  expect(text).not.toContain("95% interval");
 
   await act(async () => button("Verify").click());
   await until(() =>
@@ -238,4 +287,29 @@ test.each([
   const el = await render(<App path="/receipts" />);
   await until(() => expect(el.querySelector(".day-head .badge")?.textContent).toBe(copy));
   expect(el.textContent).not.toContain("not yet anchored");
+});
+
+test("the home page states the thesis with the record as proof", async () => {
+  vi.mocked(rw.world).mockResolvedValue(world);
+  vi.mocked(rw.daily).mockResolvedValue({ ...(dailyFixture as Daily), reveal: null });
+  vi.mocked(rw.receipts).mockResolvedValue({
+    days: [
+      { ...vector.day, record_hash: vector.record_hash, anchor: "not_anchored", anchored_at: null },
+    ],
+  });
+  const el = await render(<App path="/" />);
+  await until(() => expect(el.textContent).toContain("Scored in public since"));
+  expect(el.querySelector("h1")?.textContent).toBe("Don't ask a model. Ask a world.");
+  expect(el.textContent).toContain(
+    `Scored in public since Oct 1: 1 day, ${vector.day.leaf_count} receipts.`,
+  );
+  expect(el.textContent).toContain("World of Oct 5");
+  // Without a wide screen the globe is not loaded; every country is a button instead.
+  expect(el.querySelectorAll(".countries button")).toHaveLength(world.countries.length);
+});
+
+test("an unknown path renders not found, not the home page", async () => {
+  const el = await render(<App path="/nothing-here" />);
+  expect(el.textContent).toContain("Page not found");
+  expect(el.textContent).not.toContain("Don't ask a model");
 });

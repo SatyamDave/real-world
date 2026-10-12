@@ -361,6 +361,31 @@ def test_streak_counts_consecutive_days_and_breaks_on_a_gap(client, conn):
     assert r.json()["reveal"]["streak"] == 2
 
 
+def test_week_lists_seven_days_with_answers_and_scores(client, conn):
+    d = client.get("/v1/daily").json()
+    today, q = d["date"], d["question"]
+    with conn:
+        conn.execute(
+            "INSERT INTO daily_answers (question_id, player_id, date, probability, created_at)"
+            " VALUES ('old-week', 'p-week', '2026-10-01', 0.9, '2026-10-01')"
+        )
+        conn.execute(
+            "INSERT OR IGNORE INTO resolutions VALUES ('old-week', 1, ?, 'https://x.test', ?)",
+            (today, today),
+        )
+    r = client.post(
+        "/v1/daily/answers",
+        json={"question_id": q["id"], "player_id": "p-week", "probability": 0.3},
+    )
+    week = r.json()["reveal"]["week"]
+    assert len(week) == 7 and week[-1]["date"] == today
+    assert [w["date"] for w in week] == sorted(w["date"] for w in week)
+    assert week[-1]["probability"] == 0.3
+    old = next(w for w in week if w["date"] == "2026-10-01")
+    assert old["probability"] == 0.9 and old["brier"] == pytest.approx(0.01)
+    assert sum(w["probability"] is not None for w in week) == 2
+
+
 def test_receipts_verify_with_the_ledger(client, conn):
     days = client.get("/v1/receipts").json()["days"]
     assert [d["date"] for d in days] == sorted(daily.FIXTURE_DAYS, reverse=True)
