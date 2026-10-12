@@ -8,9 +8,13 @@ setup: ## install Python and TypeScript dependencies from the lockfiles
 	uv sync --all-packages --locked
 	pnpm install --frozen-lockfile
 
-dev: ## seed the fixture days if var/ is empty, then run the API on :8000 and the web app on :5173
+API_PORT ?= 8000
+WEB_PORT ?= 5173
+
+dev: ## seed the fixture days if var/ is empty, then run the API on $(API_PORT) and the web app on $(WEB_PORT)
 	@test -d "$${RW_HOME:-var}/snapshots" || uv run python -m rw.daily --fixtures
-	trap 'kill 0' EXIT; uv run uvicorn rw_api.app:app --port 8000 & pnpm --filter web dev
+	trap 'kill 0' EXIT; uv run uvicorn rw_api.app:app --port $(API_PORT) & \
+		VITE_API_URL=http://localhost:$(API_PORT) pnpm --filter web dev --port $(WEB_PORT)
 
 test: ## run pytest and every package's Vitest suite
 	uv run pytest -q

@@ -19,9 +19,16 @@ The template asks five things. CI refuses a PR that leaves any of them empty.
 - **Risk and rollback**: what could break, and how to undo it.
 - **Product impact**: which spec in `product/` this touches, or "none".
 
-## Review
+## The flow
 
-Open the PR as a draft. Run `/ship-pr` to check it against the definition of done. When you mark it ready for review, the `Claude review` workflow reviews it against the `CLAUDE.md` files of every folder it touches and posts one comment.
+1. Branch from `origin/main` in a worktree, never in the primary checkout:
+   `git fetch && git worktree add ../real-world-wt/<task> -b <type>/<task> origin/main`, then `make setup` there.
+2. Commit with a conventional title (see [Titles](#titles)). Before pushing, `git fetch && git rebase origin/main` and run `make check`; it runs exactly what CI runs.
+3. Push and open the PR as a draft with a body file that fills the template: `gh pr create --draft --title "<title>" --body-file <file>`. Never use `--fill`; it skips the template. `/ship-pr` walks the definition of done and opens the draft for you.
+4. Mark it ready with `gh pr ready <N>` once `make check` passes. The `Claude review` workflow then reviews it against the `CLAUDE.md` files of every folder it touches and posts one comment.
+5. Wait for every check: `gh pr checks <N> --watch`. On a failure, `gh run view <run-id> --log-failed` shows why; fix, push, wait again.
+6. Merge with a merge commit, never a squash: `gh pr merge <N> --merge`. If another PR merged first and conflicts, rebase on `origin/main`, rerun `make check`, push and wait again.
+7. After the merge, remove the worktree and delete the branch.
 
 ## Public claims
 

@@ -231,7 +231,7 @@ def input_hash(snapshot_id: str, req: SimulateRequest) -> str:
         "seed": req.seed,
         "topics": req.topics or list(news.topics()),
         "engine_version": settings.ENGINE_VERSION,
-        "model": settings.MODEL,
+        "model": llm.model_name(),
     }
     return hashlib.sha256(json.dumps(key, sort_keys=True).encode()).hexdigest()
 
@@ -388,7 +388,7 @@ def run(
     result = SimulateResult(
         world_snapshot_id=snapshot_id,
         engine_version=settings.ENGINE_VERSION,
-        model=settings.MODEL,
+        model=llm.model_name(),
         seed=req.seed,
         members=req.members,
         agents_sampled=n,

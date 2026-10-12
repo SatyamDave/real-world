@@ -5,7 +5,7 @@ The Vite + React + TypeScript web app: the daily question and its reveal, the la
 ## Run and test
 
 ```
-make dev                   # API on :8000 and this app on :5173, from the repo root
+make dev                   # API on :8000 and this app on :5173, from the repo root; API_PORT and WEB_PORT override them
 pnpm --filter web test     # Vitest, with the API mocked and fixtures from src/fixtures/
 pnpm --filter web build    # type check and production build
 ```

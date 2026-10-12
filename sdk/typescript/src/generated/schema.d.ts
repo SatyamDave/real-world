@@ -13,7 +13,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Create Simulation */
+    /** Start a fork of today's world with one event; returns a job id */
     post: operations["create_simulation_v1_simulate_post"];
     delete?: never;
     options?: never;
@@ -30,7 +30,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Estimate */
+    /** Estimate a fork's cost and model calls without running it */
     post: operations["estimate_v1_simulate_estimate_post"];
     delete?: never;
     options?: never;
@@ -45,7 +45,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Get Simulation */
+    /** A fork job's status, and its result when done */
     get: operations["get_simulation_v1_simulations__job_id__get"];
     put?: never;
     post?: never;
@@ -62,7 +62,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Simulation Events */
+    /** Stream a fork job's progress as server-sent events; resumes from Last-Event-ID */
     get: operations["simulation_events_v1_simulations__job_id__events_get"];
     put?: never;
     post?: never;
@@ -79,7 +79,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** World */
+    /** Today's world: countries, tiers, topic shares and prefilled fork events */
     get: operations["world_v1_world_get"];
     put?: never;
     post?: never;
@@ -96,7 +96,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Agent */
+    /** One simulated agent: traits, beliefs and what moved them */
     get: operations["agent_v1_agents__agent_id__get"];
     put?: never;
     post?: never;
@@ -113,7 +113,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Agent Why */
+    /** A short model-written account of one agent's trace, labelled simulated */
     get: operations["agent_why_v1_agents__agent_id__why_get"];
     put?: never;
     post?: never;
@@ -130,7 +130,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Daily */
+    /** Today's question, and the reveal once this player answered */
     get: operations["daily_v1_daily_get"];
     put?: never;
     post?: never;
@@ -149,7 +149,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Answer Daily */
+    /** Answer today's question once; returns the reveal */
     post: operations["answer_daily_v1_daily_answers_post"];
     delete?: never;
     options?: never;
@@ -164,7 +164,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Receipts */
+    /** Every committed day's root and record hash */
     get: operations["receipts_v1_receipts_get"];
     put?: never;
     post?: never;
@@ -181,7 +181,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Receipt Day */
+    /** One day's receipt: every entry with its salt and leaf hash */
     get: operations["receipt_day_v1_receipts__day__get"];
     put?: never;
     post?: never;
@@ -199,7 +199,7 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Scores
+     * Brier skill of the simulation against each baseline
      * @description score.summarize over every committed forecast whose question has resolved. A question
      *     across several countries takes its lowest-coverage tier, and "multiple" as its region when
      *     they differ.
@@ -220,7 +220,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Healthz */
+    /** Liveness check */
     get: operations["healthz_healthz_get"];
     put?: never;
     post?: never;
@@ -376,7 +376,10 @@ export interface components {
       /** Tier */
       tier: string;
     };
-    /** Crowd */
+    /**
+     * Crowd
+     * @description Other visitors' answers; the caller's own answer is never in it.
+     */
     Crowd: {
       /** Mean */
       mean: number | null;

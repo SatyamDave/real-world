@@ -15,7 +15,7 @@ make dev              # API on http://localhost:8000, web app on http://localhos
 What you see at each step:
 
 1. `make daily-fixtures` prints one block per day: the steps that ran, model calls and dollars, forecasts committed, the day's root hash, questions scored and countries marked experimental. The first run makes about 180-210 fake model calls per day; a second run prints `ran: nothing (all steps ok)` with `model calls 0` for every day. `make dev` seeds these days on its own when `var/` is empty.
-2. `make dev` prints the web URL (Vite moves to the next port when 5173 is taken) and the API docs are at http://localhost:8000/docs. `curl localhost:8000/healthz` returns `{"ok":true}`.
+2. `make dev` prints the web URL (Vite moves to the next port when 5173 is taken) and the API docs are at http://localhost:8000/docs. `curl localhost:8000/healthz` returns `{"ok":true}`. To run a second stack beside the first, pick other ports and another state folder: `RW_HOME=var2 make dev API_PORT=8001 WEB_PORT=5174`.
 3. The web app opens on today's question. Move the slider, submit, and the reveal shows you, visitors, the simulated world and the market, with your streak. A second visit shows the reveal straight away.
 4. "All receipts and verify" lists every day's forecasts; "Verify in this browser" recomputes every leaf, root and chain link with WebCrypto and reports `Verified 5 days and N receipts back to the first day`. The same check from the terminal: `uv run python -m rw.ledger verify --date 2026-10-05` prints `OK`.
 5. "Fork today's world": pick a prefilled event, read the estimate, run it. On the fake model the card appears within a second: top shifts, the p10-p90 band per topic, coverage tiers, cost, and a `/fork/{id}` link that reopens the card.
@@ -49,11 +49,13 @@ Local state (the SQLite file, snapshots, receipts) goes to `var/`, or to `$RW_HO
 | [`experiments/`](experiments/README.md) | Pre-registered experiments, hashed into a registry before they run, and their committed results, misses included. Papers cite only these. | n/a |
 | [`gtm/`](gtm/README.md) | Who we sell to, pricing, the launch plan, the builders program, and the claims we may and may not make. | n/a |
 | [`company/`](company/README.md) | The north-star metric, the plan to Nov 2 with its gates, the risk register, the operating cadence, and decisions only the founder can make. | n/a |
-| [`engine/`](engine/README.md) | The Python package `rw`: settings, the model gateway, the licence gate, and later the population, beliefs, forecasts, ledger and scoring. | [world](product/world.md), [benchmark](product/benchmark.md), [receipts](product/receipts.md) |
+| [`engine/`](engine/README.md) | The Python package `rw`: settings, the model gateway, the licence gate, the population, beliefs, news, forecasts, the ledger, scoring, forks and the daily cycle. | [world](product/world.md), [benchmark](product/benchmark.md), [receipts](product/receipts.md) |
+| [`api/`](api/README.md) | The FastAPI app `rw_api`: every `/v1` endpoint, fork jobs, idempotency, server-sent events and the committed `openapi.json`. | [simulate API](product/simulate-api.md), [daily question](product/daily-question.md) |
+| [`sdk/`](sdk/CLAUDE.md) | The [Python](sdk/python/README.md) and [TypeScript](sdk/typescript/README.md) clients, generated from `api/openapi.json`, each README opening with its quickstart. | [SDKs](product/sdks.md) |
 | [`data/`](data/README.md) | The licence table, the country and topic vocabularies, bundled sample data and fixtures. | [world](product/world.md) |
 | [`web/`](web/README.md) | The Vite + React web app. | [web app](product/web-app.md) |
 
-The layout and module boundaries come from [decision 0001](research/decisions/0001-architecture.md). The API and SDK folders arrive in later slices of the [build plan](research/decisions/BUILD_PLAN.md).
+The layout and module boundaries come from [decision 0001](research/decisions/0001-architecture.md).
 
 ## How we work
 

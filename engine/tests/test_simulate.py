@@ -54,6 +54,7 @@ def test_each_prefilled_event_yields_a_valid_result(conn):
         assert result.simulated is True and result.disclosure == simulate.DISCLOSURE
         assert result.note == "Counterfactual: not scored"
         assert result.world_snapshot_id == DAY
+        assert result.model == "fake"
         assert len(result.top_shifts) == 3
         assert len(result.trace.agents) == 10
         if e["event"]["countries"]:
