@@ -86,18 +86,18 @@ test("the reveal shows you, visitors, the simulated world and the market after s
 
   const el = await render(<DailyQuestion tiers={["A", "B", "B"]} />);
   expect(el.textContent).toContain(daily.question.text);
-  expect(el.textContent).not.toContain("Simulated world");
+  expect(el.textContent).not.toContain("Simulation");
   expect(el.querySelector(".receipt-cols")?.textContent).toContain("Shown after you answer");
 
   await act(async () => button("Submit 50%").click());
-  await until(() => expect(el.textContent).toContain("Simulated world"));
+  await until(() => expect(el.textContent).toContain("Simulation"));
   expect(el.querySelector<HTMLAnchorElement>(".receipt-cols a")?.getAttribute("href")).toBe(
     "/receipts#2026-10-05",
   );
 
   expect(rw.answer_daily).toHaveBeenCalledWith(daily.question.id, expect.any(String), 0.5);
   const text = el.textContent ?? "";
-  for (const s of ["You", "62%", "1,204 other self-selected visitors", "Simulated world", "56%"])
+  for (const s of ["You", "62%", "1,204 other self-selected visitors", "Simulation", "56%"])
     expect(text).toContain(s);
   expect(text).toContain("Market61%");
   expect(text).toContain("3 days answered in a row");
@@ -192,7 +192,7 @@ test("a repeat answer (409) still shows the reveal", async () => {
 
   const el = await render(<DailyQuestion tiers={[]} />);
   await act(async () => button("Submit").click());
-  await until(() => expect(el.textContent).toContain("Simulated world"));
+  await until(() => expect(el.textContent).toContain("Simulation"));
 });
 
 test("the fork card renders a fixture SimulateResult", async () => {
@@ -468,7 +468,7 @@ test("the acceptable-use page shows the three rules and the refusal codes", asyn
 test("the docs page lists every operation in openapi.json with its refusal codes", async () => {
   const el = await render(<App path="/docs" />);
   await until(() => expect(el.querySelector(".op")).not.toBeNull());
-  expect(document.title).toBe("API docs · Real World");
+  expect(document.title).toBe("API · Real World");
   const ops = Object.entries(spec.paths).flatMap(([path, methods]) =>
     Object.keys(methods).map((m) => `${m.toUpperCase()} ${path}`),
   );
@@ -487,7 +487,7 @@ test("the docs page lists every operation in openapi.json with its refusal codes
   const [, py, ts] = [...el.querySelectorAll("pre")].map((p) => p.textContent);
   expect(py).toContain("rw = Client(");
   expect(ts).toContain("const rw = new Client(");
-  expect(el.querySelector("header nav a[href='/docs']")?.textContent).toBe("Docs");
+  expect(el.querySelector("header nav a[href='/docs']")?.textContent).toBe("API");
 });
 
 test("the docs snippets point at the API this app talks to, not localhost:8000", async () => {
