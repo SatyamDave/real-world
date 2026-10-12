@@ -1,0 +1,158 @@
+[
+  {
+    "id": "fx-usa-cpi-rise",
+    "text": "FIXTURE: Will the illustrative US consumer price index for September, released by 2026-10-03, show a higher monthly rise than August?",
+    "topic": "inflation_worry",
+    "countries": [
+      "USA"
+    ],
+    "opens": "2026-09-28",
+    "closes": "2026-10-02",
+    "resolves_by": "2026-10-03",
+    "resolution_source": "https://example.com/fixture/resolution/fx-usa-cpi-rise",
+    "tie_break": "If the source has not published by resolves_by, the question is void; a revised figure published after resolves_by is ignored.",
+    "market_source": "fixture:FX-USA-CPI-RISE",
+    "daily_on": "2026-10-01"
+  },
+  {
+    "id": "fx-gbr-rate-hold",
+    "text": "FIXTURE: Will the illustrative UK central bank hold its policy rate at its meeting ending 2026-10-04?",
+    "topic": "economy_optimism",
+    "countries": [
+      "GBR"
+    ],
+    "opens": "2026-09-29",
+    "closes": "2026-10-03",
+    "resolves_by": "2026-10-04",
+    "resolution_source": "https://example.com/fixture/resolution/fx-gbr-rate-hold",
+    "tie_break": "If the source has not published by resolves_by, the question is void; a revised figure published after resolves_by is ignored.",
+    "market_source": "fixture:FX-GBR-RATE-HOLD",
+    "daily_on": "2026-10-02"
+  },
+  {
+    "id": "fx-deu-climate-bill",
+    "text": "FIXTURE: Will the illustrative German parliament pass the building-heat climate bill by 2026-10-05?",
+    "topic": "climate_concern",
+    "countries": [
+      "DEU"
+    ],
+    "opens": "2026-09-30",
+    "closes": "2026-10-04",
+    "resolves_by": "2026-10-05",
+    "resolution_source": "https://example.com/fixture/resolution/fx-deu-climate-bill",
+    "tie_break": "If the source has not published by resolves_by, the question is void; a revised figure published after resolves_by is ignored.",
+    "market_source": "fixture:FX-DEU-CLIMATE-BILL",
+    "daily_on": "2026-10-03"
+  },
+  {
+    "id": "fx-jpn-ai-guidelines",
+    "text": "FIXTURE: Will the illustrative Japanese government publish binding AI safety guidelines by 2026-10-05?",
+    "topic": "tech_optimism",
+    "countries": [
+      "JPN"
+    ],
+    "opens": "2026-10-01",
+    "closes": "2026-10-04",
+    "resolves_by": "2026-10-05",
+    "resolution_source": "https://example.com/fixture/resolution/fx-jpn-ai-guidelines",
+    "tie_break": "If the source has not published by resolves_by, the question is void; a revised figure published after resolves_by is ignored.",
+    "market_source": "fixture:FX-JPN-AI-GUIDELINES",
+    "daily_on": "2026-10-04"
+  },
+  {
+    "id": "fx-bra-mex-retail",
+    "text": "FIXTURE: Will illustrative September retail sales rise month on month in both Brazil and Mexico, as reported by 2026-10-12?",
+    "topic": "spending_intent",
+    "countries": [
+      "BRA",
+      "MEX"
+    ],
+    "opens": "2026-10-01",
+    "closes": "2026-10-11",
+    "resolves_by": "2026-10-12",
+    "resolution_source": "https://example.com/fixture/resolution/fx-bra-mex-retail",
+    "tie_break": "If the source has not published by resolves_by, the question is void; a revised figure published after resolves_by is ignored.",
+    "market_source": "fixture:FX-BRA-MEX-RETAIL",
+    "daily_on": "2026-10-05"
+  },
+  {
+    "id": "fx-tur-confidence-vote",
+    "text": "FIXTURE: Will the illustrative Turkish government survive a parliamentary confidence vote held by 2026-10-21?",
+    "topic": "trust_government",
+    "countries": [
+      "TUR"
+    ],
+    "opens": "2026-09-25",
+    "closes": "2026-10-20",
+    "resolves_by": "2026-10-21",
+    "resolution_source": "https://example.com/fixture/resolution/fx-tur-confidence-vote",
+    "tie_break": "If the source has not published by resolves_by, the question is void; a revised figure published after resolves_by is ignored.",
+    "market_source": "fixture:FX-TUR-CONFIDENCE-VOTE",
+    "daily_on": ""
+  },
+  {
+    "id": "fx-ind-idn-fuel-price",
+    "text": "FIXTURE: Will the illustrative regulated petrol price rise in India or Indonesia by 2026-10-16?",
+    "topic": "inflation_worry",
+    "countries": [
+      "IND",
+      "IDN"
+    ],
+    "opens": "2026-10-01",
+    "closes": "2026-10-15",
+    "resolves_by": "2026-10-16",
+    "resolution_source": "https://example.com/fixture/resolution/fx-ind-idn-fuel-price",
+    "tie_break": "If the source has not published by resolves_by, the question is void; a revised figure published after resolves_by is ignored.",
+    "market_source": "fixture:FX-IND-IDN-FUEL-PRICE",
+    "daily_on": ""
+  },
+  {
+    "id": "fx-afr-migration-quota",
+    "text": "FIXTURE: Will South Africa, Kenya or Nigeria announce an illustrative increase in skilled-migration visas by 2026-10-26?",
+    "topic": "migration_openness",
+    "countries": [
+      "ZAF",
+      "KEN",
+      "NGA"
+    ],
+    "opens": "2026-10-02",
+    "closes": "2026-10-25",
+    "resolves_by": "2026-10-26",
+    "resolution_source": "https://example.com/fixture/resolution/fx-afr-migration-quota",
+    "tie_break": "If the source has not published by resolves_by, the question is void; a revised figure published after resolves_by is ignored.",
+    "market_source": "fixture:FX-AFR-MIGRATION-QUOTA",
+    "daily_on": ""
+  },
+  {
+    "id": "fx-mena-ceasefire",
+    "text": "FIXTURE: Will the illustrative regional ceasefire announced in September still hold on 2026-10-29?",
+    "topic": "conflict_worry",
+    "countries": [
+      "ISR",
+      "EGY",
+      "TUR"
+    ],
+    "opens": "2026-09-28",
+    "closes": "2026-10-28",
+    "resolves_by": "2026-10-29",
+    "resolution_source": "https://example.com/fixture/resolution/fx-mena-ceasefire",
+    "tie_break": "If the source has not published by resolves_by, the question is void; a revised figure published after resolves_by is ignored.",
+    "market_source": "fixture:FX-MENA-CEASEFIRE",
+    "daily_on": ""
+  },
+  {
+    "id": "fx-fra-strike",
+    "text": "FIXTURE: Will the illustrative French national transport strike go ahead on 2026-10-01?",
+    "topic": "trust_government",
+    "countries": [
+      "FRA"
+    ],
+    "opens": "2026-09-26",
+    "closes": "2026-09-30",
+    "resolves_by": "2026-10-01",
+    "resolution_source": "https://example.com/fixture/resolution/fx-fra-strike",
+    "tie_break": "If the source has not published by resolves_by, the question is void; a revised figure published after resolves_by is ignored.",
+    "market_source": "fixture:FX-FRA-STRIKE",
+    "daily_on": ""
+  }
+]
