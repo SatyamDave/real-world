@@ -1,0 +1,41 @@
+date,iso3,theme,tone,num_sources,title,url
+2026-10-01,BRA,IMMIGRATION,-2.7,9,FIXTURE: Brazil reports rise in asylum applications,https://example.com/fixture/2026-10-01/bra-immigration-1
+2026-10-01,BRA,TECH_AI,0.8,15,FIXTURE: Brazil regulator opens consultation on AI rules,https://example.com/fixture/2026-10-01/bra-tech_ai-1
+2026-10-01,CHN,ECON_OILPRICE,-4.4,41,FIXTURE: Crude jumps after export terminal outage cuts supply,https://example.com/fixture/2026-10-01/chn-econ_oilprice-1
+2026-10-01,CHN,ECON_OILPRICE,-3.4,65,FIXTURE: Traders in China brace for higher fuel bills after crude spike,https://example.com/fixture/2026-10-01/chn-econ_oilprice-2
+2026-10-01,CHN,ENV_CLIMATECHANGE,-2.0,11,FIXTURE: China weather service reports a record warm September,https://example.com/fixture/2026-10-01/chn-env_climatechange-1
+2026-10-01,DEU,ECON_OILPRICE,-3.0,33,FIXTURE: Germany energy ministry says fuel stocks are adequate for now,https://example.com/fixture/2026-10-01/deu-econ_oilprice-1
+2026-10-01,DEU,ECON_OILPRICE,-4.2,72,FIXTURE: Crude jumps after export terminal outage cuts supply,https://example.com/fixture/2026-10-01/deu-econ_oilprice-2
+2026-10-01,DEU,ELECTION,-1.1,8,FIXTURE: Germany electoral commission publishes candidate list,https://example.com/fixture/2026-10-01/deu-election-1
+2026-10-01,EGY,TECH_AI,1.7,10,FIXTURE: Egypt startups announce new AI funding rounds,https://example.com/fixture/2026-10-01/egy-tech_ai-1
+2026-10-01,FRA,ELECTION,-1.0,19,FIXTURE: Campaign in France turns to the cost of living,https://example.com/fixture/2026-10-01/fra-election-1
+2026-10-01,FRA,ELECTION,-1.5,15,FIXTURE: Campaign in France turns to the cost of living,https://example.com/fixture/2026-10-01/fra-election-1
+2026-10-01,GBR,ECON_OILPRICE,-3.7,68,FIXTURE: Traders in United Kingdom brace for higher fuel bills after crude spike,https://example.com/fixture/2026-10-01/gbr-econ_oilprice-1
+2026-10-01,GBR,ECON_OILPRICE,-4.3,37,FIXTURE: United Kingdom energy ministry says fuel stocks are adequate for now,https://example.com/fixture/2026-10-01/gbr-econ_oilprice-2
+2026-10-01,GBR,ECON_STOCKMARKET,-0.8,22,FIXTURE: United Kingdom airline shares fall on fuel cost fears,https://example.com/fixture/2026-10-01/gbr-econ_stockmarket-1
+2026-10-01,GBR,IMMIGRATION,-2.4,16,FIXTURE: United Kingdom reports rise in asylum applications,https://example.com/fixture/2026-10-01/gbr-immigration-1
+2026-10-01,IDN,ENV_CLIMATECHANGE,-2.0,7,FIXTURE: Indonesia city councils debate flood defences,https://example.com/fixture/2026-10-01/idn-env_climatechange-1
+2026-10-01,IDN,IMMIGRATION,-3.4,16,FIXTURE: Indonesia reports rise in asylum applications,https://example.com/fixture/2026-10-01/idn-immigration-1
+2026-10-01,IND,ECON_OILPRICE,-4.0,48,FIXTURE: India energy ministry says fuel stocks are adequate for now,https://example.com/fixture/2026-10-01/ind-econ_oilprice-1
+2026-10-01,IND,ECON_OILPRICE,-2.7,39,FIXTURE: Crude jumps after export terminal outage cuts supply,https://example.com/fixture/2026-10-01/ind-econ_oilprice-2
+2026-10-01,IND,ELECTION,-1.8,18,FIXTURE: India electoral commission publishes candidate list,https://example.com/fixture/2026-10-01/ind-election-1
+2026-10-01,ISR,IMMIGRATION,-1.8,12,FIXTURE: Israel lawmakers debate visa rules for seasonal workers,https://example.com/fixture/2026-10-01/isr-immigration-1
+2026-10-01,ISR,TECH_AI,0.8,10,FIXTURE: Israel startups announce new AI funding rounds,https://example.com/fixture/2026-10-01/isr-tech_ai-1
+2026-10-01,JPN,ECON_OILPRICE,-3.6,40,FIXTURE: Traders in Japan brace for higher fuel bills after crude spike,https://example.com/fixture/2026-10-01/jpn-econ_oilprice-1
+2026-10-01,JPN,ECON_OILPRICE,-4.1,72,FIXTURE: Japan energy ministry says fuel stocks are adequate for now,https://example.com/fixture/2026-10-01/jpn-econ_oilprice-2
+2026-10-01,JPN,ECON_STOCKMARKET,-1.8,26,FIXTURE: Energy shares lead gains on the Japan stock exchange,https://example.com/fixture/2026-10-01/jpn-econ_stockmarket-1
+2026-10-01,JPN,IMMIGRATION,-2.9,16,FIXTURE: Japan lawmakers debate visa rules for seasonal workers,https://example.com/fixture/2026-10-01/jpn-immigration-1
+2026-10-01,KEN,ENV_CLIMATECHANGE,-2.1,19,FIXTURE: Kenya city councils debate flood defences,https://example.com/fixture/2026-10-01/ken-env_climatechange-1
+2026-10-01,MEX,ELECTION,-0.5,10,FIXTURE: Campaign in Mexico turns to the cost of living,https://example.com/fixture/2026-10-01/mex-election-1
+2026-10-01,MEX,ELECTION,-0.2,12,FIXTURE: Campaign in Mexico turns to the cost of living,https://example.com/fixture/2026-10-01/mex-election-1
+2026-10-01,NGA,ECON_OILPRICE,-3.5,38,FIXTURE: Crude jumps after export terminal outage cuts supply,https://example.com/fixture/2026-10-01/nga-econ_oilprice-1
+2026-10-01,NGA,ECON_OILPRICE,-3.7,63,FIXTURE: Traders in Nigeria brace for higher fuel bills after crude spike,https://example.com/fixture/2026-10-01/nga-econ_oilprice-2
+2026-10-01,NGA,IMMIGRATION,-1.9,13,FIXTURE: Nigeria lawmakers debate visa rules for seasonal workers,https://example.com/fixture/2026-10-01/nga-immigration-1
+2026-10-01,TUR,ELECTION,-1.1,15,FIXTURE: Campaign in Turkey turns to the cost of living,https://example.com/fixture/2026-10-01/tur-election-1
+2026-10-01,TUR,ENV_CLIMATECHANGE,-1.5,12,FIXTURE: Turkey weather service reports a record warm September,https://example.com/fixture/2026-10-01/tur-env_climatechange-1
+2026-10-01,USA,ECON_OILPRICE,-4.0,47,FIXTURE: Crude jumps after export terminal outage cuts supply,https://example.com/fixture/2026-10-01/usa-econ_oilprice-1
+2026-10-01,USA,ECON_OILPRICE,-3.4,64,FIXTURE: Traders in United States brace for higher fuel bills after crude spike,https://example.com/fixture/2026-10-01/usa-econ_oilprice-2
+2026-10-01,USA,ECON_STOCKMARKET,-0.5,21,FIXTURE: Energy shares lead gains on the United States stock exchange,https://example.com/fixture/2026-10-01/usa-econ_stockmarket-1
+2026-10-01,USA,ELECTION,-1.6,10,FIXTURE: Campaign in United States turns to the cost of living,https://example.com/fixture/2026-10-01/usa-election-1
+2026-10-01,ZAF,ELECTION,-1.5,8,FIXTURE: South Africa electoral commission publishes candidate list,https://example.com/fixture/2026-10-01/zaf-election-1
+2026-10-01,ZAF,TECH_AI,2.3,14,FIXTURE: South Africa startups announce new AI funding rounds,https://example.com/fixture/2026-10-01/zaf-tech_ai-1

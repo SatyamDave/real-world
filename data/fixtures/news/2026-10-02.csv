@@ -1,0 +1,41 @@
+date,iso3,theme,tone,num_sources,title,url
+2026-10-02,BRA,ECON_INFLATION,-3.4,29,FIXTURE: Shoppers in Brazil notice higher prices for staples,https://example.com/fixture/2026-10-02/bra-econ_inflation-1
+2026-10-02,BRA,ECON_OILPRICE,-4.7,79,FIXTURE: Brazil airlines add fuel surcharges,https://example.com/fixture/2026-10-02/bra-econ_oilprice-1
+2026-10-02,BRA,ECON_OILPRICE,-4.2,88,FIXTURE: Pump prices climb across Brazil as crude stays high,https://example.com/fixture/2026-10-02/bra-econ_oilprice-2
+2026-10-02,BRA,ELECTION,-1.7,10,FIXTURE: Brazil electoral commission publishes candidate list,https://example.com/fixture/2026-10-02/bra-election-1
+2026-10-02,CHN,TECH_AI,1.7,9,FIXTURE: China regulator opens consultation on AI rules,https://example.com/fixture/2026-10-02/chn-tech_ai-1
+2026-10-02,DEU,ECON_INFLATION,-3.8,36,FIXTURE: Economists in Germany raise inflation forecasts on fuel costs,https://example.com/fixture/2026-10-02/deu-econ_inflation-1
+2026-10-02,DEU,ECON_OILPRICE,-4.8,70,FIXTURE: Germany airlines add fuel surcharges,https://example.com/fixture/2026-10-02/deu-econ_oilprice-1
+2026-10-02,DEU,ECON_OILPRICE,-3.9,46,FIXTURE: Pump prices climb across Germany as crude stays high,https://example.com/fixture/2026-10-02/deu-econ_oilprice-2
+2026-10-02,DEU,ECON_STOCKMARKET,-1.9,16,FIXTURE: Germany stocks slip as fuel costs weigh on outlook,https://example.com/fixture/2026-10-02/deu-econ_stockmarket-1
+2026-10-02,DEU,TECH_AI,1.2,14,FIXTURE: Germany startups announce new AI funding rounds,https://example.com/fixture/2026-10-02/deu-tech_ai-1
+2026-10-02,EGY,ENV_CLIMATECHANGE,-2.8,16,FIXTURE: Fuel shock revives electric vehicle debate in Egypt,https://example.com/fixture/2026-10-02/egy-env_climatechange-1
+2026-10-02,FRA,ECON_OILPRICE,-5.2,50,FIXTURE: Pump prices climb across France as crude stays high,https://example.com/fixture/2026-10-02/fra-econ_oilprice-1
+2026-10-02,FRA,ECON_OILPRICE,-5.3,60,FIXTURE: Drivers in France fill up ahead of an expected fuel price rise,https://example.com/fixture/2026-10-02/fra-econ_oilprice-2
+2026-10-02,FRA,ELECTION,-0.4,12,FIXTURE: Campaign in France turns to the cost of living,https://example.com/fixture/2026-10-02/fra-election-1
+2026-10-02,GBR,ECON_INFLATION,-2.9,48,FIXTURE: Shoppers in United Kingdom notice higher prices for staples,https://example.com/fixture/2026-10-02/gbr-econ_inflation-1
+2026-10-02,GBR,ECON_OILPRICE,-5.1,46,FIXTURE: Drivers in United Kingdom fill up ahead of an expected fuel price rise,https://example.com/fixture/2026-10-02/gbr-econ_oilprice-1
+2026-10-02,GBR,ECON_OILPRICE,-4.8,87,FIXTURE: United Kingdom airlines add fuel surcharges,https://example.com/fixture/2026-10-02/gbr-econ_oilprice-2
+2026-10-02,GBR,ENV_CLIMATECHANGE,-1.9,17,FIXTURE: United Kingdom city councils debate flood defences,https://example.com/fixture/2026-10-02/gbr-env_climatechange-1
+2026-10-02,IDN,ELECTION,-1.3,17,FIXTURE: Indonesia opposition leads in regional election race,https://example.com/fixture/2026-10-02/idn-election-1
+2026-10-02,IDN,ELECTION,-0.7,9,FIXTURE: Indonesia opposition leads in regional election race,https://example.com/fixture/2026-10-02/idn-election-1
+2026-10-02,IND,ECON_OILPRICE,-3.8,42,FIXTURE: India airlines add fuel surcharges,https://example.com/fixture/2026-10-02/ind-econ_oilprice-1
+2026-10-02,IND,ECON_OILPRICE,-3.6,87,FIXTURE: Pump prices climb across India as crude stays high,https://example.com/fixture/2026-10-02/ind-econ_oilprice-2
+2026-10-02,IND,TECH_AI,1.5,8,FIXTURE: India regulator opens consultation on AI rules,https://example.com/fixture/2026-10-02/ind-tech_ai-1
+2026-10-02,ISR,ARMEDCONFLICT,-5.5,18,FIXTURE: Israel defence ministry reports border incident,https://example.com/fixture/2026-10-02/isr-armedconflict-1
+2026-10-02,JPN,ECON_OILPRICE,-5.1,45,FIXTURE: Drivers in Japan fill up ahead of an expected fuel price rise,https://example.com/fixture/2026-10-02/jpn-econ_oilprice-1
+2026-10-02,JPN,ECON_OILPRICE,-4.2,73,FIXTURE: Japan airlines add fuel surcharges,https://example.com/fixture/2026-10-02/jpn-econ_oilprice-2
+2026-10-02,JPN,IMMIGRATION,-2.3,8,FIXTURE: Japan lawmakers debate visa rules for seasonal workers,https://example.com/fixture/2026-10-02/jpn-immigration-1
+2026-10-02,KEN,ELECTION,-0.5,18,FIXTURE: Kenya opposition leads in regional election race,https://example.com/fixture/2026-10-02/ken-election-1
+2026-10-02,MEX,ECON_OILPRICE,-5.1,84,FIXTURE: Pump prices climb across Mexico as crude stays high,https://example.com/fixture/2026-10-02/mex-econ_oilprice-1
+2026-10-02,MEX,ECON_OILPRICE,-4.7,70,FIXTURE: Drivers in Mexico fill up ahead of an expected fuel price rise,https://example.com/fixture/2026-10-02/mex-econ_oilprice-2
+2026-10-02,MEX,ENV_CLIMATECHANGE,-2.1,10,FIXTURE: Mexico weather service reports a record warm September,https://example.com/fixture/2026-10-02/mex-env_climatechange-1
+2026-10-02,NGA,IMMIGRATION,-1.9,18,FIXTURE: Nigeria lawmakers debate visa rules for seasonal workers,https://example.com/fixture/2026-10-02/nga-immigration-1
+2026-10-02,TUR,IMMIGRATION,-3.0,7,FIXTURE: Turkey reports rise in asylum applications,https://example.com/fixture/2026-10-02/tur-immigration-1
+2026-10-02,USA,ECON_INFLATION,-3.0,24,FIXTURE: Economists in United States raise inflation forecasts on fuel costs,https://example.com/fixture/2026-10-02/usa-econ_inflation-1
+2026-10-02,USA,ECON_OILPRICE,-5.1,79,FIXTURE: Pump prices climb across United States as crude stays high,https://example.com/fixture/2026-10-02/usa-econ_oilprice-1
+2026-10-02,USA,ECON_OILPRICE,-4.1,74,FIXTURE: Drivers in United States fill up ahead of an expected fuel price rise,https://example.com/fixture/2026-10-02/usa-econ_oilprice-2
+2026-10-02,USA,ELECTION,-0.9,11,FIXTURE: Campaign in United States turns to the cost of living,https://example.com/fixture/2026-10-02/usa-election-1
+2026-10-02,ZAF,ECON_OILPRICE,-4.1,67,FIXTURE: South Africa airlines add fuel surcharges,https://example.com/fixture/2026-10-02/zaf-econ_oilprice-1
+2026-10-02,ZAF,ECON_OILPRICE,-5.2,73,FIXTURE: Pump prices climb across South Africa as crude stays high,https://example.com/fixture/2026-10-02/zaf-econ_oilprice-2
+2026-10-02,ZAF,ELECTION,-1.8,16,FIXTURE: South Africa electoral commission publishes candidate list,https://example.com/fixture/2026-10-02/zaf-election-1

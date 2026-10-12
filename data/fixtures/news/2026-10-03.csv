@@ -1,0 +1,41 @@
+date,iso3,theme,tone,num_sources,title,url
+2026-10-03,BRA,ECON_OILPRICE,-4.9,72,FIXTURE: Brazil bus operators raise fares on fuel costs,https://example.com/fixture/2026-10-03/bra-econ_oilprice-1
+2026-10-03,BRA,ECON_OILPRICE,-5.1,68,FIXTURE: Fuel costs hit freight and farm budgets in Brazil,https://example.com/fixture/2026-10-03/bra-econ_oilprice-2
+2026-10-03,BRA,ELECTION,-1.0,9,FIXTURE: Brazil electoral commission publishes candidate list,https://example.com/fixture/2026-10-03/bra-election-1
+2026-10-03,CHN,IMMIGRATION,-1.6,13,FIXTURE: China reports rise in asylum applications,https://example.com/fixture/2026-10-03/chn-immigration-1
+2026-10-03,DEU,ENV_CLIMATECHANGE,-2.8,17,FIXTURE: Fuel shock revives electric vehicle debate in Germany,https://example.com/fixture/2026-10-03/deu-env_climatechange-1
+2026-10-03,EGY,ECON_INFLATION,-3.6,29,FIXTURE: Food prices in Egypt rise as transport costs pass through,https://example.com/fixture/2026-10-03/egy-econ_inflation-1
+2026-10-03,EGY,ECON_OILPRICE,-4.8,45,FIXTURE: Egypt bus operators raise fares on fuel costs,https://example.com/fixture/2026-10-03/egy-econ_oilprice-1
+2026-10-03,EGY,ECON_OILPRICE,-6.0,86,FIXTURE: Fuel costs hit freight and farm budgets in Egypt,https://example.com/fixture/2026-10-03/egy-econ_oilprice-2
+2026-10-03,FRA,ECON_OILPRICE,-6.1,95,FIXTURE: Fuel costs hit freight and farm budgets in France,https://example.com/fixture/2026-10-03/fra-econ_oilprice-1
+2026-10-03,FRA,ECON_OILPRICE,-4.6,87,FIXTURE: Diesel shortages reported at stations in France,https://example.com/fixture/2026-10-03/fra-econ_oilprice-2
+2026-10-03,FRA,IMMIGRATION,-2.3,18,FIXTURE: France reports rise in asylum applications,https://example.com/fixture/2026-10-03/fra-immigration-1
+2026-10-03,FRA,PROTEST,-5.1,55,FIXTURE: Transport unions in France threaten a strike over fuel costs,https://example.com/fixture/2026-10-03/fra-protest-1
+2026-10-03,FRA,PROTEST,-5.1,32,FIXTURE: Protesters in France march against fuel price rises,https://example.com/fixture/2026-10-03/fra-protest-2
+2026-10-03,GBR,ELECTION,-1.4,12,FIXTURE: United Kingdom opposition leads in regional election race,https://example.com/fixture/2026-10-03/gbr-election-1
+2026-10-03,IDN,ECON_OILPRICE,-5.8,52,FIXTURE: Diesel shortages reported at stations in Indonesia,https://example.com/fixture/2026-10-03/idn-econ_oilprice-1
+2026-10-03,IDN,ECON_OILPRICE,-6.5,92,FIXTURE: Indonesia bus operators raise fares on fuel costs,https://example.com/fixture/2026-10-03/idn-econ_oilprice-2
+2026-10-03,IDN,ELECTION,-0.6,16,FIXTURE: Indonesia opposition leads in regional election race,https://example.com/fixture/2026-10-03/idn-election-1
+2026-10-03,IND,ECON_OILPRICE,-5.6,73,FIXTURE: India bus operators raise fares on fuel costs,https://example.com/fixture/2026-10-03/ind-econ_oilprice-1
+2026-10-03,IND,ECON_OILPRICE,-5.2,84,FIXTURE: Fuel costs hit freight and farm budgets in India,https://example.com/fixture/2026-10-03/ind-econ_oilprice-2
+2026-10-03,ISR,ENV_CLIMATECHANGE,-2.8,15,FIXTURE: Israel city councils debate flood defences,https://example.com/fixture/2026-10-03/isr-env_climatechange-1
+2026-10-03,JPN,ELECTION,-0.7,9,FIXTURE: Japan opposition leads in regional election race,https://example.com/fixture/2026-10-03/jpn-election-1
+2026-10-03,KEN,ECON_OILPRICE,-5.9,82,FIXTURE: Diesel shortages reported at stations in Kenya,https://example.com/fixture/2026-10-03/ken-econ_oilprice-1
+2026-10-03,KEN,ECON_OILPRICE,-4.9,54,FIXTURE: Kenya bus operators raise fares on fuel costs,https://example.com/fixture/2026-10-03/ken-econ_oilprice-2
+2026-10-03,KEN,PROTEST,-5.2,64,FIXTURE: Transport unions in Kenya threaten a strike over fuel costs,https://example.com/fixture/2026-10-03/ken-protest-1
+2026-10-03,KEN,PROTEST,-6.3,70,FIXTURE: Protesters in Kenya march against fuel price rises,https://example.com/fixture/2026-10-03/ken-protest-2
+2026-10-03,MEX,ECON_INFLATION,-4.8,52,FIXTURE: Food prices in Mexico rise as transport costs pass through,https://example.com/fixture/2026-10-03/mex-econ_inflation-1
+2026-10-03,MEX,IMMIGRATION,-1.8,14,FIXTURE: Mexico lawmakers debate visa rules for seasonal workers,https://example.com/fixture/2026-10-03/mex-immigration-1
+2026-10-03,NGA,ECON_OILPRICE,-4.9,90,FIXTURE: Fuel costs hit freight and farm budgets in Nigeria,https://example.com/fixture/2026-10-03/nga-econ_oilprice-1
+2026-10-03,NGA,ECON_OILPRICE,-5.1,38,FIXTURE: Diesel shortages reported at stations in Nigeria,https://example.com/fixture/2026-10-03/nga-econ_oilprice-2
+2026-10-03,NGA,PROTEST,-5.4,60,FIXTURE: Protesters in Nigeria march against fuel price rises,https://example.com/fixture/2026-10-03/nga-protest-1
+2026-10-03,NGA,PROTEST,-6.2,45,FIXTURE: Transport unions in Nigeria threaten a strike over fuel costs,https://example.com/fixture/2026-10-03/nga-protest-2
+2026-10-03,TUR,ECON_INFLATION,-4.7,23,FIXTURE: Turkey retailers warn of price increases next month,https://example.com/fixture/2026-10-03/tur-econ_inflation-1
+2026-10-03,TUR,ECON_OILPRICE,-5.1,47,FIXTURE: Fuel costs hit freight and farm budgets in Turkey,https://example.com/fixture/2026-10-03/tur-econ_oilprice-1
+2026-10-03,TUR,ECON_OILPRICE,-6.5,74,FIXTURE: Diesel shortages reported at stations in Turkey,https://example.com/fixture/2026-10-03/tur-econ_oilprice-2
+2026-10-03,TUR,TECH_AI,0.6,11,FIXTURE: Turkey regulator opens consultation on AI rules,https://example.com/fixture/2026-10-03/tur-tech_ai-1
+2026-10-03,USA,ECON_INFLATION,-4.9,35,FIXTURE: Food prices in United States rise as transport costs pass through,https://example.com/fixture/2026-10-03/usa-econ_inflation-1
+2026-10-03,USA,TECH_AI,0.5,10,FIXTURE: United States startups announce new AI funding rounds,https://example.com/fixture/2026-10-03/usa-tech_ai-1
+2026-10-03,ZAF,ECON_OILPRICE,-6.3,46,FIXTURE: South Africa bus operators raise fares on fuel costs,https://example.com/fixture/2026-10-03/zaf-econ_oilprice-1
+2026-10-03,ZAF,ECON_OILPRICE,-5.3,48,FIXTURE: Fuel costs hit freight and farm budgets in South Africa,https://example.com/fixture/2026-10-03/zaf-econ_oilprice-2
+2026-10-03,ZAF,ENV_CLIMATECHANGE,-2.4,13,FIXTURE: Fuel shock revives electric vehicle debate in South Africa,https://example.com/fixture/2026-10-03/zaf-env_climatechange-1

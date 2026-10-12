@@ -1,0 +1,41 @@
+date,iso3,theme,tone,num_sources,title,url
+2026-10-05,BRA,ECON_INFLATION,-2.9,32,FIXTURE: Prices in Brazil stay elevated despite lower crude,https://example.com/fixture/2026-10-05/bra-econ_inflation-1
+2026-10-05,BRA,ELECTION,-0.5,11,FIXTURE: Brazil electoral commission publishes candidate list,https://example.com/fixture/2026-10-05/bra-election-1
+2026-10-05,CHN,ELECTION,-1.1,12,FIXTURE: Campaign in China turns to the cost of living,https://example.com/fixture/2026-10-05/chn-election-1
+2026-10-05,CHN,ENV_CLIMATECHANGE,-1.1,14,FIXTURE: China weather service reports a record warm September,https://example.com/fixture/2026-10-05/chn-env_climatechange-1
+2026-10-05,DEU,ECON_INFLATION,-2.1,31,FIXTURE: Germany inflation outlook steadies as crude eases,https://example.com/fixture/2026-10-05/deu-econ_inflation-1
+2026-10-05,DEU,ELECTION,-1.3,8,FIXTURE: Germany electoral commission publishes candidate list,https://example.com/fixture/2026-10-05/deu-election-1
+2026-10-05,DEU,ENV_CLIMATECHANGE,-1.5,15,FIXTURE: Fuel shock revives electric vehicle debate in Germany,https://example.com/fixture/2026-10-05/deu-env_climatechange-1
+2026-10-05,EGY,ARMEDCONFLICT,-5.5,14,FIXTURE: Egypt defence ministry reports border incident,https://example.com/fixture/2026-10-05/egy-armedconflict-1
+2026-10-05,EGY,TECH_AI,2.5,8,FIXTURE: Egypt startups announce new AI funding rounds,https://example.com/fixture/2026-10-05/egy-tech_ai-1
+2026-10-05,FRA,ELECTION,-0.6,16,FIXTURE: Campaign in France turns to the cost of living,https://example.com/fixture/2026-10-05/fra-election-1
+2026-10-05,FRA,TECH_AI,1.3,7,FIXTURE: France regulator opens consultation on AI rules,https://example.com/fixture/2026-10-05/fra-tech_ai-1
+2026-10-05,GBR,ECON_OILPRICE,-2.3,27,FIXTURE: Fuel prices in United Kingdom dip for the first time this week,https://example.com/fixture/2026-10-05/gbr-econ_oilprice-1
+2026-10-05,GBR,ECON_STOCKMARKET,2.2,25,FIXTURE: United Kingdom shares recover as crude eases,https://example.com/fixture/2026-10-05/gbr-econ_stockmarket-1
+2026-10-05,GBR,ELECTION,-0.9,15,FIXTURE: United Kingdom opposition leads in regional election race,https://example.com/fixture/2026-10-05/gbr-election-1
+2026-10-05,GBR,TECH_AI,0.7,15,FIXTURE: United Kingdom regulator opens consultation on AI rules,https://example.com/fixture/2026-10-05/gbr-tech_ai-1
+2026-10-05,IDN,ECON_OILPRICE,-1.5,28,FIXTURE: Fuel prices in Indonesia dip for the first time this week,https://example.com/fixture/2026-10-05/idn-econ_oilprice-1
+2026-10-05,IDN,TAX_FNCACT,-0.4,21,FIXTURE: Critics in Indonesia question the cost of fuel relief,https://example.com/fixture/2026-10-05/idn-tax_fncact-1
+2026-10-05,IDN,TECH_AI,1.1,16,FIXTURE: Indonesia regulator opens consultation on AI rules,https://example.com/fixture/2026-10-05/idn-tech_ai-1
+2026-10-05,IND,ARMEDCONFLICT,-5.5,14,FIXTURE: India raises military readiness after regional clashes,https://example.com/fixture/2026-10-05/ind-armedconflict-1
+2026-10-05,IND,ECON_OILPRICE,-2.3,48,FIXTURE: India motorists see little relief yet at the pump,https://example.com/fixture/2026-10-05/ind-econ_oilprice-1
+2026-10-05,ISR,ARMEDCONFLICT,-6.6,13,FIXTURE: Israel defence ministry reports border incident,https://example.com/fixture/2026-10-05/isr-armedconflict-1
+2026-10-05,ISR,TECH_AI,0.9,15,FIXTURE: Israel startups announce new AI funding rounds,https://example.com/fixture/2026-10-05/isr-tech_ai-1
+2026-10-05,JPN,ECON_STOCKMARKET,2.2,16,FIXTURE: Japan shares recover as crude eases,https://example.com/fixture/2026-10-05/jpn-econ_stockmarket-1
+2026-10-05,JPN,TECH_AI,1.3,14,FIXTURE: Japan startups announce new AI funding rounds,https://example.com/fixture/2026-10-05/jpn-tech_ai-1
+2026-10-05,KEN,ECON_OILPRICE,-1.1,23,FIXTURE: Fuel prices in Kenya dip for the first time this week,https://example.com/fixture/2026-10-05/ken-econ_oilprice-1
+2026-10-05,KEN,PROTEST,-4.7,37,FIXTURE: Smaller fuel protests continue in Kenya,https://example.com/fixture/2026-10-05/ken-protest-1
+2026-10-05,KEN,TECH_AI,1.6,14,FIXTURE: Kenya regulator opens consultation on AI rules,https://example.com/fixture/2026-10-05/ken-tech_ai-1
+2026-10-05,MEX,IMMIGRATION,-2.1,11,FIXTURE: Mexico lawmakers debate visa rules for seasonal workers,https://example.com/fixture/2026-10-05/mex-immigration-1
+2026-10-05,MEX,TECH_AI,2.2,8,FIXTURE: Mexico startups announce new AI funding rounds,https://example.com/fixture/2026-10-05/mex-tech_ai-1
+2026-10-05,NGA,ECON_OILPRICE,-1.4,34,FIXTURE: Crude eases as the export terminal restarts; Nigeria pump prices lag,https://example.com/fixture/2026-10-05/nga-econ_oilprice-1
+2026-10-05,NGA,ENV_CLIMATECHANGE,-1.4,17,FIXTURE: Nigeria weather service reports a record warm September,https://example.com/fixture/2026-10-05/nga-env_climatechange-1
+2026-10-05,NGA,PROTEST,-3.3,22,FIXTURE: Nigeria unions pause strike plans after government talks,https://example.com/fixture/2026-10-05/nga-protest-1
+2026-10-05,NGA,TAX_FNCACT,-2.0,28,FIXTURE: Nigeria approves a temporary fuel subsidy,https://example.com/fixture/2026-10-05/nga-tax_fncact-1
+2026-10-05,TUR,ECON_INFLATION,-1.6,24,FIXTURE: Prices in Turkey stay elevated despite lower crude,https://example.com/fixture/2026-10-05/tur-econ_inflation-1
+2026-10-05,TUR,ENV_CLIMATECHANGE,-2.8,13,FIXTURE: Turkey weather service reports a record warm September,https://example.com/fixture/2026-10-05/tur-env_climatechange-1
+2026-10-05,USA,ECON_OILPRICE,-1.5,40,FIXTURE: Crude eases as the export terminal restarts; United States pump prices lag,https://example.com/fixture/2026-10-05/usa-econ_oilprice-1
+2026-10-05,USA,ENV_CLIMATECHANGE,-1.2,14,FIXTURE: United States weather service reports a record warm September,https://example.com/fixture/2026-10-05/usa-env_climatechange-1
+2026-10-05,USA,IMMIGRATION,-1.7,9,FIXTURE: United States lawmakers debate visa rules for seasonal workers,https://example.com/fixture/2026-10-05/usa-immigration-1
+2026-10-05,ZAF,ELECTION,-1.8,11,FIXTURE: South Africa electoral commission publishes candidate list,https://example.com/fixture/2026-10-05/zaf-election-1
+2026-10-05,ZAF,ENV_CLIMATECHANGE,-1.1,18,FIXTURE: Fuel shock revives electric vehicle debate in South Africa,https://example.com/fixture/2026-10-05/zaf-env_climatechange-1

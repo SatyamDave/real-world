@@ -1,0 +1,41 @@
+date,iso3,theme,tone,num_sources,title,url
+2026-10-04,BRA,ELECTION,-2.0,16,FIXTURE: Brazil electoral commission publishes candidate list,https://example.com/fixture/2026-10-04/bra-election-1
+2026-10-04,CHN,TECH_AI,1.6,9,FIXTURE: China regulator opens consultation on AI rules,https://example.com/fixture/2026-10-04/chn-tech_ai-1
+2026-10-04,DEU,TAX_FNCACT,-1.6,22,FIXTURE: Germany parliament debates fuel subsidy extension,https://example.com/fixture/2026-10-04/deu-tax_fncact-1
+2026-10-04,DEU,TECH_AI,1.2,19,FIXTURE: Germany startups announce new AI funding rounds,https://example.com/fixture/2026-10-04/deu-tech_ai-1
+2026-10-04,EGY,ECON_OILPRICE,-5.3,68,FIXTURE: Egypt opens strategic fuel reserve,https://example.com/fixture/2026-10-04/egy-econ_oilprice-1
+2026-10-04,EGY,TECH_AI,2.3,14,FIXTURE: Egypt startups announce new AI funding rounds,https://example.com/fixture/2026-10-04/egy-tech_ai-1
+2026-10-04,FRA,ELECTION,-0.8,9,FIXTURE: Campaign in France turns to the cost of living,https://example.com/fixture/2026-10-04/fra-election-1
+2026-10-04,FRA,PROTEST,-6.4,52,FIXTURE: Police in France disperse crowds at fuel price demonstration,https://example.com/fixture/2026-10-04/fra-protest-1
+2026-10-04,FRA,PROTEST,-6.9,54,FIXTURE: Fuel protests in France spread to more cities,https://example.com/fixture/2026-10-04/fra-protest-2
+2026-10-04,GBR,ECON_INFLATION,-4.0,59,FIXTURE: Wage talks in United Kingdom turn to the rising cost of living,https://example.com/fixture/2026-10-04/gbr-econ_inflation-1
+2026-10-04,GBR,ENV_CLIMATECHANGE,-2.8,12,FIXTURE: United Kingdom city councils debate flood defences,https://example.com/fixture/2026-10-04/gbr-env_climatechange-1
+2026-10-04,IDN,ECON_OILPRICE,-5.8,52,FIXTURE: Fuel prices in Indonesia hold near weekly high,https://example.com/fixture/2026-10-04/idn-econ_oilprice-1
+2026-10-04,IDN,ENV_CLIMATECHANGE,-1.3,19,FIXTURE: Indonesia city councils debate flood defences,https://example.com/fixture/2026-10-04/idn-env_climatechange-1
+2026-10-04,IDN,PROTEST,-6.3,37,FIXTURE: Police in Indonesia disperse crowds at fuel price demonstration,https://example.com/fixture/2026-10-04/idn-protest-1
+2026-10-04,IDN,PROTEST,-6.2,69,FIXTURE: Fuel protests in Indonesia spread to more cities,https://example.com/fixture/2026-10-04/idn-protest-2
+2026-10-04,IDN,TAX_FNCACT,-1.9,49,FIXTURE: Indonesia finance ministry costs a temporary fuel tax cut,https://example.com/fixture/2026-10-04/idn-tax_fncact-1
+2026-10-04,IND,ECON_INFLATION,-3.7,57,FIXTURE: Wage talks in India turn to the rising cost of living,https://example.com/fixture/2026-10-04/ind-econ_inflation-1
+2026-10-04,IND,IMMIGRATION,-2.4,18,FIXTURE: India reports rise in asylum applications,https://example.com/fixture/2026-10-04/ind-immigration-1
+2026-10-04,ISR,IMMIGRATION,-3.5,15,FIXTURE: Israel lawmakers debate visa rules for seasonal workers,https://example.com/fixture/2026-10-04/isr-immigration-1
+2026-10-04,JPN,TECH_AI,1.8,18,FIXTURE: Japan startups announce new AI funding rounds,https://example.com/fixture/2026-10-04/jpn-tech_ai-1
+2026-10-04,KEN,ECON_OILPRICE,-5.4,42,FIXTURE: Fuel prices in Kenya hold near weekly high,https://example.com/fixture/2026-10-04/ken-econ_oilprice-1
+2026-10-04,KEN,ENV_CLIMATECHANGE,-2.3,10,FIXTURE: Kenya city councils debate flood defences,https://example.com/fixture/2026-10-04/ken-env_climatechange-1
+2026-10-04,KEN,PROTEST,-5.7,44,FIXTURE: Police in Kenya disperse crowds at fuel price demonstration,https://example.com/fixture/2026-10-04/ken-protest-1
+2026-10-04,KEN,PROTEST,-7.3,85,FIXTURE: Fuel protests in Kenya spread to more cities,https://example.com/fixture/2026-10-04/ken-protest-2
+2026-10-04,KEN,TAX_FNCACT,-1.9,34,FIXTURE: Kenya finance ministry costs a temporary fuel tax cut,https://example.com/fixture/2026-10-04/ken-tax_fncact-1
+2026-10-04,MEX,ECON_OILPRICE,-5.1,83,FIXTURE: Mexico government weighs a fuel tax cut as prices stay high,https://example.com/fixture/2026-10-04/mex-econ_oilprice-1
+2026-10-04,MEX,ELECTION,-1.7,7,FIXTURE: Campaign in Mexico turns to the cost of living,https://example.com/fixture/2026-10-04/mex-election-1
+2026-10-04,NGA,ECON_OILPRICE,-4.1,38,FIXTURE: Nigeria government weighs a fuel tax cut as prices stay high,https://example.com/fixture/2026-10-04/nga-econ_oilprice-1
+2026-10-04,NGA,ELECTION,-1.4,15,FIXTURE: Campaign in Nigeria turns to the cost of living,https://example.com/fixture/2026-10-04/nga-election-1
+2026-10-04,NGA,PROTEST,-7.2,42,FIXTURE: Fuel protests in Nigeria spread to more cities,https://example.com/fixture/2026-10-04/nga-protest-1
+2026-10-04,NGA,PROTEST,-6.7,48,FIXTURE: Police in Nigeria disperse crowds at fuel price demonstration,https://example.com/fixture/2026-10-04/nga-protest-2
+2026-10-04,NGA,TAX_FNCACT,-2.8,20,FIXTURE: Nigeria parliament debates fuel subsidy extension,https://example.com/fixture/2026-10-04/nga-tax_fncact-1
+2026-10-04,TUR,ELECTION,-1.5,8,FIXTURE: Campaign in Turkey turns to the cost of living,https://example.com/fixture/2026-10-04/tur-election-1
+2026-10-04,USA,ECON_INFLATION,-3.9,43,FIXTURE: United States central bank signals it will act if fuel prices feed inflation,https://example.com/fixture/2026-10-04/usa-econ_inflation-1
+2026-10-04,USA,ECON_STOCKMARKET,-3.0,32,FIXTURE: United States markets fall on rate rise fears,https://example.com/fixture/2026-10-04/usa-econ_stockmarket-1
+2026-10-04,USA,ELECTION,-1.9,17,FIXTURE: Campaign in United States turns to the cost of living,https://example.com/fixture/2026-10-04/usa-election-1
+2026-10-04,ZAF,ECON_OILPRICE,-4.7,61,FIXTURE: South Africa opens strategic fuel reserve,https://example.com/fixture/2026-10-04/zaf-econ_oilprice-1
+2026-10-04,ZAF,PROTEST,-6.5,55,FIXTURE: Fuel protests in South Africa spread to more cities,https://example.com/fixture/2026-10-04/zaf-protest-1
+2026-10-04,ZAF,PROTEST,-5.8,73,FIXTURE: Police in South Africa disperse crowds at fuel price demonstration,https://example.com/fixture/2026-10-04/zaf-protest-2
+2026-10-04,ZAF,TECH_AI,1.0,11,FIXTURE: South Africa startups announce new AI funding rounds,https://example.com/fixture/2026-10-04/zaf-tech_ai-1
