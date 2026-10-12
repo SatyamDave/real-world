@@ -18,6 +18,7 @@ The Python package `rw`: settings, storage, the model gateway, the licence gate,
 - Every data source is read only after `sources.require(source_id)` passes.
 - Beliefs change only through the operators in `beliefs.py`; the model never sets a step size.
 - Market prices never enter assimilation or the `sim` forecast prompt.
+- A keyless run reports `model: fake`, `provider: fake` and nothing spent, on every surface: fork results, ledger entries, the daily summary and experiment results. Its would-be dollars appear only labelled as an estimate at `settings.MODEL` prices [#18, #26, #27, #33, #34].
 
 ## Test
 

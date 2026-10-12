@@ -19,3 +19,4 @@ Get the current branch ready to merge, then open a draft pull request. Title hin
 8. Write the PR body with every section of `.github/pull_request_template.md` filled: why (link the note or decision under `research/`), every change named, the commands run and what they showed, risk and rollback, product impact.
 9. Use a conventional-commit title, e.g. `feat(engine): ...`, `research: ...`, `docs(gtm): ...`.
 10. Open it as a draft: `gh pr create --draft --title "<title>" --body-file <file>`. Never use `--fill`. Mark it ready for review only when the checks pass; that triggers the Claude review.
+11. Merge only with `scripts/merge_pr.sh <N>`, which waits until every required check has reported and passed; never `gh pr merge` by hand [#8, #9].

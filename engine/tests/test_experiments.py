@@ -133,4 +133,7 @@ def test_e001_fixtures_label_fake_results(root):
     assert {"mean_brier_sim", "brier_sim_minus_plain_llm", "brier_sim_minus_naive"} <= set(
         results["metrics"]
     )
-    assert experiments.FAKE_NOTE in (path / "RESULTS.md").read_text()
+    report = (path / "RESULTS.md").read_text()
+    assert experiments.FAKE_NOTE in report
+    # A keyless run prints its would-be dollars only as an estimate, never as spend (#33, #34).
+    assert "model fake, nothing spent (estimated $" in report and " cost $" not in report

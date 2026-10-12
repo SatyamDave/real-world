@@ -33,6 +33,10 @@ def test_fixture_days_run_verify_and_chain():
     conn = db.connect()
     for s in summaries:
         assert s["ran"] == list(daily.STEPS) and s["root"] and s["forecasts_committed"] > 0
+        # Keyless: the summary names the fake model and prints dollars as an estimate (#33, #34).
+        assert s["model"] == "fake" and s["usd"] > 0
+        line = daily.format_summary(s)
+        assert "fake model, nothing spent (estimated $" in line and ", $" not in line
     statuses = conn.execute("SELECT DISTINCT status FROM stage_runs").fetchall()
     assert [r[0] for r in statuses] == ["ok"]
 

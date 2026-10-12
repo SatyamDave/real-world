@@ -1,13 +1,14 @@
 // The production build refuses to ship fixture questions (product/web-app.md); vite.config.ts runs this.
 import { Client } from "@real-world/sdk";
 
-export type ShownQuestion = { id: string; resolution_source: string };
+export type ShownQuestion = { id: string; text: string; resolution_source: string };
 
 export function fixtureLeaks(questions: ShownQuestion[]): string[] {
   const leaks = questions.flatMap((q) => {
     const host = new URL(q.resolution_source).hostname;
     const bad = [];
     if (q.id.startsWith("fx-")) bad.push(`${q.id}: fixture id`);
+    if (q.text.startsWith("FIXTURE:")) bad.push(`${q.id}: fixture text`);
     if (host === "example.com" || host.endsWith(".example.com"))
       bad.push(`${q.id}: source host ${host}`);
     return bad;
@@ -25,6 +26,7 @@ export async function shownQuestions(
       if (e.question)
         shown.push({
           id: String(e.entry.question_id),
+          text: e.question.text,
           resolution_source: e.question.resolution_source,
         });
     }

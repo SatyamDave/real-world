@@ -560,7 +560,11 @@ def run(exp_id: str, fixtures: bool = False, root: Path = EXPERIMENTS, command: 
         f"- Commit: `{commit}`",
         f"- PREREG.md sha256: `{prereg}` (matches REGISTRY.md)",
         f"- Engine {settings.ENGINE_VERSION}, provider {provider}, model {model},"
-        f" cost ${out['cost_usd']:.6f}",
+        + (
+            f" nothing spent (estimated ${out['cost_usd']:.6f} at {settings.MODEL} prices)"
+            if provider == "fake"
+            else f" cost ${out['cost_usd']:.6f}"
+        ),
         f"- n = {out['n']}; raw rows in `rows.csv`, every number in `results.json`",
         "",
         "## Pre-registered metrics",

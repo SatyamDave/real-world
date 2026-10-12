@@ -15,6 +15,7 @@ The FastAPI app `rw_api`: HTTP, fork jobs, idempotency, server-sent events, the 
 - Model calls go through `llm.complete_json` with a `Budget`; a cost that cannot be checked refuses.
 - Every simulate result carries `simulated: true`; every agent account carries its simulated label.
 - Numbers shown for a forecast (`sim`, `market`) come from committed ledger entries, never recomputed.
+- Fixture questions (`fx-` ids, `FIXTURE:` text, `example.com` sources) are for local runs and tests. Nothing served to a person may show one: `web/src/liveCheck.ts` fails a production `vite build` against an API that serves one, and `make e2e` proves it against the fixture API [#31, #33, #35].
 - `api/openapi.json` is the contract the SDKs are generated from. Change it only with `make openapi`, in the same PR as the code.
 
 ## Test
