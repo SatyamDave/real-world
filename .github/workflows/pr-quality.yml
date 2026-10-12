@@ -37,6 +37,14 @@ jobs:
               errors.push('A feat, perf or refactor PR links the research note or decision it rests on (a path under research/) in "## Why".');
             }
 
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number,
+            });
+            const ui = files.some(f => /^(web|landing)\/src\/.*\.(tsx|css)$/.test(f.filename) && !/\.test\.tsx?$/.test(f.filename));
+            if (ui && !/!\[[^\]]*\]\([^)]+\)|\.png\b/i.test(body)) {
+              errors.push('This PR changes UI in web/src or landing/src: add screenshots at 390 and 1440 px wide (an image or a .png path) to the description.');
+            }
+
             if (errors.length) core.setFailed(errors.join('\n'));
 
   size:
