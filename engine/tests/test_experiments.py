@@ -17,7 +17,7 @@ def root(tmp_path):
     out = tmp_path / "experiments"
     out.mkdir()
     shutil.copy(experiments.EXPERIMENTS / "REGISTRY.md", out)
-    for exp_id in ("E001", "E002", "E003"):
+    for exp_id in ("E001", "E002", "E003", "E006"):
         (out / exp_id).mkdir()
         shutil.copy(experiments.EXPERIMENTS / exp_id / "PREREG.md", out / exp_id)
     return out
@@ -57,6 +57,48 @@ def test_e003_assimilation_beats_control_on_fixed_seed():
     assert day30["nudge"]["rmse_logit"] < day30["none"]["rmse_logit"]
     assert day30["nudge"]["rmse_logit"] < day1["nudge"]["rmse_logit"]
     assert day30["none"]["zero_evidence_min_variance_ratio"] >= 1 - 1e-9
+
+
+def test_v2_arms_leave_the_e003_arms_unchanged():
+    plain = experiments.e003_seed(0, days=12)
+    both = experiments.e003_seed(0, days=12, v2_walk_sds=experiments.E006_V2_ARMS)
+    keep = ("seed", "day", "arm", "rmse_logit", "rmse_logit_never_observed")
+    shared = [{k: r[k] for k in keep} for r in both if r["arm"] in ("none", "nudge", "persistence")]
+    assert shared == [{k: r[k] for k in keep} for r in plain]
+    day12 = {r["arm"]: r for r in both if r["day"] == 12}
+    assert set(day12) == {"none", "nudge", "persistence", *experiments.E006_V2_ARMS}
+    assert day12["v2"]["rmse_logit"] < day12["nudge"]["rmse_logit"]
+    assert day12["v2"]["max_within_sd_change"] < 1e-9
+    assert day12["v2"]["filter_sd_logit"] > 0
+
+
+def test_e006_writes_every_pre_registered_metric(root, monkeypatch):
+    monkeypatch.setattr(experiments, "E006_SEEDS", range(1000, 1003))
+    path = experiments.run("E006", root=root)
+    results = json.loads((path / "results.json").read_text())
+    assert results["prereg_sha256"] == experiments.registry(root)["E006"]["sha256"]
+    assert results["seeds"] == [1000, 1001, 1002] and results["cost_usd"] == 0.0
+    metrics = results["metrics"]
+    assert metrics["primary_day30_rmse_v2_minus_persistence"]["verdict"] in (
+        "supported",
+        "not supported",
+    )
+    for name in (
+        "day30_rmse_v2_minus_nudge",
+        "day30_rmse_v2_minus_none",
+        "never_observed_day30_rmse_v2_minus_none",
+        "day30_rmse_v2_walk_half_minus_persistence",
+        "day30_rmse_v2_walk_double_minus_persistence",
+        "day30_rmse_over_filter_sd_v2",
+        "day30_max_within_segment_sd_change_v2",
+        "zero_evidence_variance_does_not_shrink",
+    ):
+        assert name in metrics
+    assert len(metrics["rmse_logit_by_day"]) == 6
+    report = (path / "RESULTS.md").read_text()
+    assert "v2 minus persistence" in report and "Decision 0005" in report
+    rows = (path / "rows.csv").read_text().splitlines()
+    assert len(rows) == 1 + 3 * experiments.E003_DAYS * 6
 
 
 def test_e003_writes_every_result_field(root):

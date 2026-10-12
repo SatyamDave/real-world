@@ -47,6 +47,11 @@ def previous_snapshot(date: str) -> str | None:
     return max((p.parent.name for p in found if p.parent.name < date), default=None)
 
 
+def poll_error_sd(share: float, n: float) -> float:
+    """Logit SD of a poll share: the sampling SD by the delta method times POLL_ERROR_FACTOR."""
+    return settings.POLL_ERROR_FACTOR / float(np.sqrt(n * share * (1 - share)))
+
+
 def ingest(
     conn: sqlite3.Connection, date: str, budget: llm.Budget, world_agents: int, live: bool = False
 ) -> Detail:
@@ -66,6 +71,9 @@ def assimilate(
     tps = population.topics()
     B = np.column_stack([agents[f"b_{t}"] for t in tps])
     B0 = np.column_stack([agents[f"b0_{t}"] for t in tps])
+    prior_var = settings.KALMAN_PRIOR_SD_LOGIT**2
+    C = np.column_stack([agents.get(f"c_{t}", np.zeros(len(B))) for t in tps])
+    P = np.column_stack([agents.get(f"p_{t}", np.full(len(B), prior_var)) for t in tps])
 
     clusters: dict[str, Detail] = {}
     rows = conn.execute(
@@ -88,15 +96,27 @@ def assimilate(
         hit = news.exposure(agents["age_band"][idx], c["iso3"], c["salience"], 0, rng)
         push[idx[hit]] += np.array([c["signal"][t] for t in tps])
         exposed[idx[hit]] = True
-    B = beliefs.update_beliefs(B, B0, agents["s"], push, exposed)
+    B = beliefs.update_beliefs(B, B0 + C, agents["s"], push, exposed)
 
     observed = conn.execute(
-        "SELECT iso3, topic, SUM(share * n) / SUM(n) FROM observations WHERE date = ?"
+        "SELECT iso3, topic, SUM(share * n) / SUM(n), SUM(n) FROM observations WHERE date = ?"
         " GROUP BY iso3, topic",
         (date,),
     ).fetchall()
-    targets = {(iso3, tps.index(topic)): share for iso3, topic, share in observed}
-    B, nudges = beliefs.nudge(B, agents["country"], targets)
+    if settings.ASSIMILATION == "kalman":
+        targets = {
+            (iso3, tps.index(topic)): (share, poll_error_sd(share, n))
+            for iso3, topic, share, n in observed
+        }
+        B, C, P, nudges = beliefs.kalman_update(B, C, P, agents["country"], targets)
+        for j, t in enumerate(tps):
+            agents[f"c_{t}"] = C[:, j]
+            agents[f"p_{t}"] = P[:, j]
+    elif settings.ASSIMILATION == "nudge":
+        shares = {(iso3, tps.index(topic)): share for iso3, topic, share, _ in observed}
+        B, nudges = beliefs.nudge(B, agents["country"], shares)
+    else:
+        raise ValueError(f"settings.ASSIMILATION is {settings.ASSIMILATION!r}, not nudge or kalman")
 
     for j, t in enumerate(tps):
         agents[f"b_{t}"] = B[:, j]

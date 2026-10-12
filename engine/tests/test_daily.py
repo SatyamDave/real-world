@@ -1,6 +1,7 @@
 import csv
 import json
 
+import numpy as np
 import pytest
 
 from rw import daily, db, forecast, ledger, llm, population, settings
@@ -92,6 +93,42 @@ def test_nudges_are_capped_and_recorded():
     polls = conn.execute("SELECT count(DISTINCT date || iso3 || topic) FROM observations")
     assert len(rows) == polls.fetchone()[0] > 0
     assert all(abs(r["applied"]) <= settings.NUDGE_CAP_LOGIT + 1e-12 for r in rows)
+
+
+def test_poll_error_sd_is_twice_the_sampling_sd():
+    assert daily.poll_error_sd(0.5, 1000) == pytest.approx(2 / (1000 * 0.25) ** 0.5)
+
+
+def test_kalman_mode_records_polls_and_carries_offset_and_variance(monkeypatch):
+    monkeypatch.setattr(settings, "ASSIMILATION", "kalman")
+    run_fixtures()
+    conn = db.connect()
+    rows = conn.execute("SELECT * FROM nudges").fetchall()
+    polls = conn.execute("SELECT count(DISTINCT date || iso3 || topic) FROM observations")
+    assert len(rows) == polls.fetchone()[0] > 0
+    assert any(abs(r["applied"]) > settings.NUDGE_CAP_LOGIT for r in rows)
+    agents = population.read_snapshot(DAYS[-1])
+    tps = population.topics()
+    polled = {(r["iso3"], r["topic"]) for r in rows}
+    prior = settings.KALMAN_PRIOR_SD_LOGIT**2
+    for t in tps:
+        for iso3 in set(agents["country"].tolist()):
+            mask = agents["country"] == iso3
+            c, p = agents[f"c_{t}"][mask], agents[f"p_{t}"][mask]
+            assert np.ptp(c) == np.ptp(p) == 0
+            if (iso3, t) in polled:
+                assert c[0] != 0 and p[0] < prior
+            else:
+                assert c[0] == 0 and p[0] > prior
+
+
+def test_unknown_assimilation_mode_fails_the_step(monkeypatch):
+    monkeypatch.setattr(settings, "ASSIMILATION", "etkf")
+    with pytest.raises(ValueError, match="ASSIMILATION"):
+        daily.run(DAYS[0], world_agents=AGENTS)
+    row = db.connect().execute("SELECT status FROM stage_runs WHERE step = 'assimilate'")
+    assert row.fetchone()["status"] == "failed"
+    assert not population.snapshot_path(DAYS[0]).exists()
 
 
 def test_no_assimilation_or_sim_prompt_holds_a_market_price():
