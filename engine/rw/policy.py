@@ -38,9 +38,11 @@ PRIVATE_PERSON = re.compile(
 )
 PERSUASION = re.compile(
     r"\bwhich\s+(?:message|slogan|ad|framing|pitch|talking point)s?\b[^.]{0,80}"
-    r"\b(?:voters?|election|candidate|campaign|works best|wins|persuades?)\b"
+    r"\b(?:voters?|votes?|support|election|candidate|campaign|works best|wins|persuades?)\b"
     r"|\b(?:message|ad|slogan)\s+(?:variants?|a/b test)"
     r"|\b(?:persuade|convince|win over|sway)\b[^.]{0,40}\b(?:undecided|swing|likely)\s+voters\b"
+    r"|\b(?:shift|move|swing|win|flip|sway)\w*\s+(?:(?:the|more|most|many|enough)\s+)*"
+    r"(?:votes?|voters?|support)\s+(?:to|toward|towards|for)\b"
     r"|\bour\s+(?:campaign|candidate|ad|message|slogan)\b",
     re.IGNORECASE,
 )
