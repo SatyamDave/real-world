@@ -1,8 +1,8 @@
 .DEFAULT_GOAL := help
-.PHONY: help setup dev test lint typecheck check experiment
+.PHONY: help setup dev test lint typecheck check experiment daily daily-fixtures
 
 help: ## list every target
-	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-11s %s\n", $$1, $$2}'
+	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-15s %s\n", $$1, $$2}'
 
 setup: ## install Python and TypeScript dependencies from the lockfiles
 	uv sync --all-packages --locked
@@ -31,3 +31,10 @@ experiment: ## run one experiment: make experiment ID=E001
 	@test -n "$(ID)" || { echo "usage: make experiment ID=E001"; exit 2; }
 	@test -f engine/rw/experiments.py || { echo "rw.experiments does not exist yet; a later slice adds engine/rw/experiments.py"; exit 1; }
 	uv run python -m rw.experiments run $(ID)
+
+daily: ## run the daily cycle for one day: make daily DATE=2026-10-01
+	@test -n "$(DATE)" || { echo "usage: make daily DATE=YYYY-MM-DD"; exit 2; }
+	uv run python -m rw.daily --date $(DATE)
+
+daily-fixtures: ## run the daily cycle over every fixture day; a rerun does no new work
+	uv run python -m rw.daily --fixtures
