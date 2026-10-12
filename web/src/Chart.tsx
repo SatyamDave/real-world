@@ -16,11 +16,15 @@ const scale =
   ([lo, hi]: [number, number], a: number, b: number) =>
   (v: number) =>
     a + ((v - lo) / (hi - lo)) * (b - a);
-/** At most `max` indexes of `n`, always including the first and the last. */
-const sparse = (n: number, max = 5) =>
-  new Set(
-    Array.from({ length: Math.min(n, max) }, (_, i) => Math.round((i * (n - 1)) / (max - 1 || 1))),
+/** At most `max` indexes of `n`: the first, every step-th and the last, never closer than half a step. */
+const sparse = (n: number, max = 4) => {
+  const step = Math.max(1, Math.ceil((n - 1) / (max - 1)));
+  const last = n - 1;
+  const at = Array.from({ length: n }, (_, i) => i).filter(
+    (i) => i % step === 0 && (i === 0 || last - i >= step / 2),
   );
+  return new Set(last > 0 ? [...at, last] : at);
+};
 
 function Frame({
   title,

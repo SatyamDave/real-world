@@ -32,6 +32,31 @@ test("a trajectory draws a labelled line and a band, with one table row per poin
   expect(box.querySelectorAll("details summary")[0].textContent).toBe("Data table");
 });
 
+test("trajectory x labels are evenly spaced and never adjacent", async () => {
+  const week = Array.from({ length: 7 }, (_, i) => ({ x: `Day ${i + 1}`, y: i }));
+  await draw(<Trajectory title="Week" points={week} />);
+  const labels = [...box.querySelectorAll("svg text.chart-tick")]
+    .filter((t) => t.textContent?.startsWith("Day"))
+    .map((t) => t.textContent);
+  expect(labels).toEqual(["Day 1", "Day 3", "Day 5", "Day 7"]);
+});
+
+test("a two-point trajectory labels both ends", async () => {
+  await draw(
+    <Trajectory
+      title="Two"
+      points={[
+        { x: "2026-10-01", y: 1 },
+        { x: "2026-10-02", y: 2 },
+      ]}
+    />,
+  );
+  const labels = [...box.querySelectorAll("svg text.chart-tick")]
+    .map((t) => t.textContent)
+    .filter((t) => t?.startsWith("2026"));
+  expect(labels).toEqual(["2026-10-01", "2026-10-02"]);
+});
+
 test("a trajectory without low and high draws no band", async () => {
   await draw(<Trajectory title="T" points={days.map(({ x, y }) => ({ x, y }))} />);
   expect(box.querySelector("path.chart-band")).toBeNull();
