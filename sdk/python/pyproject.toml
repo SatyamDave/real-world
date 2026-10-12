@@ -1,0 +1,16 @@
+[project]
+name = "realworld"
+version = "0.1.0"
+description = "Python client for the Real World Simulate API"
+requires-python = ">=3.12"
+dependencies = ["httpx", "pydantic"]
+
+[dependency-groups]
+dev = ["datamodel-code-generator"]
+
+[build-system]
+requires = ["uv_build>=0.11,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
