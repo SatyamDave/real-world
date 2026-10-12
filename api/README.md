@@ -20,6 +20,7 @@ Open http://localhost:8000/docs, or http://localhost:8000/llms.txt for the same 
 | `GET /v1/simulations/{job_id}` | A fork's status and, once done, the result (`simulated: true`) or the error. |
 | `GET /v1/simulations/{job_id}/events` | Server-sent events, one `id:` each; `Last-Event-ID` resumes; a `: heartbeat` comment every 15 s; closes after `succeeded` or `failed`. |
 | `GET /v1/world` | Latest snapshot date, per-country cells, today's daily question id, prefilled fork events. |
+| `GET /v1/world/population` | The latest snapshot's population: per country its rubric, tier, segments with agent counts and per topic the published marginal, the simulated share with p10-p90 and the spread audit (null before `learn` has run); the settings and licence rows it rests on ([world page](../product/world-page.md)). |
 | `GET /v1/agents/{agent_id}` | Traits, shares, tier, and per day per topic the logit change split into the news step (with the signal title), the poll nudge and the anchor pull toward `b0` plus the assimilated offset. |
 | `GET /v1/agents/{agent_id}/why` | A model-written account from that trace, labelled "Simulated account, not the cause". Cached by prompt. |
 | `GET /v1/daily` | Today's question; with `?player_id=` after answering, the reveal: you, crowd, committed `sim` and `market`, outcome, Brier, streak and `week` (the seven days ending today, each with your answer and its Brier once resolved). |

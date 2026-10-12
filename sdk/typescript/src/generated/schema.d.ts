@@ -245,6 +245,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v1/world/population": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The simulated population: every country, segment and topic with its calibration and spread */
+    get: operations["world_population_v1_world_population_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -561,6 +578,95 @@ export interface components {
       /** Detail */
       detail: string;
     };
+    /** Population */
+    Population: {
+      /** Date */
+      date: string;
+      /** Agents */
+      agents: number;
+      /** Segments */
+      segments: number;
+      /** Tier Floors */
+      tier_floors: {
+        [key: string]: number;
+      };
+      settings_used: components["schemas"]["SettingsUsed"];
+      /** Countries */
+      countries: components["schemas"]["PopulationCountry"][];
+      /** Sources */
+      sources: components["schemas"]["PopulationSource"][];
+    };
+    /** PopulationCountry */
+    PopulationCountry: {
+      /** Iso3 */
+      iso3: string;
+      /** Name */
+      name: string;
+      /** Region */
+      region: string;
+      /** Population Millions */
+      population_millions: number;
+      /** Tier */
+      tier: string;
+      /** Experimental */
+      experimental: boolean;
+      rubric: components["schemas"]["Rubric"];
+      /** Agent Count */
+      agent_count: number;
+      /** Segments */
+      segments: components["schemas"]["PopulationSegment"][];
+      /** Topics */
+      topics: components["schemas"]["PopulationTopic"][];
+    };
+    /** PopulationSegment */
+    PopulationSegment: {
+      /** Segment */
+      segment: string;
+      /** Age Band */
+      age_band: string;
+      /** Education */
+      education: string;
+      /** Agent Count */
+      agent_count: number;
+    };
+    /** PopulationSource */
+    PopulationSource: {
+      /** Source Id */
+      source_id: string;
+      /** Kind */
+      kind: string;
+      /** Commercial Use */
+      commercial_use: string;
+      /** Checked On */
+      checked_on: string;
+    };
+    /** PopulationTopic */
+    PopulationTopic: {
+      /** Topic */
+      topic: string;
+      /** Label */
+      label: string;
+      /** Source Id */
+      source_id: string;
+      /** Calibrated Share */
+      calibrated_share: number;
+      /** Survey Sd Logit */
+      survey_sd_logit: number;
+      /** Share */
+      share: number;
+      /** P10 */
+      p10: number;
+      /** P50 */
+      p50: number;
+      /** P90 */
+      p90: number;
+      /** Sim Sd Logit */
+      sim_sd_logit: number | null;
+      /** Ratio */
+      ratio: number | null;
+      /** In Band */
+      in_band: boolean | null;
+    };
     /** PrefilledEvent */
     PrefilledEvent: {
       /** Id */
@@ -674,6 +780,21 @@ export interface components {
        */
       week: components["schemas"]["WeekDay"][];
     };
+    /** Rubric */
+    Rubric: {
+      /** Population */
+      population: number;
+      /** Attitudes */
+      attitudes: number;
+      /** Markets */
+      markets: number;
+      /** News */
+      news: number;
+      /** Ground Truth */
+      ground_truth: number;
+      /** Score */
+      score: number;
+    };
     /** SegmentShift */
     SegmentShift: {
       /** Segment */
@@ -690,6 +811,21 @@ export interface components {
       n_agents: number;
       /** Tier */
       tier: string;
+    };
+    /** SettingsUsed */
+    SettingsUsed: {
+      /** World Agents */
+      world_agents: number;
+      /** World Seed */
+      world_seed: number;
+      /** Spread Band */
+      spread_band: number[];
+      /** Country Floor Share */
+      country_floor_share: number;
+      /** Stubbornness Beta */
+      stubbornness_beta: number[];
+      /** Offset Sd Logit */
+      offset_sd_logit: number;
     };
     /** SimulateRequest */
     SimulateRequest: {
@@ -1482,6 +1618,33 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["SystemStatus"];
         };
+      };
+    };
+  };
+  world_population_v1_world_population_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Population"];
+        };
+      };
+      /** @description No such world snapshot */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

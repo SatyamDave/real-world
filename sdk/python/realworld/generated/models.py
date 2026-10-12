@@ -185,6 +185,35 @@ class PolicyRefused(BaseModel):
     detail: str = Field(..., title="Detail")
 
 
+class PopulationSegment(BaseModel):
+    segment: str = Field(..., title="Segment")
+    age_band: str = Field(..., title="Age Band")
+    education: str = Field(..., title="Education")
+    agent_count: int = Field(..., title="Agent Count")
+
+
+class PopulationSource(BaseModel):
+    source_id: str = Field(..., title="Source Id")
+    kind: str = Field(..., title="Kind")
+    commercial_use: str = Field(..., title="Commercial Use")
+    checked_on: str = Field(..., title="Checked On")
+
+
+class PopulationTopic(BaseModel):
+    topic: str = Field(..., title="Topic")
+    label: str = Field(..., title="Label")
+    source_id: str = Field(..., title="Source Id")
+    calibrated_share: float = Field(..., title="Calibrated Share")
+    survey_sd_logit: float = Field(..., title="Survey Sd Logit")
+    share: float = Field(..., title="Share")
+    p10: float = Field(..., title="P10")
+    p50: float = Field(..., title="P50")
+    p90: float = Field(..., title="P90")
+    sim_sd_logit: float | None = Field(..., title="Sim Sd Logit")
+    ratio: float | None = Field(..., title="Ratio")
+    in_band: bool | None = Field(..., title="In Band")
+
+
 class PrefilledEvent(BaseModel):
     id: str = Field(..., title="Id")
     text: str = Field(..., title="Text")
@@ -233,6 +262,15 @@ class Refused(BaseModel):
     )
 
 
+class Rubric(BaseModel):
+    population: int = Field(..., title="Population")
+    attitudes: int = Field(..., title="Attitudes")
+    markets: int = Field(..., title="Markets")
+    news: int = Field(..., title="News")
+    ground_truth: int = Field(..., title="Ground Truth")
+    score: int = Field(..., title="Score")
+
+
 class SegmentShift(BaseModel):
     segment: str = Field(..., title="Segment")
     topic: str = Field(..., title="Topic")
@@ -241,6 +279,15 @@ class SegmentShift(BaseModel):
     shift_p90: float = Field(..., title="Shift P90")
     n_agents: int = Field(..., title="N Agents")
     tier: str = Field(..., title="Tier")
+
+
+class SettingsUsed(BaseModel):
+    world_agents: int = Field(..., title="World Agents")
+    world_seed: int = Field(..., title="World Seed")
+    spread_band: list[float] = Field(..., title="Spread Band")
+    country_floor_share: float = Field(..., title="Country Floor Share")
+    stubbornness_beta: list[float] = Field(..., title="Stubbornness Beta")
+    offset_sd_logit: float = Field(..., title="Offset Sd Logit")
 
 
 class SimulateRequest(BaseModel):
@@ -393,6 +440,19 @@ class JobCreated(BaseModel):
     links: Links
 
 
+class PopulationCountry(BaseModel):
+    iso3: str = Field(..., title="Iso3")
+    name: str = Field(..., title="Name")
+    region: str = Field(..., title="Region")
+    population_millions: float = Field(..., title="Population Millions")
+    tier: str = Field(..., title="Tier")
+    experimental: bool = Field(..., title="Experimental")
+    rubric: Rubric
+    agent_count: int = Field(..., title="Agent Count")
+    segments: list[PopulationSegment] = Field(..., title="Segments")
+    topics: list[PopulationTopic] = Field(..., title="Topics")
+
+
 class ReceiptEntry(BaseModel):
     entry: dict[str, Any] = Field(..., title="Entry")
     salt: str = Field(..., title="Salt")
@@ -427,6 +487,16 @@ class Daily(BaseModel):
     date: str = Field(..., title="Date")
     question: DailyQuestion
     reveal: Reveal | None
+
+
+class Population(BaseModel):
+    date: str = Field(..., title="Date")
+    agents: int = Field(..., title="Agents")
+    segments: int = Field(..., title="Segments")
+    tier_floors: dict[str, int] = Field(..., title="Tier Floors")
+    settings_used: SettingsUsed
+    countries: list[PopulationCountry] = Field(..., title="Countries")
+    sources: list[PopulationSource] = Field(..., title="Sources")
 
 
 class ReceiptDay(BaseModel):
