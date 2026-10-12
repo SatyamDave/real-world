@@ -1154,6 +1154,18 @@ button.link:hover:not(:disabled) {
   color: var(--accent);
 }
 
+/* Inline links reach 44 px with padding that does not move the text around them. */
+.strip-link,
+.receipt-cols a,
+.agent-links button.link,
+main :is(p, li, dd, h3) a {
+  padding: 14px 0;
+}
+
+.receipt-cols .src {
+  margin: -15px 0;
+}
+
 .thesis {
   display: flex;
   flex-direction: column;
@@ -1547,6 +1559,51 @@ button.link:hover:not(:disabled) {
   .table-wrap {
     margin: 0 -16px;
     padding: 0 16px;
+  }
+
+  /* Stacked rows: every column is on screen without sideways scrolling. */
+  .table-wrap table,
+  .table-wrap tbody,
+  .table-wrap tr,
+  .table-wrap td {
+    display: block;
+  }
+
+  .table-wrap thead {
+    position: absolute;
+    left: -9999px;
+  }
+
+  .table-wrap td {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 4px 0;
+    border-top: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .table-wrap tr {
+    padding: 8px 0;
+    border-top: 1.5px dashed var(--line);
+  }
+
+  .table-wrap td::before {
+    content: attr(data-label);
+    flex: none;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .table-wrap td:first-child {
+    display: block;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .table-wrap td:first-child::before {
+    content: none;
   }
 }
 
