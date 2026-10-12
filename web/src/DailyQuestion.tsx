@@ -1,6 +1,7 @@
+import { ApiError, type Reveal } from "@real-world/sdk";
 import { type CSSProperties, useState } from "react";
 import { Disclosure, LoadError, pct, useLoad } from "./App";
-import { ApiError, answerDaily, daily, type Reveal, type Tier } from "./api";
+import { rw } from "./api";
 
 const PLAYER_KEY = "rw.player_id";
 
@@ -20,9 +21,9 @@ function playerId(): string {
 const day = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 
-export function DailyQuestion({ tiers }: { tiers: Tier[] }) {
+export function DailyQuestion({ tiers }: { tiers: string[] }) {
   const [player] = useState(playerId);
-  const loaded = useLoad(() => daily(player), player);
+  const loaded = useLoad(() => rw.daily(player), player);
   const [value, setValue] = useState(50);
   const [after, setAfter] = useState<Reveal | null>(null);
   const [status, setStatus] = useState("");
@@ -36,19 +37,20 @@ export function DailyQuestion({ tiers }: { tiers: Tier[] }) {
     if (!q) return;
     setStatus("Submitting");
     try {
-      await answerDaily(q.id, player, value / 100);
+      setAfter((await rw.answer_daily(q.id, player, value / 100)).reveal);
+      setStatus("");
     } catch (e) {
-      // 409 means this browser already answered; the reveal below still applies.
+      // 409 means this browser already answered; its reveal still applies.
       if (!(e instanceof ApiError && e.status === 409)) {
         setStatus(`Not submitted: ${(e as Error).message}`);
         return;
       }
-    }
-    try {
-      setAfter((await daily(player)).reveal);
-      setStatus("");
-    } catch (e) {
-      setStatus(`Submitted. The reveal did not load: ${(e as Error).message}`);
+      try {
+        setAfter((await rw.daily(player)).reveal);
+        setStatus("");
+      } catch (e) {
+        setStatus(`Submitted. The reveal did not load: ${(e as Error).message}`);
+      }
     }
   }
 
@@ -100,7 +102,7 @@ export function DailyQuestion({ tiers }: { tiers: Tier[] }) {
   );
 }
 
-function RevealView({ reveal, tiers }: { reveal: Reveal; tiers: Tier[] }) {
+function RevealView({ reveal, tiers }: { reveal: Reveal; tiers: string[] }) {
   const rows: [string, number | null, string][] = [
     ["You", reveal.you, "your answer"],
     [

@@ -1,17 +1,11 @@
+import type { Estimate, Job, PrefilledEvent } from "@real-world/sdk";
 import { useEffect, useState } from "react";
 import { Disclosure, LoadError, pct, pts, TierBadge, topicLabel } from "./App";
-import {
-  type Estimate,
-  estimate,
-  getSimulation,
-  type Job,
-  type JobEvent,
-  type PrefilledEvent,
-  simulate,
-  simulationEvents,
-} from "./api";
+import { rw } from "./api";
 
 const EVENT_MAX_CHARS = 500;
+
+type Progress = { member: number; members: number; day: number; days: number };
 
 export function Fork({ events }: { events: PrefilledEvent[] }) {
   const [text, setText] = useState("");
@@ -24,7 +18,7 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
     if (!trimmed) return;
     let live = true;
     const t = setTimeout(() => {
-      estimate({ event: { text: trimmed } }).then(
+      rw.estimate({ event: { text: trimmed } }).then(
         (value) => live && setEst({ for: trimmed, value }),
         (e: Error) => live && setEst({ for: trimmed, error: e.message }),
       );
@@ -40,7 +34,7 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
   async function run() {
     setStatus("Starting");
     try {
-      setJobId((await simulate({ event: { text: trimmed } })).id);
+      setJobId((await rw.simulate({ event: { text: trimmed } })).id);
       setStatus("");
     } catch (e) {
       setStatus(`Not started: ${(e as Error).message}`);
@@ -109,33 +103,26 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
 
 export function ForkRun({ id }: { id: string }) {
   const [job, setJob] = useState<Job | null>(null);
-  const [progress, setProgress] = useState<JobEvent | null>(null);
+  const [progress, setProgress] = useState<Progress | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let live = true;
-    let stop = () => {};
-    getSimulation(id).then(
-      (j) => {
-        if (!live) return;
-        setJob(j);
-        if (j.status === "queued" || j.status === "running")
-          stop = simulationEvents(id, (e) => {
-            if (e.type === "progress") setProgress(e);
-            else {
-              stop();
-              getSimulation(id).then(
-                (done) => live && setJob(done),
-                (err: Error) => live && setError(err.message),
-              );
-            }
-          });
-      },
-      (e: Error) => live && setError(e.message),
-    );
+    (async () => {
+      let j = await rw.get_simulation(id);
+      if (!live) return;
+      setJob(j);
+      if (j.status === "queued" || j.status === "running") {
+        for await (const e of rw.events(id)) {
+          if (!live) return;
+          if (e.type === "progress") setProgress(e as unknown as Progress);
+        }
+        j = await rw.get_simulation(id);
+        if (live) setJob(j);
+      }
+    })().catch((e: Error) => live && setError(e.message));
     return () => {
       live = false;
-      stop();
     };
   }, [id]);
 

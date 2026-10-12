@@ -1,4 +1,13 @@
 // @vitest-environment jsdom
+
+import {
+  type Agent,
+  type AgentWhy,
+  ApiError,
+  type Daily,
+  type Job,
+  type World,
+} from "@real-world/sdk";
 import type { ReactNode } from "react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
@@ -6,8 +15,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import vector from "../../data/fixtures/receipts_test_vector.json";
 import { AgentPanel } from "./AgentPanel";
 import { App, DISCLOSURE } from "./App";
-import type { Agent, AgentWhy, Daily, Job, ReceiptDay, World } from "./api";
-import * as api from "./api";
+import { rw } from "./api";
 import { DailyQuestion } from "./DailyQuestion";
 import { ForkCard } from "./ForkCard";
 import agentFixture from "./fixtures/agent.json";
@@ -16,35 +24,31 @@ import dailyFixture from "./fixtures/daily.json";
 import jobFixture from "./fixtures/job.json";
 import worldFixture from "./fixtures/world.json";
 
-vi.mock("./api", async (original) => {
-  const real = await original<typeof api>();
-  const stub = () => vi.fn(() => Promise.reject(new Error("not stubbed")));
-  return {
-    ...real,
-    world: stub(),
-    daily: stub(),
-    answerDaily: stub(),
-    agent: stub(),
-    agentWhy: stub(),
-    receipts: stub(),
-    receiptDay: stub(),
-    scores: stub(),
-  };
-});
-
 const world = worldFixture as World;
 const job = jobFixture as Job;
 let container: HTMLDivElement;
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+// Every SDK call is stubbed; a test resolves only the ones its view needs.
 beforeEach(() => {
   container = document.body.appendChild(document.createElement("div"));
+  for (const m of [
+    "world",
+    "daily",
+    "answer_daily",
+    "agent",
+    "agent_why",
+    "receipts",
+    "receipt_day",
+    "scores",
+  ] as const)
+    vi.spyOn(rw, m).mockRejectedValue(new Error("not stubbed"));
 });
 
 afterEach(() => {
   container.remove();
-  vi.clearAllMocks();
+  vi.restoreAllMocks();
 });
 
 const flush = () => act(() => new Promise((r) => setTimeout(r, 0)));
@@ -70,10 +74,8 @@ const button = (text: string) => {
 
 test("the reveal shows you, visitors, the simulated world and the market after submit", async () => {
   const daily = dailyFixture as Daily;
-  vi.mocked(api.daily)
-    .mockResolvedValueOnce({ question: daily.question, reveal: null })
-    .mockResolvedValueOnce(daily);
-  vi.mocked(api.answerDaily).mockResolvedValue({});
+  vi.mocked(rw.daily).mockResolvedValue({ ...daily, reveal: null });
+  vi.mocked(rw.answer_daily).mockResolvedValue(daily);
 
   const el = await render(<DailyQuestion tiers={["A", "B", "B"]} />);
   expect(el.textContent).toContain(daily.question.text);
@@ -82,7 +84,7 @@ test("the reveal shows you, visitors, the simulated world and the market after s
   await act(async () => button("Submit 50%").click());
   await until(() => expect(el.textContent).toContain("Simulated world"));
 
-  expect(api.answerDaily).toHaveBeenCalledWith(daily.question.id, expect.any(String), 0.5);
+  expect(rw.answer_daily).toHaveBeenCalledWith(daily.question.id, expect.any(String), 0.5);
   const text = el.textContent ?? "";
   for (const s of ["You", "62%", "1,204 self-selected visitors", "Simulated world", "56%"])
     expect(text).toContain(s);
@@ -93,10 +95,10 @@ test("the reveal shows you, visitors, the simulated world and the market after s
 
 test("a repeat answer (409) still shows the reveal", async () => {
   const daily = dailyFixture as Daily;
-  vi.mocked(api.daily)
-    .mockResolvedValueOnce({ question: daily.question, reveal: null })
+  vi.mocked(rw.daily)
+    .mockResolvedValueOnce({ ...daily, reveal: null })
     .mockResolvedValueOnce(daily);
-  vi.mocked(api.answerDaily).mockRejectedValue(new api.ApiError(409, {}));
+  vi.mocked(rw.answer_daily).mockRejectedValue(new ApiError(409, {}));
 
   const el = await render(<DailyQuestion tiers={[]} />);
   await act(async () => button("Submit").click());
@@ -122,13 +124,13 @@ test("the fork card renders a fixture SimulateResult", async () => {
 });
 
 test("the agent panel labels the trace and the simulated account", async () => {
-  vi.mocked(api.agent).mockResolvedValue(agentFixture as Agent);
-  vi.mocked(api.agentWhy).mockResolvedValue(whyFixture as AgentWhy);
+  vi.mocked(rw.agent).mockResolvedValue(agentFixture as Agent);
+  vi.mocked(rw.agent_why).mockResolvedValue(whyFixture as AgentWhy);
 
   const el = await render(<AgentPanel country={world.countries[0]} onClose={() => {}} />);
   const headings = [...el.querySelectorAll("h3")].map((h) => h.textContent);
   expect(headings).toEqual(["What moved this agent", "In its own words"]);
-  expect(api.agent).toHaveBeenCalledWith(world.countries[0].sample_agent_id);
+  expect(rw.agent).toHaveBeenCalledWith(world.countries[0].sample_agent_id);
   expect(el.textContent).toContain("FIXTURE: Fuel prices rise for a third week");
   expect(el.querySelector(".label-simulated")?.textContent).toBe(
     "Simulated account, not the cause",
@@ -138,11 +140,15 @@ test("the agent panel labels the trace and the simulated account", async () => {
 });
 
 test("the receipts page verifies the served chain and states the reference and claim", async () => {
-  vi.mocked(api.world).mockResolvedValue(world);
-  vi.mocked(api.receipts).mockResolvedValue({
+  vi.mocked(rw.world).mockResolvedValue(world);
+  vi.mocked(rw.receipts).mockResolvedValue({
     days: [{ ...vector.day, record_hash: vector.record_hash, anchored: false }],
   });
-  vi.mocked(api.receiptDay).mockResolvedValue(structuredClone(vector) as ReceiptDay);
+  vi.mocked(rw.receipt_day).mockResolvedValue({
+    ...vector,
+    anchored: false,
+    entries: vector.entries.map((e) => ({ ...e, outcome: null, brier: null })),
+  });
   const skill = {
     n: 2,
     n_pairs: 4,
@@ -150,8 +156,10 @@ test("the receipts page verifies the served chain and states the reference and c
     low: -0.05,
     high: 0.03,
     claim: "insufficient_n" as const,
+    by_tier: {},
+    by_region: {},
   };
-  vi.mocked(api.scores).mockResolvedValue({ market: skill, plain_llm: skill });
+  vi.mocked(rw.scores).mockResolvedValue({ market: skill, plain_llm: skill });
 
   const el = await render(<App path="/receipts" />);
   const text = el.textContent ?? "";

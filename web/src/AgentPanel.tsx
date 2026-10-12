@@ -1,11 +1,12 @@
+import type { Country } from "@real-world/sdk";
 import { useEffect, useRef } from "react";
 import { Disclosure, LoadError, pct, pts, TierBadge, topicLabel, useLoad } from "./App";
-import { agent, agentWhy, type Country } from "./api";
+import { rw } from "./api";
 
 export function AgentPanel({ country, onClose }: { country: Country; onClose: () => void }) {
   const id = country.sample_agent_id;
-  const a = useLoad(() => agent(id), id);
-  const why = useLoad(() => agentWhy(id), id);
+  const a = useLoad(() => rw.agent(id), id);
+  const why = useLoad(() => rw.agent_why(id), id);
   const close = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {

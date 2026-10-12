@@ -15,17 +15,31 @@ export type Daily = Schemas["Daily"];
 export type Receipts = Schemas["Receipts"];
 export type ReceiptDay = Schemas["ReceiptDay"];
 export type BaselineSkill = Schemas["BaselineSkill"];
+export type Country = Schemas["Country"];
+export type PrefilledEvent = Schemas["PrefilledEvent"];
+export type Reveal = Schemas["Reveal"];
+export type DayRecord = Schemas["DayRecord"];
+export type ReceiptEntry = Schemas["ReceiptEntry"];
+export type Skill = Schemas["Skill"];
 export type JobEvent = { type: string; [key: string]: unknown };
 export type { components, paths };
 
 export const API_VERSION = "2026-10-27";
 const TERMINAL = ["succeeded", "failed"];
 
+/** An error status from the API, with the parsed response body. */
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    readonly body: unknown,
+  ) {
+    super(`${status}: ${typeof body === "string" ? body : JSON.stringify(body)}`);
+  }
+}
+
 async function ok<T>(call: Promise<{ data?: T; error?: unknown; response: Response }>): Promise<T> {
   const { data, error, response } = await call;
-  if (error !== undefined || data === undefined) {
-    throw new Error(`${response.status}: ${JSON.stringify(error)}`);
-  }
+  if (error !== undefined || data === undefined) throw new ApiError(response.status, error);
   return data;
 }
 
@@ -104,7 +118,7 @@ export class Client {
         continue;
       }
       if (!response.ok || !response.body) {
-        throw new Error(`${response.status}: ${await response.text()}`);
+        throw new ApiError(response.status, await response.text());
       }
       const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
       let buffer = "";

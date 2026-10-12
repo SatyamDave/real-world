@@ -1,7 +1,7 @@
+import type { Country } from "@real-world/sdk";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactGlobe, { type GlobeMethods } from "react-globe.gl";
 import { pct, topicLabel } from "./App";
-import type { Country } from "./api";
 
 interface Feature {
   properties: { iso3: string; name: string };
