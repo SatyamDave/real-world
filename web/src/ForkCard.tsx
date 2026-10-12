@@ -105,7 +105,8 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
       </div>
       {status && status !== "Starting" && (
         <p className="bad small" role="alert">
-          {status}
+          {status}{" "}
+          {status.startsWith("Refused") && <a href="/acceptable-use">See acceptable use.</a>}
         </p>
       )}
       {jobId && <ForkRun key={jobId} id={jobId} />}

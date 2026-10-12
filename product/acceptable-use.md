@@ -5,7 +5,7 @@ Real World simulates groups of synthetic people and publishes scored forecasts. 
 ## The rules
 
 1. **No persuasion testing on elections or candidates.** Do not use a fork to find which message, ad, slogan or framing moves voters, or how to shift support for a candidate, party or ballot measure.
-2. **No real private people.** Do not name, describe or imitate a real private individual in an event. Agents are census-sampled and anonymous; none of them is a real person.
+2. **No real private people.** Do not name, describe or imitate a real private individual in an event. Agents are sampled from a synthetic population calibrated to published marginals; none of them is a real person.
 3. **Outputs are labelled simulated.** Every result says `simulated: true` and carries a disclosure. Do not remove the label when you quote, share or republish a result.
 
 ## Election window

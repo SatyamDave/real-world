@@ -1,7 +1,8 @@
 import { ApiError, type Country, type World } from "@real-world/sdk";
 import { lazy, Suspense, useEffect, useState } from "react";
+import { AcceptableUse } from "./AcceptableUse";
 import { AgentPanel } from "./AgentPanel";
-import { rw } from "./api";
+import { API_URL, rw } from "./api";
 import { DailyQuestion } from "./DailyQuestion";
 import { Fork, ForkRun } from "./ForkCard";
 import { ReceiptsPage, ReceiptsStrip } from "./Receipts";
@@ -312,9 +313,28 @@ function NotFound() {
   );
 }
 
+function Footer() {
+  return (
+    <footer className="site-footer">
+      <nav aria-label="Footer">
+        <a href="/receipts">Receipts</a>
+        <a href="/acceptable-use">Acceptable use</a>
+        <a href={`${API_URL}/docs`}>API</a>
+        <a href="https://github.com/SatyamDave/real-world">Source</a>
+      </nav>
+      <p>
+        Real World outputs are AI-simulated. Simulated populations are not polls and not predictions
+        about real people.
+      </p>
+      <p>© 2026 Real World.</p>
+    </footer>
+  );
+}
+
 const TITLES: Record<string, string> = {
   "/": "Real World: don't ask a model, ask a world",
   "/receipts": "Receipts · Real World",
+  "/acceptable-use": "Acceptable use · Real World",
 };
 
 export function App({ path = location.pathname }: { path?: string }) {
@@ -335,12 +355,15 @@ export function App({ path = location.pathname }: { path?: string }) {
           <ForkRun id={decodeURIComponent(fork[1])} />
         ) : path === "/receipts" ? (
           <ReceiptsPage tiers={tiers} />
+        ) : path === "/acceptable-use" ? (
+          <AcceptableUse />
         ) : path === "/" ? (
           <Home w={w} tiers={tiers} />
         ) : (
           <NotFound />
         )}
       </main>
+      <Footer />
     </>
   );
 }
