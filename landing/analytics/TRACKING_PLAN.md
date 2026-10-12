@@ -8,6 +8,7 @@ The one list of what the page sends and why. The code is `src/analytics.ts` (the
 - No email address, hash, probability or score is ever an event property. The email goes only to our own database.
 - Nothing loads, and nothing is sent, when the browser sends Global Privacy Control or Do Not Track. Nothing loads until after first paint and browser idle.
 - With no `VITE_AMPLITUDE_API_KEY` the SDK is not loaded. With no pixel id that pixel is not loaded.
+- The browser SDK is started with `trackingOptions: { ipAddress: false }`, so it does not send the visitor's IP address. What Amplitude then stores for location is checked on a deploy (see "Verify after a deploy"); the country we need is saved with the signup from the request header.
 - US-only until a consent banner exists ([product/101](../../research/product/101-prelaunch-landing-waitlist-ads.md)).
 
 ## Browser events (Amplitude, custom)
@@ -60,4 +61,5 @@ The signup id as the conversion id lets a later server-side conversion call dedu
 1. Open the preview with `?utm_source=test&utm_content=hashed`, accept nothing, wait 5 seconds.
 2. In Amplitude, find the device in the user lookup. Expect `landing_viewed` with `headline_variant = hashed`, the autocapture page view with the UTM properties, and `section_viewed` for `hero`.
 3. Submit a `test+<timestamp>@example.com` address. Expect `email_submitted`, `signup_saved` and the server `waitlist_email_saved` with the same `signup_id`.
-4. Delete the test row by id afterwards (steps in `landing/RUNBOOK.md`, added in the next PR).
+4. Open the test device's events: the browser events should show no IP address and no city; if they do, the SDK option is not enough and the privacy page must say Amplitude records them.
+5. Delete the test row by id afterwards (steps in `landing/RUNBOOK.md`, added in the next PR).

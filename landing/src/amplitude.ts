@@ -19,6 +19,9 @@ export async function start(opts: StartOptions): Promise<Started> {
   // Passing undefined keeps the SDK's own handling of the ampDeviceId URL
   // parameter, which carries the id across domains (Amplitude cross-domain docs).
   await amp.init(opts.apiKey, undefined, {
+    // Do not send the visitor's IP address, so Amplitude does not geolocate it (the
+    // country we need is already saved with the signup from the request header).
+    trackingOptions: { ipAddress: false },
     autocapture: {
       pageViews: true,
       sessions: true,
