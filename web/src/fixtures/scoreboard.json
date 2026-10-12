@@ -1,0 +1,599 @@
+{
+  "protocol": {
+    "version": "2026-10-11",
+    "hash": "4fd1241129a3ef74c9006321917e3334c82c460270f289051ff0df8fc3d15b47",
+    "headline": "brier",
+    "log_clip": [0.01, 0.99],
+    "coin_reference": 0.25,
+    "min_resolved_for_claims": 100,
+    "bootstrap": {
+      "block": "day",
+      "resamples": 1000,
+      "seed": 7,
+      "interval": 0.95
+    }
+  },
+  "resolved_questions": 4,
+  "open_questions": 5,
+  "first_commit": "2026-10-01",
+  "forecasters": [
+    {
+      "forecaster": "market",
+      "n_questions": 4,
+      "n_forecasts": 13,
+      "mean_brier": 0.2578769230769231,
+      "mean_log_score": -0.6979789178045669,
+      "brier_low": null,
+      "brier_high": null
+    },
+    {
+      "forecaster": "plain_llm",
+      "n_questions": 4,
+      "n_forecasts": 13,
+      "mean_brier": 0.21583134846153845,
+      "mean_log_score": -0.6215113424610779,
+      "brier_low": null,
+      "brier_high": null
+    },
+    {
+      "forecaster": "sim",
+      "n_questions": 4,
+      "n_forecasts": 13,
+      "mean_brier": 0.2540194869230769,
+      "mean_log_score": -0.7034160974005936,
+      "brier_low": null,
+      "brier_high": null
+    }
+  ],
+  "skill": {
+    "market": {
+      "n": 4,
+      "n_pairs": 13,
+      "mean_diff": -0.003857436153846182,
+      "low": -0.03565087750000002,
+      "high": 0.05054968384615383,
+      "claim": "insufficient_n",
+      "by_tier": {
+        "A": {
+          "n": 4,
+          "n_pairs": 13,
+          "mean_diff": -0.003857436153846182,
+          "low": -0.03565087750000002,
+          "high": 0.05054968384615383,
+          "claim": "insufficient_n"
+        }
+      },
+      "by_region": {
+        "East Asia": {
+          "n": 1,
+          "n_pairs": 4,
+          "mean_diff": -0.11984776250000004,
+          "low": -0.17995406750000004,
+          "high": -0.05014268250000005,
+          "claim": "insufficient_n"
+        },
+        "Europe": {
+          "n": 2,
+          "n_pairs": 7,
+          "mean_diff": 0.10501584571428568,
+          "low": 0.07266572571428571,
+          "high": 0.14457489999999998,
+          "claim": "insufficient_n"
+        },
+        "North America": {
+          "n": 1,
+          "n_pairs": 2,
+          "mean_diff": -0.15293326999999998,
+          "low": -0.19476775,
+          "high": -0.11109878999999998,
+          "claim": "insufficient_n"
+        }
+      }
+    },
+    "plain_llm": {
+      "n": 4,
+      "n_pairs": 13,
+      "mean_diff": 0.038188138461538464,
+      "low": -0.01633753499999998,
+      "high": 0.10709969,
+      "claim": "insufficient_n",
+      "by_tier": {
+        "A": {
+          "n": 4,
+          "n_pairs": 13,
+          "mean_diff": 0.038188138461538464,
+          "low": -0.01633753499999998,
+          "high": 0.10709969,
+          "claim": "insufficient_n"
+        }
+      },
+      "by_region": {
+        "East Asia": {
+          "n": 1,
+          "n_pairs": 4,
+          "mean_diff": -0.055320094999999986,
+          "low": -0.15798425249999998,
+          "high": 0.02303965000000001,
+          "claim": "insufficient_n"
+        },
+        "Europe": {
+          "n": 2,
+          "n_pairs": 7,
+          "mean_diff": 0.08725919,
+          "low": -0.062445591249999974,
+          "high": 0.2084520203999996,
+          "claim": "insufficient_n"
+        },
+        "North America": {
+          "n": 1,
+          "n_pairs": 2,
+          "mean_diff": 0.053455925,
+          "low": -0.06184375,
+          "high": 0.1687556,
+          "claim": "insufficient_n"
+        }
+      }
+    }
+  },
+  "reliability": {
+    "market": [
+      {
+        "bin_low": 0.4,
+        "bin_high": 0.5,
+        "n": 4,
+        "mean_probability": 0.4475,
+        "observed_rate": 1.0
+      },
+      {
+        "bin_low": 0.5,
+        "bin_high": 0.6,
+        "n": 3,
+        "mean_probability": 0.5433333333333333,
+        "observed_rate": 0.0
+      },
+      {
+        "bin_low": 0.6,
+        "bin_high": 0.7,
+        "n": 3,
+        "mean_probability": 0.6133333333333333,
+        "observed_rate": 0.0
+      },
+      {
+        "bin_low": 0.7,
+        "bin_high": 0.8,
+        "n": 2,
+        "mean_probability": 0.79,
+        "observed_rate": 1.0
+      },
+      {
+        "bin_low": 0.8,
+        "bin_high": 0.9,
+        "n": 1,
+        "mean_probability": 0.84,
+        "observed_rate": 1.0
+      }
+    ],
+    "plain_llm": [
+      {
+        "bin_low": 0.2,
+        "bin_high": 0.3,
+        "n": 1,
+        "mean_probability": 0.2831,
+        "observed_rate": 0.0
+      },
+      {
+        "bin_low": 0.3,
+        "bin_high": 0.4,
+        "n": 1,
+        "mean_probability": 0.3106,
+        "observed_rate": 0.0
+      },
+      {
+        "bin_low": 0.4,
+        "bin_high": 0.5,
+        "n": 4,
+        "mean_probability": 0.4449,
+        "observed_rate": 0.5
+      },
+      {
+        "bin_low": 0.5,
+        "bin_high": 0.6,
+        "n": 5,
+        "mean_probability": 0.5383,
+        "observed_rate": 0.8
+      },
+      {
+        "bin_low": 0.6,
+        "bin_high": 0.7,
+        "n": 1,
+        "mean_probability": 0.6574,
+        "observed_rate": 0.0
+      },
+      {
+        "bin_low": 0.7,
+        "bin_high": 0.8,
+        "n": 1,
+        "mean_probability": 0.7203,
+        "observed_rate": 1.0
+      }
+    ],
+    "sim": [
+      {
+        "bin_low": 0.3,
+        "bin_high": 0.4,
+        "n": 1,
+        "mean_probability": 0.3403,
+        "observed_rate": 1.0
+      },
+      {
+        "bin_low": 0.4,
+        "bin_high": 0.5,
+        "n": 6,
+        "mean_probability": 0.47100000000000003,
+        "observed_rate": 0.3333333333333333
+      },
+      {
+        "bin_low": 0.5,
+        "bin_high": 0.6,
+        "n": 3,
+        "mean_probability": 0.5442666666666667,
+        "observed_rate": 0.6666666666666666
+      },
+      {
+        "bin_low": 0.6,
+        "bin_high": 0.7,
+        "n": 3,
+        "mean_probability": 0.6379333333333334,
+        "observed_rate": 0.6666666666666666
+      }
+    ]
+  },
+  "resolved": [
+    {
+      "question_id": "fx-jpn-ai-guidelines",
+      "text": "FIXTURE: Will the illustrative Japanese government publish binding AI safety guidelines by 2026-10-05?",
+      "date": "2026-10-04",
+      "outcome": 1,
+      "resolved_on": "2026-10-05",
+      "tiers": ["A"],
+      "region": "East Asia",
+      "forecasts": {
+        "market": {
+          "probability": 0.41,
+          "brier": 0.3481000000000001
+        },
+        "sim": {
+          "probability": 0.6122,
+          "brier": 0.15038884000000002
+        },
+        "plain_llm": {
+          "probability": 0.519,
+          "brier": 0.23136099999999998
+        }
+      }
+    },
+    {
+      "question_id": "fx-deu-climate-bill",
+      "text": "FIXTURE: Will the illustrative German parliament pass the building-heat climate bill by 2026-10-05?",
+      "date": "2026-10-04",
+      "outcome": 0,
+      "resolved_on": "2026-10-05",
+      "tiers": ["A"],
+      "region": "Europe",
+      "forecasts": {
+        "sim": {
+          "probability": 0.6869,
+          "brier": 0.47183160999999996
+        },
+        "market": {
+          "probability": 0.55,
+          "brier": 0.30250000000000005
+        },
+        "plain_llm": {
+          "probability": 0.4625,
+          "brier": 0.21390625000000002
+        }
+      }
+    },
+    {
+      "question_id": "fx-jpn-ai-guidelines",
+      "text": "FIXTURE: Will the illustrative Japanese government publish binding AI safety guidelines by 2026-10-05?",
+      "date": "2026-10-03",
+      "outcome": 1,
+      "resolved_on": "2026-10-05",
+      "tiers": ["A"],
+      "region": "East Asia",
+      "forecasts": {
+        "sim": {
+          "probability": 0.4709,
+          "brier": 0.27994681
+        },
+        "market": {
+          "probability": 0.47,
+          "brier": 0.28090000000000004
+        },
+        "plain_llm": {
+          "probability": 0.5664,
+          "brier": 0.18800895999999997
+        }
+      }
+    },
+    {
+      "question_id": "fx-gbr-rate-hold",
+      "text": "FIXTURE: Will the illustrative UK central bank hold its policy rate at its meeting ending 2026-10-04?",
+      "date": "2026-10-03",
+      "outcome": 1,
+      "resolved_on": "2026-10-04",
+      "tiers": ["A"],
+      "region": "Europe",
+      "forecasts": {
+        "market": {
+          "probability": 0.79,
+          "brier": 0.044099999999999986
+        },
+        "plain_llm": {
+          "probability": 0.524,
+          "brier": 0.22657599999999997
+        },
+        "sim": {
+          "probability": 0.3403,
+          "brier": 0.43520408999999993
+        }
+      }
+    },
+    {
+      "question_id": "fx-deu-climate-bill",
+      "text": "FIXTURE: Will the illustrative German parliament pass the building-heat climate bill by 2026-10-05?",
+      "date": "2026-10-03",
+      "outcome": 0,
+      "resolved_on": "2026-10-05",
+      "tiers": ["A"],
+      "region": "Europe",
+      "forecasts": {
+        "plain_llm": {
+          "probability": 0.4187,
+          "brier": 0.17530969000000002
+        },
+        "market": {
+          "probability": 0.6,
+          "brier": 0.36
+        },
+        "sim": {
+          "probability": 0.483,
+          "brier": 0.233289
+        }
+      }
+    },
+    {
+      "question_id": "fx-usa-cpi-rise",
+      "text": "FIXTURE: Will the illustrative US consumer price index for September, released by 2026-10-03, show a higher monthly rise than August?",
+      "date": "2026-10-02",
+      "outcome": 0,
+      "resolved_on": "2026-10-03",
+      "tiers": ["A"],
+      "region": "North America",
+      "forecasts": {
+        "sim": {
+          "probability": 0.4635,
+          "brier": 0.21483225000000003
+        },
+        "market": {
+          "probability": 0.64,
+          "brier": 0.4096
+        },
+        "plain_llm": {
+          "probability": 0.526,
+          "brier": 0.27667600000000003
+        }
+      }
+    },
+    {
+      "question_id": "fx-jpn-ai-guidelines",
+      "text": "FIXTURE: Will the illustrative Japanese government publish binding AI safety guidelines by 2026-10-05?",
+      "date": "2026-10-02",
+      "outcome": 1,
+      "resolved_on": "2026-10-05",
+      "tiers": ["A"],
+      "region": "East Asia",
+      "forecasts": {
+        "plain_llm": {
+          "probability": 0.4096,
+          "brier": 0.34857216
+        },
+        "market": {
+          "probability": 0.46,
+          "brier": 0.2916
+        },
+        "sim": {
+          "probability": 0.5939,
+          "brier": 0.16491721
+        }
+      }
+    },
+    {
+      "question_id": "fx-gbr-rate-hold",
+      "text": "FIXTURE: Will the illustrative UK central bank hold its policy rate at its meeting ending 2026-10-04?",
+      "date": "2026-10-02",
+      "outcome": 1,
+      "resolved_on": "2026-10-04",
+      "tiers": ["A"],
+      "region": "Europe",
+      "forecasts": {
+        "plain_llm": {
+          "probability": 0.7203,
+          "brier": 0.07823208999999998
+        },
+        "market": {
+          "probability": 0.84,
+          "brier": 0.02560000000000001
+        },
+        "sim": {
+          "probability": 0.5117,
+          "brier": 0.23843688999999996
+        }
+      }
+    },
+    {
+      "question_id": "fx-deu-climate-bill",
+      "text": "FIXTURE: Will the illustrative German parliament pass the building-heat climate bill by 2026-10-05?",
+      "date": "2026-10-02",
+      "outcome": 0,
+      "resolved_on": "2026-10-05",
+      "tiers": ["A"],
+      "region": "Europe",
+      "forecasts": {
+        "sim": {
+          "probability": 0.5272,
+          "brier": 0.27793984
+        },
+        "plain_llm": {
+          "probability": 0.3106,
+          "brier": 0.09647236
+        },
+        "market": {
+          "probability": 0.55,
+          "brier": 0.30250000000000005
+        }
+      }
+    },
+    {
+      "question_id": "fx-usa-cpi-rise",
+      "text": "FIXTURE: Will the illustrative US consumer price index for September, released by 2026-10-03, show a higher monthly rise than August?",
+      "date": "2026-10-01",
+      "outcome": 0,
+      "resolved_on": "2026-10-03",
+      "tiers": ["A"],
+      "region": "North America",
+      "forecasts": {
+        "market": {
+          "probability": 0.6,
+          "brier": 0.36
+        },
+        "sim": {
+          "probability": 0.4989,
+          "brier": 0.24890121
+        },
+        "plain_llm": {
+          "probability": 0.2831,
+          "brier": 0.08014561
+        }
+      }
+    },
+    {
+      "question_id": "fx-jpn-ai-guidelines",
+      "text": "FIXTURE: Will the illustrative Japanese government publish binding AI safety guidelines by 2026-10-05?",
+      "date": "2026-10-01",
+      "outcome": 1,
+      "resolved_on": "2026-10-05",
+      "tiers": ["A"],
+      "region": "East Asia",
+      "forecasts": {
+        "market": {
+          "probability": 0.45,
+          "brier": 0.30250000000000005
+        },
+        "plain_llm": {
+          "probability": 0.5561,
+          "brier": 0.19704720999999997
+        },
+        "sim": {
+          "probability": 0.6147,
+          "brier": 0.14845608999999999
+        }
+      }
+    },
+    {
+      "question_id": "fx-gbr-rate-hold",
+      "text": "FIXTURE: Will the illustrative UK central bank hold its policy rate at its meeting ending 2026-10-04?",
+      "date": "2026-10-01",
+      "outcome": 1,
+      "resolved_on": "2026-10-04",
+      "tiers": ["A"],
+      "region": "Europe",
+      "forecasts": {
+        "sim": {
+          "probability": 0.489,
+          "brier": 0.261121
+        },
+        "plain_llm": {
+          "probability": 0.4888,
+          "brier": 0.26132543999999996
+        },
+        "market": {
+          "probability": 0.79,
+          "brier": 0.044099999999999986
+        }
+      }
+    },
+    {
+      "question_id": "fx-deu-climate-bill",
+      "text": "FIXTURE: Will the illustrative German parliament pass the building-heat climate bill by 2026-10-05?",
+      "date": "2026-10-01",
+      "outcome": 0,
+      "resolved_on": "2026-10-05",
+      "tiers": ["A"],
+      "region": "Europe",
+      "forecasts": {
+        "sim": {
+          "probability": 0.4207,
+          "brier": 0.17698849000000003
+        },
+        "market": {
+          "probability": 0.53,
+          "brier": 0.28090000000000004
+        },
+        "plain_llm": {
+          "probability": 0.6574,
+          "brier": 0.43217476
+        }
+      }
+    }
+  ],
+  "misses": [
+    {
+      "question_id": "fx-deu-climate-bill",
+      "text": "FIXTURE: Will the illustrative German parliament pass the building-heat climate bill by 2026-10-05?",
+      "date": "2026-10-04",
+      "forecaster": "sim",
+      "probability": 0.6869,
+      "outcome": 0,
+      "brier": 0.47183160999999996
+    },
+    {
+      "question_id": "fx-gbr-rate-hold",
+      "text": "FIXTURE: Will the illustrative UK central bank hold its policy rate at its meeting ending 2026-10-04?",
+      "date": "2026-10-03",
+      "forecaster": "sim",
+      "probability": 0.3403,
+      "outcome": 1,
+      "brier": 0.43520408999999993
+    },
+    {
+      "question_id": "fx-jpn-ai-guidelines",
+      "text": "FIXTURE: Will the illustrative Japanese government publish binding AI safety guidelines by 2026-10-05?",
+      "date": "2026-10-03",
+      "forecaster": "sim",
+      "probability": 0.4709,
+      "outcome": 1,
+      "brier": 0.27994681
+    },
+    {
+      "question_id": "fx-deu-climate-bill",
+      "text": "FIXTURE: Will the illustrative German parliament pass the building-heat climate bill by 2026-10-05?",
+      "date": "2026-10-02",
+      "forecaster": "sim",
+      "probability": 0.5272,
+      "outcome": 0,
+      "brier": 0.27793984
+    },
+    {
+      "question_id": "fx-gbr-rate-hold",
+      "text": "FIXTURE: Will the illustrative UK central bank hold its policy rate at its meeting ending 2026-10-04?",
+      "date": "2026-10-01",
+      "forecaster": "sim",
+      "probability": 0.489,
+      "outcome": 1,
+      "brier": 0.261121
+    }
+  ]
+}

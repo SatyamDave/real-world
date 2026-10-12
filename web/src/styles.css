@@ -1810,3 +1810,45 @@ main :is(p, li, dd, h3) a {
 .question-page {
   overflow-wrap: anywhere;
 }
+
+/* ---- Scores ---- */
+
+.scores {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.reliability {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+}
+
+.misses {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.misses .num {
+  display: block;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.scores > .disclosure {
+  border: 0;
+}
+
+.scores code {
+  overflow-wrap: anywhere;
+}
+
+/* Each baseline carries two breakdown tables, too wide to sit side by side. */
+.scores .skills {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}

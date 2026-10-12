@@ -117,9 +117,9 @@ export function ReceiptsStrip() {
 }
 
 // Below this many resolved questions an interval says nothing, so none is shown.
-const MIN_N_FOR_INTERVAL = 10;
+export const MIN_N_FOR_INTERVAL = 10;
 
-function SkillCard({ name, s }: { name: string; s?: Skill }) {
+export function SkillCard({ name, s }: { name: string; s?: Skill }) {
   if (!s) return <div className="skill" />;
   const diff = s.mean_diff;
   const detail =

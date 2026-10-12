@@ -33,6 +33,7 @@ Open http://localhost:8000/docs, or http://localhost:8000/llms.txt for the same 
 | `GET /v1/questions/{question_id}` | One question with its hashes and outcome, and per day every committed forecast (`sim`, `plain_llm`, `market`) with spread, receipt, Brier and log score once resolved, the per-segment model answers behind the sim forecast, the plain LLM samples and the day's headlines. `404` for an id not on the list. |
 | `GET /v1/scores` | Skill of the `sim` forecaster against each baseline over resolved questions. |
 | `GET /v1/research` | Every pre-registered experiment with its registered and current hash, hypothesis, primary metric, kill criterion and committed runs, and the eight papers with links to their sources ([research](../product/research.md)). Read from the repository files; no stored state. |
+| `GET /v1/scoreboard` | The public scoreboard: protocol and hash, resolved and open question counts, mean Brier and log score per forecaster with a day-block bootstrap interval from 10 resolved questions, skill against each baseline, reliability bins, every scored question-day newest first and the five worst `sim` forecasts. |
 | `GET /healthz` | `{"ok": true}` |
 
 Every error is a JSON object with a one-sentence `detail`. A refusal adds `code` (`409` closed or already done, `422` refused or invalid, `402` over a cost cap, `503` a check could not run, `401` bad key, `429` rate limit); `404` carries `detail` only.
