@@ -1,0 +1,54 @@
+{
+  "day": {
+    "date": "2026-10-01",
+    "engine_version": "0.1.0",
+    "leaf_count": "2",
+    "prev_root": "0000000000000000000000000000000000000000000000000000000000000000",
+    "protocol_hash": "e9321dd3e9ad7ddc5f0650bf65a0c2fc62c67c205de35aa0b0bb956e0e5a32a5",
+    "root": "f8e20bafcd3e3409f9b9dd76277d860d4604d189c975b5984184deb80ba51c56"
+  },
+  "entries": [
+    {
+      "entry": {
+        "committed_at": "2026-10-01T06:00:00Z",
+        "config_hash": "f74a4e22346aa20da11ea96e31666909655aeda462a753cc5d3ad3f9846c8ceb",
+        "date": "2026-10-01",
+        "engine_version": "0.1.0",
+        "forecaster": "market",
+        "kind": "forecast",
+        "market_price_at_commit": "0.7100",
+        "market_source": "fixture:FX-ZÜRICH-CUT",
+        "model": "",
+        "probability": "0.7100",
+        "question_hash": "40be97cc77a1fb4ddece6d63e2a6c10e8d312a3acaf9b9764e583a6ab5986674",
+        "question_id": "fx-2026-10-03-central-bank-cut",
+        "snapshot_sha256": "f03365a7b3623591c464d628dc13297f78891d142dab343514786255a4d96d00",
+        "supersedes": ""
+      },
+      "leaf_hash": "33d0343171c2fba4a971ea79650e646775c1322c912db4b33eee3fbc7abfafd6",
+      "salt": "ffeeddccbbaa99887766554433221100"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-01T06:00:00Z",
+        "config_hash": "f74a4e22346aa20da11ea96e31666909655aeda462a753cc5d3ad3f9846c8ceb",
+        "date": "2026-10-01",
+        "engine_version": "0.1.0",
+        "forecaster": "sim",
+        "kind": "forecast",
+        "market_price_at_commit": "0.7100",
+        "market_source": "fixture:FX-ZÜRICH-CUT",
+        "model": "claude-haiku-5-5",
+        "probability": "0.6250",
+        "question_hash": "40be97cc77a1fb4ddece6d63e2a6c10e8d312a3acaf9b9764e583a6ab5986674",
+        "question_id": "fx-2026-10-03-central-bank-cut",
+        "snapshot_sha256": "f03365a7b3623591c464d628dc13297f78891d142dab343514786255a4d96d00",
+        "supersedes": ""
+      },
+      "leaf_hash": "4befc7b5516b67f9c64686cb83b184ecaaacf2022d2186a9fa7adeabe3011146",
+      "salt": "00112233445566778899aabbccddeeff"
+    }
+  ],
+  "note": "FIXTURE: illustrative entries. Hash values inside entries and protocol_hash are sha256 of placeholder strings, not real artifacts. Recompute leaf_hash = sha256(0x00 || canonical(entry + {salt})), day.root, and record_hash = sha256(canonical(day)) per research/decisions/0002-benchmark-and-receipts.md.",
+  "record_hash": "fbd9a9df6b361e47745af74e86dc3d3a41d85b45c906ca05f5e2533f465367f5"
+}
