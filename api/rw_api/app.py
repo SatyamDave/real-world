@@ -27,6 +27,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse,
 from pydantic import BaseModel, ConfigDict, Field
 
 from rw import db, forecast, ledger, llm, policy, population, score, settings, simulate
+from rw_api import routes_research
 
 log = logging.getLogger("rw_api")
 SCHEMA = Path(__file__).parent / "schema.sql"
@@ -1243,6 +1244,7 @@ from rw_api import routes_status  # noqa: E402
 
 app.include_router(routes_status.router)
 
+app.include_router(routes_research.router)
 
 if __name__ == "__main__":
     print(json.dumps(app.openapi(), indent=2))

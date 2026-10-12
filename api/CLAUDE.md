@@ -4,7 +4,7 @@ The FastAPI app `rw_api`: HTTP, fork jobs, idempotency, server-sent events, the 
 
 ## Specs and research
 
-- Product: [simulate-api](../product/simulate-api.md), [daily-question](../product/daily-question.md), [receipts](../product/receipts.md), [benchmark](../product/benchmark.md)
+- Product: [research](../product/research.md), [simulate-api](../product/simulate-api.md), [daily-question](../product/daily-question.md), [receipts](../product/receipts.md), [benchmark](../product/benchmark.md)
 - Decisions: [0001-architecture](../research/decisions/0001-architecture.md), [0002-benchmark-and-receipts](../research/decisions/0002-benchmark-and-receipts.md)
 - Research: [engineering/069](../research/engineering/069-api-design.md), [engineering/074](../research/engineering/074-abuse-and-safety.md), [product/077](../research/product/077-daily-question-mechanics.md), [engineering/070](../research/engineering/070-commit-reveal-timestamping.md)
 

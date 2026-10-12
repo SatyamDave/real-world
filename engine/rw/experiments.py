@@ -82,6 +82,8 @@ def registry(root: Path = EXPERIMENTS) -> dict[str, Row]:
             cells = [c.strip() for c in line.strip().strip("|").split("|")]
             rows[m.group(1)] = {
                 "title": cells[1],
+                "registered": cells[2],
+                "owner": cells[3],
                 "sha256": cells[4].strip("`"),
                 "status": cells[5],
             }
@@ -107,6 +109,42 @@ def check_registration(exp_id: str, root: Path = EXPERIMENTS) -> str:
             " the plan changed after registration, so nothing ran"
         )
     return actual
+
+
+def prereg_section(exp_id: str, heading: str, root: Path = EXPERIMENTS) -> str:
+    """The text under `## heading` in an experiment's PREREG.md, up to the next heading."""
+    text = (root / exp_id / "PREREG.md").read_text()
+    m = re.search(rf"^## {re.escape(heading)}\n(.*?)(?=^## |\Z)", text, re.M | re.S)
+    return m.group(1).strip() if m else ""
+
+
+def results(exp_id: str, root: Path = EXPERIMENTS) -> list[Row]:
+    """Each committed run of an experiment, oldest first, read from its results.json."""
+    out = []
+    for path in sorted((root / exp_id / "results").glob("*/results.json")):
+        r = json.loads(path.read_text())
+        key = next((k for k in r["metrics"] if k.startswith("primary")), None)
+        m = r["metrics"].get(key) if key else None
+        out.append(
+            {
+                "path": str((path.parent / "RESULTS.md").relative_to(root.parent)),
+                "date": r["started_at"][:10],
+                "command": r["command"],
+                "commit": r["git_commit"],
+                "provider": r["provider"],
+                "model": r["model"],
+                "primary": m
+                and {
+                    "metric": key,
+                    "value": m["mean"],
+                    "low": m["low"],
+                    "high": m["high"],
+                    "n": m["n"],
+                },
+                "outcome": (m or {}).get("verdict", "no verdict recorded"),
+            }
+        )
+    return out
 
 
 def _rmse(x: np.ndarray) -> float:

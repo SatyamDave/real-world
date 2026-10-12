@@ -29,6 +29,7 @@ Open http://localhost:8000/docs, or http://localhost:8000/llms.txt for the same 
 | `GET /v1/receipts`, `GET /v1/receipts/{day}` | Day records newest first with anchor status; one day with every entry, salt and leaf hash, its question (text, resolution source, resolves by), outcome and Brier once known, and its stored RFC 3161 and OpenTimestamps proofs. |
 | `GET /v1/status` | Live status: latest cycle date, state and finish time, ledger root and record hash, anchor status, model and provider in use, spend today against the nightly budget, engine version. |
 | `GET /v1/scores` | Skill of the `sim` forecaster against each baseline over resolved questions. |
+| `GET /v1/research` | Every pre-registered experiment with its registered and current hash, hypothesis, primary metric, kill criterion and committed runs, and the eight papers with links to their sources ([research](../product/research.md)). Read from the repository files; no stored state. |
 | `GET /healthz` | `{"ok": true}` |
 
 Every error is a JSON object with a one-sentence `detail`. A refusal adds `code` (`409` closed or already done, `422` refused or invalid, `402` over a cost cap, `503` a check could not run, `401` bad key, `429` rate limit); `404` carries `detail` only.

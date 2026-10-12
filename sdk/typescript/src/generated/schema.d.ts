@@ -245,6 +245,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v1/research": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The experiment registry with its pre-registration hashes and results, and the papers */
+    get: operations["research_v1_research_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -510,6 +527,53 @@ export interface components {
       /** Countries */
       countries?: string[] | null;
     };
+    /** Experiment */
+    Experiment: {
+      /** Id */
+      id: string;
+      /** Title */
+      title: string;
+      /** Registered */
+      registered: string;
+      /** Owner */
+      owner: string;
+      /** Status */
+      status: string;
+      /** Registry Sha256 */
+      registry_sha256: string;
+      /** Prereg Sha256 */
+      prereg_sha256: string;
+      /** Hash Matches */
+      hash_matches: boolean;
+      /** Prereg Url */
+      prereg_url: string;
+      /** Hypothesis */
+      hypothesis: string;
+      /** Primary Metric */
+      primary_metric: string;
+      /** Kill Criterion */
+      kill_criterion: string;
+      /** Results */
+      results: components["schemas"]["ExperimentResult"][];
+    };
+    /** ExperimentResult */
+    ExperimentResult: {
+      /** Path */
+      path: string;
+      /** Date */
+      date: string;
+      /** Command */
+      command: string;
+      /** Commit */
+      commit: string;
+      /** Provider */
+      provider: string;
+      /** Model */
+      model: string;
+      primary: components["schemas"]["Primary"] | null;
+      /** Outcome */
+      outcome: string;
+    };
     /** Job */
     Job: {
       /** Id */
@@ -551,6 +615,35 @@ export interface components {
       /** Detail */
       detail: string;
     };
+    /** Paper */
+    Paper: {
+      /** Slug */
+      slug: string;
+      /** Short Title */
+      short_title: string;
+      /** Title */
+      title: string;
+      /** Claim */
+      claim: string;
+      /** Stage */
+      stage: string;
+      /** Venue */
+      venue: string;
+      /** Pending */
+      pending: string;
+      /** Tex Url */
+      tex_url: string;
+      /** Status Url */
+      status_url: string;
+      pdf: components["schemas"]["PaperPdf"];
+    };
+    /** PaperPdf */
+    PaperPdf: {
+      /** How */
+      how: string;
+      /** Ci */
+      ci: string;
+    };
     /** PolicyRefused */
     PolicyRefused: {
       /**
@@ -569,6 +662,19 @@ export interface components {
       text: string;
       /** Countries */
       countries: string[] | null;
+    };
+    /** Primary */
+    Primary: {
+      /** Metric */
+      metric: string;
+      /** Value */
+      value: number;
+      /** Low */
+      low: number;
+      /** High */
+      high: number;
+      /** N */
+      n: number;
     };
     /** ReceiptDay */
     ReceiptDay: {
@@ -652,6 +758,17 @@ export interface components {
        * @description The fork already running under this Idempotency-Key.
        */
       id?: string | null;
+    };
+    /** Research */
+    Research: {
+      /** Experiments */
+      experiments: components["schemas"]["Experiment"][];
+      /** Papers */
+      papers: components["schemas"]["Paper"][];
+      /** Repo */
+      repo: string;
+      /** Commit */
+      commit: string;
     };
     /** Reveal */
     Reveal: {
@@ -1481,6 +1598,26 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["SystemStatus"];
+        };
+      };
+    };
+  };
+  research_v1_research_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Research"];
         };
       };
     };
