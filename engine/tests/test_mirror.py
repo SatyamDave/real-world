@@ -1,0 +1,79 @@
+import os
+import subprocess
+from pathlib import Path
+
+import pytest
+
+SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "mirror_receipts.sh"
+
+
+@pytest.fixture
+def home(tmp_path, monkeypatch):
+    monkeypatch.setenv("RW_HOME", str(tmp_path / "var"))
+    (tmp_path / "var" / "receipts").mkdir(parents=True)
+    return tmp_path / "var"
+
+
+@pytest.fixture
+def remote(tmp_path):
+    path = tmp_path / "remote.git"
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(path)], check=True)
+    return str(path)
+
+
+def mirror(remote: str | None) -> subprocess.CompletedProcess[str]:
+    env = {k: v for k, v in os.environ.items() if k != "RECEIPTS_MIRROR_REMOTE"}
+    if remote is not None:
+        env["RECEIPTS_MIRROR_REMOTE"] = remote
+    return subprocess.run([str(SCRIPT)], env=env, capture_output=True, text=True)
+
+
+def git(remote: str, *args: str) -> str:
+    return subprocess.run(
+        ["git", "--git-dir", remote, *args], check=True, capture_output=True, text=True
+    ).stdout
+
+
+def receipt(home: Path, date: str, question_id: str = "us-cpi-oct") -> None:
+    text = f'{{"day": {{"date": "{date}"}}, "question_id": "{question_id}"}}\n'
+    (home / "receipts" / f"{date}.json").write_text(text)
+
+
+def test_off_when_the_remote_is_unset(home):
+    out = mirror(None)
+    assert out.returncode == 0
+    assert out.stdout == "receipts mirror off: RECEIPTS_MIRROR_REMOTE is not set\n"
+    assert not (home / "mirror").exists()
+
+
+def test_pushes_new_days_once_and_never_rewrites_a_mirrored_day(home, remote):
+    receipt(home, "2026-10-05", "fx-usa-cpi-rise")
+    receipt(home, "2026-10-14")
+    receipt(home, "2026-10-15")
+    out = mirror(remote)
+    assert out.returncode == 0, out.stderr
+    assert out.stdout == "receipts mirror: pushed receipts through 2026-10-15\n"
+    files = git(remote, "ls-tree", "-r", "--name-only", "main").split()
+    assert files == ["receipts/2026-10-14.json", "receipts/2026-10-15.json"]
+    shown = git(remote, "show", "main:receipts/2026-10-15.json")
+    assert shown == (home / "receipts" / "2026-10-15.json").read_text()
+    assert remote not in (home / "mirror" / ".git" / "config").read_text()
+
+    head = git(remote, "rev-parse", "main").strip()
+    out = mirror(remote)
+    assert out.returncode == 0 and out.stdout == "receipts mirror: nothing new\n"
+    assert git(remote, "rev-parse", "main").strip() == head
+
+    receipt(home, "2026-10-16")
+    assert mirror(remote).returncode == 0
+    assert git(remote, "log", "--format=%s", "main").splitlines() == [
+        "chore: receipts through 2026-10-16",
+        "chore: receipts through 2026-10-15",
+    ]
+    assert git(remote, "diff", "--name-only", head, "main").split() == ["receipts/2026-10-16.json"]
+
+    (home / "receipts" / "2026-10-14.json").write_text("{}\n")
+    head = git(remote, "rev-parse", "main").strip()
+    out = mirror(remote)
+    assert out.returncode == 1 and "2026-10-14.json differs" in out.stderr
+    assert git(remote, "rev-parse", "main").strip() == head

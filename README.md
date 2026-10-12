@@ -41,6 +41,18 @@ To fork with an API key instead of the anonymous limits, mint one with `uv run p
 
 Local state (the SQLite file, snapshots, receipts) goes to `var/`, or to `$RW_HOME` if set.
 
+## Switching on with secrets
+
+Everything above runs with no secret. Each of these switches one thing on:
+
+| Secret | Where | What it switches on |
+| --- | --- | --- |
+| `ANTHROPIC_API_KEY` | environment | Every model call goes to Claude (`settings.MODEL`) instead of the fake model, within `NIGHTLY_BUDGET_USD` and the fork caps in `engine/rw/settings.py`. |
+| `ANTHROPIC_API_KEY` | repository secret | `.github/workflows/papers.yml` opens a PR updating the affected papers after a PR outside `papers/` merges; `claude-review.yml` reviews each non-draft PR against the `CLAUDE.md` files and posts one comment; `learn-rules.yml` opens a daily PR that turns mistakes in recently merged PRs into rules and checks. Each skips itself with a warning when the secret is unset. |
+| `RECEIPTS_MIRROR_REMOTE` | environment | `make mirror` pushes `var/receipts/*.json` to this git URL (token included); unset, it says the mirror is off ([receipts](product/receipts.md)). |
+| `RW_ALLOWED_ORIGINS` | API environment | Comma-separated origins, like `https://host`, that may call the API from a browser besides localhost. A malformed entry stops the API at startup. |
+| `RW_TRUSTED_PROXIES` | API environment | Comma-separated proxy addresses whose last `X-Forwarded-For` hop is taken as the caller for the anonymous fork limit; otherwise the peer address is used. |
+
 ## Where things live
 
 | Folder | What it holds | Product spec |

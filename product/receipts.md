@@ -16,6 +16,7 @@ Skeptics: HN readers, forecasting researchers, YC partners and pilot buyers who 
 - The database refuses UPDATE and DELETE on ledger tables (test).
 - Every open question in a committed question set has one leaf per forecaster per day; the verifier reports any gap.
 - The page states that a constant 50% scores 0.25, and shows each day's anchor status as one of: "anchored 2026-10-12 17:19:19 UTC by freetsa.org (RFC 3161 token)" with the token as a download, "anchor pending: OpenTimestamps proof awaits a Bitcoin block", or "not yet anchored" (`web/src/App.test.tsx`).
+- Mirror: `make mirror` (`scripts/mirror_receipts.sh`) copies `var/receipts/*.json` into a clone of the git repo named by `RECEIPTS_MIRROR_REMOTE`, commits `chore: receipts through <date>` only when a file is new, and pushes. Days on the fixture questions are never mirrored. It refuses to push when a day already mirrored differs from the local copy, and prints `receipts mirror off: RECEIPTS_MIRROR_REMOTE is not set` and exits 0 when the remote is unset. It runs on its own, after the daily cycle, so a push error never fails the cycle. The public mirror goes live once the founder creates the public repo and sets the remote. Tested against a local bare repo (`engine/tests/test_mirror.py`).
 - Anyone can check a token without our code: `openssl ts -reply -in D.tsr -text` prints the message data, which must equal the day's record hash; `openssl ts -verify` with FreeTSA's published certificates checks the signature ([engineering/070](../research/engineering/070-commit-reveal-timestamping.md)).
 
 ## What it is not
@@ -23,7 +24,6 @@ Skeptics: HN readers, forecasting researchers, YC partners and pilot buyers who 
 - Not a leaderboard of accuracy claims. No percentage, no "beats the market" (see [benchmark](benchmark.md)).
 - No edits or deletions, ever. A correction is a new entry that names the one it corrects.
 - No fork results: counterfactuals cannot be scored.
-- No public git mirror of the day records yet; that needs the founder.
 - Our own check of a token stops at its message imprint. The token's signature and certificate chain, and the upgrade of a pending OpenTimestamps proof to a Bitcoin attestation, are follow-ups.
 
 ## Where the code lives
