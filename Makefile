@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help setup dev test lint typecheck check experiment daily daily-fixtures
+.PHONY: help setup dev test lint typecheck check experiment daily daily-fixtures openapi
 
 help: ## list every target
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-15s %s\n", $$1, $$2}'
@@ -8,7 +8,8 @@ setup: ## install Python and TypeScript dependencies from the lockfiles
 	uv sync --all-packages --locked
 	pnpm install --frozen-lockfile
 
-dev: ## run the API on :8000 and the web dev server on :5173 together
+dev: ## seed the fixture days if var/ is empty, then run the API on :8000 and the web app on :5173
+	@test -d "$${RW_HOME:-var}/snapshots" || uv run python -m rw.daily --fixtures
 	trap 'kill 0' EXIT; uv run uvicorn rw_api.app:app --port 8000 & pnpm --filter web dev
 
 test: ## run pytest and every package's Vitest suite
@@ -37,3 +38,7 @@ daily: ## run the daily cycle for one day: make daily DATE=2026-10-01
 
 daily-fixtures: ## run the daily cycle over every fixture day; a rerun does no new work
 	uv run python -m rw.daily --fixtures
+
+openapi: ## rewrite api/openapi.json from the running app's schema
+	uv run python -m rw_api.app > api/openapi.json
+	pnpm exec biome format --write api/openapi.json
