@@ -17,7 +17,7 @@ import { AgentPanel } from "./AgentPanel";
 import { App, DISCLOSURE } from "./App";
 import { rw } from "./api";
 import { DailyQuestion } from "./DailyQuestion";
-import { ForkCard } from "./ForkCard";
+import { Fork, ForkCard } from "./ForkCard";
 import agentFixture from "./fixtures/agent.json";
 import whyFixture from "./fixtures/agent_why.json";
 import dailyFixture from "./fixtures/daily.json";
@@ -121,6 +121,22 @@ test("the fork card renders a fixture SimulateResult", async () => {
   );
   expect(text).toContain(DISCLOSURE);
   expect(el.querySelectorAll(".disclosure .tier")).toHaveLength(3);
+});
+
+test("the fork form shows an acceptable-use refusal inline", async () => {
+  const detail = "The event names a private person. Real World simulates groups.";
+  vi.spyOn(rw, "estimate").mockResolvedValue({
+    estimated_cost_usd: 0.001,
+    model_calls: 3,
+    segments: 3,
+    within_cap: true,
+  });
+  vi.spyOn(rw, "simulate").mockRejectedValue(new ApiError(422, { code: "private_person", detail }));
+  const el = await render(<Fork events={world.prefilled_events} />);
+  await act(async () => button(world.prefilled_events[0].text).click());
+  await until(() => expect(button("Run fork").disabled).toBe(false));
+  await act(async () => button("Run fork").click());
+  await until(() => expect(el.textContent).toContain(`Refused: ${detail}`));
 });
 
 test("the agent panel labels the trace and the simulated account", async () => {

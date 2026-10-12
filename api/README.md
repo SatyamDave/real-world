@@ -15,7 +15,7 @@ Open http://localhost:8000/docs. Every endpoint works with `ANTHROPIC_API_KEY` u
 
 | Method and path | What it returns |
 | --- | --- |
-| `POST /v1/simulate` | `202 {id, status, links}` and runs `simulate.run` in the background. Needs `Idempotency-Key` (at most 255 characters); `Real-World-Version`, if sent, must be `2026-10-27`. `402` with the estimate when it exceeds `max_cost_usd`. |
+| `POST /v1/simulate` | `202 {id, status, links}` and runs `simulate.run` in the background. Needs `Idempotency-Key` (at most 255 characters); `Real-World-Version`, if sent, must be `2026-10-27`. `402` with the estimate when it exceeds `max_cost_usd`; `422 {code, detail}` when `policy.screen` refuses the event ([acceptable use](../product/acceptable-use.md)); `503` when the screen could not run. |
 | `POST /v1/simulate/estimate` | Estimated cost, model calls and whether it fits the cap. No job. |
 | `GET /v1/simulations/{id}` | Job status and, once done, the result (`simulated: true`) or the error. |
 | `GET /v1/simulations/{id}/events` | Server-sent events, one `id:` each; `Last-Event-ID` resumes; a `: heartbeat` comment every 15 s; closes after `succeeded` or `failed`. |

@@ -84,14 +84,17 @@
             }
           },
           "422": {
-            "description": "Validation Error",
+            "description": "The event breaks the acceptable-use policy (or the body is invalid)",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/PolicyRefused"
                 }
               }
             }
+          },
+          "503": {
+            "description": "The acceptable-use check could not run; nothing was started"
           }
         }
       }
@@ -1149,6 +1152,22 @@
         "type": "object",
         "required": ["self", "events"],
         "title": "Links"
+      },
+      "PolicyRefused": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["private_person", "election_persuasion", "election_window"],
+            "title": "Code"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": ["code", "detail"],
+        "title": "PolicyRefused"
       },
       "PrefilledEvent": {
         "properties": {

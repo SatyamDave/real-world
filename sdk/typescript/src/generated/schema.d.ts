@@ -507,6 +507,16 @@ export interface components {
       /** Events */
       events: string;
     };
+    /** PolicyRefused */
+    PolicyRefused: {
+      /**
+       * Code
+       * @enum {string}
+       */
+      code: "private_person" | "election_persuasion" | "election_window";
+      /** Detail */
+      detail: string;
+    };
     /** PrefilledEvent */
     PrefilledEvent: {
       /** Id */
@@ -825,14 +835,21 @@ export interface operations {
           "application/json": components["schemas"]["Conflict"];
         };
       };
-      /** @description Validation Error */
+      /** @description The event breaks the acceptable-use policy (or the body is invalid) */
       422: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": components["schemas"]["PolicyRefused"];
         };
+      };
+      /** @description The acceptable-use check could not run; nothing was started */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
