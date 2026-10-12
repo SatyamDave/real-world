@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig, type Plugin, runnerImport } from "vite";
 
 type Check = typeof import("./src/liveCheck");
@@ -22,4 +23,6 @@ function noFixtureQuestions(): Plugin {
 
 export default defineConfig(({ command, mode }) => ({
   plugins: command === "build" && mode === "production" ? [noFixtureQuestions()] : [],
+  // Vitest blanks CSS by default; theme.test.ts reads the font rules as text.
+  test: { css: { include: [/fonts\.css/] } },
 }));

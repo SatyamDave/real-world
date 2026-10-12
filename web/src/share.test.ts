@@ -53,7 +53,7 @@ test("the fork sentence names the largest move and the run spread", () => {
   );
   const text = forkShareText(job, "https://rw.test/fork/job_fixture1");
   expect(text).toContain("“A chip shortage doubles phone prices worldwide”");
-  expect(text).toContain("Simulation, not a poll or a prediction of a real person.");
+  expect(text).toContain("AI-simulated. Not a poll or a prediction of a real person.");
   expect(text.endsWith("https://rw.test/fork/job_fixture1")).toBe(true);
 });
 

@@ -14,7 +14,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import vector from "../../data/fixtures/receipts_test_vector.json";
 import { AgentPanel } from "./AgentPanel";
-import { App, DISCLOSURE } from "./App";
+import { App, DISCLOSURE, whenIdle } from "./App";
 import { rw } from "./api";
 import { DailyQuestion } from "./DailyQuestion";
 import { Fork, ForkCard, ForkRun } from "./ForkCard";
@@ -85,9 +85,13 @@ test("the reveal shows you, visitors, the simulated world and the market after s
   const el = await render(<DailyQuestion tiers={["A", "B", "B"]} />);
   expect(el.textContent).toContain(daily.question.text);
   expect(el.textContent).not.toContain("Simulated world");
+  expect(el.querySelector(".receipt-cols")?.textContent).toContain("Shown after you answer");
 
   await act(async () => button("Submit 50%").click());
   await until(() => expect(el.textContent).toContain("Simulated world"));
+  expect(el.querySelector<HTMLAnchorElement>(".receipt-cols a")?.getAttribute("href")).toBe(
+    "/receipts#2026-10-05",
+  );
 
   expect(rw.answer_daily).toHaveBeenCalledWith(daily.question.id, expect.any(String), 0.5);
   const text = el.textContent ?? "";
@@ -123,6 +127,46 @@ test("a closed question shows when answers closed instead of the slider", async 
   const el = await render(<DailyQuestion tiers={[]} />);
   expect(el.textContent).toContain("Answers closed");
   expect(el.querySelector("input[type=range]")).toBeNull();
+});
+
+test("the daily card is a receipt: a Pending stamp until it resolves, and when and where", async () => {
+  const daily = dailyFixture as Daily;
+  vi.mocked(rw.daily).mockResolvedValue({ ...daily, reveal: null });
+  const el = await render(<DailyQuestion tiers={[]} />);
+  expect(el.querySelector(".receipt-top .stamp")?.textContent).toBe("Pending");
+  const cols = el.querySelector(".receipt-cols")?.textContent ?? "";
+  expect(cols).toContain("Resolves2026-10-07example.org");
+
+  vi.mocked(rw.daily).mockResolvedValue({
+    ...daily,
+    reveal: { ...dailyFixture.reveal, outcome: 1 },
+  });
+  const resolved = await render(<DailyQuestion tiers={[]} />);
+  const stamp = resolved.querySelector(".receipt-top .stamp");
+  expect(stamp?.textContent).toBe("Resolved yes");
+  expect(stamp?.classList.contains("good")).toBe(true);
+});
+
+test("the globe waits for the load event and an idle moment, and can be cancelled", () => {
+  const idle = vi.fn((_cb: () => void) => 7);
+  const cancelIdle = vi.fn();
+  vi.stubGlobal("requestIdleCallback", idle);
+  vi.stubGlobal("cancelIdleCallback", cancelIdle);
+  const ready = vi.spyOn(document, "readyState", "get").mockReturnValue("loading");
+  const run = vi.fn();
+
+  const cancel = whenIdle(run);
+  expect(idle).not.toHaveBeenCalled();
+  dispatchEvent(new Event("load"));
+  expect(idle).toHaveBeenCalledWith(run, { timeout: 2000 });
+  cancel();
+  expect(cancelIdle).toHaveBeenCalledWith(7);
+
+  ready.mockReturnValue("complete");
+  whenIdle(run);
+  expect(idle).toHaveBeenCalledTimes(2);
+  expect(run).not.toHaveBeenCalled();
+  vi.unstubAllGlobals();
 });
 
 test("a failed load says what failed in words and retries", async () => {
@@ -299,6 +343,7 @@ test("the receipts page verifies the served chain and states the reference and c
   expect(text).toContain(QUESTION.text);
   expect(text).toContain("1 day before resolution");
   expect(text).toContain("not yet anchored");
+  expect(el.querySelector("tbody td:last-child .pending")?.textContent).toBe("Pending");
   expect(text).toContain("A constant 50% forecast scores 0.25");
   expect(text).toContain("No claim yet");
   expect(text).toContain("n = 2 resolved questions");
@@ -339,6 +384,8 @@ test.each([
   const el = await render(<App path="/receipts" />);
   await until(() => expect(el.querySelector(".day-head .badge")?.textContent).toBe(copy));
   expect(el.textContent).not.toContain("not yet anchored");
+  // Verify green marks an anchored day; a pending one keeps the clay stamp.
+  expect(el.querySelector(".day-head .badge")?.classList.contains("good")).toBe(anchored);
 });
 
 test("the home page states the thesis with the record as proof", async () => {

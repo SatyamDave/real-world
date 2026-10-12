@@ -6,13 +6,36 @@ import { DailyQuestion } from "./DailyQuestion";
 import { Fork, ForkRun } from "./ForkCard";
 import { ReceiptsPage, ReceiptsStrip } from "./Receipts";
 
-// three.js is most of the bundle, so the globe loads after the question is on screen, and only
-// on screens wide enough to use it.
+// three.js is most of the bundle, so the globe loads once the page is idle, and only on screens
+// wide enough to use it. A still poster holds its place until then.
 const Globe = lazy(() => import("./Globe"));
 const WIDE = "(min-width: 768px)";
 const FEATURED = ["USA", "BRA", "KEN"];
 
-export const DISCLOSURE = "Simulation, not a poll or a prediction of a real person";
+export const DISCLOSURE = "AI-simulated. Not a poll or a prediction of a real person";
+
+export const prefersReducedMotion = () =>
+  typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** Runs `run` once the page has loaded and the main thread is idle; returns a cancel. */
+export function whenIdle(run: () => void): () => void {
+  let cancel = () => {};
+  const idle = () => {
+    if (typeof requestIdleCallback === "function") {
+      const id = requestIdleCallback(run, { timeout: 2000 });
+      cancel = () => cancelIdleCallback(id);
+    } else {
+      const id = setTimeout(run, 200);
+      cancel = () => clearTimeout(id);
+    }
+  };
+  if (document.readyState === "complete") idle();
+  else {
+    addEventListener("load", idle, { once: true });
+    cancel = () => removeEventListener("load", idle);
+  }
+  return () => cancel();
+}
 
 export const pct = (share: number) => `${Math.round(share * 100)}%`;
 
@@ -67,7 +90,7 @@ export function Disclosure({ tiers }: { tiers: string[] }) {
       {DISCLOSURE}
       {counts.length > 0 && (
         <>
-          {" · Coverage "}
+          {". Coverage "}
           {counts.map(([t, n]) => (
             <span key={t} className="disclosure-tier">
               <TierBadge tier={t} />
@@ -138,9 +161,11 @@ function Header({ path, date }: { path: string; date?: string }) {
         Skip to content
       </a>
       <a href="/" className="brand">
-        <span className="brand-mark" aria-hidden="true" />
         <span>
           Real World
+          <span className="brand-mark" aria-hidden="true">
+            .
+          </span>
           {date && <span className="brand-date">World of {shortDate(date)}</span>}
         </span>
       </a>
@@ -237,9 +262,16 @@ function CountryList({
   );
 }
 
+function useIdle() {
+  const [idle, setIdle] = useState(false);
+  useEffect(() => whenIdle(() => setIdle(true)), []);
+  return idle;
+}
+
 function Home({ w, tiers }: { w?: World; tiers: string[] }) {
   const [selected, setSelected] = useState<Country | null>(null);
   const wide = useWide();
+  const idle = useIdle();
   return (
     <>
       <div className="home">
@@ -250,10 +282,21 @@ function Home({ w, tiers }: { w?: World; tiers: string[] }) {
         {w && <Fork events={w.prefilled_events} />}
         {w && !wide && <CountryList countries={w.countries} onSelect={setSelected} />}
       </div>
-      {w && wide && (
-        <Suspense fallback={<div className="globe" />}>
-          <Globe countries={w.countries} onSelect={setSelected} paused={selected !== null} />
-        </Suspense>
+      {wide && (
+        <div className="globe">
+          <img
+            className="globe-poster"
+            src="/globe-poster.svg"
+            width={500}
+            height={500}
+            alt="A dot-sampled globe of the world's land."
+          />
+          {w && idle && (
+            <Suspense fallback={null}>
+              <Globe countries={w.countries} onSelect={setSelected} paused={selected !== null} />
+            </Suspense>
+          )}
+        </div>
       )}
       {selected && <AgentPanel country={selected} onClose={() => setSelected(null)} />}
     </>

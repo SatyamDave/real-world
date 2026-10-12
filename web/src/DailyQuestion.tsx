@@ -19,6 +19,14 @@ function playerId(): string {
   }
 }
 
+const host = (url: string) => {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url;
+  }
+};
+
 const time = (iso: string) =>
   new Date(iso).toLocaleString("en-US", {
     month: "short",
@@ -36,7 +44,7 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
 
   if (loaded.error)
     return (
-      <section className="card daily">
+      <section className="card receipt daily">
         <LoadError what="today's question" error={loaded.error} retry={loaded.retry} />
       </section>
     );
@@ -44,7 +52,7 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
   const reveal = after ?? loaded.data?.reveal;
   if (!q || !loaded.data)
     return (
-      <section className="card daily skeleton" aria-busy="true">
+      <section className="card receipt daily skeleton" aria-busy="true">
         <Loading what="today's question" />
       </section>
     );
@@ -74,18 +82,44 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
   }
 
   return (
-    <section className="card daily">
-      <p className="eyebrow">
-        Today's question <span className="dot" aria-hidden="true" /> resolves by{" "}
-        {shortDate(q.resolves_by)}
-      </p>
+    <section className="card receipt daily">
+      <div className="receipt-top">
+        <span>Today's question</span>
+        {reveal?.outcome != null ? (
+          <span className="stamp good">Resolved {reveal.outcome ? "yes" : "no"}</span>
+        ) : (
+          <span className="stamp">Pending</span>
+        )}
+      </div>
       <h2 className="question">{q.text}</h2>
-      <p className="muted small">
-        Resolution source:{" "}
-        <a href={q.resolution_source} target="_blank" rel="noreferrer">
-          {q.resolution_source}
-        </a>
-      </p>
+      <dl className="receipt-cols">
+        <div>
+          <dt>Committed</dt>
+          {reveal?.sim != null ? (
+            <dd>
+              <a href={`/receipts#${date}`}>{date}</a>
+              <span className="src">in that day's record</span>
+            </dd>
+          ) : reveal ? (
+            <dd className="pending">No forecast committed</dd>
+          ) : closed ? (
+            <dd>
+              <a href={`/receipts#${date}`}>Check the record</a>
+            </dd>
+          ) : (
+            <dd className="pending">Shown after you answer</dd>
+          )}
+        </div>
+        <div>
+          <dt>Resolves</dt>
+          <dd>
+            {q.resolves_by}
+            <a className="src" href={q.resolution_source} target="_blank" rel="noreferrer">
+              {host(q.resolution_source)}
+            </a>
+          </dd>
+        </div>
+      </dl>
       {reveal ? (
         <RevealView reveal={reveal} date={date} tiers={tiers} />
       ) : closed ? (

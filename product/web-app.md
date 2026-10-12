@@ -11,6 +11,8 @@ States, written out:
 - Empty: "No forecasts committed yet.", "No days committed yet.", "No forecast is hashed yet. The record starts with the first one.", "No segment of at least N agents moved." (N is the result's `top_shift_min_agents`)
 - A fork id that does not exist: "This fork does not exist or has expired." Any other unknown path: "Page not found".
 
+The look is the landing page's "Commit Slip" theme: the same colour tokens (cool paper, ink, verify green for committed, verified and anchored states, clay for pending), self-hosted IBM Plex Sans for reading and Plex Mono for data (dates, hashes, probabilities), one type scale (12, 14, 16, 20, 26, 40 px on a phone, a 64 px headline on desktop), one body colour, 44 px touch targets and a 2 px green focus ring. Today's question, the latest receipts, each day on the receipts page and the fork card are printed receipts: a header with a stamp ("Pending" in clay until the question resolves, "Resolved yes" or "Resolved no" in green after; "AI-simulated" on a fork), a torn bottom edge, and on the question a "Committed" column ("Shown after you answer", then the day's date linking its receipts; "Check the record" once answers close) and a "Resolves" column (the date and the resolution source's host). The fork's saved image is the same receipt, light in either theme. The landing work defines no dark theme, so dark mode keeps the same hues on a near-black green paper. On wide screens a still globe poster shows at once; the live globe loads after the page goes idle, fades in over it, and every simulated country rings once. With reduced motion the globe does not rotate or ring.
+
 Every route sets its own title (a fork uses its event text), the page has a favicon, a static Open Graph image (`web/public/og.png`) and description, a skip link, and focus that moves into the agent panel on open and back on close.
 
 ## Who it is for
@@ -25,7 +27,9 @@ Curious visitors in their first 60 seconds, people opening a shared fork link, a
 - A Playwright run at 1440 and 375 px, light and dark, against the local API: no horizontal scroll, the globe chunk is not requested at 375 px, the fork image is 1200x630.
 - `pnpm --filter web build` succeeds with no type errors; the bundle has no runtime errors on load against the local API (smoke test).
 - A production build (`pnpm --filter web build`) first asks the API at `VITE_API_URL` for every question the app would show (the daily question and each receipt day's forecasts) and fails if any id starts with `fx-` or any resolution source is on `example.com`, or if the API cannot be reached. `vite build --mode fixtures` skips the check for a local smoke build on fixtures. `src/liveCheck.test.ts` covers the rule.
-- Every result view shows "Simulation, not a poll or a prediction of a real person" and the coverage tier.
+- Every result view shows "AI-simulated. Not a poll or a prediction of a real person" and the coverage tier ([messaging](../gtm/messaging.md) asks for "AI-simulated" on every output).
+- `theme.test.ts`: every font file in `fonts.css` ships with `font-display: swap`, the OFL notice is present and `index.html` preloads the body face. Component tests cover the Pending and Resolved stamps, the Committed and Resolves columns, the green stamp on an anchored day, and that the globe waits for the load event and an idle moment.
+- Largest contentful paint, measured with Playwright on a production build served with gzip: under 1.5 s on a warm desktop at 1440 px and under 2.5 s on a simulated phone (390 px, 4x CPU slowdown, 150 ms latency, 1.6 Mbps).
 - Measured after launch: first-minute activation and share-to-visit rate ([research/product/077](../research/product/077-daily-question-mechanics.md)).
 
 ## What it is not
