@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import spec from "../../api/openapi.json";
 import vector from "../../data/fixtures/receipts_test_vector.json";
 import { AgentPanel } from "./AgentPanel";
 import { App, DISCLOSURE, whenIdle } from "./App";
@@ -423,6 +424,7 @@ test.each(["/", "/receipts", "/fork/x", "/nothing-here"])("%s has the footer", a
   const el = await render(<App path={path} />);
   const links = [...el.querySelectorAll("footer nav a")].map((a) => a.textContent);
   expect(links).toEqual(["Receipts", "Acceptable use", "API", "Source"]);
+  expect(el.querySelector("footer a[href='/docs']")?.textContent).toBe("API");
   expect(el.querySelector("footer")?.textContent).toContain(
     "Real World outputs are AI-simulated. Simulated populations are not polls and not predictions about real people.",
   );
@@ -445,4 +447,29 @@ test("the acceptable-use page shows the three rules and the refusal codes", asyn
     "election_persuasion1",
     "election_windowElection window",
   ]);
+});
+
+test("the docs page lists every operation in openapi.json with its refusal codes", async () => {
+  const el = await render(<App path="/docs" />);
+  await until(() => expect(el.querySelector(".op")).not.toBeNull());
+  expect(document.title).toBe("API docs · Real World");
+  const ops = Object.entries(spec.paths).flatMap(([path, methods]) =>
+    Object.keys(methods).map((m) => `${m.toUpperCase()} ${path}`),
+  );
+  expect([...el.querySelectorAll(".op")].map((s) => s.getAttribute("aria-label"))).toEqual(ops);
+  const simulate = el.querySelector(".op[aria-label='POST /v1/simulate']");
+  for (const code of [
+    ...spec.components.schemas.Refused.properties.code.enum,
+    ...spec.components.schemas.PolicyRefused.properties.code.enum,
+  ])
+    expect(simulate?.querySelector(".codes")?.textContent).toContain(code);
+  expect(simulate?.textContent).toContain(
+    spec.components.schemas.SimulateRequest.properties.members.description,
+  );
+  expect(el.querySelector(".first-call pre")?.textContent).toContain("Idempotency-Key");
+  expect(el.textContent).toContain("Authorization: Bearer rw_...");
+  const [, py, ts] = [...el.querySelectorAll("pre")].map((p) => p.textContent);
+  expect(py).toContain("rw = Client(");
+  expect(ts).toContain("const rw = new Client(");
+  expect(el.querySelector("header nav a[href='/docs']")?.textContent).toBe("Docs");
 });
