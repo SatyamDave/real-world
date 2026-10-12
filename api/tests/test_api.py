@@ -579,6 +579,39 @@ def test_after_its_close_the_daily_question_is_the_next_open_one_the_day_forecas
     assert reveal["streak"] >= 1 and reveal["week"][-1]["probability"] == 0.6
 
 
+def test_the_fallback_is_never_a_later_day_s_own_question(client, conn, monkeypatch):
+    # With the ledger through 10-04, fx-bra-mex-retail is open and closes soonest, but it is
+    # 10-05's own question; an answer to it now would be filed under 10-04.
+    monkeypatch.setattr(api, "_today", lambda conn: "2026-10-04")
+    freeze(monkeypatch, "2026-10-04")
+    q = client.get("/v1/daily").json()["question"]
+    assert q["id"] == "fx-ind-idn-fuel-price"
+    r = client.post(
+        "/v1/daily/answers",
+        json={"question_id": q["id"], "player_id": "p-fallback-day", "probability": 0.4},
+    )
+    assert r.status_code == 201 and r.json()["date"] == "2026-10-04"
+    assert r.json()["reveal"]["sim"] is not None
+
+
+def test_week_shows_today_s_question_when_a_day_has_several_answers(client, conn, monkeypatch):
+    freeze(monkeypatch, "2026-10-12")
+    d = client.get("/v1/daily").json()
+    r = client.post(
+        "/v1/daily/answers",
+        json={"question_id": d["question"]["id"], "player_id": "p-two", "probability": 0.3},
+    )
+    assert r.status_code == 201
+    with conn:
+        conn.execute(
+            "INSERT INTO daily_answers (question_id, player_id, date, probability, created_at)"
+            " VALUES ('fx-other', 'p-two', ?, 0.9, '2026-10-12T13:00:00+00:00')",
+            (d["date"],),
+        )
+    week = client.get("/v1/daily", params={"player_id": "p-two"}).json()["reveal"]["week"]
+    assert week[-1]["probability"] == 0.3
+
+
 def test_when_every_question_has_closed_answers_are_refused_and_not_written(
     client, conn, monkeypatch
 ):
