@@ -1,0 +1,23 @@
+{
+  "note": "Illustrative events for the fork card. They are hypothetical, not real news.",
+  "events": [
+    {
+      "id": "chip-shortage",
+      "event": { "text": "A chip shortage doubles phone prices worldwide.", "countries": null }
+    },
+    {
+      "id": "europe-heatwave",
+      "event": {
+        "text": "A summer heatwave destroys much of the wheat harvest across Europe.",
+        "countries": ["DEU", "FRA", "GBR"]
+      }
+    },
+    {
+      "id": "ai-tutors",
+      "event": {
+        "text": "The government makes an AI tutor free for every public school student.",
+        "countries": ["BRA", "IND", "USA"]
+      }
+    }
+  ]
+}
