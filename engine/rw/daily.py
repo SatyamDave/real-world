@@ -382,6 +382,7 @@ def summary(
         "ran": ran,
         "model_calls": conn.execute("SELECT count(*) FROM llm_calls").fetchone()[0] - calls_before,
         "usd": usd,
+        "model": llm.model_name(),
         "forecasts_committed": forecasts,
         "root": day["root"] if day else None,
         "questions_scored": scored.fetchone()[0],
@@ -390,9 +391,13 @@ def summary(
 
 
 def format_summary(s: Detail) -> str:
+    # A fake-model run spends nothing; its dollars are what the real model would have cost (#34).
+    cost = f"${s['usd']:.4f}"
+    if s["model"] == "fake":
+        cost = f"fake model, nothing spent (estimated {cost} at {settings.MODEL} prices)"
     return (
         f"{s['date']}  ran: {', '.join(s['ran']) or 'nothing (all steps ok)'}\n"
-        f"  model calls {s['model_calls']}, ${s['usd']:.4f}, "
+        f"  model calls {s['model_calls']}, {cost}, "
         f"forecasts committed {s['forecasts_committed']}, root {s['root']}\n"
         f"  questions scored {s['questions_scored']}, "
         f"experimental: {', '.join(s['experimental']) or 'none'}"

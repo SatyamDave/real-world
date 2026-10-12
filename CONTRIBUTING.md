@@ -26,8 +26,8 @@ The template asks five things. CI refuses a PR that leaves any of them empty.
 2. Commit with a conventional title (see [Titles](#titles)). Before pushing, `git fetch && git rebase origin/main` and run `make check`; it runs exactly what CI runs.
 3. Push and open the PR as a draft with a body file that fills the template: `gh pr create --draft --title "<title>" --body-file <file>`. Never use `--fill`; it skips the template. `/ship-pr` walks the definition of done and opens the draft for you.
 4. Mark it ready with `gh pr ready <N>` once `make check` passes. The `Claude review` workflow then reviews it against the `CLAUDE.md` files of every folder it touches and posts one comment.
-5. Wait for every check: `gh pr checks <N> --watch`. On a failure, `gh run view <run-id> --log-failed` shows why; fix, push, wait again.
-6. Merge with a merge commit, never a squash: `gh pr merge <N> --merge`. If another PR merged first and conflicts, rebase on `origin/main`, rerun `make check`, push and wait again.
+5. Merge only with `scripts/merge_pr.sh <N>`. It waits until the CI and PR quality checks have reported and passed, then merges with a merge commit, never a squash. `gh pr checks --watch` and `gh pr merge` on their own return before a late check exists, which is how #8 and #9 merged with no check reported. On a failure, `gh run view <run-id> --log-failed` shows why; fix, push, run the script again.
+6. If another PR merged first and conflicts, rebase on `origin/main`, rerun `make check`, push and wait again.
 7. After the merge, remove the worktree and delete the branch.
 
 ## Public claims
@@ -40,7 +40,7 @@ Use a plain conventional-commit title: `feat(engine): sample agents from census 
 
 ## Size
 
-Keep PRs under about 400 changed lines, excluding lockfiles, generated files and research notes. CI warns above that. A larger PR says in its description why it could not be split.
+Keep PRs under about 400 changed lines, excluding lockfiles, generated files, papers, experiment results and research notes. CI refuses a larger PR unless its description says why it could not be split (20 of the first 32 PRs were over, 9 with no reason given).
 
 ## Forecasts are append-only
 
