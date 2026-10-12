@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { appDeepLink, track } from "../analytics";
+import { appDeepLink, getDeviceId, getHeadlineVariant, track } from "../analytics";
 import { BRAND } from "../brand";
 import { config, hasAppUrl } from "../config";
 import { CONSENT_TEXT, CONSENT_VERSION } from "../copy/consent";
 import { TypeformSlot } from "./TypeformSlot";
+import { useTurnstile } from "./useTurnstile";
 
 // A lenient client-side email check; the server (PR3) is the real validator.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -14,6 +15,9 @@ export interface SignupInput {
   referrer: string;
   landingPath: string;
   consentVersion: string;
+  deviceId: string | null;
+  headlineVariant: string;
+  turnstileToken: string | null;
 }
 export interface SignupResult {
   signupId: string;
@@ -39,7 +43,7 @@ function collectUtm(): Record<string, string> {
   return out;
 }
 
-// Default submit: POST to the signup Pages Function (added in PR3).
+// Default submit: POST to the signup Pages Function.
 const defaultSubmit: SubmitFn = async (input) => {
   const res = await fetch("/api/signup", {
     method: "POST",
@@ -60,6 +64,7 @@ export function SignupForm({
 }) {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<State>({ kind: "idle" });
+  const turnstile = useTurnstile(config.turnstileSiteKey);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -77,9 +82,14 @@ export function SignupForm({
         referrer: document.referrer,
         landingPath: window.location.pathname,
         consentVersion: CONSENT_VERSION,
+        deviceId: getDeviceId(),
+        headlineVariant: getHeadlineVariant(),
+        turnstileToken: turnstile.token(),
       });
+      turnstile.reset();
       setState(result.duplicate ? { kind: "duplicate", result } : { kind: "success", result });
     } catch {
+      turnstile.reset();
       setState({ kind: "error" });
       track("signup_failed", { location, reason: "request_failed" });
     }
@@ -95,7 +105,7 @@ export function SignupForm({
             ? "We've got this email. Answer the teaser question below to finish."
             : `One quick question while you're here — it's the kind ${BRAND.name} scores every day.`}
         </p>
-        <TypeformSlot signupId={state.result.signupId} />
+        <TypeformSlot signupId={state.result.signupId} deviceId={getDeviceId()} />
         {hasAppUrl ? (
           <a
             className="try-link"
@@ -143,7 +153,12 @@ export function SignupForm({
         </p>
       ) : null}
       <p className="consent">{CONSENT_TEXT}</p>
-      {config.turnstileSiteKey ? <p className="turnstile-note">Protected by a bot check.</p> : null}
+      {config.turnstileSiteKey ? (
+        <>
+          <div ref={turnstile.ref} />
+          <p className="turnstile-note">Protected by a bot check.</p>
+        </>
+      ) : null}
     </form>
   );
 }

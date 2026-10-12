@@ -47,3 +47,8 @@ Running unattended from ~02:55 PT on 2026-10-12. One line per decision: time (PT
 ## Session note
 
 - ~04:45 — Session paused: usage limit reached mid-PR3. Done: PR1 (docs, draft PR #19), PR2 (page+globe, draft PR #20), Neon project+schema+.dev.vars (above). Remaining: finish PR3, then PR4 (analytics), PR5 (launch readiness), preview deploy + verification, and MORNING.md. Branch `landing/3-data` holds uncommitted WIP (migration, package.json deps, .dev.vars). Stack bases drifted behind origin/main (now 22b64ea) — rebase the stack before the final deploy. MORNING.md not yet written.
+
+## Resumed 2026-10-12 (session 2)
+
+- `landing/BRIEF.md` does not exist in the repo (no branch, no history) or on disk. Proceeding from the task message guardrails, PLAN.md budgets, product/landing-page.md and decision 0003. Rohit: re-add BRIEF.md if it holds anything not captured here.
+- PR3 finished. Decisions: (1) pinned workers-types 5.20261002.1, not the newest, because pnpm offered to add a minimumReleaseAgeExclude for a 1-day-old version and that weakens the repo's supply-chain guard; reverted the yaml. Reverse: bump the version and add the exclude. (2) Rate-limit table is migration 0002, not an edit to applied 0001. (3) Salt for the IP hash falls back to TURNSTILE_SECRET_KEY so no new secret is needed. (4) Typeform: first completed answer per signup wins, because the duplicate-email response returns the signup id; unverified webhook bodies log metadata only. (5) Fixed a line-length lint in PR2's gen_globe_poster.py so `make check` passes on the stack. (6) The Typeform form is created at deploy time (step 5), when the webhook URL exists.

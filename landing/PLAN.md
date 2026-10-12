@@ -32,15 +32,23 @@ Legend: [ ] todo · [x] done · [~] in progress · [B] blocked (see OVERNIGHT_LO
 - [x] Build: critical JS 74.6KB gz (<120), cobe split 5.9KB gz; smoke-tested in browser, 0 console errors
 - [ ] /ship-pr draft PR (base landing/1-docs)
 
-## PR 3 — data (`landing/3-data`, title `feat(landing): waitlist storage`) — IN PROGRESS (not yet a PR; see OVERNIGHT_LOG "PR3")
+## PR 3 — data (`landing/3-data`, title `feat(landing): waitlist storage`) — DONE, draft PR
 - [x] Neon project `real-world-landing` (id frosty-river-82145431), db `landing`, dev branch; conn strings written to `.dev.vars`
-- [x] Migration `db/migrations/0001_init.sql` applied dev→main; tables `waitlist_signups`, `typeform_events`; no IPs
-- [~] deps added to package.json (not installed yet)
-- [ ] `POST /api/signup` (Turnstile verify, validate email, insert/duplicate, Amplitude server event, IP rate limit)
-- [ ] Typeform as code `landing/typeform/form.json` + create/update script; URL params; `@typeform/embed`
-- [ ] `POST /api/typeform` webhook (log raw first, verify signature constant-time, update by signup_id, idempotent)
-- [ ] Tests on Neon dev branch: signature valid/invalid/missing, duplicate email, webhook replay, Turnstile failure
-- [ ] /ship-pr draft PR
+- [x] Migrations `0001_init.sql`, `0002_rate_limit.sql` applied dev -> main; no IPs stored
+- [x] `POST /api/signup` (Turnstile, email validation, insert/duplicate, Amplitude event, hashed-IP rate limit)
+- [x] `POST /api/typeform` (log first, constant-time HMAC, first answer wins, idempotent, Amplitude event)
+- [x] Typeform as code (`typeform/form.json`, `scripts/typeform-sync.mjs`), `@typeform/embed` lazy-loaded; form is created at deploy time (step 5)
+- [x] Tests: 12 unit + 8 Neon-dev integration (skipped without DATABASE_URL_DEV)
+- [x] draft PR
+
+## Design pass (`landing/design-pass`, title `feat(landing): design pass from competitor analysis`) — stacked on PR 3
+- [ ] Competitor screenshots + INSPIRATION.md (table, top 8 patterns, what Real World does differently)
+- [ ] frontend-design: direction, tokens, type; re-score vs alternates, switch only if analysis clearly says so
+- [ ] Hero headline structure, contrast line, forecast-card receipts, motion polish, CTA hierarchy, mobile layout
+- [ ] design:ux-copy for every headline, CTA, state; check against gtm/messaging.md
+- [ ] Quality loop x2 (screenshot, critique in PR body, fix)
+- [ ] design:accessibility-review; Lighthouse + axe budgets pass; before/after screenshots in PR
+- [ ] engineering:code-review, draft PR
 
 ## PR 4 — analytics (`landing/4-analytics`, title `feat(landing): amplitude tracking`)
 - [ ] `@amplitude/analytics-browser` autocapture+attribution+UTM; session-replay plugin w/ sample rate; mask email
@@ -59,7 +67,7 @@ Legend: [ ] todo · [x] done · [~] in progress · [B] blocked (see OVERNIGHT_LO
 - [ ] /ship-pr draft PR
 
 ## Final — deploy + MORNING.md
-- [ ] `wrangler pages deploy --branch landing-preview`; set preview secrets
+- [ ] engineering:deploy-checklist, then `wrangler pages deploy --branch landing-preview`; set preview secrets
 - [ ] Verify on preview: Playwright signup (test+<ts>@…), row in Neon, events in Amplitude
 - [ ] Delete only the test rows created, by id
 - [ ] `landing/MORNING.md`: preview URL, done, screenshots, decisions to check, blocked + click-by-click, 10-step go-live checklist

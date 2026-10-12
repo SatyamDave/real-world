@@ -1,0 +1,48 @@
+{
+  "title": "Waitlist: your forecast",
+  "type": "form",
+  "settings": {
+    "language": "en",
+    "is_public": true,
+    "progress_bar": "proportion",
+    "show_progress_bar": false,
+    "hide_navigation": true,
+    "meta": { "allow_indexing": false }
+  },
+  "hidden": ["signup_id", "device_id", "variant", "question_id"],
+  "fields": [
+    {
+      "ref": "forecast_probability",
+      "type": "number",
+      "title": "Will the US Federal Reserve cut its policy rate at the meeting ending October 28, 2026?",
+      "properties": {
+        "description": "Enter your chance that the answer is yes, from 0 to 100."
+      },
+      "validations": { "required": true, "min_value": 0, "max_value": 100 }
+    },
+    {
+      "ref": "role",
+      "type": "multiple_choice",
+      "title": "Which best describes you?",
+      "properties": {
+        "randomize": false,
+        "allow_multiple_selection": false,
+        "choices": [
+          { "label": "Forecaster or trader" },
+          { "label": "Researcher or academic" },
+          { "label": "Journalist or analyst" },
+          { "label": "Developer or builder" },
+          { "label": "Just curious" }
+        ]
+      },
+      "validations": { "required": true }
+    }
+  ],
+  "thankyou_screens": [
+    {
+      "ref": "thanks",
+      "title": "Thanks. You're on the list.",
+      "properties": { "show_button": false }
+    }
+  ]
+}

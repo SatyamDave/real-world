@@ -7,7 +7,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p functions",
     "gen:poster": "python3 scripts/gen_globe_poster.py"
   },
   "dependencies": {
@@ -18,7 +18,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20261012.1",
+    "@cloudflare/workers-types": "5.20261002.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "jsdom": "30.1.2",

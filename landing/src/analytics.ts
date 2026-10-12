@@ -9,6 +9,10 @@ export function setHeadlineVariant(variant: string): void {
   headlineVariant = variant;
 }
 
+export function getHeadlineVariant(): string {
+  return headlineVariant;
+}
+
 export type EventName =
   | "landing_viewed"
   | "globe_ready"
