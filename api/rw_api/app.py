@@ -18,7 +18,7 @@ from typing import Annotated, Any, Literal
 import numpy as np
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from rw import db, forecast, ledger, llm, population, score, settings, simulate
@@ -247,7 +247,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(
     title="Real World API",
     version=settings.API_VERSION,
-    description="Every simulation result is labelled simulated. See product/simulate-api.md.",
+    description=(
+        "Fork today's simulated world, read its agents, answer the daily question and check"
+        " the hashed receipts. Every simulation result is labelled simulated."
+    ),
     lifespan=lifespan,
 )
 app.add_middleware(
@@ -318,6 +321,7 @@ def _estimate(req: simulate.SimulateRequest) -> simulate.Estimate:
 
 @app.post(
     "/v1/simulate",
+    summary="Start a fork of today's world with one event; returns a job id",
     status_code=202,
     response_model=JobCreated,
     responses={
@@ -373,12 +377,20 @@ def create_simulation(
     return _created(job_id, "queued")
 
 
-@app.post("/v1/simulate/estimate", response_model=simulate.Estimate)
+@app.post(
+    "/v1/simulate/estimate",
+    summary="Estimate a fork's cost and model calls without running it",
+    response_model=simulate.Estimate,
+)
 def estimate(req: simulate.SimulateRequest) -> simulate.Estimate:
     return _estimate(req)
 
 
-@app.get("/v1/simulations/{job_id}", response_model=Job)
+@app.get(
+    "/v1/simulations/{job_id}",
+    summary="A fork job's status, and its result when done",
+    response_model=Job,
+)
 def get_simulation(job_id: str) -> Job:
     row = connect().execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
     if row is None:
@@ -425,6 +437,7 @@ async def _stream(conn: sqlite3.Connection, job_id: str, after: int) -> AsyncIte
 
 @app.get(
     "/v1/simulations/{job_id}/events",
+    summary="Stream a fork job's progress as server-sent events; resumes from Last-Event-ID",
     response_class=StreamingResponse,
     responses={200: {"content": {"text/event-stream": {}}, "description": "Server-sent events"}},
 )
@@ -463,7 +476,11 @@ def _daily_question(conn: sqlite3.Connection) -> tuple[str, dict[str, Any]]:
     raise HTTPException(404, f"no daily question for {day}")
 
 
-@app.get("/v1/world", response_model=World)
+@app.get(
+    "/v1/world",
+    summary="Today's world: countries, tiers, topic shares and prefilled fork events",
+    response_model=World,
+)
 def world() -> World:
     dates = _snapshot_dates()
     if not dates:
@@ -560,7 +577,11 @@ def _agent(conn: sqlite3.Connection, agent_id: str) -> Agent:
     )
 
 
-@app.get("/v1/agents/{agent_id}", response_model=Agent)
+@app.get(
+    "/v1/agents/{agent_id}",
+    summary="One simulated agent: traits, beliefs and what moved them",
+    response_model=Agent,
+)
 def agent(agent_id: str) -> Agent:
     return _agent(connect(), agent_id)
 
@@ -575,6 +596,7 @@ WHY_SCHEMA: llm.Schema = {
 
 @app.get(
     "/v1/agents/{agent_id}/why",
+    summary="A short model-written account of one agent's trace, labelled simulated",
     response_model=AgentWhy,
     responses={402: {"description": "The model call would exceed its cost cap"}},
 )
@@ -654,13 +676,18 @@ def _daily(conn: sqlite3.Connection, player_id: str | None) -> Daily:
     )
 
 
-@app.get("/v1/daily", response_model=Daily)
+@app.get(
+    "/v1/daily",
+    summary="Today's question, and the reveal once this player answered",
+    response_model=Daily,
+)
 def daily(player_id: Annotated[str | None, Query(max_length=64)] = None) -> Daily:
     return _daily(connect(), player_id)
 
 
 @app.post(
     "/v1/daily/answers",
+    summary="Answer today's question once; returns the reveal",
     status_code=201,
     response_model=Daily,
     responses={409: {"description": "This player already answered this question"}},
@@ -682,7 +709,9 @@ def answer_daily(a: Answer) -> Daily:
     return _daily(conn, a.player_id)
 
 
-@app.get("/v1/receipts", response_model=Receipts)
+@app.get(
+    "/v1/receipts", summary="Every committed day's root and record hash", response_model=Receipts
+)
 def receipts() -> Receipts:
     rows = connect().execute("SELECT * FROM ledger_days ORDER BY date DESC").fetchall()
     return Receipts(
@@ -693,7 +722,11 @@ def receipts() -> Receipts:
     )
 
 
-@app.get("/v1/receipts/{day}", response_model=ReceiptDay)
+@app.get(
+    "/v1/receipts/{day}",
+    summary="One day's receipt: every entry with its salt and leaf hash",
+    response_model=ReceiptDay,
+)
 def receipt_day(day: str) -> ReceiptDay:
     conn = connect()
     row = ledger._day_row(conn, day)
@@ -720,7 +753,11 @@ def receipt_day(day: str) -> ReceiptDay:
     )
 
 
-@app.get("/v1/scores", response_model=dict[str, BaselineSkill])
+@app.get(
+    "/v1/scores",
+    summary="Brier skill of the simulation against each baseline",
+    response_model=dict[str, BaselineSkill],
+)
 def scores() -> dict[str, Any]:
     """score.summarize over every committed forecast whose question has resolved. A question
     across several countries takes its lowest-coverage tier, and "multiple" as its region when
@@ -751,7 +788,12 @@ def scores() -> dict[str, Any]:
     return score.summarize(rows, score.load_protocol())
 
 
-@app.get("/healthz")
+@app.get("/", include_in_schema=False)
+def root() -> RedirectResponse:
+    return RedirectResponse("/docs")
+
+
+@app.get("/healthz", summary="Liveness check")
 def healthz() -> dict[str, bool]:
     return {"ok": True}
 

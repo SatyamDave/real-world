@@ -2,13 +2,13 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Real World API",
-    "description": "Every simulation result is labelled simulated. See product/simulate-api.md.",
+    "description": "Fork today's simulated world, read its agents, answer the daily question and check the hashed receipts. Every simulation result is labelled simulated.",
     "version": "2026-10-27"
   },
   "paths": {
     "/v1/simulate": {
       "post": {
-        "summary": "Create Simulation",
+        "summary": "Start a fork of today's world with one event; returns a job id",
         "operationId": "create_simulation_v1_simulate_post",
         "parameters": [
           {
@@ -98,7 +98,7 @@
     },
     "/v1/simulate/estimate": {
       "post": {
-        "summary": "Estimate",
+        "summary": "Estimate a fork's cost and model calls without running it",
         "operationId": "estimate_v1_simulate_estimate_post",
         "requestBody": {
           "content": {
@@ -136,7 +136,7 @@
     },
     "/v1/simulations/{job_id}": {
       "get": {
-        "summary": "Get Simulation",
+        "summary": "A fork job's status, and its result when done",
         "operationId": "get_simulation_v1_simulations__job_id__get",
         "parameters": [
           {
@@ -175,7 +175,7 @@
     },
     "/v1/simulations/{job_id}/events": {
       "get": {
-        "summary": "Simulation Events",
+        "summary": "Stream a fork job's progress as server-sent events; resumes from Last-Event-ID",
         "operationId": "simulation_events_v1_simulations__job_id__events_get",
         "parameters": [
           {
@@ -226,7 +226,7 @@
     },
     "/v1/world": {
       "get": {
-        "summary": "World",
+        "summary": "Today's world: countries, tiers, topic shares and prefilled fork events",
         "operationId": "world_v1_world_get",
         "responses": {
           "200": {
@@ -244,7 +244,7 @@
     },
     "/v1/agents/{agent_id}": {
       "get": {
-        "summary": "Agent",
+        "summary": "One simulated agent: traits, beliefs and what moved them",
         "operationId": "agent_v1_agents__agent_id__get",
         "parameters": [
           {
@@ -283,7 +283,7 @@
     },
     "/v1/agents/{agent_id}/why": {
       "get": {
-        "summary": "Agent Why",
+        "summary": "A short model-written account of one agent's trace, labelled simulated",
         "operationId": "agent_why_v1_agents__agent_id__why_get",
         "parameters": [
           {
@@ -325,7 +325,7 @@
     },
     "/v1/daily": {
       "get": {
-        "summary": "Daily",
+        "summary": "Today's question, and the reveal once this player answered",
         "operationId": "daily_v1_daily_get",
         "parameters": [
           {
@@ -372,7 +372,7 @@
     },
     "/v1/daily/answers": {
       "post": {
-        "summary": "Answer Daily",
+        "summary": "Answer today's question once; returns the reveal",
         "operationId": "answer_daily_v1_daily_answers_post",
         "requestBody": {
           "content": {
@@ -413,7 +413,7 @@
     },
     "/v1/receipts": {
       "get": {
-        "summary": "Receipts",
+        "summary": "Every committed day's root and record hash",
         "operationId": "receipts_v1_receipts_get",
         "responses": {
           "200": {
@@ -431,7 +431,7 @@
     },
     "/v1/receipts/{day}": {
       "get": {
-        "summary": "Receipt Day",
+        "summary": "One day's receipt: every entry with its salt and leaf hash",
         "operationId": "receipt_day_v1_receipts__day__get",
         "parameters": [
           {
@@ -470,7 +470,7 @@
     },
     "/v1/scores": {
       "get": {
-        "summary": "Scores",
+        "summary": "Brier skill of the simulation against each baseline",
         "description": "score.summarize over every committed forecast whose question has resolved. A question\nacross several countries takes its lowest-coverage tier, and \"multiple\" as its region when\nthey differ.",
         "operationId": "scores_v1_scores_get",
         "responses": {
@@ -493,7 +493,7 @@
     },
     "/healthz": {
       "get": {
-        "summary": "Healthz",
+        "summary": "Liveness check",
         "operationId": "healthz_healthz_get",
         "responses": {
           "200": {

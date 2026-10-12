@@ -22,6 +22,8 @@ The contract is the Pydantic models in `engine/rw/simulate.py`, exported to `api
 | `GET /v1/agents/{id}` | One agent: traits, beliefs, tier, and "what moved this agent" (belief changes with the news cluster or nudge behind each). |
 | `GET /v1/agents/{id}/why` | "In its own words": a short model-written account generated from the trace, labelled simulated. Cached. |
 
+`GET /` redirects to the interactive docs at `/docs`, where each operation carries a one-line summary.
+
 Checks, all automated in `api/tests/`:
 
 - Same `Idempotency-Key` and body returns the same job; same key with a different body returns `422`; same key while running returns `409` with the job id.
