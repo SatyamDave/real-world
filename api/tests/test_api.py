@@ -47,7 +47,7 @@ def conn():
 
 @pytest.fixture
 def answers_open(monkeypatch):
-    """Every fixture question has closed by now; answer tests run on the question's own day."""
+    """Answer tests run on the daily question's own day, whatever the date is now."""
     monkeypatch.setattr(api, "_clock", lambda: datetime(2026, 10, 5, 12, tzinfo=UTC))
 
 
@@ -445,9 +445,51 @@ def test_daily_reveal_matches_the_committed_ledger_and_refuses_a_second_answer(
     assert wrong.status_code == 422
 
 
-def test_an_answer_after_closes_at_is_refused_and_not_written(client, conn):
+def freeze(monkeypatch, day):
+    monkeypatch.setattr(api, "_clock", lambda: datetime.fromisoformat(f"{day}T12:00:00+00:00"))
+
+
+def test_the_daily_question_is_its_own_day_question_while_open(client, monkeypatch):
+    freeze(monkeypatch, "2026-10-10")
+    d = client.get("/v1/daily").json()
+    assert d["date"] == "2026-10-05" and d["question"]["id"] == "fx-bra-mex-retail"
+
+
+def test_after_its_close_the_daily_question_is_the_next_open_one_the_day_forecast(
+    client, conn, monkeypatch
+):
+    freeze(monkeypatch, "2026-10-12")
+    fixtures = api.forecast.load_questions()
+    # Open and closing first, but the day never forecast it, so it has no committed sim.
+    unforecast = {**fixtures[0], "id": "fx-not-forecast", "daily_on": None, "closes": "2026-10-13"}
+    monkeypatch.setattr(api.forecast, "load_questions", lambda: [*fixtures, unforecast])
+    d = client.get("/v1/daily").json()
+    assert (
+        d["question"]["id"] == "fx-ind-idn-fuel-price" and d["question"]["closes_at"] > "2026-10-12"
+    )
+    assert client.get("/v1/world").json()["daily_question_id"] == "fx-ind-idn-fuel-price"
+
+    r = client.post(
+        "/v1/daily/answers",
+        json={"question_id": "fx-ind-idn-fuel-price", "player_id": "p-next", "probability": 0.6},
+    )
+    assert r.status_code == 201
+    committed = {
+        e["entry"]["forecaster"]: float(e["entry"]["probability"])
+        for e in ledger.entries(conn, d["date"])
+        if e["entry"]["kind"] == "forecast" and e["entry"]["question_id"] == "fx-ind-idn-fuel-price"
+    }
+    reveal = r.json()["reveal"]
+    assert reveal["sim"] == committed["sim"] and reveal["market"] == committed["market"]
+    assert reveal["streak"] >= 1 and reveal["week"][-1]["probability"] == 0.6
+
+
+def test_when_every_question_has_closed_answers_are_refused_and_not_written(
+    client, conn, monkeypatch
+):
+    freeze(monkeypatch, "2026-10-28")
     q = client.get("/v1/daily").json()["question"]
-    assert datetime.now(UTC).date().isoformat() > q["closes_at"]
+    assert q["id"] == "fx-bra-mex-retail"
     r = client.post(
         "/v1/daily/answers",
         json={"question_id": q["id"], "player_id": "p-late", "probability": 0.7},
