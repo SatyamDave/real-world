@@ -54,6 +54,7 @@ If the step you need first does not exist, write it in its own PR before the cod
 - Cut before you add. Deleting a dead path or a wrong claim counts as an improvement.
 - Read the lenses in `research/lenses/` before changing scope. They record what the company refuses to build before Nov 2.
 - Never leave the repo worse: no failing checks, no broken links, no unrelated files in the diff.
+- Mistakes become guards. `company/rules-log.md` lists every rule and check added because of a real mistake, with the PRs that show it; `/learn-rules` (run daily by `.github/workflows/learn-rules.yml`) reads merged PRs and proposes the next ones. Prefer a check over a sentence.
 
 ## Definition of done for a PR
 
