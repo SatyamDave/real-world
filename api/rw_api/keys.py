@@ -5,15 +5,17 @@ A key is printed once by create; only its SHA-256 is stored (product/simulate-ap
 
 import argparse
 import hashlib
+import math
 import secrets
 import sqlite3
 
+from rw import llm
 from rw_api.app import _now, connect, key_spent
 
 
 def create(conn: sqlite3.Connection, label: str, cap_usd: float) -> str:
-    if not cap_usd > 0:
-        raise ValueError("--cap-usd must be above 0")
+    if not (math.isfinite(cap_usd) and cap_usd > 0):
+        raise ValueError("--cap-usd must be a number above 0")
     key = f"rw_{secrets.token_hex(16)}"
     with conn:
         conn.execute(
@@ -25,8 +27,10 @@ def create(conn: sqlite3.Connection, label: str, cap_usd: float) -> str:
 
 def rows(conn: sqlite3.Connection) -> list[str]:
     keys = conn.execute("SELECT id, label, cap_usd, revoked_at FROM api_keys ORDER BY id")
-    return [
-        f"{r['id']}\t{r['label']}\tcap ${r['cap_usd']:g}\tspent ${key_spent(conn, r['id']):.4f}"
+    provider = llm.provider().name
+    return ["id\tlabel\tcap\tspent\tstatus"] + [
+        f"{r['id']}\t{r['label']}\t${r['cap_usd']:g}"
+        f"\t{llm.cost_text(key_spent(conn, r['id']), provider)}"
         f"\t{'revoked ' + r['revoked_at'] if r['revoked_at'] else 'live'}"
         for r in keys.fetchall()
     ]

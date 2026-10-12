@@ -16,7 +16,7 @@ Open http://localhost:8000/docs, or http://localhost:8000/llms.txt for the same 
 | Method and path | What it returns |
 | --- | --- |
 | `POST /v1/simulate` | `202 {id, status, links}` and runs `simulate.run` in the background. Needs `Idempotency-Key` (at most 255 characters); `Real-World-Version`, if sent, must be `2026-10-27`. `Authorization: Bearer rw_...` is optional; `401 {code, detail}` for an unknown or revoked key. `402`/`429 {code, detail}` when a spend check refuses: `max_cost_usd` (clamped without a key), the key's cap, the day's fork budget or the per-address daily count (`503` when a check cannot run; codes in [simulate-api](../product/simulate-api.md)); `422 {code, detail}` when `policy.screen` refuses the event ([acceptable use](../product/acceptable-use.md)); `503` when the screen could not run. |
-| `POST /v1/simulate/estimate` | Estimated cost, model calls and whether it fits the cap; takes the same optional key. No job. |
+| `POST /v1/simulate/estimate` | Estimated cost, model calls and whether it fits the cap; takes the same optional key (`401` unknown or revoked, `503` when it cannot be checked). No job. |
 | `GET /v1/simulations/{id}` | Job status and, once done, the result (`simulated: true`) or the error. |
 | `GET /v1/simulations/{id}/events` | Server-sent events, one `id:` each; `Last-Event-ID` resumes; a `: heartbeat` comment every 15 s; closes after `succeeded` or `failed`. |
 | `GET /v1/world` | Latest snapshot date, per-country cells, today's daily question id, prefilled fork events. |
@@ -30,7 +30,7 @@ Open http://localhost:8000/docs, or http://localhost:8000/llms.txt for the same 
 
 ## State
 
-`rw_api/schema.sql` owns `jobs`, `job_events`, `idempotency_keys`, `fork_clients`, `api_keys`, `key_forks` and `daily_answers`, in the engine's SQLite file under `$RW_HOME`. `uv run python -m rw_api.keys create --label <name> --cap-usd <n>` makes an API key and prints it once; `list` and `revoke --id <n>` manage them. An idempotency key is honoured for 24 hours. On startup, jobs left `queued` or `running` are marked `failed` with error `interrupted`.
+`rw_api/schema.sql` owns `jobs`, `job_events`, `idempotency_keys`, `fork_clients`, `api_keys`, `key_forks`, `key_screens` and `daily_answers`, in the engine's SQLite file under `$RW_HOME`. `uv run python -m rw_api.keys create --label <name> --cap-usd <n>` makes an API key and prints it once; `list` and `revoke --id <n>` manage them. An idempotency key is honoured for 24 hours. On startup, jobs left `queued` or `running` are marked `failed` with error `interrupted`.
 
 ## Research
 

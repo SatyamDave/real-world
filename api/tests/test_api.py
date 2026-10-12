@@ -3,6 +3,7 @@ import hashlib
 import importlib
 import json
 import re
+import sqlite3
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -290,7 +291,8 @@ def test_a_key_over_its_cap_or_the_fork_budget_is_refused_before_any_model_call(
         conn, simulate(client, CHIPS, **bearer(conn, 0.01)), 402, "key_cap_spent"
     )
     assert body["detail"] == (
-        "this API key has $0.0100 of its $0.01 cap left, less than this fork's max_cost_usd $0.5"
+        "this API key's $0.01 cap would be passed: fake model, nothing spent (estimated $0.0000"
+        f" at {settings.MODEL} prices) so far, and this fork may cost up to $0.51"
     )
     monkeypatch.setattr(settings, "FORK_DAILY_BUDGET_USD", llm.spent_today(conn, public=True))
     refused_and_spent_nothing(
@@ -339,14 +341,73 @@ def test_the_keys_cli_prints_a_key_once_lists_its_spend_and_revokes_it(conn, cap
     row = conn.execute("SELECT * FROM api_keys WHERE label = 'builder-a'").fetchone()
     assert row["key_sha256"] == hashlib.sha256(key.encode()).hexdigest()
     assert key not in json.dumps(dict(row))
+    spent = f"fake model, nothing spent (estimated $0.0000 at {settings.MODEL} prices)"
     keys.main(["list"])
-    assert f"{row['id']}\tbuilder-a\tcap $100\tspent $0.0000\tlive" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert out.startswith("id\tlabel\tcap\tspent\tstatus\n")
+    assert f"{row['id']}\tbuilder-a\t$100\t{spent}\tlive" in out
     keys.main(["revoke", "--id", str(row["id"])])
     keys.main(["list"])
-    assert f"{row['id']}\tbuilder-a\tcap $100\tspent $0.0000\trevoked " in capsys.readouterr().out
+    assert f"{row['id']}\tbuilder-a\t$100\t{spent}\trevoked " in capsys.readouterr().out
     with pytest.raises(SystemExit) as gone:
         keys.main(["revoke", "--id", str(row["id"])])
     assert gone.value.code == 1
+    for cap in ("inf", "nan", "0"):
+        with pytest.raises(SystemExit) as bad:
+            keys.main(["create", "--label", f"cap-{cap}", "--cap-usd", cap])
+        assert bad.value.code == 1
+    assert conn.execute("SELECT 1 FROM api_keys WHERE label LIKE 'cap-%'").fetchone() is None
+
+
+def test_a_keyed_screen_is_charged_to_the_key_even_when_it_refuses(client, conn, monkeypatch):
+    out = json.dumps(
+        {"rule": "election_persuasion", "quote": "tough-on-crime framing", "election_name": ""}
+    )
+
+    class Stub:
+        name = "stub"
+
+        def complete(self, prompt, schema, max_tokens):
+            return out, 50, 20
+
+    monkeypatch.setattr(llm, "provider", Stub)
+    auth = bearer(conn, 1.0)
+    key_id = conn.execute("SELECT max(id) FROM api_keys").fetchone()[0]
+    last = conn.execute("SELECT COALESCE(max(id), 0) FROM llm_calls").fetchone()[0]
+    body = {"event": {"text": "Test the tough-on-crime framing on retired teachers."}}
+    r = simulate(client, body, **auth)
+    assert r.status_code == 422 and r.json()["code"] == "election_persuasion"
+    (cost,) = conn.execute("SELECT cost_usd FROM llm_calls WHERE id > ?", (last,)).fetchone()
+    assert cost > 0 and api.key_spent(conn, key_id) == pytest.approx(cost)
+
+
+def test_a_key_lookup_or_key_spend_that_cannot_be_read_refuses_with_503(client, conn, monkeypatch):
+    auth = bearer(conn)
+    before, before_jobs = calls(conn), jobs(conn)
+    connect = api.connect
+
+    def no_keys_table():
+        c = connect()
+        c.set_authorizer(
+            lambda action, table, *_: (
+                sqlite3.SQLITE_DENY if table == "api_keys" else sqlite3.SQLITE_OK
+            )
+        )
+        return c
+
+    monkeypatch.setattr(api, "connect", no_keys_table)
+    body = refused_and_spent_nothing(conn, simulate(client, CHIPS, **auth), 503, "spend_unreadable")
+    assert body["detail"].startswith("the API key could not be checked: ")
+    est = client.post("/v1/simulate/estimate", json=CHIPS, headers=auth)
+    assert est.status_code == 503 and est.json()["code"] == "spend_unreadable"
+    monkeypatch.setattr(api, "connect", connect)
+
+    def broken(conn, key):
+        raise RuntimeError("no key_forks table")
+
+    monkeypatch.setattr(api, "key_spent", broken)
+    refused_and_spent_nothing(conn, simulate(client, CHIPS, **auth), 503, "spend_unreadable")
+    assert (calls(conn), jobs(conn)) == (before, before_jobs)
 
 
 def test_a_rule_refusal_returns_422_with_its_code_and_spends_nothing(client, conn):

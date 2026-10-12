@@ -419,21 +419,26 @@ def _key(conn: sqlite3.Connection, authorization: str | None) -> int | JSONRespo
     if authorization is None:
         return None
     scheme, _, token = authorization.partition(" ")
-    row = conn.execute(
-        "SELECT id FROM api_keys WHERE key_sha256 = ? AND revoked_at IS NULL",
-        (hashlib.sha256(token.strip().encode()).hexdigest(),),
-    ).fetchone()
+    try:
+        row = conn.execute(
+            "SELECT id FROM api_keys WHERE key_sha256 = ? AND revoked_at IS NULL",
+            (hashlib.sha256(token.strip().encode()).hexdigest(),),
+        ).fetchone()
+    except Exception as e:
+        return _refuse(503, "spend_unreadable", f"the API key could not be checked: {e}")
     if scheme.lower() != "bearer" or row is None:
         return _refuse(401, "invalid_api_key", "this API key is unknown or revoked")
     return row[0]
 
 
 def key_spent(conn: sqlite3.Connection, key: int) -> float:
-    """What a key's forks have cost, counting each unfinished or interrupted fork at its cap."""
+    """What a key's screens and forks have cost, counting each unfinished or interrupted fork at
+    its cap."""
     return conn.execute(
-        "SELECT COALESCE(SUM(COALESCE(k.spent_usd, json_extract(j.request_json,"
+        "SELECT (SELECT COALESCE(SUM(COALESCE(k.spent_usd, json_extract(j.request_json,"
         " '$.max_cost_usd'))), 0) FROM key_forks k JOIN jobs j ON j.id = k.job_id"
-        " WHERE k.api_key_id = ?",
+        " WHERE k.api_key_id = ?1)"
+        " + (SELECT COALESCE(SUM(spent_usd), 0) FROM key_screens WHERE api_key_id = ?1)",
         (key,),
     ).fetchone()[0]
 
@@ -477,11 +482,12 @@ def _limits(
         if cap is None:
             return _refuse(401, "invalid_api_key", "this API key is unknown or revoked")
         if not spent + reserve <= cap:
+            so_far = llm.cost_text(spent, llm.provider().name)
             return _refuse(
                 402,
                 "key_cap_spent",
-                f"this API key has ${max(cap - spent, 0):.4f} of its ${cap:g} cap left, less than"
-                f" this fork's max_cost_usd ${reserve:g}",
+                f"this API key's ${cap:g} cap would be passed: {so_far} so far, and this fork"
+                f" may cost up to ${reserve:g}",
             )
     elif started >= settings.FORK_ANON_PER_DAY:
         return _refuse(
@@ -547,7 +553,9 @@ def create_simulation(
         client = _client(request)
         if client is None:
             return _refuse(503, "client_unknown", "the caller's address could not be read")
-    refusal = _limits(conn, client, key, req.max_cost_usd)
+    # A keyed caller also pays for the screen below, so its cap must hold that call too.
+    screen_reserve = 0.0 if key is None else settings.SCREEN_MAX_COST_USD
+    refusal = _limits(conn, client, key, req.max_cost_usd + screen_reserve)
     if refusal is not None:
         return refusal
     est = _estimate(req)
@@ -560,10 +568,18 @@ def create_simulation(
             est,
         )
 
+    screen_budget = llm.Budget(settings.SCREEN_MAX_COST_USD)
     try:
-        refusal = policy.screen(req.event.text, conn)
+        refusal = policy.screen(req.event.text, conn, budget=screen_budget)
     except Exception as e:
         raise HTTPException(503, f"the acceptable-use check could not run: {e}") from e
+    finally:
+        if key is not None and screen_budget.spent_usd > 0:
+            with conn:
+                conn.execute(
+                    "INSERT INTO key_screens (api_key_id, spent_usd, created_at) VALUES (?, ?, ?)",
+                    (key, screen_budget.spent_usd, _now()),
+                )
     if refusal is not None:
         return JSONResponse(refusal.model_dump(), status_code=422)
 
