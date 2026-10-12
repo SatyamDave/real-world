@@ -62,15 +62,10 @@ class Claim(StrEnum):
     insufficient_n = "insufficient_n"
 
 
-class Conflict(BaseModel):
-    detail: str = Field(..., title="Detail")
-    id: str = Field(..., title="Id")
-
-
 class Cost(BaseModel):
     estimated_usd: float = Field(
         ...,
-        description="An estimate made before the run, at the configured model's (Haiku) prices.",
+        description="An estimate made before the run, at the configured model's prices.",
         title="Estimated Usd",
     )
     actual_usd: float = Field(
@@ -96,8 +91,14 @@ class Coverage(BaseModel):
 
 
 class Crowd(BaseModel):
-    mean: float | None = Field(..., title="Mean")
-    count: int = Field(..., title="Count")
+    mean: float | None = Field(
+        ..., description="Mean of other visitors' answers; null if there are none.", title="Mean"
+    )
+    count: int = Field(
+        ...,
+        description="Other visitors' answers; the caller's own is never counted.",
+        title="Count",
+    )
 
 
 class DailyQuestion(BaseModel):
@@ -169,6 +170,10 @@ class Links(BaseModel):
     events: str = Field(..., title="Events")
 
 
+class NotFound(BaseModel):
+    detail: str = Field(..., title="Detail")
+
+
 class Code(StrEnum):
     private_person = "private_person"
     election_persuasion = "election_persuasion"
@@ -204,6 +209,15 @@ class Code1(StrEnum):
     spend_unreadable = "spend_unreadable"
     invalid_api_key = "invalid_api_key"
     key_cap_spent = "key_cap_spent"
+    idempotency_key_running = "idempotency_key_running"
+    invalid_request = "invalid_request"
+    unsupported_version = "unsupported_version"
+    acceptable_use_unreadable = "acceptable_use_unreadable"
+    idempotency_key_reused = "idempotency_key_reused"
+    why_over_cap = "why_over_cap"
+    wrong_question = "wrong_question"
+    answers_closed = "answers_closed"
+    already_answered = "already_answered"
 
 
 class Refused(BaseModel):
@@ -214,6 +228,9 @@ class Refused(BaseModel):
         title="Detail",
     )
     estimate: Estimate | None = None
+    id: str | None = Field(
+        None, description="The fork already running under this Idempotency-Key.", title="Id"
+    )
 
 
 class SegmentShift(BaseModel):
@@ -242,14 +259,14 @@ class SimulateRequest(BaseModel):
     )
     members: int = Field(
         5,
-        description="Ensemble size: independent runs whose spread gives the p10-p90 band.",
+        description="Ensemble members: independent runs of the fork, each with its own agent subsample and noise. Their p10-p90 range is the spread.",
         ge=1,
         le=20,
         title="Members",
     )
     agents: int = Field(
         200,
-        description="Agents sampled from the world, in proportion to country population.",
+        description="Agents sampled from the world snapshot, in proportion to country population.",
         ge=50,
         le=5000,
         title="Agents",
@@ -261,13 +278,16 @@ class SimulateRequest(BaseModel):
     )
     max_cost_usd: float = Field(
         0.5,
-        description="Refuse with 402 if the estimate exceeds this. One model call per segment.",
+        description="Cost cap in dollars. A fork whose estimate is above it is refused with 402. The estimate counts one model call per segment.",
         gt=0.0,
         le=5.0,
         title="Max Cost Usd",
     )
     seed: int = Field(
-        0, description="Random seed; the same request is replayed.", ge=0, title="Seed"
+        0,
+        description="Fixes the agent subsample and each member's noise. The model's answers can still differ between runs.",
+        ge=0,
+        title="Seed",
     )
 
 
@@ -307,18 +327,10 @@ class TraceAgent(BaseModel):
     steps: list[Step] = Field(..., title="Steps")
 
 
-class ValidationError(BaseModel):
-    loc: list[str | int] = Field(..., title="Location")
-    msg: str = Field(..., title="Message")
-    type: str = Field(..., title="Error Type")
-    input: Any | None = Field(None, title="Input")
-    ctx: dict[str, Any] | None = Field(None, title="Context")
-
-
 class WeekDay(BaseModel):
     date: str = Field(..., title="Date")
     probability: float | None = Field(
-        ..., description="The player's answer that day; null if none.", title="Probability"
+        ..., description="The visitor's answer that day; null if none.", title="Probability"
     )
     brier: float | None = Field(
         ..., description="Its Brier score once the question resolved.", title="Brier"
@@ -351,10 +363,6 @@ class BaselineSkill(BaseModel):
     claim: Claim = Field(..., title="Claim")
     by_tier: dict[str, Skill] = Field(..., title="By Tier")
     by_region: dict[str, Skill] = Field(..., title="By Region")
-
-
-class HTTPValidationError(BaseModel):
-    detail: list[ValidationError] | None = Field(None, title="Detail")
 
 
 class JobCreated(BaseModel):
@@ -411,8 +419,7 @@ class ReceiptDay(BaseModel):
 class SimulateResult(BaseModel):
     simulated: Literal[True] = Field(True, title="Simulated")
     disclosure: str = Field(
-        "AI-simulated. A fork of a synthetic population under an event you described: not a poll, not a forecast of real people, and not scored.",
-        title="Disclosure",
+        "AI-simulated. Not a poll or a prediction of a real person", title="Disclosure"
     )
     world_snapshot_id: str = Field(..., title="World Snapshot Id")
     engine_version: str = Field(..., title="Engine Version")

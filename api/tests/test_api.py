@@ -18,6 +18,7 @@ from rw_api import keys
 
 ROOT = Path(__file__).resolve().parents[2]
 AGENTS = 2000
+STALE = "the server restarted before the fork finished"
 CHIPS = {"event": {"text": "A chip shortage doubles phone prices worldwide."}, "days": 3}
 
 
@@ -102,7 +103,7 @@ def test_idempotency_key_replays_conflicts_and_refuses_a_new_body(client, conn):
     assert again.json()["id"] == job_id and again.json()["status"] == "succeeded"
 
     other = simulate(client, {**CHIPS, "days": 4}, k)
-    assert other.status_code == 422
+    assert other.status_code == 409 and other.json()["code"] == "idempotency_key_reused"
 
     with conn:
         conn.execute("UPDATE jobs SET status = 'running' WHERE id = ?", (job_id,))
@@ -133,7 +134,8 @@ def test_idempotency_key_and_version_headers_are_checked(client):
     no_key = client.post("/v1/simulate", json=CHIPS)
     assert no_key.status_code == 422
     assert simulate(client, CHIPS, "x" * 256).status_code == 422
-    assert simulate(client, CHIPS, **{"Real-World-Version": "2026-01-01"}).status_code == 400
+    stale = simulate(client, CHIPS, **{"Real-World-Version": "2026-01-01"})
+    assert stale.status_code == 422 and stale.json()["code"] == "unsupported_version"
     ok = simulate(client, CHIPS, **{"Real-World-Version": settings.API_VERSION})
     assert ok.status_code == 202
 
@@ -397,7 +399,7 @@ def test_a_key_lookup_or_key_spend_that_cannot_be_read_refuses_with_503(client, 
 
     monkeypatch.setattr(api, "connect", no_keys_table)
     body = refused_and_spent_nothing(conn, simulate(client, CHIPS, **auth), 503, "spend_unreadable")
-    assert body["detail"].startswith("the API key could not be checked: ")
+    assert body["detail"] == "the API key could not be checked"
     est = client.post("/v1/simulate/estimate", json=CHIPS, headers=auth)
     assert est.status_code == 503 and est.json()["code"] == "spend_unreadable"
     monkeypatch.setattr(api, "connect", connect)
@@ -452,7 +454,7 @@ def test_a_screen_that_cannot_run_refuses_with_503(client, conn, monkeypatch):
     monkeypatch.setattr(settings, "SCREEN_MAX_COST_USD", 0.0)
     before_jobs = jobs(conn)
     r = simulate(client, {"event": {"text": "An event the screen has never seen."}})
-    assert r.status_code == 503
+    assert r.status_code == 503 and r.json()["code"] == "acceptable_use_unreadable"
     assert jobs(conn) == before_jobs
 
 
@@ -508,8 +510,8 @@ def test_startup_marks_jobs_left_running_as_interrupted(conn):
         )
     with TestClient(api.app) as c:
         job = c.get("/v1/simulations/job_stale").json()
-        assert job["status"] == "failed" and job["error"] == "interrupted"
-        assert events(c, "job_stale")[-1][1] == {"type": "failed", "error": "interrupted"}
+        assert job["status"] == "failed" and job["error"] == STALE
+        assert events(c, "job_stale")[-1][1] == {"type": "failed", "error": STALE}
 
 
 def test_world_has_every_country_the_daily_question_and_prefilled_events(client):
@@ -593,12 +595,12 @@ def test_daily_reveal_matches_the_committed_ledger_and_refuses_a_second_answer(
         "/v1/daily/answers",
         json={"question_id": q["id"], "player_id": "p-reveal", "probability": 0.1},
     )
-    assert again.status_code == 409
+    assert again.status_code == 409 and again.json()["code"] == "already_answered"
     wrong = client.post(
         "/v1/daily/answers",
         json={"question_id": "fx-fra-strike", "player_id": "p-x", "probability": 0.1},
     )
-    assert wrong.status_code == 422
+    assert wrong.status_code == 422 and wrong.json()["code"] == "wrong_question"
 
 
 def freeze(monkeypatch, day):
@@ -683,7 +685,7 @@ def test_when_every_question_has_closed_answers_are_refused_and_not_written(
         "/v1/daily/answers",
         json={"question_id": q["id"], "player_id": "p-late", "probability": 0.7},
     )
-    assert r.status_code == 409 and "closed" in r.json()["detail"]
+    assert r.status_code == 409 and r.json()["code"] == "answers_closed"
     row = conn.execute("SELECT 1 FROM daily_answers WHERE player_id = 'p-late'").fetchone()
     assert row is None
 

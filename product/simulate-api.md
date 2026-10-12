@@ -2,7 +2,7 @@
 
 ## What it does
 
-`POST /v1/simulate` takes today's world (or a named snapshot), one event in plain words ("a chip shortage doubles phone prices worldwide"), a number of days and an ensemble size, and runs the fork. It answers at once with `202` and a job id; the caller polls `GET /v1/simulations/{id}` or reads a resumable event stream. The result is typed: for each topic, the share of people leaning yes before and after, with a p10-p90 band across ensemble members; the biggest segment shifts among segments of at least `top_shift_min_agents` (5% of the sample, the segment-size floor from [research/product/082](../research/product/082-icp-political.md)); the coverage tier of every country involved; a trace for a handful of agents; the cost; who answered the model calls (`provider`); and a content hash. Every result says `simulated: true`. With the fake model (no `ANTHROPIC_API_KEY`), `provider` is `fake`, `cost.actual_usd` is 0 and `cost.estimated_usd` is the pre-run estimate at Haiku prices; the web shows "Fake model, nothing spent". The cost is checked before any model call, and the request is refused if it would exceed `max_cost_usd`, the day's fork budget or the caller's daily fork count. The event is then screened against the [acceptable-use policy](acceptable-use.md); a refused event never starts a fork.
+`POST /v1/simulate` takes today's world (or a named snapshot), one event in plain words ("a chip shortage doubles phone prices worldwide"), a number of days and an ensemble size, and runs the fork. It answers at once with `202` and a job id; the caller polls `GET /v1/simulations/{job_id}` or reads a resumable event stream. The result is typed: for each topic, the share of people leaning yes before and after, with a p10-p90 band across ensemble members; the biggest segment shifts among segments of at least `top_shift_min_agents` (5% of the sample, the segment-size floor from [research/product/082](../research/product/082-icp-political.md)); the coverage tier of every country involved; a trace for a handful of agents; the cost; who answered the model calls (`provider`); and a content hash. Every result says `simulated: true`. With the fake model (no `ANTHROPIC_API_KEY`), `provider` is `fake`, `cost.actual_usd` is 0 and `cost.estimated_usd` is the pre-run estimate at Haiku prices; the web shows "Fake model, nothing spent". The cost is checked before any model call, and the request is refused if it would exceed `max_cost_usd`, the day's fork budget or the caller's daily fork count. The event is then screened against the [acceptable-use policy](acceptable-use.md); a refused event never starts a fork.
 
 ## Who it is for
 
@@ -14,19 +14,19 @@ The contract is the Pydantic models in `engine/rw/simulate.py`, exported to `api
 
 | Method and path | Purpose |
 | --- | --- |
-| `POST /v1/simulate` | Create a fork job. Headers: `Idempotency-Key` (required, at most 255 chars), `Real-World-Version` (optional, date; default and only value `2026-10-27`), `Authorization: Bearer rw_...` (optional API key). Returns `202 {id, status, links}`; `401 {code, detail}` for an unknown or revoked key; `402 {code, detail, estimate}` or `429 {code, detail}` when a spend check refuses (below); `422 {code, detail}` when the event breaks the [acceptable-use policy](acceptable-use.md); `503` when a spend, address or acceptable-use check could not run. |
+| `POST /v1/simulate` | Create a fork job. Headers: `Idempotency-Key` (required, at most 255 chars), `Real-World-Version` (optional, date; default and only value `2026-10-27`), `Authorization: Bearer rw_...` (optional API key). Returns `202 {id, status, links}`; `401 {code, detail}` for an unknown or revoked key; `402 {code, detail, estimate}` or `429 {code, detail}` when a spend check refuses (below); `409 {code, detail}` when the `Idempotency-Key` is running a fork or was used with another body; `422 {code, detail}` when the request is invalid (`invalid_request`), `Real-World-Version` is not current (`unsupported_version`) or the event breaks the [acceptable-use policy](acceptable-use.md); `503 {code, detail}` when a spend, address or acceptable-use check could not run. |
 | `POST /v1/simulate/estimate` | Same body and optional key, returns estimated cost, model calls and whether it fits the cap; `401` for an unknown or revoked key, `503` when the key cannot be checked. No job. |
-| `GET /v1/simulations/{id}` | Job status (`queued`, `running`, `succeeded`, `failed`) and the result when done. |
-| `GET /v1/simulations/{id}/events` | Server-sent events with an `id:` per event; reconnecting with `Last-Event-ID` replays from there. Heartbeat every 15 s. |
+| `GET /v1/simulations/{job_id}` | Job status (`queued`, `running`, `succeeded`, `failed`) and the result when done. |
+| `GET /v1/simulations/{job_id}/events` | Server-sent events with an `id:` per event; reconnecting with `Last-Event-ID` replays from there. Heartbeat every 15 s. |
 | `GET /v1/world` | Today's snapshot id and date, per-country cells (tier, agent count, mean share per topic), the daily question id, prefilled fork events. |
-| `GET /v1/agents/{id}` | One agent: traits, beliefs, tier, and "what moved this agent" (belief changes with the news cluster or nudge behind each). |
-| `GET /v1/agents/{id}/why` | "In its own words": a short model-written account generated from the trace, labelled simulated. Cached. |
+| `GET /v1/agents/{agent_id}` | One agent: traits, beliefs, tier, and "what moved this agent" (belief changes with the news cluster or nudge behind each). |
+| `GET /v1/agents/{agent_id}/why` | "In its own words": a short model-written account generated from the trace, labelled simulated. Cached. |
 
 `GET /` redirects to the interactive docs at `/docs`, where each operation carries a one-line summary and every `SimulateRequest` field a description. `GET /llms.txt` lists the same operations in plain text.
 
 Checks, all automated in `api/tests/`:
 
-- Same `Idempotency-Key` and body returns the same job; same key with a different body returns `422`; same key while running returns `409` with the job id.
+- Same `Idempotency-Key` and body returns the same job; same key with a different body returns `409` with code `idempotency_key_reused`; same key while running returns `409` with code `idempotency_key_running` and the job id.
 - A request whose estimate exceeds `max_cost_usd` returns `402` with the estimate, and no `llm_calls` row is written.
 - Spend checks run in this order, before the estimate and the policy screen, and again under the database write lock when the job is inserted. Each refusal writes no job and no `llm_calls` row. The web shows "Not started: " followed by `detail`. A keyed caller skips the address rows; an anonymous one skips the key rows.
 

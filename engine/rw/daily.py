@@ -11,6 +11,7 @@ import sqlite3
 import sys
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
+from datetime import date as Date
 from functools import partial
 from typing import Any
 from urllib.parse import urlparse
@@ -439,26 +440,35 @@ def anchor_line(conn: sqlite3.Connection, date: str) -> str:
     status, at = ledger.anchor_status(conn, date)
     if status == "anchored":
         tsa = next(a["service"] for a in ledger.anchors(conn, date) if a["kind"] == "rfc3161")
-        return f"anchored by {urlparse(tsa).hostname} at {at}"
+        when = (at or "").replace("T", " ").replace("Z", " UTC")
+        return f"Anchored {when} by {urlparse(tsa).hostname}"
     if status == "pending":
-        return "pending (OpenTimestamps)"
+        return "Anchor pending: OpenTimestamps proof awaits a Bitcoin block"
     row = conn.execute(
         "SELECT detail FROM stage_runs WHERE date = ? AND step = 'anchor'", (date,)
     ).fetchone()
     detail = json.loads(row["detail"] or "{}") if row else {}
-    return f"not anchored: {detail.get('skipped') or detail.get('error') or 'anchor step not run'}"
+    return f"Not anchored: {detail.get('skipped') or detail.get('error') or 'anchor step not run'}"
 
 
 def format_summary(s: Detail) -> str:
     cost = llm.cost_text(s["usd"], s["model"])
     return (
-        f"{s['date']}  ran: {', '.join(s['ran']) or 'nothing (all steps ok)'}\n"
-        f"  model calls {s['model_calls']}, {cost}, "
-        f"forecasts committed {s['forecasts_committed']}, root {s['root']}\n"
-        f"  questions scored {s['questions_scored']}, "
+        f"{s['date']}  Steps run: {', '.join(s['ran']) or 'none'}\n"
+        f"  Model calls: {s['model_calls']}, forecasts committed: {s['forecasts_committed']}, "
+        f"root: {s['root']}\n"
+        f"  Cost: {cost}\n"
+        f"  Questions scored: {s['questions_scored']}, "
         f"experimental: {', '.join(s['experimental']) or 'none'}\n"
         f"  {s['anchor']}"
     )
+
+
+def valid_date(text: str) -> bool:
+    try:
+        return Date.fromisoformat(text).isoformat() == text
+    except ValueError:
+        return False
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -477,6 +487,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="live reads the approved lists in data/questions",
     )
     args = parser.parse_args(argv)
+    if args.date is not None and not valid_date(args.date):
+        print(f"{args.date} is not a date; use YYYY-MM-DD", file=sys.stderr)
+        return 2
     if args.fixtures and args.news == "live":
         parser.error("--news live needs --date")
     if args.fixtures and args.questions == "live":
@@ -487,7 +500,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"question list refused, nothing ran: {e}", file=sys.stderr)
         return 1
 
-    dates = FIXTURE_DAYS if args.fixtures else [args.date]
+    dates = FIXTURE_DAYS if args.fixtures else [str(args.date)]
     steps = [args.step] if args.step else None
     try:
         for date in dates:
