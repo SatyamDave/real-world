@@ -1,6 +1,6 @@
 # @real-world/sdk
 
-TypeScript client for the Real World API ([product/sdks.md](../../product/sdks.md)). Start the API with `make dev`, save this as `quickstart.mts` in a workspace package that lists `"@real-world/sdk": "workspace:*"`, and run `node quickstart.mts` (Node 22.18 or newer, which runs TypeScript as is):
+TypeScript client for the Real World API, a forecast and simulation API with a public score: "Simulations with receipts." AI simulates how the world reacts to the news, and every forecast is sealed before the outcome and scored in public. Request a key with a dollar cap, expect every refusal as one sentence, and read every output as AI-simulated ([product/sdks.md](../../product/sdks.md)). Start the API with `make dev`, save this as `quickstart.mts` in a workspace package that lists `"@real-world/sdk": "workspace:*"`, and run `node quickstart.mts` (Node 22.18 or newer, which runs TypeScript as is):
 
 ```ts
 import { Client } from "@real-world/sdk";

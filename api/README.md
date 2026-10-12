@@ -1,5 +1,7 @@
 # Real World API
 
+Simulations with receipts: a forecast and simulation API with a public score. AI simulates how the world reacts to the news; every forecast is sealed before the outcome and scored in public. Get a key with a dollar cap, expect every refusal as one sentence in `detail`, and read every output as AI-simulated.
+
 The FastAPI app `rw_api` over the `rw` engine. It is the only code that speaks HTTP ([decision 0001](../research/decisions/0001-architecture.md)). What each endpoint must do is specified in [product/simulate-api.md](../product/simulate-api.md), [product/daily-question.md](../product/daily-question.md), [product/receipts.md](../product/receipts.md) and [product/benchmark.md](../product/benchmark.md); the field-level contract is the committed [openapi.json](openapi.json).
 
 ## Run it

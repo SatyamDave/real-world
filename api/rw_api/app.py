@@ -331,8 +331,11 @@ app = FastAPI(
     title="Real World API",
     version=settings.API_VERSION,
     description=(
-        "Fork today's simulated world, read its agents, answer the daily question and check"
-        " the hashed receipts. Every fork result is labelled simulated."
+        "Simulations with receipts. AI simulates how the world reacts to the news. Every forecast"
+        " is sealed before the outcome and scored in public. A forecast and simulation API with a"
+        " public score: fork today's simulated world, read its agents, answer the daily question"
+        " and check the hashed receipts. Get a key with a dollar cap; every refusal is one"
+        " sentence in `detail`, and every output is labelled AI-simulated."
     ),
     lifespan=lifespan,
 )
