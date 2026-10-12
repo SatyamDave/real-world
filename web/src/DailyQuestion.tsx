@@ -221,10 +221,10 @@ function WeekGrid({ reveal, date }: { reveal: Reveal; date: string }) {
       <ol className="week-grid" aria-label="Your last seven days">
         {reveal.week.map((w) => {
           const s = square(w);
-          const meaning = SQUARES.find(([q]) => q === s)?.[1];
+          const [, meaning, kind] = SQUARES.find(([q]) => q === s) ?? SQUARES[4];
           return (
             <li key={w.date} title={`${shortDate(w.date)}: ${meaning}`}>
-              <span aria-hidden="true">{s}</span>
+              <span className={`sq sq-${kind}`} data-square={kind} aria-hidden="true" />
               <span className="sr-only">
                 {shortDate(w.date)}: {meaning}
               </span>
@@ -247,9 +247,9 @@ function WeekGrid({ reveal, date }: { reveal: Reveal; date: string }) {
         <textarea className="share-text" readOnly rows={4} value={text} aria-label="Your week" />
       )}
       <p className="muted small week-legend">
-        {SQUARES.map(([s, m]) => (
+        {SQUARES.map(([s, m, kind]) => (
           <span key={s}>
-            <span aria-hidden="true">{s}</span> {m}
+            <span className={`sq sq-${kind}`} aria-hidden="true" /> {m}
           </span>
         ))}
       </p>
