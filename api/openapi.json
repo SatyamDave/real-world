@@ -1,0 +1,1780 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Real World API",
+    "description": "Every simulation result is labelled simulated. See product/simulate-api.md.",
+    "version": "2026-10-27"
+  },
+  "paths": {
+    "/v1/simulate": {
+      "post": {
+        "summary": "Create Simulation",
+        "operationId": "create_simulation_v1_simulate_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "name": "Real-World-Version",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Real-World-Version"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Real-World-Version is not the current version"
+          },
+          "402": {
+            "description": "The estimate exceeds max_cost_usd",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A job with this Idempotency-Key is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conflict"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulate/estimate": {
+      "post": {
+        "summary": "Estimate",
+        "operationId": "estimate_v1_simulate_estimate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Estimate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulations/{job_id}": {
+      "get": {
+        "summary": "Get Simulation",
+        "operationId": "get_simulation_v1_simulations__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulations/{job_id}/events": {
+      "get": {
+        "summary": "Simulation Events",
+        "operationId": "simulation_events_v1_simulations__job_id__events_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "Last-Event-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Last-Event-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-sent events",
+            "content": {
+              "text/event-stream": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/world": {
+      "get": {
+        "summary": "World",
+        "operationId": "world_v1_world_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/World"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/agents/{agent_id}": {
+      "get": {
+        "summary": "Agent",
+        "operationId": "agent_v1_agents__agent_id__get",
+        "parameters": [
+          {
+            "name": "agent_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Agent Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Agent"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/agents/{agent_id}/why": {
+      "get": {
+        "summary": "Agent Why",
+        "operationId": "agent_why_v1_agents__agent_id__why_get",
+        "parameters": [
+          {
+            "name": "agent_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Agent Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentWhy"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The model call would exceed its cost cap"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/daily": {
+      "get": {
+        "summary": "Daily",
+        "operationId": "daily_v1_daily_get",
+        "parameters": [
+          {
+            "name": "player_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Player Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Daily"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/daily/answers": {
+      "post": {
+        "summary": "Answer Daily",
+        "operationId": "answer_daily_v1_daily_answers_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Answer"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Daily"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This player already answered this question"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/receipts": {
+      "get": {
+        "summary": "Receipts",
+        "operationId": "receipts_v1_receipts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipts"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/receipts/{day}": {
+      "get": {
+        "summary": "Receipt Day",
+        "operationId": "receipt_day_v1_receipts__day__get",
+        "parameters": [
+          {
+            "name": "day",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Day"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptDay"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/scores": {
+      "get": {
+        "summary": "Scores",
+        "description": "score.summarize over every committed forecast whose question has resolved. A question\nacross several countries takes its lowest-coverage tier, and \"multiple\" as its region when\nthey differ.",
+        "operationId": "scores_v1_scores_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/BaselineSkill"
+                  },
+                  "type": "object",
+                  "title": "Response Scores V1 Scores Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "summary": "Healthz",
+        "operationId": "healthz_healthz_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "type": "object",
+                  "title": "Response Healthz Healthz Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Agent": {
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "title": "Agent Id"
+          },
+          "iso3": {
+            "type": "string",
+            "title": "Iso3"
+          },
+          "tier": {
+            "type": "string",
+            "title": "Tier"
+          },
+          "segment": {
+            "type": "string",
+            "title": "Segment"
+          },
+          "traits": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Traits"
+          },
+          "shares": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Shares"
+          },
+          "moved": {
+            "items": {
+              "$ref": "#/components/schemas/AgentStep"
+            },
+            "type": "array",
+            "title": "Moved"
+          }
+        },
+        "type": "object",
+        "required": ["agent_id", "iso3", "tier", "segment", "traits", "shares", "moved"],
+        "title": "Agent"
+      },
+      "AgentStep": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "delta": {
+            "type": "number",
+            "title": "Delta",
+            "description": "Change in the agent's belief, in logit."
+          },
+          "cause": {
+            "type": "string",
+            "title": "Cause"
+          }
+        },
+        "type": "object",
+        "required": ["date", "topic", "delta", "cause"],
+        "title": "AgentStep"
+      },
+      "AgentWhy": {
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "title": "Agent Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "label": {
+            "type": "string",
+            "const": "Simulated account, not the cause",
+            "title": "Label",
+            "default": "Simulated account, not the cause"
+          },
+          "simulated": {
+            "type": "boolean",
+            "const": true,
+            "title": "Simulated",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": ["agent_id", "text"],
+        "title": "AgentWhy"
+      },
+      "Answer": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id"
+          },
+          "player_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Player Id"
+          },
+          "probability": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Probability"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["question_id", "player_id", "probability"],
+        "title": "Answer"
+      },
+      "Band": {
+        "properties": {
+          "p10": {
+            "type": "number",
+            "title": "P10"
+          },
+          "p50": {
+            "type": "number",
+            "title": "P50"
+          },
+          "p90": {
+            "type": "number",
+            "title": "P90"
+          }
+        },
+        "type": "object",
+        "required": ["p10", "p50", "p90"],
+        "title": "Band"
+      },
+      "BaselineSkill": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "n_pairs": {
+            "type": "integer",
+            "title": "N Pairs"
+          },
+          "mean_diff": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Diff"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "claim": {
+            "type": "string",
+            "enum": ["reportable", "insufficient_n"],
+            "title": "Claim"
+          },
+          "by_tier": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Skill"
+            },
+            "type": "object",
+            "title": "By Tier"
+          },
+          "by_region": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Skill"
+            },
+            "type": "object",
+            "title": "By Region"
+          }
+        },
+        "type": "object",
+        "required": ["n", "n_pairs", "mean_diff", "low", "high", "claim", "by_tier", "by_region"],
+        "title": "BaselineSkill"
+      },
+      "Conflict": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": ["detail", "id"],
+        "title": "Conflict"
+      },
+      "Cost": {
+        "properties": {
+          "estimated_usd": {
+            "type": "number",
+            "title": "Estimated Usd"
+          },
+          "actual_usd": {
+            "type": "number",
+            "title": "Actual Usd"
+          }
+        },
+        "type": "object",
+        "required": ["estimated_usd", "actual_usd"],
+        "title": "Cost"
+      },
+      "Country": {
+        "properties": {
+          "iso3": {
+            "type": "string",
+            "title": "Iso3"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          },
+          "tier": {
+            "type": "string",
+            "title": "Tier"
+          },
+          "experimental": {
+            "type": "boolean",
+            "title": "Experimental"
+          },
+          "agent_count": {
+            "type": "integer",
+            "title": "Agent Count"
+          },
+          "shares": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Shares"
+          },
+          "sample_agent_id": {
+            "type": "string",
+            "title": "Sample Agent Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "iso3",
+          "name",
+          "lat",
+          "lng",
+          "tier",
+          "experimental",
+          "agent_count",
+          "shares",
+          "sample_agent_id"
+        ],
+        "title": "Country"
+      },
+      "Coverage": {
+        "properties": {
+          "iso3": {
+            "type": "string",
+            "title": "Iso3"
+          },
+          "tier": {
+            "type": "string",
+            "title": "Tier"
+          }
+        },
+        "type": "object",
+        "required": ["iso3", "tier"],
+        "title": "Coverage"
+      },
+      "Crowd": {
+        "properties": {
+          "mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": ["mean", "count"],
+        "title": "Crowd"
+      },
+      "Daily": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "question": {
+            "$ref": "#/components/schemas/DailyQuestion"
+          },
+          "reveal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Reveal"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": ["date", "question", "reveal"],
+        "title": "Daily"
+      },
+      "DailyQuestion": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "resolution_source": {
+            "type": "string",
+            "title": "Resolution Source"
+          },
+          "closes_at": {
+            "type": "string",
+            "title": "Closes At"
+          },
+          "resolves_by": {
+            "type": "string",
+            "title": "Resolves By"
+          }
+        },
+        "type": "object",
+        "required": ["id", "text", "resolution_source", "closes_at", "resolves_by"],
+        "title": "DailyQuestion"
+      },
+      "DayBand": {
+        "properties": {
+          "p10": {
+            "type": "number",
+            "title": "P10"
+          },
+          "p50": {
+            "type": "number",
+            "title": "P50"
+          },
+          "p90": {
+            "type": "number",
+            "title": "P90"
+          },
+          "day": {
+            "type": "integer",
+            "title": "Day"
+          }
+        },
+        "type": "object",
+        "required": ["p10", "p50", "p90", "day"],
+        "title": "DayBand"
+      },
+      "DayRecord": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "prev_root": {
+            "type": "string",
+            "title": "Prev Root"
+          },
+          "root": {
+            "type": "string",
+            "title": "Root"
+          },
+          "leaf_count": {
+            "type": "string",
+            "title": "Leaf Count"
+          },
+          "protocol_hash": {
+            "type": "string",
+            "title": "Protocol Hash"
+          },
+          "engine_version": {
+            "type": "string",
+            "title": "Engine Version"
+          }
+        },
+        "type": "object",
+        "required": ["date", "prev_root", "root", "leaf_count", "protocol_hash", "engine_version"],
+        "title": "DayRecord"
+      },
+      "DaySummary": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "prev_root": {
+            "type": "string",
+            "title": "Prev Root"
+          },
+          "root": {
+            "type": "string",
+            "title": "Root"
+          },
+          "leaf_count": {
+            "type": "string",
+            "title": "Leaf Count"
+          },
+          "protocol_hash": {
+            "type": "string",
+            "title": "Protocol Hash"
+          },
+          "engine_version": {
+            "type": "string",
+            "title": "Engine Version"
+          },
+          "record_hash": {
+            "type": "string",
+            "title": "Record Hash"
+          },
+          "anchored": {
+            "type": "boolean",
+            "title": "Anchored"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "prev_root",
+          "root",
+          "leaf_count",
+          "protocol_hash",
+          "engine_version",
+          "record_hash",
+          "anchored"
+        ],
+        "title": "DaySummary"
+      },
+      "Estimate": {
+        "properties": {
+          "estimated_cost_usd": {
+            "type": "number",
+            "title": "Estimated Cost Usd"
+          },
+          "model_calls": {
+            "type": "integer",
+            "title": "Model Calls"
+          },
+          "segments": {
+            "type": "integer",
+            "title": "Segments"
+          },
+          "within_cap": {
+            "type": "boolean",
+            "title": "Within Cap"
+          }
+        },
+        "type": "object",
+        "required": ["estimated_cost_usd", "model_calls", "segments", "within_cap"],
+        "title": "Estimate"
+      },
+      "Event": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "countries": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Countries"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["text"],
+        "title": "Event"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Job": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["queued", "running", "succeeded", "failed"],
+            "title": "Status"
+          },
+          "request": {
+            "$ref": "#/components/schemas/SimulateRequest"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SimulateResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          }
+        },
+        "type": "object",
+        "required": ["id", "status", "request", "created_at"],
+        "title": "Job"
+      },
+      "JobCreated": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["queued", "running", "succeeded", "failed"],
+            "title": "Status"
+          },
+          "links": {
+            "$ref": "#/components/schemas/Links"
+          }
+        },
+        "type": "object",
+        "required": ["id", "status", "links"],
+        "title": "JobCreated"
+      },
+      "Links": {
+        "properties": {
+          "self": {
+            "type": "string",
+            "title": "Self"
+          },
+          "events": {
+            "type": "string",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": ["self", "events"],
+        "title": "Links"
+      },
+      "PrefilledEvent": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "countries": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Countries"
+          }
+        },
+        "type": "object",
+        "required": ["id", "text", "countries"],
+        "title": "PrefilledEvent"
+      },
+      "ReceiptDay": {
+        "properties": {
+          "day": {
+            "$ref": "#/components/schemas/DayRecord"
+          },
+          "record_hash": {
+            "type": "string",
+            "title": "Record Hash"
+          },
+          "anchored": {
+            "type": "boolean",
+            "title": "Anchored"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ReceiptEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          }
+        },
+        "type": "object",
+        "required": ["day", "record_hash", "anchored", "entries"],
+        "title": "ReceiptDay"
+      },
+      "ReceiptEntry": {
+        "properties": {
+          "entry": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Entry"
+          },
+          "salt": {
+            "type": "string",
+            "title": "Salt"
+          },
+          "leaf_hash": {
+            "type": "string",
+            "title": "Leaf Hash"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier"
+          }
+        },
+        "type": "object",
+        "required": ["entry", "salt", "leaf_hash", "outcome", "brier"],
+        "title": "ReceiptEntry"
+      },
+      "Receipts": {
+        "properties": {
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/DaySummary"
+            },
+            "type": "array",
+            "title": "Days"
+          }
+        },
+        "type": "object",
+        "required": ["days"],
+        "title": "Receipts"
+      },
+      "Refused": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/Estimate"
+          }
+        },
+        "type": "object",
+        "required": ["detail", "estimate"],
+        "title": "Refused"
+      },
+      "Reveal": {
+        "properties": {
+          "you": {
+            "type": "number",
+            "title": "You"
+          },
+          "crowd": {
+            "$ref": "#/components/schemas/Crowd"
+          },
+          "sim": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sim"
+          },
+          "market": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Market"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier"
+          },
+          "streak": {
+            "type": "integer",
+            "title": "Streak"
+          }
+        },
+        "type": "object",
+        "required": ["you", "crowd", "sim", "market", "outcome", "brier", "streak"],
+        "title": "Reveal"
+      },
+      "SegmentShift": {
+        "properties": {
+          "segment": {
+            "type": "string",
+            "title": "Segment"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "shift_p10": {
+            "type": "number",
+            "title": "Shift P10"
+          },
+          "shift_p50": {
+            "type": "number",
+            "title": "Shift P50"
+          },
+          "shift_p90": {
+            "type": "number",
+            "title": "Shift P90"
+          },
+          "n_agents": {
+            "type": "integer",
+            "title": "N Agents"
+          },
+          "tier": {
+            "type": "string",
+            "title": "Tier"
+          }
+        },
+        "type": "object",
+        "required": ["segment", "topic", "shift_p10", "shift_p50", "shift_p90", "n_agents", "tier"],
+        "title": "SegmentShift"
+      },
+      "SimulateRequest": {
+        "properties": {
+          "world": {
+            "type": "string",
+            "pattern": "^(today|\\d{4}-\\d{2}-\\d{2})$",
+            "title": "World",
+            "default": "today"
+          },
+          "event": {
+            "$ref": "#/components/schemas/Event"
+          },
+          "days": {
+            "type": "integer",
+            "maximum": 14.0,
+            "minimum": 1.0,
+            "title": "Days",
+            "default": 7
+          },
+          "members": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Members",
+            "default": 5
+          },
+          "agents": {
+            "type": "integer",
+            "maximum": 5000.0,
+            "minimum": 50.0,
+            "title": "Agents",
+            "default": 200
+          },
+          "topics": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topics"
+          },
+          "max_cost_usd": {
+            "type": "number",
+            "maximum": 5.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Max Cost Usd",
+            "default": 0.5
+          },
+          "seed": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Seed",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["event"],
+        "title": "SimulateRequest"
+      },
+      "SimulateResult": {
+        "properties": {
+          "simulated": {
+            "type": "boolean",
+            "const": true,
+            "title": "Simulated",
+            "default": true
+          },
+          "disclosure": {
+            "type": "string",
+            "title": "Disclosure",
+            "default": "AI-simulated. A fork of a synthetic population under an event you described: not a poll, not a forecast of real people, and not scored."
+          },
+          "world_snapshot_id": {
+            "type": "string",
+            "title": "World Snapshot Id"
+          },
+          "engine_version": {
+            "type": "string",
+            "title": "Engine Version"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "seed": {
+            "type": "integer",
+            "title": "Seed"
+          },
+          "members": {
+            "type": "integer",
+            "title": "Members"
+          },
+          "agents_sampled": {
+            "type": "integer",
+            "title": "Agents Sampled"
+          },
+          "days": {
+            "type": "integer",
+            "title": "Days"
+          },
+          "cost": {
+            "$ref": "#/components/schemas/Cost"
+          },
+          "coverage": {
+            "items": {
+              "$ref": "#/components/schemas/Coverage"
+            },
+            "type": "array",
+            "title": "Coverage"
+          },
+          "outputs": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/TopicOutput"
+            },
+            "type": "object",
+            "title": "Outputs"
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/SegmentShift"
+            },
+            "type": "array",
+            "title": "Segments"
+          },
+          "top_shifts": {
+            "items": {
+              "$ref": "#/components/schemas/SegmentShift"
+            },
+            "type": "array",
+            "title": "Top Shifts"
+          },
+          "trace": {
+            "$ref": "#/components/schemas/Trace"
+          },
+          "note": {
+            "type": "string",
+            "const": "Counterfactual: not scored",
+            "title": "Note",
+            "default": "Counterfactual: not scored"
+          },
+          "content_hash": {
+            "type": "string",
+            "title": "Content Hash",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "world_snapshot_id",
+          "engine_version",
+          "model",
+          "seed",
+          "members",
+          "agents_sampled",
+          "days",
+          "cost",
+          "coverage",
+          "outputs",
+          "segments",
+          "top_shifts",
+          "trace"
+        ],
+        "title": "SimulateResult"
+      },
+      "Skill": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "n_pairs": {
+            "type": "integer",
+            "title": "N Pairs"
+          },
+          "mean_diff": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Diff"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "claim": {
+            "type": "string",
+            "enum": ["reportable", "insufficient_n"],
+            "title": "Claim"
+          }
+        },
+        "type": "object",
+        "required": ["n", "n_pairs", "mean_diff", "low", "high", "claim"],
+        "title": "Skill"
+      },
+      "Step": {
+        "properties": {
+          "day": {
+            "type": "integer",
+            "title": "Day"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "delta": {
+            "type": "number",
+            "title": "Delta"
+          },
+          "cause": {
+            "type": "string",
+            "enum": ["event", "anchor_pull"],
+            "title": "Cause"
+          }
+        },
+        "type": "object",
+        "required": ["day", "topic", "delta", "cause"],
+        "title": "Step"
+      },
+      "TopicOutput": {
+        "properties": {
+          "baseline_share": {
+            "type": "number",
+            "title": "Baseline Share"
+          },
+          "final": {
+            "$ref": "#/components/schemas/Band"
+          },
+          "by_day": {
+            "items": {
+              "$ref": "#/components/schemas/DayBand"
+            },
+            "type": "array",
+            "title": "By Day"
+          }
+        },
+        "type": "object",
+        "required": ["baseline_share", "final", "by_day"],
+        "title": "TopicOutput"
+      },
+      "Trace": {
+        "properties": {
+          "segment_signals": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Segment Signals"
+          },
+          "agents": {
+            "items": {
+              "$ref": "#/components/schemas/TraceAgent"
+            },
+            "type": "array",
+            "title": "Agents"
+          }
+        },
+        "type": "object",
+        "required": ["segment_signals", "agents"],
+        "title": "Trace"
+      },
+      "TraceAgent": {
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "title": "Agent Id"
+          },
+          "iso3": {
+            "type": "string",
+            "title": "Iso3"
+          },
+          "segment": {
+            "type": "string",
+            "title": "Segment"
+          },
+          "belief_start": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Belief Start"
+          },
+          "belief_end": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Belief End"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/Step"
+            },
+            "type": "array",
+            "title": "Steps"
+          }
+        },
+        "type": "object",
+        "required": ["agent_id", "iso3", "segment", "belief_start", "belief_end", "steps"],
+        "title": "TraceAgent"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      },
+      "World": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "countries": {
+            "items": {
+              "$ref": "#/components/schemas/Country"
+            },
+            "type": "array",
+            "title": "Countries"
+          },
+          "daily_question_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daily Question Id"
+          },
+          "prefilled_events": {
+            "items": {
+              "$ref": "#/components/schemas/PrefilledEvent"
+            },
+            "type": "array",
+            "title": "Prefilled Events"
+          }
+        },
+        "type": "object",
+        "required": ["date", "countries", "daily_question_id", "prefilled_events"],
+        "title": "World"
+      }
+    }
+  }
+}
