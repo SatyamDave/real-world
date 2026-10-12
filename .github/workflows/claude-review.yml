@@ -1,0 +1,54 @@
+name: Claude review
+
+on:
+  pull_request:
+    types: [ready_for_review, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip when no API key is set
+        id: key
+        env:
+          HAS_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+        run: |
+          if [ "$HAS_KEY" != "true" ]; then echo "::warning::ANTHROPIC_API_KEY secret not set; Claude review skipped."; exit 0; fi
+          echo "run=true" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        if: steps.key.outputs.run == 'true'
+        with:
+          fetch-depth: 0
+      - uses: anthropics/claude-code-action@v1
+        if: steps.key.outputs.run == 'true'
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: >-
+            --max-turns 40
+            --allowedTools "Read,Write,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(python3 scripts/check_links.py),Bash(shasum:*)"
+          prompt: |
+            Review pull request #${{ github.event.pull_request.number }} in ${{ github.repository }}.
+            Read the diff with `git diff ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}`
+            and the description with `gh pr view ${{ github.event.pull_request.number }}`.
+
+            The rules are the repository's CLAUDE.md files. Read the root CLAUDE.md, then the CLAUDE.md
+            in every folder that contains a changed file and in each of that folder's parents.
+            Judge the PR only against those rules and the definition of done in the root CLAUDE.md:
+            one concern, the improvement-loop step it rests on and any skipped step, every template section
+            filled, the check that proves it, numbers traced to a committed artifact or a linked research note,
+            claims allowed by gtm/messaging.md, no edit to a published forecast or a registered PREREG.md,
+            and every relative link resolving (`python3 scripts/check_links.py`).
+
+            Quote the rule and the file and line for each problem. Do not suggest work outside the PR's scope.
+            Post exactly one comment with `gh pr comment ${{ github.event.pull_request.number }} --body-file <file>`:
+            a one-line verdict (ready, or changes needed), then the problems, most serious first, or "No problems found."
