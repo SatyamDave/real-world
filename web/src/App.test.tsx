@@ -1,9 +1,161 @@
-import { renderToStaticMarkup } from "react-dom/server";
-import { expect, test } from "vitest";
-import { App } from "./App";
+// @vitest-environment jsdom
+import type { ReactNode } from "react";
+import { act } from "react";
+import { createRoot } from "react-dom/client";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import vector from "../../data/fixtures/receipts_test_vector.json";
+import { AgentPanel } from "./AgentPanel";
+import { App, DISCLOSURE } from "./App";
+import type { Agent, AgentWhy, Daily, Job, ReceiptDay, World } from "./api";
+import * as api from "./api";
+import { DailyQuestion } from "./DailyQuestion";
+import { ForkCard } from "./ForkCard";
+import agentFixture from "./fixtures/agent.json";
+import whyFixture from "./fixtures/agent_why.json";
+import dailyFixture from "./fixtures/daily.json";
+import jobFixture from "./fixtures/job.json";
+import worldFixture from "./fixtures/world.json";
 
-test("renders the Real World heading and the simulation disclaimer", () => {
-  const html = renderToStaticMarkup(<App />);
-  expect(html).toContain("<h1>Real World</h1>");
-  expect(html).toContain("Simulation, not a poll or a prediction of a real person");
+vi.mock("./api", async (original) => {
+  const real = await original<typeof api>();
+  const stub = () => vi.fn(() => Promise.reject(new Error("not stubbed")));
+  return {
+    ...real,
+    world: stub(),
+    daily: stub(),
+    answerDaily: stub(),
+    agent: stub(),
+    agentWhy: stub(),
+    receipts: stub(),
+    receiptDay: stub(),
+    scores: stub(),
+  };
+});
+
+const world = worldFixture as World;
+const job = jobFixture as Job;
+let container: HTMLDivElement;
+
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+beforeEach(() => {
+  container = document.body.appendChild(document.createElement("div"));
+});
+
+afterEach(() => {
+  container.remove();
+  vi.clearAllMocks();
+});
+
+const flush = () => act(() => new Promise((r) => setTimeout(r, 0)));
+
+async function render(node: ReactNode) {
+  await act(async () => createRoot(container).render(node));
+  await flush();
+  return container;
+}
+
+const button = (text: string) => {
+  const b = [...container.querySelectorAll("button")].find((x) => x.textContent?.includes(text));
+  if (!b) throw new Error(`no button "${text}"`);
+  return b;
+};
+
+test("the reveal shows you, visitors, the simulated world and the market after submit", async () => {
+  const daily = dailyFixture as Daily;
+  vi.mocked(api.daily)
+    .mockResolvedValueOnce({ question: daily.question, reveal: null })
+    .mockResolvedValueOnce(daily);
+  vi.mocked(api.answerDaily).mockResolvedValue({});
+
+  const el = await render(<DailyQuestion tiers={["A", "B", "B"]} />);
+  expect(el.textContent).toContain(daily.question.text);
+  expect(el.textContent).not.toContain("Simulated world");
+
+  await act(async () => button("Submit 50%").click());
+  await flush();
+
+  expect(api.answerDaily).toHaveBeenCalledWith(daily.question.id, expect.any(String), 0.5);
+  const text = el.textContent ?? "";
+  for (const s of ["You", "62%", "1,204 self-selected visitors", "Simulated world", "56%"])
+    expect(text).toContain(s);
+  expect(text).toContain("Market61%");
+  expect(text).toContain("3 days answered in a row");
+  expect(text).toContain(DISCLOSURE);
+});
+
+test("a repeat answer (409) still shows the reveal", async () => {
+  const daily = dailyFixture as Daily;
+  vi.mocked(api.daily)
+    .mockResolvedValueOnce({ question: daily.question, reveal: null })
+    .mockResolvedValueOnce(daily);
+  vi.mocked(api.answerDaily).mockRejectedValue(new api.ApiError(409, {}));
+
+  const el = await render(<DailyQuestion tiers={[]} />);
+  await act(async () => button("Submit").click());
+  await flush();
+  expect(el.textContent).toContain("Simulated world");
+});
+
+test("the fork card renders a fixture SimulateResult", async () => {
+  const el = await render(<ForkCard job={job} />);
+  const text = el.textContent ?? "";
+  expect(text).toContain("“A chip shortage doubles phone prices worldwide”");
+  expect(el.querySelectorAll(".shifts li")).toHaveLength(3);
+  expect(text).toContain("USA · 25-34 · tertiary");
+  expect(text).toContain("+8.1 pts");
+  expect(text).toContain("range across 5 simulated runs, not a confidence interval yet");
+  expect(text).toContain("52% → 58%");
+  expect(text).toContain("$0.0054");
+  expect(text).toContain("Counterfactual: not scored");
+  expect(el.querySelector<HTMLInputElement>(".share input")?.value).toBe(
+    `${location.origin}/fork/job_fixture1`,
+  );
+  expect(text).toContain(DISCLOSURE);
+  expect(el.querySelectorAll(".disclosure .tier")).toHaveLength(3);
+});
+
+test("the agent panel labels the trace and the simulated account", async () => {
+  vi.mocked(api.agent).mockResolvedValue(agentFixture as Agent);
+  vi.mocked(api.agentWhy).mockResolvedValue(whyFixture as AgentWhy);
+
+  const el = await render(<AgentPanel country={world.countries[0]} onClose={() => {}} />);
+  const headings = [...el.querySelectorAll("h3")].map((h) => h.textContent);
+  expect(headings).toEqual(["What moved this agent", "In its own words"]);
+  expect(api.agent).toHaveBeenCalledWith(world.countries[0].sample_agent_id);
+  expect(el.textContent).toContain("FIXTURE: Fuel prices rise for a third week");
+  expect(el.querySelector(".label-simulated")?.textContent).toBe(
+    "Simulated account, not the cause",
+  );
+  expect(el.querySelector("blockquote")?.textContent).toBe(whyFixture.text);
+  expect(el.textContent).toContain(DISCLOSURE);
+});
+
+test("the receipts page verifies the served chain and states the reference and claim", async () => {
+  vi.mocked(api.world).mockResolvedValue(world);
+  vi.mocked(api.receipts).mockResolvedValue({
+    days: [{ ...vector.day, record_hash: vector.record_hash, anchored: false }],
+  });
+  vi.mocked(api.receiptDay).mockResolvedValue(structuredClone(vector) as ReceiptDay);
+  const skill = {
+    n: 2,
+    n_pairs: 4,
+    mean_diff: -0.01,
+    low: -0.05,
+    high: 0.03,
+    claim: "insufficient_n" as const,
+  };
+  vi.mocked(api.scores).mockResolvedValue({ market: skill, plain_llm: skill });
+
+  const el = await render(<App path="/receipts" />);
+  const text = el.textContent ?? "";
+  expect(text).toContain("not yet anchored");
+  expect(text).toContain("A constant 50% forecast scores 0.25");
+  expect(text).toContain("insufficient_n");
+  expect(text).toContain("n = 2 questions");
+
+  await act(async () => button("Verify").click());
+  await flush();
+  expect(el.textContent).toContain("Verified 1 day and 2 receipts back to the first day");
+  expect(el.textContent).toContain(DISCLOSURE);
 });

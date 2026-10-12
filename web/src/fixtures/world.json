@@ -1,0 +1,340 @@
+{
+  "date": "2026-10-05",
+  "countries": [
+    {
+      "iso3": "USA",
+      "name": "United States",
+      "lat": 39.8,
+      "lng": -98.6,
+      "tier": "A",
+      "experimental": false,
+      "agent_count": 337,
+      "shares": {
+        "inflation_worry": 0.542,
+        "economy_optimism": 0.681,
+        "spending_intent": 0.238,
+        "trust_government": 0.271,
+        "climate_concern": 0.657,
+        "tech_optimism": 0.483,
+        "migration_openness": 0.428,
+        "conflict_worry": 0.326
+      },
+      "sample_agent_id": "a00000"
+    },
+    {
+      "iso3": "GBR",
+      "name": "United Kingdom",
+      "lat": 54.0,
+      "lng": -2.0,
+      "tier": "A",
+      "experimental": false,
+      "agent_count": 699,
+      "shares": {
+        "inflation_worry": 0.217,
+        "economy_optimism": 0.701,
+        "spending_intent": 0.46,
+        "trust_government": 0.657,
+        "climate_concern": 0.201,
+        "tech_optimism": 0.467,
+        "migration_openness": 0.633,
+        "conflict_worry": 0.337
+      },
+      "sample_agent_id": "a00600"
+    },
+    {
+      "iso3": "DEU",
+      "name": "Germany",
+      "lat": 51.2,
+      "lng": 10.4,
+      "tier": "A",
+      "experimental": false,
+      "agent_count": 1167,
+      "shares": {
+        "inflation_worry": 0.261,
+        "economy_optimism": 0.39,
+        "spending_intent": 0.213,
+        "trust_government": 0.59,
+        "climate_concern": 0.206,
+        "tech_optimism": 0.729,
+        "migration_openness": 0.612,
+        "conflict_worry": 0.781
+      },
+      "sample_agent_id": "a01200"
+    },
+    {
+      "iso3": "FRA",
+      "name": "France",
+      "lat": 46.6,
+      "lng": 2.4,
+      "tier": "A",
+      "experimental": false,
+      "agent_count": 943,
+      "shares": {
+        "inflation_worry": 0.217,
+        "economy_optimism": 0.333,
+        "spending_intent": 0.463,
+        "trust_government": 0.497,
+        "climate_concern": 0.34,
+        "tech_optimism": 0.339,
+        "migration_openness": 0.331,
+        "conflict_worry": 0.476
+      },
+      "sample_agent_id": "a01800"
+    },
+    {
+      "iso3": "JPN",
+      "name": "Japan",
+      "lat": 36.2,
+      "lng": 138.3,
+      "tier": "B",
+      "experimental": false,
+      "agent_count": 496,
+      "shares": {
+        "inflation_worry": 0.756,
+        "economy_optimism": 0.45,
+        "spending_intent": 0.75,
+        "trust_government": 0.753,
+        "climate_concern": 0.26,
+        "tech_optimism": 0.578,
+        "migration_openness": 0.634,
+        "conflict_worry": 0.378
+      },
+      "sample_agent_id": "a02400"
+    },
+    {
+      "iso3": "BRA",
+      "name": "Brazil",
+      "lat": -10.8,
+      "lng": -52.9,
+      "tier": "B",
+      "experimental": false,
+      "agent_count": 960,
+      "shares": {
+        "inflation_worry": 0.4,
+        "economy_optimism": 0.633,
+        "spending_intent": 0.627,
+        "trust_government": 0.762,
+        "climate_concern": 0.453,
+        "tech_optimism": 0.698,
+        "migration_openness": 0.602,
+        "conflict_worry": 0.382
+      },
+      "sample_agent_id": "a03000"
+    },
+    {
+      "iso3": "MEX",
+      "name": "Mexico",
+      "lat": 23.6,
+      "lng": -102.6,
+      "tier": "B",
+      "experimental": false,
+      "agent_count": 801,
+      "shares": {
+        "inflation_worry": 0.784,
+        "economy_optimism": 0.5,
+        "spending_intent": 0.765,
+        "trust_government": 0.436,
+        "climate_concern": 0.712,
+        "tech_optimism": 0.488,
+        "migration_openness": 0.646,
+        "conflict_worry": 0.443
+      },
+      "sample_agent_id": "a03600"
+    },
+    {
+      "iso3": "IDN",
+      "name": "Indonesia",
+      "lat": -2.5,
+      "lng": 118.0,
+      "tier": "C",
+      "experimental": false,
+      "agent_count": 880,
+      "shares": {
+        "inflation_worry": 0.304,
+        "economy_optimism": 0.529,
+        "spending_intent": 0.622,
+        "trust_government": 0.605,
+        "climate_concern": 0.425,
+        "tech_optimism": 0.463,
+        "migration_openness": 0.505,
+        "conflict_worry": 0.667
+      },
+      "sample_agent_id": "a04200"
+    },
+    {
+      "iso3": "ZAF",
+      "name": "South Africa",
+      "lat": -29.0,
+      "lng": 25.1,
+      "tier": "B",
+      "experimental": false,
+      "agent_count": 733,
+      "shares": {
+        "inflation_worry": 0.704,
+        "economy_optimism": 0.422,
+        "spending_intent": 0.64,
+        "trust_government": 0.482,
+        "climate_concern": 0.385,
+        "tech_optimism": 0.709,
+        "migration_openness": 0.569,
+        "conflict_worry": 0.547
+      },
+      "sample_agent_id": "a04800"
+    },
+    {
+      "iso3": "TUR",
+      "name": "Turkey",
+      "lat": 39.0,
+      "lng": 35.2,
+      "tier": "C",
+      "experimental": false,
+      "agent_count": 862,
+      "shares": {
+        "inflation_worry": 0.302,
+        "economy_optimism": 0.501,
+        "spending_intent": 0.789,
+        "trust_government": 0.662,
+        "climate_concern": 0.524,
+        "tech_optimism": 0.716,
+        "migration_openness": 0.339,
+        "conflict_worry": 0.508
+      },
+      "sample_agent_id": "a05400"
+    },
+    {
+      "iso3": "ISR",
+      "name": "Israel",
+      "lat": 31.4,
+      "lng": 35.0,
+      "tier": "B",
+      "experimental": false,
+      "agent_count": 1175,
+      "shares": {
+        "inflation_worry": 0.708,
+        "economy_optimism": 0.412,
+        "spending_intent": 0.746,
+        "trust_government": 0.596,
+        "climate_concern": 0.565,
+        "tech_optimism": 0.638,
+        "migration_openness": 0.43,
+        "conflict_worry": 0.714
+      },
+      "sample_agent_id": "a06000"
+    },
+    {
+      "iso3": "IND",
+      "name": "India",
+      "lat": 22.9,
+      "lng": 79.6,
+      "tier": "C",
+      "experimental": false,
+      "agent_count": 1177,
+      "shares": {
+        "inflation_worry": 0.732,
+        "economy_optimism": 0.644,
+        "spending_intent": 0.685,
+        "trust_government": 0.511,
+        "climate_concern": 0.537,
+        "tech_optimism": 0.456,
+        "migration_openness": 0.234,
+        "conflict_worry": 0.722
+      },
+      "sample_agent_id": "a06600"
+    },
+    {
+      "iso3": "NGA",
+      "name": "Nigeria",
+      "lat": 9.6,
+      "lng": 8.1,
+      "tier": "D",
+      "experimental": true,
+      "agent_count": 783,
+      "shares": {
+        "inflation_worry": 0.533,
+        "economy_optimism": 0.765,
+        "spending_intent": 0.448,
+        "trust_government": 0.688,
+        "climate_concern": 0.449,
+        "tech_optimism": 0.201,
+        "migration_openness": 0.524,
+        "conflict_worry": 0.672
+      },
+      "sample_agent_id": "a07200"
+    },
+    {
+      "iso3": "KEN",
+      "name": "Kenya",
+      "lat": 0.2,
+      "lng": 37.9,
+      "tier": "D",
+      "experimental": false,
+      "agent_count": 539,
+      "shares": {
+        "inflation_worry": 0.475,
+        "economy_optimism": 0.217,
+        "spending_intent": 0.338,
+        "trust_government": 0.306,
+        "climate_concern": 0.551,
+        "tech_optimism": 0.717,
+        "migration_openness": 0.679,
+        "conflict_worry": 0.678
+      },
+      "sample_agent_id": "a07800"
+    },
+    {
+      "iso3": "EGY",
+      "name": "Egypt",
+      "lat": 26.6,
+      "lng": 29.9,
+      "tier": "D",
+      "experimental": true,
+      "agent_count": 1036,
+      "shares": {
+        "inflation_worry": 0.759,
+        "economy_optimism": 0.219,
+        "spending_intent": 0.766,
+        "trust_government": 0.242,
+        "climate_concern": 0.721,
+        "tech_optimism": 0.472,
+        "migration_openness": 0.652,
+        "conflict_worry": 0.369
+      },
+      "sample_agent_id": "a08400"
+    },
+    {
+      "iso3": "CHN",
+      "name": "China",
+      "lat": 35.0,
+      "lng": 103.8,
+      "tier": "D",
+      "experimental": false,
+      "agent_count": 475,
+      "shares": {
+        "inflation_worry": 0.266,
+        "economy_optimism": 0.575,
+        "spending_intent": 0.407,
+        "trust_government": 0.242,
+        "climate_concern": 0.296,
+        "tech_optimism": 0.516,
+        "migration_openness": 0.301,
+        "conflict_worry": 0.364
+      },
+      "sample_agent_id": "a09000"
+    }
+  ],
+  "daily_question_id": "fx-2026-10-07-central-bank-cut",
+  "prefilled_events": [
+    {
+      "id": "chip-shortage",
+      "text": "A chip shortage doubles phone prices worldwide"
+    },
+    {
+      "id": "oil-spike",
+      "text": "Oil jumps 40% after a supply disruption in the Gulf"
+    },
+    {
+      "id": "ai-jobs",
+      "text": "A major report says AI will automate a quarter of office jobs within five years"
+    }
+  ]
+}

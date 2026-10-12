@@ -8,8 +8,8 @@ setup: ## install Python and TypeScript dependencies from the lockfiles
 	uv sync --all-packages --locked
 	pnpm install --frozen-lockfile
 
-dev: ## run the web dev server
-	pnpm --filter web dev
+dev: ## run the API on :8000 and the web dev server on :5173 together
+	trap 'kill 0' EXIT; uv run uvicorn rw_api.app:app --port 8000 & pnpm --filter web dev
 
 test: ## run pytest and every package's Vitest suite
 	uv run pytest -q

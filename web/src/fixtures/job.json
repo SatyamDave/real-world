@@ -1,0 +1,135 @@
+{
+  "id": "job_fixture1",
+  "status": "succeeded",
+  "request": {
+    "world": "today",
+    "event": {
+      "text": "A chip shortage doubles phone prices worldwide"
+    },
+    "days": 7,
+    "members": 5,
+    "agents": 200
+  },
+  "result": {
+    "simulated": true,
+    "disclosure": "Simulation, not a poll or a prediction of a real person",
+    "world_snapshot_id": "2026-10-05",
+    "engine_version": "0.1.0",
+    "model": "claude-haiku-5-5",
+    "members": 5,
+    "agents_sampled": 200,
+    "days": 7,
+    "cost": {
+      "estimated_usd": 0.0061,
+      "actual_usd": 0.0054
+    },
+    "coverage": [
+      {
+        "iso3": "USA",
+        "tier": "A"
+      },
+      {
+        "iso3": "IND",
+        "tier": "C"
+      },
+      {
+        "iso3": "BRA",
+        "tier": "B"
+      }
+    ],
+    "outputs": {
+      "inflation_worry": {
+        "baseline_share": 0.52,
+        "final": {
+          "p10": 0.56,
+          "p50": 0.58,
+          "p90": 0.61
+        },
+        "by_day": [
+          {
+            "day": 1,
+            "p10": 0.51,
+            "p50": 0.53,
+            "p90": 0.56
+          }
+        ]
+      },
+      "spending_intent": {
+        "baseline_share": 0.41,
+        "final": {
+          "p10": 0.35,
+          "p50": 0.37,
+          "p90": 0.4
+        },
+        "by_day": [
+          {
+            "day": 1,
+            "p10": 0.38,
+            "p50": 0.4,
+            "p90": 0.43
+          }
+        ]
+      }
+    },
+    "segments": [
+      {
+        "segment": "USA|25-34|tertiary",
+        "topic": "inflation_worry",
+        "shift_p10": 0.061,
+        "shift_p50": 0.081,
+        "shift_p90": 0.101,
+        "n_agents": 14,
+        "tier": "A"
+      },
+      {
+        "segment": "IND|35-49|secondary",
+        "topic": "spending_intent",
+        "shift_p10": -0.084,
+        "shift_p50": -0.064,
+        "shift_p90": -0.044,
+        "n_agents": 14,
+        "tier": "C"
+      },
+      {
+        "segment": "BRA|18-24|primary",
+        "topic": "inflation_worry",
+        "shift_p10": 0.032,
+        "shift_p50": 0.052,
+        "shift_p90": 0.072,
+        "n_agents": 14,
+        "tier": "B"
+      }
+    ],
+    "top_shifts": [
+      {
+        "segment": "USA|25-34|tertiary",
+        "topic": "inflation_worry",
+        "shift_p10": 0.061,
+        "shift_p50": 0.081,
+        "shift_p90": 0.101,
+        "n_agents": 14,
+        "tier": "A"
+      },
+      {
+        "segment": "IND|35-49|secondary",
+        "topic": "spending_intent",
+        "shift_p10": -0.084,
+        "shift_p50": -0.064,
+        "shift_p90": -0.044,
+        "n_agents": 14,
+        "tier": "C"
+      },
+      {
+        "segment": "BRA|18-24|primary",
+        "topic": "inflation_worry",
+        "shift_p10": 0.032,
+        "shift_p50": 0.052,
+        "shift_p90": 0.072,
+        "n_agents": 14,
+        "tier": "B"
+      }
+    ],
+    "content_hash": "9f2c000000000000000000000000000000000000000000000000000000000000",
+    "note": "Counterfactual: not scored"
+  }
+}

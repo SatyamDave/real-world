@@ -1,0 +1,21 @@
+{
+  "question": {
+    "id": "fx-2026-10-07-central-bank-cut",
+    "text": "FIXTURE: Will the fixture central bank cut its policy rate on Oct 7?",
+    "resolution_source": "https://example.org/fixture-central-bank",
+    "closes_at": "2026-10-06T23:59:00Z",
+    "resolves_by": "2026-10-07"
+  },
+  "reveal": {
+    "you": 0.62,
+    "crowd": {
+      "mean": 0.48,
+      "count": 1204
+    },
+    "sim": 0.555,
+    "market": 0.61,
+    "outcome": null,
+    "brier": null,
+    "streak": 3
+  }
+}
