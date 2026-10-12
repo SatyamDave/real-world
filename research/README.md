@@ -1,5 +1,7 @@
 # Research
 
+**Start here:** read [`SYNTHESIS.md`](SYNTHESIS.md) for the one-page answer and the index of every note, then [`lenses/`](lenses/) for the plan reviewed from each seat.
+
 This folder is the heart of the company. Every product and engineering decision traces back to a note here.
 
 ## Layout
