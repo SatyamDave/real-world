@@ -44,9 +44,12 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Skip when only papers changed
+      - name: Skip when only papers changed or no API key is set
         id: scope
+        env:
+          HAS_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
         run: |
+          if [ "$HAS_KEY" != "true" ]; then echo "::warning::ANTHROPIC_API_KEY secret not set; papers not updated."; exit 0; fi
           git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.merge_commit_sha }} > changed.txt
           if grep -qv '^papers/' changed.txt; then echo "run=true" >> "$GITHUB_OUTPUT"; fi
       - uses: anthropics/claude-code-action@v1
