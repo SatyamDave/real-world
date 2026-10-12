@@ -1236,5 +1236,10 @@ def healthz() -> dict[str, bool]:
     return {"ok": True}
 
 
+from rw_api import routes_status  # noqa: E402
+
+app.include_router(routes_status.router)
+
+
 if __name__ == "__main__":
     print(json.dumps(app.openapi(), indent=2))

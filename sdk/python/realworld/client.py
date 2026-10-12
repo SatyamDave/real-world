@@ -21,6 +21,7 @@ from realworld.generated.models import (
     Receipts,
     SimulateRequest,
     SimulateResult,
+    SystemStatus,
     World,
 )
 
@@ -184,6 +185,10 @@ class Client:
     def receipt_day(self, date: str) -> ReceiptDay:
         """Returns one day record with each receipt's entry, salt and leaf hash."""
         return ReceiptDay.model_validate(self._send("GET", f"/v1/receipts/{date}"))
+
+    def status(self) -> SystemStatus:
+        """Returns the live system status: latest cycle, ledger head, anchor, model, spend."""
+        return SystemStatus.model_validate(self._send("GET", "/v1/status"))
 
     def scores(self) -> dict[str, BaselineSkill]:
         """Returns the skill of the simulation against each baseline."""

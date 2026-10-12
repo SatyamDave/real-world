@@ -1606,3 +1606,137 @@ main :is(p, li, dd, h3) a {
   }
 }
 /* biome-ignore-end lint/complexity/noImportantStyles: reduced motion block ends */
+
+/* ---- Charts ---- */
+
+.chart {
+  margin: 16px 0;
+}
+
+.chart figcaption {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chart svg {
+  display: block;
+  width: 100%;
+  max-width: 540px;
+  height: auto;
+}
+
+.chart-tick {
+  fill: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.chart-grid {
+  stroke: var(--line);
+  stroke-width: 0.5;
+}
+
+.chart-ref {
+  stroke: var(--line);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.chart-band {
+  fill: var(--accent);
+  opacity: 0.18;
+}
+
+.chart-dot {
+  fill: var(--ink);
+}
+
+.chart-dot-n {
+  fill: var(--accent);
+  fill-opacity: 0.7;
+  stroke: var(--ink);
+  stroke-width: 1;
+}
+
+.chart-bar {
+  fill: var(--accent);
+}
+
+.chart-range line {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.chart summary {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* ---- Method, API call and status strip ---- */
+
+.method,
+.api-call {
+  margin: 24px 0;
+}
+
+.method summary {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.method-foot {
+  margin-top: 8px;
+}
+
+.api-snippet pre {
+  overflow-x: auto;
+  margin: 4px 0 12px;
+  padding: 12px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.api-downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.status-strip {
+  margin-bottom: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+/* Seven nav links wrap to a second row on phones and narrow windows. */
+@media (max-width: 960px) {
+  .topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding-block: 4px;
+  }
+
+  .topbar nav {
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .topbar nav a {
+    padding: 0 8px;
+  }
+}

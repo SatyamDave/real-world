@@ -12,6 +12,7 @@ export type World = Schemas["World"];
 export type Agent = Schemas["Agent"];
 export type AgentWhy = Schemas["AgentWhy"];
 export type Daily = Schemas["Daily"];
+export type SystemStatus = Schemas["SystemStatus"];
 export type Receipts = Schemas["Receipts"];
 export type ReceiptDay = Schemas["ReceiptDay"];
 export type BaselineSkill = Schemas["BaselineSkill"];
@@ -215,6 +216,11 @@ export class Client {
   /** Returns one day record with each receipt's entry, salt and leaf hash. */
   receipt_day(date: string): Promise<ReceiptDay> {
     return ok(this.http.GET("/v1/receipts/{day}", { params: { path: { day: date } } }));
+  }
+
+  /** Returns the live system status: latest cycle, ledger head, anchor, model, spend. */
+  status(): Promise<SystemStatus> {
+    return ok(this.http.GET("/v1/status"));
   }
 
   /** Returns the skill of the simulation against each baseline. */

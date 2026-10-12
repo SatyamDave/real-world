@@ -312,6 +312,28 @@ class Step(BaseModel):
     cause: Cause = Field(..., title="Cause")
 
 
+class CycleStatus(StrEnum):
+    ok = "ok"
+    failed = "failed"
+    running = "running"
+    not_run = "not_run"
+
+
+class SystemStatus(BaseModel):
+    date: str | None = Field(..., title="Date")
+    cycle_finished_at: str | None = Field(..., title="Cycle Finished At")
+    cycle_status: CycleStatus = Field(..., title="Cycle Status")
+    root: str | None = Field(..., title="Root")
+    record_hash: str | None = Field(..., title="Record Hash")
+    anchor: Anchor1 | None = Field(..., title="Anchor")
+    anchored_at: str | None = Field(..., title="Anchored At")
+    model: str = Field(..., title="Model")
+    provider: str = Field(..., title="Provider")
+    spent_today_usd: float = Field(..., title="Spent Today Usd")
+    nightly_budget_usd: float = Field(..., title="Nightly Budget Usd")
+    engine_version: str = Field(..., title="Engine Version")
+
+
 class TopicOutput(BaseModel):
     baseline_share: float = Field(..., title="Baseline Share")
     final: Band
