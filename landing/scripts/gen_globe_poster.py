@@ -86,12 +86,11 @@ def main():
         lat += STEP
 
     size = 2 * R + 2 * PAD
-    circles = "".join(
-        f'<circle cx="{x + PAD:.1f}" cy="{y + PAD:.1f}" r="{DOT}"/>' for x, y in dots
-    )
+    circles = "".join(f'<circle cx="{x + PAD:.1f}" cy="{y + PAD:.1f}" r="{DOT}"/>' for x, y in dots)
     svg = (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {size:.0f} {size:.0f}" '
-        f'role="img" aria-label="A dot-sampled globe of the world\'s land, centred on the Atlantic">'
+        'role="img" aria-label="A dot-sampled globe of the world\'s land, '
+        'centred on the Atlantic">'
         f'<defs><radialGradient id="sea" cx="38%" cy="34%" r="75%">'
         f'<stop offset="0%" stop-color="#E9ECEA"/><stop offset="100%" stop-color="#DCE1DE"/>'
         f"</radialGradient></defs>"
