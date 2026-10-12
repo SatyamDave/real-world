@@ -1,0 +1,16 @@
+{
+  "version": "2026-10-11",
+  "question_types": ["binary"],
+  "headline": "brier",
+  "log_clip": [0.01, 0.99],
+  "baselines": ["market", "plain_llm"],
+  "coin_reference": 0.25,
+  "bootstrap": {
+    "block": "day",
+    "resamples": 1000,
+    "seed": 7,
+    "interval": 0.95
+  },
+  "min_resolved_for_claims": 100,
+  "breakdowns": ["tier", "region"]
+}
