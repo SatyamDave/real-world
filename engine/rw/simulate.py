@@ -288,7 +288,7 @@ def run(
     seg_noise_sd = np.array([TIER_NOISE_SD[t] for t in seg_tier])
 
     B_all = np.column_stack([sub[f"b_{t}"] for t in topics])
-    B0_all = np.column_stack([sub[f"b0_{t}"] for t in topics])
+    B0_all = np.column_stack([sub[f"b0_{t}"] + sub.get(f"c_{t}", 0.0) for t in topics])
     n, n_topics = B_all.shape
     by_day = np.zeros((req.members, req.days, n_topics))
     seg_shift = np.full((req.members, len(segments), n_topics), np.nan)

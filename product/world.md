@@ -2,7 +2,7 @@
 
 ## What it does
 
-Every morning the system takes yesterday's simulated population, shows it the news that broke since, corrects it against the polls that came out, and saves today's world. Each agent's beliefs move a little when news reaches it, less if it is stubborn, and drift back toward where it started. Where a real poll exists, the matching group of agents is pulled toward it, by a capped amount that is recorded. Every country carries a coverage grade, and any country whose simulated disagreement is far narrower or wider than real surveys is marked experimental for the day. The result is a dated snapshot that the daily question, forks, the globe and "ask why" all read from.
+Every morning the system takes yesterday's simulated population, shows it the news that broke since, corrects it against the polls that came out, and saves today's world. Each agent's beliefs move a little when news reaches it, less if it is stubborn, and drift back toward where it started. Where a real poll exists, the matching group of agents moves toward it by an amount that grows with how unsure we are and shrinks with how noisy the poll is, and the move is recorded; the point agents drift back to moves with it, so tomorrow's pull does not undo it. Every country carries a coverage grade, and any country whose simulated disagreement is far narrower or wider than real surveys is marked experimental for the day. The result is a dated snapshot that the daily question, forks, the globe and "ask why" all read from.
 
 ## Who it is for
 
@@ -13,7 +13,8 @@ Nobody visits "the world" directly. Visitors meet it through the globe and an ag
 - `make daily DATE=<fixture date>` runs all six steps on the bundled fixtures with no API key and writes `var/snapshots/<date>/agents.parquet`; re-running it does no new work (checked by a test that counts `llm_calls` rows).
 - `python -m rw.daily --date <past UTC day> --news live` runs the same six steps on that day's real news from GDELT instead of the fixtures. It reads all 96 GKG files of the day, keeps English-feed articles whose locations name one of the 16 countries and whose themes include one of nine GKG themes, and saves them in the fixture shape at `var/news/<date>.csv`; a rerun reads that file and downloads nothing. A missing file, a network error or a day with no kept articles stops the run at `ingest`, so a day without news never forecasts (checked by `engine/tests/test_news_live.py`).
 - Property test: with no signals and no polls, the population mean per topic stays put and per-agent spread does not shrink beyond the stated weekly limit.
-- Property test: a nudge never moves a segment by more than the cap, and the nudge is stored.
+- Unit tests: the update matches the textbook scalar Kalman step, moves a whole group and its anchor offset by the same amount, does nothing but grow the uncertainty with no poll, and absorbs a shock in one poll; every move is stored.
+- [E006](../experiments/E006/results/2026-10-12-none/RESULTS.md): on the synthetic world, day-30 segment error is below persistence's (-0.0182 logit, 95% interval -0.0190 to -0.0174, n = 50 seeds). Synthetic only; no claim about real polls.
 - Test: no market price appears in any prompt or input of the assimilation and `sim` forecast steps.
 - The `learn` step writes an SD ratio per country and topic; a country outside 0.8-1.2 is marked experimental, and the API and globe show it.
 - Measured outcome after launch: SD ratio inside 0.8-1.2 for Tier A/B countries on most days ([research/science/018](../research/science/018-failure-modes.md)).
@@ -25,10 +26,10 @@ Nobody visits "the world" directly. Visitors meet it through the globe and an ag
 - No social graph, neighbour talk, twins, native-language prompts or fine-tuning.
 - Not the world's news. Live news is GDELT's English GKG feed, which leans toward outlets that publish online in English, and its theme and location tags are machine-assigned and noisy ([research/data/050](../research/data/050-gdelt.md)). Live days carry no polls yet.
 - No market prices as observations. Markets are a baseline to score against, not a signal to copy.
-- No ensemble Kalman filter until a hindcast shows capped nudging overfits.
+- No ensemble Kalman filter. The update is a scalar filter per country and topic ([decision 0005](../research/decisions/0005-assimilation-v2.md)); an ensemble filter waits until one observation covers several groups.
 
 ## Where the code lives
 
 - `engine/rw/population.py`, `beliefs.py`, `news.py`, `daily.py`; data in `data/` (`sources.csv`, `countries.csv`, `topics.csv`, `sample/`, `fixtures/`).
-- Decisions: [0001-architecture](../research/decisions/0001-architecture.md) (GDELT GKG is the news source the fixture mimics).
+- Decisions: [0001-architecture](../research/decisions/0001-architecture.md) (GDELT GKG is the news source the fixture mimics), [0005-assimilation-v2](../research/decisions/0005-assimilation-v2.md).
 - Research: [SYNTHESIS](../research/SYNTHESIS.md), [science/022](../research/science/022-data-assimilation-abm.md), [science/025](../research/science/025-news-exposure-diffusion.md), [science/028](../research/science/028-large-scale-llm-sims.md), [engineering/064](../research/engineering/064-agent-state-storage.md), [engineering/065](../research/engineering/065-belief-update-operators.md), [data/050](../research/data/050-gdelt.md), [open-source/042](../research/open-source/042-news-ingestion.md), [data/057](../research/data/057-global-synthetic-population.md), [data/060](../research/data/060-data-licensing-legal.md), [data/099](../research/data/099-country-coverage-tiers.md).

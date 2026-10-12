@@ -269,6 +269,20 @@ def test_agent_moves_add_up_to_its_belief_change(client):
     assert "anchor pull" in causes and causes - {"anchor pull", "nudge toward the day's polls"}
     assert client.get("/v1/agents/nobody").status_code == 404
 
+    first = population.read_snapshot(daily.FIXTURE_DAYS[-2])
+    j = int(np.flatnonzero(first["agent_id"] == agent_id)[0])
+    for t in population.topics():
+        old = first[f"b_{t}"][j]
+        want = settings.ANCHOR_PULL * (first[f"b0_{t}"][j] + first[f"c_{t}"][j] - old)
+        got = [
+            s["delta"]
+            for s in a["moved"]
+            if s["topic"] == t
+            and s["cause"] == "anchor pull"
+            and s["date"] == daily.FIXTURE_DAYS[-1]
+        ]
+        assert sum(got) == pytest.approx(want, abs=1e-6)
+
 
 def test_why_is_labelled_simulated_and_cached(client, conn):
     agent_id = client.get("/v1/world").json()["countries"][1]["sample_agent_id"]

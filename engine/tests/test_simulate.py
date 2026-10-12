@@ -115,6 +115,18 @@ def test_trace_deltas_sum_to_each_agents_belief_change(conn):
     assert set(result.trace.segment_signals) >= {s.segment for s in result.segments}
 
 
+def test_forks_pull_toward_the_assimilated_anchor(conn, world):
+    shifted = dict(world)
+    for t in population.topics():
+        shifted[f"c_{t}"] = np.full(len(world["agent_id"]), 1.0)
+        shifted[f"b_{t}"] = world[f"b0_{t}"] + 1.0
+    population.write_snapshot(DAY, shifted)
+    result = simulate.run(conn, req(days=5))
+    assert result.trace.agents
+    day_one = [s for a in result.trace.agents for s in a.steps if s.day == 1]
+    assert day_one and all(s.cause != "anchor_pull" for s in day_one)
+
+
 def test_topics_filter_the_outputs(conn):
     result = simulate.run(conn, req(topics=["tech_optimism", "inflation_worry"]))
     assert list(result.outputs) == ["inflation_worry", "tech_optimism"]

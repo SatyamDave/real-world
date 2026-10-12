@@ -10,7 +10,7 @@ One definition per term. Specs, code comments and UI copy use these words with t
 | World snapshot | The full agent table for one date, `var/snapshots/YYYY-MM-DD/agents.parquet`. Its id is the date. "Today's world" is the latest committed snapshot. |
 | Daily cycle | The six steps that produce a snapshot and the day's forecasts: ingest, assimilate, forecast, publish, score, learn. |
 | Signal | A signed push on one or more topics, extracted once from a news cluster or a fork event. |
-| Assimilation nudge | A capped per-segment shift that moves simulated beliefs toward an observed poll. Stored per segment, topic and day. |
+| Assimilation nudge | The per-segment shift that moves simulated beliefs toward an observed poll, sized by a Kalman gain since [decision 0005](../research/decisions/0005-assimilation-v2.md). Stored per segment, topic and day. |
 | Fork | A simulation that starts from a world snapshot, adds one event and runs forward N days. In the API a fork is a simulation job. |
 | Ensemble member | One run of a fork with its own agent subsample and noise. Spread across members is the band we show. |
 | Spread | The p10-p90 range across ensemble members. Raw and uncalibrated until about 100 forecasts resolve; labelled that way. |
