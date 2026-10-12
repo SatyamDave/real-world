@@ -1,6 +1,7 @@
 :root {
   color-scheme: light dark;
   --column: 1120px;
+  --globe-controls: 152px;
   --edge: max(24px, calc((100% - var(--column)) / 2 + 24px));
 }
 
@@ -94,7 +95,7 @@ button:active:not(:disabled) {
 
 button:disabled {
   opacity: 0.6;
-  cursor: default;
+  cursor: not-allowed;
 }
 
 button.primary {
@@ -137,7 +138,6 @@ button.primary:hover:not(:disabled) {
 .stat-value,
 .slider-value,
 .skill-value,
-.hashes dd,
 .band-value,
 .shift-value,
 .counter {
@@ -145,8 +145,7 @@ button.primary:hover:not(:disabled) {
   font-variant-numeric: tabular-nums;
 }
 
-.mono,
-.hashes dd {
+.mono {
   font-size: 14px;
 }
 
@@ -212,23 +211,25 @@ button.primary:hover:not(:disabled) {
   color: var(--accent);
 }
 
-.stamp.plain,
-.label-simulated {
+.stamp.plain {
   color: var(--muted);
 }
 
-.label-simulated {
-  display: inline-block;
-  margin-bottom: 8px;
-  padding: 1px 8px;
-  border: 1.5px solid currentColor;
-  border-radius: var(--radius);
-  font-size: 12px;
-  font-weight: 600;
+.receipt-top :is(h2, h3) {
+  margin: 0;
+  color: var(--ink);
 }
 
 .receipt-top h2 {
-  color: var(--ink);
+  font-size: 20px;
+}
+
+.receipt-top h3 {
+  font-size: 16px;
+}
+
+.day .receipt-cols {
+  margin-bottom: 16px;
 }
 
 .receipt-cols {
@@ -567,7 +568,7 @@ main {
   display: grid;
   grid-template-columns: 84px 1fr auto auto;
   gap: 10px;
-  align-items: center;
+  align-items: baseline;
   padding: 8px 0;
   border-top: 1.5px dashed var(--line);
   font-size: 14px;
@@ -578,9 +579,7 @@ main {
 }
 
 .strip-q {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .who {
@@ -672,13 +671,11 @@ main {
 }
 
 .fork-card {
-  margin-top: 16px;
   animation: rise 0.35s ease-out;
 }
 
 .page > .fork-card {
   max-width: 640px;
-  margin: 16px 0 0;
 }
 
 .setup {
@@ -833,7 +830,7 @@ main {
 
 .globe-poster {
   position: absolute;
-  inset: 0;
+  inset: 0 0 var(--globe-controls) 0;
   margin: auto;
   width: min(72%, 72vh);
   height: auto;
@@ -842,7 +839,7 @@ main {
 
 .globe-live {
   position: absolute;
-  inset: 0;
+  inset: 0 0 var(--globe-controls) 0;
   opacity: 0;
   transition: opacity 0.6s ease;
 }
@@ -1056,36 +1053,6 @@ blockquote {
 .skill-claim {
   font-weight: 600;
   letter-spacing: -0.02em;
-}
-
-.day-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  padding-top: 12px;
-}
-
-.day-head h2 {
-  font-family: var(--font-mono);
-  font-weight: 500;
-}
-
-.hashes {
-  display: grid;
-  grid-template-columns: repeat(4, auto);
-  justify-content: start;
-  gap: 4px 24px;
-  margin: 12px 0;
-}
-
-.hashes dt {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.hashes dd {
-  margin: 0;
 }
 
 .table-wrap {
@@ -1447,13 +1414,12 @@ main :is(p, li, dd, h3) a {
 .site-footer nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 24px;
+  gap: 0 24px;
   margin-bottom: 6px;
 }
 
 .site-footer nav a {
   display: inline-block;
-  min-width: 44px;
   padding: 12px 0;
 }
 
@@ -1465,6 +1431,10 @@ main :is(p, li, dd, h3) a {
 /* Phones and narrow windows: the globe joins the page flow, above the headline as on the landing page */
 
 @media (max-width: 960px) {
+  :root {
+    --globe-controls: 0px;
+  }
+
   main {
     display: flex;
     flex-direction: column;
@@ -1551,10 +1521,6 @@ main :is(p, li, dd, h3) a {
 
   .skills {
     grid-template-columns: 1fr;
-  }
-
-  .hashes {
-    grid-template-columns: 1fr 1fr;
   }
 
   .run-row {
