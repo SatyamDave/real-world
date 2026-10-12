@@ -2,7 +2,7 @@
 
 - Date: 2026-10-12
 - Status: proposed
-- Rests on: [engineering/103-self-improving-loop](../engineering/103-self-improving-loop.md), [science/019-calibration-methods](../science/019-calibration-methods.md), [science/030-forecast-scoring](../science/030-forecast-scoring.md), [0002-benchmark-and-receipts](0002-benchmark-and-receipts.md), [CTO lens](../lenses/cto.md)
+- Rests on: [engineering/104-self-improving-loop](../engineering/104-self-improving-loop.md), [science/019-calibration-methods](../science/019-calibration-methods.md), [science/030-forecast-scoring](../science/030-forecast-scoring.md), [0002-benchmark-and-receipts](0002-benchmark-and-receipts.md), [CTO lens](../lenses/cto.md)
 
 ## Decision
 
@@ -12,11 +12,11 @@ After the daily cycle scores, a new `improve` step fits one candidate, a Platt m
 
 | Option | For | Against |
 | --- | --- | --- |
-| No loop; a person retunes settings after reading scores | No new code | Slow, and a person choosing after seeing results is the selection [103](../engineering/103-self-improving-loop.md) warns against |
-| Platt map, fresh holdout, margin plus interval (chosen) | Two parameters; beats isotonic below a few hundred cases ([103](../engineering/103-self-improving-loop.md)); no model calls, so no spend | Fixes only a global lean and over- or underconfidence; fresh holdout delays the second promotion |
-| Isotonic or per-topic maps now | Can fix shapes Platt cannot | Overfit below about 200-1000 cases ([103](../engineering/103-self-improving-loop.md)); we have tens |
+| No loop; a person retunes settings after reading scores | No new code | Slow, and a person choosing after seeing results is the selection [104](../engineering/104-self-improving-loop.md) warns against |
+| Platt map, fresh holdout, margin plus interval (chosen) | Two parameters; beats isotonic below a few hundred cases ([104](../engineering/104-self-improving-loop.md)); no model calls, so no spend | Fixes only a global lean and over- or underconfidence; fresh holdout delays the second promotion |
+| Isotonic or per-topic maps now | Can fix shapes Platt cannot | Overfit below about 200-1000 cases ([104](../engineering/104-self-improving-loop.md)); we have tens |
 | Search assimilation weights, prompts and sample sizes by replay | Can fix errors upstream of the map | Each candidate reruns the simulation over past days with model calls; needs a budgeted replay path that does not exist yet |
-| Fine-tune a model on our forecasts and outcomes | Largest possible gain | Inputs include Jev outputs; MCA §2.3(b) bans distillation and the outcome-label question is open ([103](../engineering/103-self-improving-loop.md)) |
+| Fine-tune a model on our forecasts and outcomes | Largest possible gain | Inputs include Jev outputs; MCA §2.3(b) bans distillation and the outcome-label question is open ([104](../engineering/104-self-improving-loop.md)) |
 
 ## Why this one
 

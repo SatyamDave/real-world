@@ -2,7 +2,7 @@
 
 - Registered: 2026-10-12
 - Owner seat: CTO
-- Rests on: [self-improving loop note](../../research/engineering/103-self-improving-loop.md), [decision 0008](../../research/decisions/0008-self-improving-loop.md), [calibration methods](../../research/science/019-calibration-methods.md), [forecast scoring](../../research/science/030-forecast-scoring.md)
+- Rests on: [self-improving loop note](../../research/engineering/104-self-improving-loop.md), [decision 0008](../../research/decisions/0008-self-improving-loop.md), [calibration methods](../../research/science/019-calibration-methods.md), [forecast scoring](../../research/science/030-forecast-scoring.md)
 - Claim it earns or kills: no public claim (the stream is synthetic). It decides whether the daily `improve` step stays in the cycle ([decision 0008](../../research/decisions/0008-self-improving-loop.md)).
 
 ## Hypothesis
