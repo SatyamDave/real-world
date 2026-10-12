@@ -1,5 +1,5 @@
 """The self-improving loop: fit a recalibration map on old resolved questions, test it on fresh
-ones, and promote it forward-only when it clears the pre-registered bar (decision 0006)."""
+ones, and promote it forward-only when it clears the pre-registered bar (decision 0008)."""
 
 import json
 import math
