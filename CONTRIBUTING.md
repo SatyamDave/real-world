@@ -29,3 +29,7 @@ Keep PRs under about 400 changed lines, excluding lockfiles, generated files and
 ## Forecasts are append-only
 
 Nothing may edit or delete a published forecast or its hash. A correction is a new record that references the old one.
+
+## Papers
+
+After your PR merges, the `papers` workflow may open a follow-up PR updating `papers/`. Review it like code: every number must point to a committed artifact, and every citation must be real. See [papers/README.md](papers/README.md).

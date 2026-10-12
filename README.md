@@ -7,6 +7,7 @@ A live simulation of the whole world. Every morning it takes in real news, polls
 | Folder | What it holds | Who reads it first |
 | --- | --- | --- |
 | [`research/`](research/README.md) | Every piece of market, science, data and engineering research, and every decision we made from it. Start here. | Everyone |
+| [`papers/`](papers/README.md) | Our public research papers. Every number in them comes from an artifact in this repo, and they are updated after every merged PR. | Researchers, investors, press |
 | [`product/`](product/README.md) | One plain-language spec per product surface: what it does, who it is for, how we know it works, and which code owns it. | PMs, then engineers |
 | Code folders | Added by the base scaffold; each one has a README that links back to its product spec. | Engineers |
 
