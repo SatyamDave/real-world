@@ -348,6 +348,21 @@ test("the receipts page verifies the served chain and states the reference and c
   expect(text).toContain("1 day before resolution");
   expect(text).toContain("not yet anchored");
   expect(el.querySelector("tbody td:last-child .pending")?.textContent).toBe("Pending");
+  const wrap = el.querySelector(".table-wrap");
+  expect(wrap?.getAttribute("tabindex")).toBe("0");
+  expect(wrap?.getAttribute("aria-label")).toMatch(/\d{4}-\d\d-\d\d/);
+  const labels = [...(el.querySelector("tbody tr")?.querySelectorAll("td") ?? [])].map((td) =>
+    td.getAttribute("data-label"),
+  );
+  expect(labels).toEqual([
+    null,
+    "Forecaster",
+    "Probability",
+    "Market at commit",
+    "Committed",
+    "Leaf hash",
+    "Outcome",
+  ]);
   expect(text).toContain("A constant 50% forecast scores 0.25");
   expect(text).toContain("No claim yet");
   expect(text).toContain("n = 2 resolved questions");

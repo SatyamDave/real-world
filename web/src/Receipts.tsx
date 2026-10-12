@@ -274,7 +274,13 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
               <dd>{d.day.leaf_count}</dd>
             </div>
           </dl>
-          <div className="table-wrap">
+          <div
+            className="table-wrap"
+            role="region"
+            aria-label={`Forecasts committed ${d.day.date}`}
+            // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be keyboard reachable
+            tabIndex={0}
+          >
             <table>
               <thead>
                 <tr>
@@ -297,20 +303,20 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
                         `Question set, ${(r.entry.question_ids as string[])?.length ?? 0} questions`
                       )}
                     </td>
-                    <td>{FORECASTER[str(r.entry.forecaster)] ?? str(r.entry.forecaster)}</td>
-                    <td className="num" title={str(r.entry.probability)}>
+                    <td data-label="Forecaster">{FORECASTER[str(r.entry.forecaster)] ?? str(r.entry.forecaster)}</td>
+                    <td data-label="Probability" className="num" title={str(r.entry.probability)}>
                       {prob(r.entry.probability)}
                     </td>
-                    <td className="num" title={str(r.entry.market_price_at_commit)}>
+                    <td data-label="Market at commit" className="num" title={str(r.entry.market_price_at_commit)}>
                       {prob(r.entry.market_price_at_commit)}
                     </td>
-                    <td>
+                    <td data-label="Committed">
                       <Committed r={r} />
                     </td>
-                    <td className="mono" title={r.leaf_hash}>
+                    <td data-label="Leaf hash" className="mono" title={r.leaf_hash}>
                       {short(r.leaf_hash)}
                     </td>
-                    <td>
+                    <td data-label="Outcome">
                       <Outcome r={r} />
                     </td>
                   </tr>
