@@ -58,3 +58,40 @@ def test_design_reports_each_rule(tmp_path, rel, text, expected):
     write(tmp_path, {**DESIGN_CLEAN, rel: text})
     code, out = run(tmp_path, "check_design.py")
     assert code == 1 and expected in out, out
+
+
+GLOSSARY_CLEAN = {
+    "product/glossary.md": "| Term | Meaning | Do not write |\n| --- | --- | --- |\n"
+    "| Agent | One simulated person. | persona, respondent |\n"
+    "| Fork | A simulation. | scenario, what-if |\n| Topic | One belief. | |\n",
+    "web/src/App.tsx": 'const label = "Fork this agent";\n',
+    "web/src/App.test.tsx": 'it("ignores a persona in a test", () => {});\n',
+    "web/src/fixtures/world.ts": 'export const note = "persona";\n',
+    "sdk/typescript/src/generated/schema.ts": "// respondent\n",
+}
+
+
+def test_glossary_passes_a_clean_tree(tmp_path):
+    write(tmp_path, GLOSSARY_CLEAN)
+    code, out = run(tmp_path, "check_glossary.py")
+    assert code == 0, out
+
+
+@pytest.mark.parametrize(
+    "rel, text, expected",
+    [
+        ("web/src/App.tsx", "<p>Personas</p>\n", 'App.tsx:1: "Personas" is not a glossary term'),
+        ("README.md", "\nTry a What-If.\n", 'README.md:2: "What-If" is not a glossary term; write'),
+        ("api/rw_api/app.py", "# scenarios\n", '"scenarios" is not a glossary term; write "Fork"'),
+        ("gtm/messaging.md", "100 respondents\n", 'write "Agent"'),
+    ],
+)
+def test_glossary_reports_a_banned_word(tmp_path, rel, text, expected):
+    write(tmp_path, {**GLOSSARY_CLEAN, rel: text})
+    code, out = run(tmp_path, "check_glossary.py")
+    assert code == 1 and expected in out, out
+
+
+def test_glossary_ignores_a_word_inside_another(tmp_path):
+    write(tmp_path, {**GLOSSARY_CLEAN, "product/fork.md": "personality, scenariography\n"})
+    assert run(tmp_path, "check_glossary.py")[0] == 0

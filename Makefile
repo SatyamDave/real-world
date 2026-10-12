@@ -20,12 +20,13 @@ test: ## run pytest and every package's Vitest suite
 	uv run pytest -q
 	pnpm -r test
 
-lint: ## ruff check, ruff format --check, biome check, markdown links, design tokens
+lint: ## ruff check, ruff format --check, biome check, markdown links, design tokens, glossary
 	uv run ruff check .
 	uv run ruff format --check .
 	pnpm exec biome check .
 	uv run python scripts/check_links.py
 	uv run python scripts/check_design.py
+	uv run python scripts/check_glossary.py
 
 typecheck: ## pyright and tsc --noEmit
 	uv run pyright
