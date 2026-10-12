@@ -29,11 +29,14 @@ const TERMINAL = ["succeeded", "failed"];
 
 /** An error status from the API, with the parsed response body. */
 export class ApiError extends Error {
-  constructor(
-    readonly status: number,
-    readonly body: unknown,
-  ) {
+  readonly status: number;
+  readonly body: unknown;
+
+  // No parameter properties: Node strips types without compiling them, and rejects those.
+  constructor(status: number, body: unknown) {
     super(`${status}: ${typeof body === "string" ? body : JSON.stringify(body)}`);
+    this.status = status;
+    this.body = body;
   }
 }
 
@@ -62,13 +65,17 @@ export function parseSse(buffer: string): { events: [string | null, JobEvent][];
 
 export class Client {
   private http;
+  private baseUrl: string;
+  private fetcher: typeof fetch;
 
   /** Without apiKey the API treats the caller as anonymous (product/simulate-api.md). */
   constructor(
-    private baseUrl = "http://localhost:8000",
-    private fetcher: typeof fetch = (...args) => fetch(...args),
+    baseUrl = "http://localhost:8000",
+    fetcher: typeof fetch = (...args) => fetch(...args),
     apiKey?: string,
   ) {
+    this.baseUrl = baseUrl;
+    this.fetcher = fetcher;
     const headers: Record<string, string> = { "Real-World-Version": API_VERSION };
     if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
     this.http = createClient<paths>({ baseUrl, fetch: fetcher, headers });

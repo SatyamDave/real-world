@@ -1,6 +1,6 @@
 # @real-world/sdk
 
-TypeScript client for the Real World Simulate API ([product/sdks.md](../../product/sdks.md)). Start the API with `make dev`, then:
+TypeScript client for the Real World Simulate API ([product/sdks.md](../../product/sdks.md)). Start the API with `make dev`, then save this as `quickstart.mts` in a workspace package that lists `"@real-world/sdk": "workspace:*"` and run `node quickstart.mts` (Node 22.18 or newer, which runs TypeScript as is):
 
 ```ts
 import { Client } from "@real-world/sdk";
