@@ -21,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from rw import db, forecast, ledger, llm, population, score, settings, simulate
+from rw import db, forecast, ledger, llm, policy, population, score, settings, simulate
 
 SCHEMA = Path(__file__).parent / "schema.sql"
 IDEMPOTENCY_TTL = timedelta(hours=24)
@@ -328,6 +328,11 @@ def _estimate(req: simulate.SimulateRequest) -> simulate.Estimate:
         400: {"description": "Real-World-Version is not the current version"},
         402: {"model": Refused, "description": "The estimate exceeds max_cost_usd"},
         409: {"model": Conflict, "description": "A job with this Idempotency-Key is running"},
+        422: {
+            "model": policy.PolicyRefused,
+            "description": "The event breaks the acceptable-use policy (or the body is invalid)",
+        },
+        503: {"description": "The acceptable-use check could not run; nothing was started"},
     },
 )
 def create_simulation(
@@ -348,6 +353,13 @@ def create_simulation(
     if not est.within_cap:
         body = Refused(detail="the estimate exceeds max_cost_usd", estimate=est)
         return JSONResponse(body.model_dump(), status_code=402)
+
+    try:
+        refusal = policy.screen(req.event.text, conn)
+    except Exception as e:
+        raise HTTPException(503, f"the acceptable-use check could not run: {e}") from e
+    if refusal is not None:
+        return JSONResponse(refusal.model_dump(), status_code=422)
 
     job_id = f"job_{secrets.token_hex(8)}"
     cutoff = (datetime.now(UTC) - IDEMPOTENCY_TTL).isoformat(timespec="seconds")

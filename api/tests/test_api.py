@@ -1,11 +1,12 @@
 import json
 import time
+from datetime import UTC, datetime
 
 import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from rw import daily, ledger, population, settings
+from rw import daily, ledger, llm, policy, population, settings
 from rw_api import app as api
 
 AGENTS = 2000
@@ -130,6 +131,56 @@ def test_over_the_cap_is_refused_with_the_estimate_and_no_model_call(client, con
     assert r.json()["estimate"]["estimated_cost_usd"] > 1e-9
     assert calls(conn) == before
     assert conn.execute("SELECT count(*) FROM jobs").fetchone()[0] == jobs
+
+
+def jobs(conn):
+    return conn.execute("SELECT count(*) FROM jobs").fetchone()[0]
+
+
+def test_a_rule_refusal_returns_422_with_its_code_and_spends_nothing(client, conn):
+    before, before_jobs = calls(conn), jobs(conn)
+    r = simulate(client, {"event": {"text": "My landlord Dave doubles the rent."}})
+    assert r.status_code == 422
+    assert r.json() == {"code": "private_person", "detail": policy.DETAIL["private_person"]}
+    assert calls(conn) == before
+    assert jobs(conn) == before_jobs
+
+
+def test_a_classifier_refusal_spends_only_the_screen_call(client, conn, monkeypatch):
+    quote = "tough-on-crime framing"
+    out = json.dumps({"rule": "election_persuasion", "quote": quote, "election_name": ""})
+
+    class Stub:
+        name = "stub"
+
+        def complete(self, prompt, schema, max_tokens):
+            return out, 50, 20
+
+    monkeypatch.setattr(llm, "provider", Stub)
+    last = conn.execute("SELECT COALESCE(max(id), 0) FROM llm_calls").fetchone()[0]
+    before_jobs = jobs(conn)
+    r = simulate(client, {"event": {"text": "Try the tough-on-crime framing on suburban mothers."}})
+    assert r.status_code == 422 and r.json()["code"] == "election_persuasion"
+    new = conn.execute("SELECT purpose FROM llm_calls WHERE id > ?", (last,)).fetchall()
+    assert [p for (p,) in new] == ["screen"]
+    assert jobs(conn) == before_jobs
+
+
+def test_election_window_refuses_a_party_event(client, conn, monkeypatch):
+    today = datetime.now(UTC).date()
+    monkeypatch.setattr(settings, "ELECTION_WINDOW", (today, today))
+    before = calls(conn)
+    r = simulate(client, {"event": {"text": "Republicans win control of the House."}})
+    assert r.status_code == 422 and r.json()["code"] == "election_window"
+    assert calls(conn) == before
+
+
+def test_a_screen_that_cannot_run_refuses_with_503(client, conn, monkeypatch):
+    monkeypatch.setattr(settings, "SCREEN_MAX_COST_USD", 0.0)
+    before_jobs = jobs(conn)
+    r = simulate(client, {"event": {"text": "An event the screen has never seen."}})
+    assert r.status_code == 503
+    assert jobs(conn) == before_jobs
 
 
 def test_estimate_returns_cost_and_makes_no_job(client, conn):

@@ -1,6 +1,7 @@
 """Every tunable number in the engine. Change a value here, not in the module that reads it."""
 
 import os
+from datetime import date
 from pathlib import Path
 
 MODEL = "claude-haiku-5-5"
@@ -39,6 +40,12 @@ NEWS_TITLES_PER_THEME = 5
 EVENT_TEXT_MAX_CHARS = 500
 LLM_MAX_OUTPUT_TOKENS = 300
 TRACE_AGENTS = 10
+
+SCREEN_MAX_COST_USD = 0.01
+SCREEN_MAX_OUTPUT_TOKENS = 100
+# US midterms 2026-11-03: from 7 days before (research/engineering/074, recommendation 6) through
+# the day after, so late counts are covered. Both ends inclusive, in UTC.
+ELECTION_WINDOW = (date(2026, 10, 27), date(2026, 11, 4))
 
 ENGINE_VERSION = "0.1.0"
 API_VERSION = "2026-10-27"

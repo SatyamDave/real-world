@@ -10,6 +10,7 @@ The Python package `rw`: the simulation engine behind the daily cycle, forks and
 | `rw/db.py` | `connect()` opens `$RW_HOME/rw.sqlite` with foreign keys on and applies every `rw/sql/*.sql` in name order. `apply(conn, path)` applies another schema file. |
 | `rw/llm.py` | The only way to call a model. `complete_json(purpose, prompt, schema, budget, max_tokens)` returns a dict that matches the JSON schema. |
 | `rw/sources.py` | `require(source_id)` refuses any data source in `data/sources.csv` that is not cleared for commercial use, unless it is a fixture. |
+| `rw/policy.py` | `screen(text, conn, today)` checks a fork event against [product/acceptable-use.md](../product/acceptable-use.md): a regex rule pass, then one `screen` classification through `complete_json` with its own `SCREEN_MAX_COST_USD` budget. Returns a `PolicyRefused(code, detail)` or `None`; a classifier that cannot run raises. A classifier refusal counts only when its quote appears in the event, so the fake model never refuses. |
 | `rw/beliefs.py` | The only operators that change agent beliefs: `update_beliefs`, `nudge`, `spread_audit`. Pure numpy, no model calls. |
 
 ## The model gateway

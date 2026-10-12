@@ -12,7 +12,7 @@ Curious visitors in their first 60 seconds, people opening a shared fork link, a
 
 - Routes: `/` (daily question, receipts strip, fork box, globe), `/fork/{id}` (fork card, loads from `GET /v1/simulations/{id}`), `/receipts` (full list and verifier).
 - All data comes through `@real-world/sdk`; the app has no hand-written fetch calls.
-- Component tests (Vitest) for: the reveal after submit, the fork card from a fixture result, the agent panel labels, the receipts verifier passing on the shared test vector and failing on a changed byte.
+- Component tests (Vitest) for: the reveal after submit, the fork card from a fixture result, the fork form showing an acceptable-use refusal (`Refused: <detail>`) inline, the agent panel labels, the receipts verifier passing on the shared test vector and failing on a changed byte.
 - `pnpm --filter web build` succeeds with no type errors; the bundle has no runtime errors on load against the local API (smoke test).
 - Every result view shows "Simulation, not a poll or a prediction of a real person" and the coverage tier.
 - Measured after launch: first-minute activation and share-to-visit rate ([research/product/077](../research/product/077-daily-question-mechanics.md)).

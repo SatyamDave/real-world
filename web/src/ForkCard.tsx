@@ -1,4 +1,4 @@
-import type { Estimate, Job, PrefilledEvent } from "@real-world/sdk";
+import { ApiError, type Estimate, type Job, type PrefilledEvent } from "@real-world/sdk";
 import { useEffect, useState } from "react";
 import { Disclosure, LoadError, pct, pts, TierBadge, topicLabel } from "./App";
 import { rw } from "./api";
@@ -37,7 +37,8 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
       setJobId((await rw.simulate({ event: { text: trimmed } })).id);
       setStatus("");
     } catch (e) {
-      setStatus(`Not started: ${(e as Error).message}`);
+      const refused = e instanceof ApiError && e.status === 422 ? policyDetail(e.body) : null;
+      setStatus(refused ? `Refused: ${refused}` : `Not started: ${(e as Error).message}`);
     }
   }
 
@@ -99,6 +100,11 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
       {jobId && <ForkRun key={jobId} id={jobId} />}
     </section>
   );
+}
+
+function policyDetail(body: unknown): string | null {
+  const b = body as { code?: unknown; detail?: unknown } | null;
+  return typeof b?.code === "string" && typeof b.detail === "string" ? b.detail : null;
 }
 
 export function ForkRun({ id }: { id: string }) {

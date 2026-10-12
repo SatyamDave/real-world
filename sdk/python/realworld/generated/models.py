@@ -139,6 +139,17 @@ class Links(BaseModel):
     events: str = Field(..., title="Events")
 
 
+class Code(StrEnum):
+    private_person = "private_person"
+    election_persuasion = "election_persuasion"
+    election_window = "election_window"
+
+
+class PolicyRefused(BaseModel):
+    code: Code = Field(..., title="Code")
+    detail: str = Field(..., title="Detail")
+
+
 class PrefilledEvent(BaseModel):
     id: str = Field(..., title="Id")
     text: str = Field(..., title="Text")
