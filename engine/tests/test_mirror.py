@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+from rw import ledger
+
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "mirror_receipts.sh"
 
@@ -43,7 +45,21 @@ def git(remote: str, *args: str) -> str:
 
 
 def receipt(home: Path, date: str, question_id: str = "us-cpi-oct") -> None:
-    body = {"day": {"date": date}, "entries": [{"entry": {"question_id": question_id}}]}
+    entry, salt = {"question_id": question_id}, "00" * 16
+    leaf = ledger.leaf_hash(entry, salt)
+    day = {
+        "date": date,
+        "prev_root": ledger.GENESIS_ROOT,
+        "root": ledger.merkle_root([leaf]),
+        "leaf_count": "1",
+        "protocol_hash": "a" * 64,
+        "engine_version": "test",
+    }
+    body = {
+        "day": day,
+        "record_hash": ledger.record_hash(day),
+        "entries": [{"entry": entry, "salt": salt, "leaf_hash": leaf}],
+    }
     (home / "receipts" / f"{date}.json").write_text(json.dumps(body) + "\n")
 
 
@@ -85,3 +101,22 @@ def test_pushes_new_days_once_and_never_rewrites_a_mirrored_day(home, remote):
     out = mirror(remote)
     assert out.returncode == 1 and "2026-10-14.json differs" in out.stderr
     assert git(remote, "rev-parse", "main").strip() == head
+
+
+def test_a_tampered_day_refuses_the_whole_push_and_names_the_file(home, remote):
+    receipt(home, "2026-10-14")
+    receipt(home, "2026-10-15")
+    path = home / "receipts" / "2026-10-15.json"
+    body = json.loads(path.read_text())
+    body["entries"][0]["entry"]["question_id"] = "us-cpi-forged"
+    path.write_text(json.dumps(body) + "\n")
+    out = mirror(remote)
+    assert out.returncode == 1
+    assert "2026-10-15.json" in out.stderr and "2026-10-14.json" not in out.stderr
+    assert git(remote, "branch", "--list").strip() == ""
+
+    path.unlink()
+    assert mirror(remote).returncode == 0
+    assert git(remote, "ls-tree", "-r", "--name-only", "main").split() == [
+        "receipts/2026-10-14.json"
+    ]
