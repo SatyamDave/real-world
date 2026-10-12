@@ -84,12 +84,12 @@ uv run python -m rw.daily --date 2026-10-14 --questions live  # the approved lis
 - Fixtures stay the default, and `--fixtures` refuses `--questions live`.
 - The live lists carry no market price (`market_source` is empty), so `forecast` stops at the market lookup until a forecast path without one is decided ([decisions-needed](../company/decisions-needed.md) item 4).
 
-Each day prints the steps that ran, model calls, dollars, forecasts committed, the day's root hash, questions scored, countries marked experimental, and the anchor status: `anchored by freetsa.org at <time>`, `pending (OpenTimestamps)` or `not anchored: <reason>`.
+Each day prints five lines: the steps that ran; model calls, forecasts committed and the day's root hash; the cost (`fake model, nothing spent` on a keyless run, with the estimate); questions scored and countries marked experimental; and the anchor status: `Anchored <time> UTC by freetsa.org`, `Anchor pending: OpenTimestamps proof awaits a Bitcoin block` or `Not anchored: <reason>`. Fixture days always print `Not anchored: fixture days are not sent to public timestamp servers`, and `python -m rw.ledger anchor` refuses them too.
 
 - The nightly budget is `NIGHTLY_BUDGET_USD` minus `llm.spent_today()`. `BudgetExceeded`, or any other error outside `anchor`, marks the step `failed` and stops the run; the CLI exits 1. Rerun the same command once the cause is fixed.
 - To see what happened: `SELECT * FROM stage_runs WHERE date = '2026-10-01'` in `var/rw.sqlite`; `detail` holds the step's counts or its error.
 - To check a day's receipts: `uv run python -m rw.ledger verify --date 2026-10-01`.
-- To anchor a committed day by hand: `uv run python -m rw.ledger anchor --date 2026-10-01`, or `uv run python -m rw.daily --date 2026-10-14 --step anchor`. It sends only the day's record hash to `settings.TSA_URL` and `settings.OTS_CALENDAR_URL`, prints `anchored <time>`, `pending` or `not_anchored`, and exits 1 if either service failed; rerun it to retry the one that failed.
+- To anchor a committed live day by hand: `uv run python -m rw.ledger anchor --date 2026-10-01`, or `uv run python -m rw.daily --date 2026-10-14 --step anchor`. It sends only the day's record hash to `settings.TSA_URL` and `settings.OTS_CALENDAR_URL`, prints `anchored <time>`, `pending` or `not_anchored`, and exits 1 if either service failed; rerun it to retry the one that failed.
 
 ## Test
 

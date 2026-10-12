@@ -794,6 +794,7 @@ def test_receipts_show_a_day_anchored_only_when_its_token_verifies(tmp_path, mon
     ledger.commit_day(
         conn, day["date"], [e["entry"] for e in vector["entries"]], day["protocol_hash"]
     )
+    monkeypatch.setattr(ledger, "FIXTURE_PREFIX", "never-")  # the recorded vector uses fx- ids
     assert ledger.anchor_day(conn, day["date"]) == []
     monkeypatch.setattr(ledger.secrets, "token_hex", lambda n: n * "ab")
     entry = {**vector["entries"][0]["entry"], "date": "2026-10-02"}
