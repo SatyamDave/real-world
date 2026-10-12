@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { initAfterPaint, setHeadlineVariant, track } from "./analytics";
 import { resolveHeadline } from "./copy/headlines";
+import "./styles/fonts.css";
 import "./styles/tokens.css";
 import "./styles/global.css";
 
