@@ -1,0 +1,417 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+
+\emergencystretch=3em
+\newcommand{\RW}{\textsc{Real World}}
+
+\title{Don't Ask a Model, Ask a World:\\ A Data-Assimilated Population Simulation\\ with Public Forecast Receipts}
+\author{Real World Research\\ \small Draft of 2026-10-11, revised after internal review.\\ \small No empirical results yet; every experiment is a pre-registered protocol.}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+A common way to use large language models (LLMs) for social questions is to \emph{ask a model}: prompt one LLM, perhaps with a persona, for what a population thinks or what will happen next. Published evaluations find that LLM respondents reproduce group means but collapse within-group variance and tilt toward Western and US opinion. We add two concerns of our own: such answers carry no state that is corrected when the world changes, and they are usually not committed anywhere a reader can audit. We argue for \emph{asking a world} instead, and describe \RW{}, a system designed to test that idea. \RW{} keeps a persistent population of roughly $10^5$ numeric agent records calibrated to published demographic and attitude marginals. Each agent's belief on a topic is its segment's latent position plus a fixed individual offset, and an explicit response model maps beliefs to survey answers. A daily filter assimilates polls into the segment positions through that response model, with pollster house effects estimated as state. News and search trends act only as bounded forcing, and prediction-market prices are never assimilated. Forecasts are committed each night as salted Merkle leaves and timestamped; the question list and leaf count are published in clear, and every leaf is revealed at resolution. The contribution is the architecture, the interface rules that separate what is assimilated from what is scored, and a pre-registered protocol. Its primary hypothesis is falsifiable and may fail: that a market-blind world beats an LLM given the \emph{same} observation bundle, the same model mixture and the same number of calls. The protocol also defines an equivalence test for the opposite conclusion, that the world adds nothing. No results are reported; each is marked pending with the artifact that will produce it.
+\end{abstract}
+
+\section{Introduction}
+
+Ask a frontier LLM what share of Kenyans support a new tax, or whether a ceasefire will hold through Friday, and it will answer fluently. Three things are missing from that answer. It has no \emph{grounding}: it is not clear whose opinions the model reflects, and the evidence says it reflects some populations far better than others~\citep{santurkar2023whose,durmus2023global,tao2024cultural}. It has no \emph{state}: the model's view of the world stops at its training cutoff plus whatever a retrieval step happens to fetch, and nothing corrects it tomorrow when a poll shows it was wrong. And it has no \emph{accountability}: unless the answer is committed somewhere, a later reader cannot tell a forecast from a rationalization. The second and third points are our framing of the design problem, not findings of the cited literature.
+
+Numerical weather prediction is built around a cycle: assimilate observations into a model state, forecast from an ensemble of perturbed states, verify against outcomes, repeat~\citep{bauer2015quiet,leutbecher2008ensemble}. Epidemic forecasting has borrowed the same cycle, assimilating surveillance data into a compartmental model with an ensemble Kalman filter and forecasting forward~\citep{shaman2012forecasting}. This paper asks what the cycle looks like when the state is the beliefs of a population.
+
+Our answer is \RW{}. The product promise is that every morning there is a ``today's world'' whose segment beliefs have been corrected toward the latest polls; it commits dated forecasts before outcomes exist and is scored in public; and anyone can fork it with an event and see an ensemble run seven simulated days forward. The research claim is narrower: \emph{a grounded, assimilated population forecasts better than an LLM given the same information, the same models and the same compute}. The prior literature gives real reasons to expect that claim to fail (Section~\ref{sec:related}), which is why we pre-register it, together with a test that can conclude the world adds nothing.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+  \item \textbf{An architecture} for a persistent population model with an explicit agent response model, a segment-level filter with a nonlinear observation operator, ensembles, forks and receipts (Section~\ref{sec:arch}).
+  \item \textbf{Interface rules} that keep the claims falsifiable: the LLM never sets the size of a belief update; assimilation acts on segment positions, not individual agents; and no prediction-market price enters the primary scored forecaster at all (Section~\ref{sec:interfaces}).
+  \item \textbf{A position} stated as two competing hypotheses, superiority and equivalence, against a matched-information ask-a-model baseline. We also name the other baselines a world must beat: a describe-the-population call~\citep{jang2026instruction}, a no-persona prevalence query~\citep{doudkin2026marginal}, a non-LLM marginal lookup and a poll-only Kalman filter (Section~\ref{sec:position}).
+  \item \textbf{A pre-registered protocol} with six hypotheses, a defined unit of analysis, cluster-robust inference, explicit decision rules, a sample-size rule and rules for missing, voided and versioned forecasts (Section~\ref{sec:protocol}, Appendix~\ref{app:spec}).
+  \item \textbf{A failure-mode accounting} that lists, before any result exists, the ways the system can be wrong while looking right (Section~\ref{sec:limits}).
+\end{enumerate}
+
+\paragraph{Which system is scored.} The design in this paper is the \emph{public build}, the one that publishes daily receipts. Its population is built from GLOPOP-S~\citep{ton2024glopop} and published survey aggregates, not from IPUMS International, whose terms prohibit commercial use and redistribution~\citep{ipumsi}. A research build that draws demographic records from IPUMS International may be run separately under those terms. It is not scored under this protocol, and nothing in Section~\ref{sec:protocol} refers to it.
+
+\paragraph{Companion papers.} This paper belongs to a planned portfolio. The companion papers are in preparation and are cited by short title: the upgraded ensemble filter (\emph{Belief Assimilation}), the ledger, scoring and verifier (\emph{Receipts}), dispersion calibration of LLM answers (\emph{Correcting Variance Collapse}), the donor-matched population resource (\emph{Unequally Known}), the forward-dated benchmark (\emph{The Real World Benchmark}), the literature systematization (\emph{Silicon Samples, 2022--2026}) and governance of public release (\emph{Governing Public World Simulators}). The pre-registration does not depend on any of them. Every rule the protocol needs is stated in this paper and its appendix, and it is that text which will be hashed.
+
+\section{Related Work}\label{sec:related}
+
+\paragraph{LLMs as survey respondents.} \citet{argyle2023outofone} conditioned GPT-3 on backstories of real US respondents and argued for ``algorithmic fidelity'' of the resulting ``silicon samples''; \citet{aher2023simulate} and \citet{horton2023homo} used LLMs to replicate human-subject and economic experiments. Later work is more sobering. \citet{bisbee2024synthetic} found that ChatGPT respondents matched ANES group means roughly but with much less variation. In their Table~1, the standard deviation of their ChatGPT measure of affective polarization among partisans is 16.1, against 31.4 in pooled 2016--2020 ANES. They also found that 48\% of regression coefficients differed significantly from the human data, and that the synthetic distribution shifted between runs in April and July 2023. OpinionQA~\citep{santurkar2023whose} and GlobalOpinionQA~\citep{durmus2023global} show default model opinions are closer to some groups and countries than others. Alignment tuning can widen that gap~\citep{ryan2024unintended}, and cultural prompting only partly closes it~\citep{tao2024cultural}. Across 30 European Social Survey countries, silicon samples track a country-level assumption attached to the country label rather than individual attitudes. A no-LLM average of neighbouring countries recovers country levels more accurately than every model condition tested~\citep{wang2026silicon}. \citet{dominguez2023questioning} question how survey answers should be elicited from LLMs at all. \citet{meister2024distributional} report that models describe a distribution better than they simulate it.
+
+\paragraph{Variance collapse and distortion.} Individual-level grounding helps on individual prediction but does not fix population-level distortion. Agents built from two-hour interviews of 1,052 Americans reached 83\% of participants' own two-week test-retest consistency on held-out GSS items, against 74\% for demographics-only agents (v3 of \citet{park2024grounded}). Those agents predict the \emph{same} person's held-out answers from that person's own data, which our population does not have. In 19 pre-registered studies with 164 outcomes on the Twin-2K-500 sample~\citep{toubia2025twin}, digital twins correlated with human responses at an average of $r=0.20$, only modestly better than a homogeneous base model~\citep{peng2025funhouse}; the authors name insufficient individuation among five systematic distortions. LLMs flatten identity groups~\citep{wang2024misportray}, and assigned personas collapse toward stereotyped modes~\citep{xiao2026chameleon}. Instruction-tuned models fail to sample from distributions they can describe: a single call asking for the response distribution more than halves the error of persona aggregation~\citep{jang2026instruction}. In a single-author preprint, \citet{doudkin2026marginal} finds that a no-persona prevalence query beat committed persona panels in all nine aligned model-battery comparisons (mean absolute error 6.27 against 12.39). In the same study, constraint-aware probability vectors (mean 5.34) beat that query in four of nine, and on three unpublished demographic cells neither approach beat reciting the national distribution. Verbalized sampling~\citep{zhang2025verbalized} counters under-dispersion, but in non-WEIRD persona modelling it overshoots, moving the SD ratio from 0.4--0.56 to 1.26--1.37~\citep{ozkan2026distribution}. Fine-tuning on pooled survey data~\citep{suh2025subpop}, cross-survey transfer~\citep{ku2026cross}, population-aligned persona generation~\citep{hu2025population} and rectification with a small human sample~\citep{krsteski2025valid,angelopoulos2023ppi} are stronger survey baselines than prompting alone. \citet{wu2025boundary} argue LLM social simulations need explicit validity boundaries; \citet{anthis2025promising} argue the method is nonetheless promising. We therefore require a world to beat a describe-the-population call, a prevalence query and a non-LLM marginal lookup. The companion \emph{Silicon Samples, 2022--2026} systematizes this literature; we cite here only what motivates a design choice or a baseline.
+
+\paragraph{Large-scale LLM agent simulation.} Generative Agents~\citep{park2023generative} introduced memory, reflection and planning for 25 agents. OASIS~\citep{yang2024oasis} and AgentSociety~\citep{piao2025agentsociety} scale LLM-driven agents to large social-media and urban populations. Project Sid~\citep{altera2024sid} studies many-agent civilization in Minecraft. Concordia~\citep{vezhnevets2023concordia} provides a game-master framework for grounded generative ABMs, and \citet{gao2023survey} survey the area. \citet{chopra2024limits} query LLM ``archetypes'' once per group, which keeps an 8.4-million-agent model of New York City tractable. \citet{chuang2023opinion} find that networks of LLM agents drift toward scientific consensus unless confirmation bias is induced; this is why we do not let the LLM set update sizes. To our knowledge none of these \emph{LLM-agent} systems is continuously corrected against observations or scored on a public forward record.
+
+\paragraph{Data assimilation and polls as latent state.} The ensemble Kalman filter~\citep{evensen1994sequential} and its localized and inflated variants~\citep{houtekamer2001sequential,anderson2001ensemble,hunt2007efficient} are among the ensemble and hybrid methods behind modern weather assimilation~\citep{bauer2015quiet}. For agent-based models, \citet{ward2016dynamic} used an EnKF to calibrate a footfall model of a Leeds shopping street with ensembles of 10, 100 and 1,000. \citet{malleson2020crowds} report that particle filtering scales poorly with the number of agents: in their pedestrian experiments with up to 40 agents the particles needed rose steeply, and they extrapolate exponential growth, an extrapolation that has not been tested at scale. \citet{kieu2020dealing} assimilate data into an ABM for short-term prediction. \citet{shaman2012forecasting} assimilate influenza surveillance into an epidemic model and forecast forward. In political science, \citet{linzer2013dynamic} treats state-level voting intention as a latent dynamic state observed through polls, and multilevel regression with post-stratification~\citep{park2004bayesian} estimates subgroup opinion from national polls. Our filter is closest to these poll-as-state models, and the poll-only Kalman filter baseline in Section~\ref{sec:protocol} exists to measure what the population adds over them.
+
+\paragraph{LLM forecasting and scoring.} Retrieval-augmented LLM systems approach human crowds without matching them on average. \citet{halawi2024approaching} report a Brier score of 0.179 against the crowd's 0.149; their system surpasses the crowd in some settings, and a weighted average of system and crowd scores 0.146. On 31 binary tournament questions, an ensemble of 12 LLMs was statistically indistinguishable from a crowd of 925 human forecasters~\citep{schoenegger2024wisdom}, so multi-model averaging alone is a strong baseline. ForecastBench~\citep{karger2024forecastbench} tracks LLMs against superforecasters on questions unresolved at submission. Prophet Arena~\citep{yang2025prophet} reports a Brier score of 0.184 for its best model against 0.187 for the market on 1,367 Kalshi events resolved before 11 October 2025. Every model's prompt in that evaluation included the current contract prices, and the authors note that most models align closely with market predictions. The figure therefore measures an LLM reading the market on a retrospective event set; it is not independent skill and not a forward record. Prediction markets are a strong reference forecaster~\citep{wolfers2004prediction}. We score with proper rules~\citep{brier1950verification,gneiting2007strictly}, and with the fair CRPS for ensembles~\citep{ferro2014fair}.
+
+\paragraph{Commitments and public forecast experiments.} Hash-linked timestamping~\citep{haber1991timestamp} and Merkle trees~\citep{merkle1988digital} let a party commit to many statements at once. Certificate Transparency~\citep{rfc6962} runs such commitments as a public append-only log. RFC~3161 time-stamp authorities~\citep{rfc3161} and OpenTimestamps~\citep{opentimestamps}, which anchors to Bitcoin, date the commitments. The direct precedent for hash-committed public forecasts is the Financial Bubble Experiment. Launched on 2 November 2009, it published MD5 and SHA-2 fingerprints of withheld forecast documents and revealed the documents later~\citep{sornette2009financial}. The Axial Seamount Eruption Forecasting Experiment adapts the same design to volcanology with SHA-256~\citep{lei2025axial}. Pre-registration~\citep{nosek2018preregistration} is the methodological analogue. What is new here is the granularity and the scoring: a salted leaf per question and forecaster, a published leaf count and question list per day, a chained daily root, and paired Brier scoring of several forecasters against the market price at a scheduled call time.
+
+\section{Architecture}\label{sec:arch}
+
+\RW{} is a nightly batch system. One pipeline runs once per day in seven steps, each keyed by date, reading and writing immutable snapshot files, and safe to rerun:
+\begin{center}
+\fbox{\begin{minipage}{0.92\linewidth}\small
+\textbf{Daily cycle for date $t$.}
+\textsf{questions}$(t)$: generate the day's questions by the hashed rule; publish IDs in clear $\;\rightarrow\;$
+\textsf{ingest}$(t)$: pull news, polls, search trends (and, for secondary arms only, market prices) up to cutoff $c_t$ $\;\rightarrow\;$
+\textsf{assimilate}$(t)$: update segment positions and house effects from new polls $\;\rightarrow\;$
+\textsf{forecast}$(t)$: every arm forecasts every open question $\;\rightarrow\;$
+\textsf{publish}$(t)$: salt, hash, Merkle-root, chain and timestamp all leaves $\;\rightarrow\;$
+\textsf{score}$(t)$: reveal and score questions resolved since $t-1$ $\;\rightarrow\;$
+\textsf{learn}$(t)$: update calibration maps and interval widths by their pre-registered rules only.
+\end{minipage}}
+\end{center}
+Section~\ref{sec:interfaces} states where each interface rule applies in this cycle. Only forks need on-demand compute, and they run on a sampled subpopulation.
+
+\subsection{Population}\label{sec:pop}
+The population $\mathcal{A}$ has $N\approx 10^5$ numeric agent records. Each agent $i$ carries a demographic record $d_i$ (country, admin-1 region, age, sex, education, urban/rural, household) drawn from GLOPOP-S, a synthetic population for 2015 built from LIS and DHS microdata and published under CC BY 4.0~\citep{ton2024glopop}. Records are reweighted by iterative proportional fitting~\citep{deming1940least} to current national age--sex marginals. Agents are allocated to countries in proportion to population, with a floor of $n_{\min}$ agents per country; post-stratification weights $\omega_i$ restore population shares.
+
+A \emph{segment} $g$ is country $\times$ age band (3) $\times$ education (3). Segments with fewer than 30 respondents in the anchoring survey are merged, first across education and then across age. This gives at most about 1,800 segments, in line with the 1--2k segments our engineering notes plan for. Agents are not LLM calls. The LLM is called per question (and per segment only for the B2-style describe-the-population arm), never per agent. The agents exist so that the observation operator can average over a within-segment distribution (Section~\ref{sec:state}) and so that ``ask why'' has a concrete record to speak for.
+
+\paragraph{Attitude priors.} Each country receives a \emph{coverage tier}: A/B where a recent national survey reports the topic by segment, C where only a national marginal exists, and D where there is no survey and the prior is an LLM describe-the-population call. The tier is attached to every output. It is distinct from the four \emph{population tiers} of \emph{Unequally Known}, which grade the population layer alone; a population Tier~4 country, for which that resource builds no attitude block, is coverage tier D here, because the forecasting state still needs a prior and this labelled one is it. Segment anchors come from published survey cross-tabulations, for example World Values Survey Wave~7~\citep{wvs7}, used only where the source's terms permit. They are not donor-matched respondents: donor-matched attitude vectors from \emph{Unequally Known} would replace these anchors only for sources cleared in writing, and only as a new, separately hashed version. Our agents' offsets are draws from a segment's estimated distribution and carry no information about any particular person. The method rests on a conditional-independence assumption: given segment, attitude is independent of the demographic detail we do not condition on. It also inherits the gap between the survey year and the census-derived base year (2015 for GLOPOP-S). Both are untested assumptions here.
+
+\paragraph{Sampling error is not negligible everywhere.} With $10^5$ agents and about 1,800 segments, a segment averages about 55 agents, and a floor country with $n_{\min}=100$ agents has about 11 per segment. A country share estimated from $n$ agents has sampling standard error about $\sqrt{p(1-p)/n}$, which is 5.0 percentage points at $n=100$ and $p=0.5$. Large countries are far below that. Agents do not set the segment position $z_g$; that comes from the survey and the filter. But agent offsets are the Monte Carlo representation of the within-segment distribution, so small segments represent it coarsely. Per-country and per-segment counts are part of the hashed manifest.
+
+\subsection{State and response model}\label{sec:state}
+For a fixed topic set $\mathcal{T}$ (for example, approval of a head of government, inflation expectations, support for a policy), listed in the manifest before day~0, agent $i$ in segment $g(i)$ holds a belief logit on each topic $\tau$:
+\begin{equation}\label{eq:agent}
+b_{i\tau}^{t} = z_{g(i)\tau}^{t} + u_{i\tau},\qquad \textstyle\sum_{i\in g}\omega_i u_{i\tau}=0 .
+\end{equation}
+Here $z_{g\tau}^t$ is the segment's latent position, which evolves, and $u_{i\tau}$ is a fixed individual offset drawn once at construction. Its spread $s_{g\tau}$ is fitted so that the response model below reproduces the segment's published response distribution.
+
+\paragraph{Response model.} For a binary item, agent $i$ answers ``yes'' with probability $\sigma(b_{i\tau})$, where $\sigma$ is the logistic function. For an ordinal item with categories $1,\dots,C$, it answers in an ordered-logit model, $\Pr(\text{answer}\le c)=\sigma(\kappa_{\tau c}-b_{i\tau})$, with item cutpoints $\kappa_{\tau c}$ fixed at construction. The expected share answering ``yes'' among the agents in a poll's frame $F$ (with frame weights $\omega_i^F$) is therefore
+\begin{equation}\label{eq:obsop}
+h_F(z_\tau)=\frac{\sum_{i\in F}\omega_i^F\,\sigma\!\big(z_{g(i)\tau}+u_{i\tau}\big)}{\sum_{i\in F}\omega_i^F}.
+\end{equation}
+This is nonlinear in $z$. It is not $\sigma$ of the mean logit, and the difference (a Jensen gap) grows with the offset spread. Because $h_F$ is computed over the agents themselves, the observation operator accounts for within-segment dispersion exactly under the model. That is one concrete thing the $10^5$ records do, and ablation A3 removes it. For a binary item, the within-segment spread $s_{g\tau}$ cannot be identified from a published marginal alone. Where no respondent-level data with permissive terms exist, $s_{g\tau}$ is set to a pooled default recorded in the manifest, and binary items are excluded from H4.
+
+\paragraph{Text profile.} Each agent has a text profile generated once from its record. It is read only when an LLM must speak for the agent or explain it, and it never feeds back into $b$.
+
+\subsection{Forecast model}\label{sec:dynamics}
+The segment positions evolve as an anchored, exogenously forced first-order autoregression:
+\begin{equation}\label{eq:update}
+z_{g\tau}^{t+1} = z_{g\tau}^{t} + \operatorname{clip}\!\Big(\gamma\sum_{j\in J_t} e_{gj}\,x_{j\tau},\;\pm\delta\Big) + \lambda\,\big(z_{g\tau}^{0}-z_{g\tau}^{t}\big) + \xi_{g\tau}^{t},\qquad \xi_{g\tau}^{t}\sim\mathcal{N}(0,q_\tau).
+\end{equation}
+The symbols are:
+\begin{itemize}
+  \item $J_t$ is the set of stories ingested on day $t$.
+  \item $x_{j\tau}\in\{-2,\dots,2\}$ is a graded, signed signal that an LLM extracts once per story (not once per agent).
+  \item $e_{gj}\in[0,1]$ is segment $g$'s exposure to story $j$. It is a non-LLM lookup on the story's language and country and the segment's media access, so exposure depends on the story.
+  \item $\gamma$ is a gain and $\delta$ caps the news-forced move per day.
+  \item $\lambda$ pulls the position back toward the anchor $z^0_{g\tau}$.
+  \item $q_\tau$ is process noise.
+\end{itemize}
+
+The model has no social-influence term. It shares only the anchoring idea with Friedkin--Johnsen dynamics~\citep{friedkin1990social}; it is not a network model. Agents inherit the segment move through Eq.~\eqref{eq:agent}, which is a pure shift and therefore preserves within-segment variance exactly.
+
+\paragraph{The anchor pull is a real modelling choice.} Without new polls, any shift, whether forced by news or applied by assimilation, decays toward $z^0$ with half-life $\ln 2/\lambda$. A genuine opinion shift therefore persists only while polls keep observing it. We intend this as conservative mean reversion, but it works against state correction (Section~\ref{sec:position}), so we do not leave $\lambda$ to judgement. It is fitted by maximum likelihood together with $q_\tau$ and the house-effect variance on pre-period poll series, with no LLM involved. If those series show persistent shifts, the fit returns a small $\lambda$. Anchors $z^0$ are re-estimated, by rule, whenever a new wave of the anchoring survey is released for that country, and the re-estimate is logged. A sensitivity arm with $\lambda=0$ is reported.
+
+\paragraph{Forecasting forward.} No future news is known at commit, so a $k$-day forecast propagates Eq.~\eqref{eq:update} with zero forcing after $c_t$. Each forecast is therefore the filtered state, relaxing toward its anchor, with growing process noise. The value news adds enters only through forcing applied up to $c_t$.
+
+\subsection{Observations}\label{sec:obs}
+Table~\ref{tab:obs} lists every input, what it is allowed to touch, and its operator.
+
+\begin{table}[t]
+\centering\small
+\caption{Inputs, roles and operators. ``Forcing'' enters Eq.~\eqref{eq:update}; ``observation'' enters the filter, Eq.~\eqref{eq:kf}. The public build loads only sources marked cleared in a hashed licence table; a source with unknown terms is blocked.}
+\label{tab:obs}
+\begin{tabular}{@{}L{2.3cm}L{2.3cm}L{4.4cm}L{2.0cm}L{2.6cm}@{}}
+\toprule
+Input & Role & Operator and noise & Cadence & Never used for \\
+\midrule
+News (GDELT~\citep{gdelt,leetaru2013gdelt}) & forcing $x_j$ & LLM-graded signal per story; exposure $e_{gj}$ by lookup & daily cut of a 15-min feed & measuring belief \\
+Search trends & forcing & treated as news attention & daily & measuring belief \\
+Polls & observation & $h_F(z)$ of Eq.~\eqref{eq:obsop}; binomial variance at effective $n$ plus frame variance; house effect $\beta_p$ in state & once, on release & the poll that resolves a question, before scoring \\
+Survey waves & anchors $z^0$, offsets $u$ & moment matching to published cross-tabs & on release & daily assimilation \\
+Prediction markets & secondary arms only, as prompt text & none; never assimilated into $z$ & at $c_t$ & any primary arm; own event cluster in all arms \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Polls.} A poll by pollster $p$ on topic $\tau$ with frame $F$ reports share $y$ from effective sample size $n_{\mathrm{eff}}$. Its observation equation is $y = h_F(z_\tau) + \beta_{p\tau} + \eta$, with $\eta\sim\mathcal{N}\big(0,\;y(1-y)/n_{\mathrm{eff}} + v_\tau\big)$. The term $v_\tau$ captures frame and question-wording variance. House effects $\beta_{p\tau}$ are part of the state: each follows a slow random walk and is constrained to sum to zero across a country's pollsters, or anchored to an official result when one exists. A poll enters once, on its release day. Its error variance is inflated by $q_\tau\,(t-t_{\mathrm{mid}})$, where $t_{\mathrm{mid}}$ is the fieldwork midpoint, to account for its age.
+
+\paragraph{Markets.} Markets price events, not beliefs, and we have no observation operator from an event price to a population belief. They are therefore never assimilated into $z$. They enter only as text in the prompts of the secondary \emph{market-aware} arms (Section~\ref{sec:protocol}), and are excluded even there for the question's own event cluster. \emph{Belief Assimilation} specifies an operator for the narrow class of markets whose outcome the population itself decides; adopting it would be a new, separately hashed version and a market-aware arm, never the primary forecaster.
+
+\subsection{Daily assimilation}\label{sec:da}
+For each topic, the filter state is $\theta_\tau=(z_{\cdot\tau},\beta_{\cdot\tau})$, with forecast mean $\theta^f$ and covariance $P^f$. In v1, $P^f$ is diagonal across segments: there is no cross-segment covariance. The forecast step applies Eq.~\eqref{eq:update} to the mean and propagates the variance as $(1-\lambda)^2P^a+q_\tau$ for each $z$ and as a random walk for each $\beta$. It is an aggregate model and needs no agent runs; the agents enter only through $h_F$. The update is an iterated extended Kalman filter:
+\begin{equation}\label{eq:kf}
+\theta^{a} = \theta^{f} + G\big(y - h(\theta^{f})\big),\qquad G = P^{f} \mathbf{H}^{\top}\big(\mathbf{H} P^{f} \mathbf{H}^{\top}+R\big)^{-1},\qquad \mathbf{H}=\partial h/\partial\theta\,\big|_{\theta^f}.
+\end{equation}
+Here $h$ stacks Eq.~\eqref{eq:obsop} plus the house effects for the day's polls, and $R$ is their diagonal error covariance. The update relinearizes twice. We write $G$ for the gain to avoid a clash with ensemble size $K$. Polls on the same topic and day are processed in release-time order. The analysis increment changes $z$ directly, so $\delta$ in Eq.~\eqref{eq:update} caps news forcing only, not assimilation. Increments larger than three posterior standard deviations are flagged in the daily log.
+
+Two properties follow from the diagonal $P^f$. First, a segment outside every poll's frame receives no increment; it relaxes toward its anchor and is reported as unassimilated. Second, the update is identifiable only up to what the polls see. A national topline constrains one weighted sum of $z$, so its split across age and education is set by the prior variances in $P^f$ and the frame weights, not by data. We report the segment-level positions as model output, not as measurements.
+
+Cross-segment covariance, localization and inflation~\citep{houtekamer2001sequential,anderson2001ensemble,hunt2007efficient} are an upgrade path, adopted only as a new, separately hashed version (Section~\ref{sec:protocol}). Our research notes recommend starting with capped per-cell nudging and moving to an ensemble transform filter only if that fails out of sample; that upgrade is the two-level filter of \emph{Belief Assimilation}. The filter above is a principled form of per-cell nudging, with the gain set by the variances rather than by hand.
+
+\subsection{From state to question probabilities}\label{sec:forecast}
+Every question is assigned, at creation and by a hashed lookup rule (Appendix~\ref{app:qrule}), to a \emph{class} and to a set of mapped topics $\mathcal{T}_q\subseteq\mathcal{T}$, which may be empty.
+
+\paragraph{Class P (population-decided).} Questions that resolve on a population share, or on a threshold of one, that the state models directly: a national vote share, a referendum, a poll value. The probability is computed analytically. Each of $K$ ensemble members gives a share $h_F(z^{(k)})$ on the resolving frame (for votes, a turnout-weighted frame). The probability is the variance-corrected fraction of members on the YES side of the threshold. No LLM sets this number. Seat-based and multi-round outcomes are not class P.
+
+\paragraph{Class C (context).} All other event questions: central-bank decisions, ceasefires, prices, sports. The population does not decide these, and averaging simulated lay beliefs about them has no causal justification. The world therefore does \emph{not} answer them by population weighting. Each ensemble member makes one LLM call from its assigned model family. The call receives the contract text, the arm's observation bundle and a structured summary of the world state for $\mathcal{T}_q$ (positions, recent increments, tiers), or a generic country summary if $\mathcal{T}_q=\varnothing$. It returns a verbalized probability, and $p_q$ is the mean over members. For class C, the LLM does set the probability. The only difference from the ask-a-model baseline is the state summary, so H1 on class C tests exactly whether the state adds information to a model given the same bundle.
+
+\subsection{Ensembles}\label{sec:ensembles}
+Each of $K$ members perturbs three things, following ensemble weather practice of perturbing both initial state and model~\citep{leutbecher2008ensemble}:
+\begin{itemize}
+  \item the initial state, drawn from $\mathcal{N}(\theta^a,P^a)$;
+  \item the reading of the day's stories, as one of $M$ independent LLM extractions of $x$;
+  \item for class C, the model family, assigned round-robin across members.
+\end{itemize}
+Members run on a stratified subsample with post-stratification weights. Members share one analysis state, so they are exchangeable only conditionally on it; we use the fair CRPS~\citep{ferro2014fair} and report spread--skill ratios and PIT histograms. LLM populations are under-dispersed~\citep{bisbee2024synthetic,wang2024misportray}, so raw ensemble spread is never published as an interval. Published intervals are widened by a factor fitted prequentially on the scored record (Appendix~\ref{app:vc}). Conformal methods~\citep{angelopoulos2023conformal} are a later option once forward history exists.
+
+\subsection{Forks}\label{sec:forks}
+A fork is a user-supplied event $e$ applied to today's analysis state. The system produces $M$ LLM readings of $e$ as signals $x_e$. It then runs $K$ members for seven simulated days with and without $x_e$, giving $\Delta_e = f(\theta^a, x_e) - f(\theta^a, \varnothing)$ with an ensemble interval. $\Delta_e$ is a paired difference only if everything other than $x_e$ is identical across the two arms. Hosted LLM sampling cannot be seeded, so common random numbers apply only to the numeric layer: state draws and process noise use shared seeds. Every other LLM output (the day's story readings, any summaries) is generated once, cached and reused by both arms. Forks run on a sampled subpopulation, are rate-capped per user, and carry the coverage tier of every country they touch. A user fork has no real outcome and never enters the forecast record. Pre-committed forks on scheduled events form a separate research track (H5).
+
+\subsection{Receipts}\label{sec:receipts}
+Forecasts are committed under the protocol of \emph{Receipts}, used here unchanged; this section repeats only the rules a hypothesis below depends on. Each day, the \textsf{questions} step commits, before any forecast, the list of question IDs selected by the hashed rule (Appendix~\ref{app:qrule}) with their contract text, resolution source, event cluster and class. Every arm is a registered forecaster slot, and W is the confirmatory market-blind slot (\texttt{rw-blind}). Each forecast leaf is the salted hash of the question ID, arm ID, probability (or quantiles), data cutoff $c_t$, model identifiers, prompt hashes and operator version. Leaves form a Merkle tree~\citep{merkle1988digital} whose root is chained to the previous day's root~\citep{haber1991timestamp}; the leaf count and the position of every (question, arm) cell are fixed in the day record, so an operator cannot commit several values for a cell and reveal the favourable one. The day record is signed, pushed to a public git mirror and must be shown, by RFC~3161 tokens~\citep{rfc3161} from a majority of three named authorities, an OpenTimestamps Bitcoin attestation~\citep{opentimestamps} and an entry in a public transparency log, to have existed by a \emph{scheduled call time} $T^\star$ that follows the cutoff $c_t$. The market reference is not in the leaf: it is read from venue history at $T^\star$ and published in a separate snapshot record. A question is eligible only if it resolves at least 24 hours after $T^\star$.
+
+\paragraph{Reveal timing.} Forecast values are revealed in the clear shortly after $T^\star$, once the market snapshot record is published, except in categories the genesis record embargoes until resolution, such as vote shares on polling day. A revealed forecast can move the markets used as the reference, but only after $T^\star$, so it can affect only later days' references; we monitor that channel with an event study of market prices after each publication. Every leaf is revealed, including those of voided questions. A timestamp proves that bytes existed and were not altered after it. It does not prove the forecast was made without information the timestamp postdates, nor that it was good; scoring and the cutoff field address those.
+
+\section{Interface Rules That Keep the Claims Falsifiable}\label{sec:interfaces}
+
+\paragraph{R1: the LLM never sets the size of a belief update.} LLM agent networks drift toward consensus~\citep{chuang2023opinion}. If the LLM decided how far each segment moves, the world would converge on the model's own view, and asking a world would collapse into asking a model with extra steps. Three limits on this rule should be stated plainly:
+\begin{itemize}
+  \item The LLM does set the sign and grade of each story signal $x_{j\tau}$, a bounded integer. The gain $\gamma$, the cap $\delta$, the exposure lookup and the filter then turn those grades into moves.
+  \item For class C questions the LLM sets the scored probability, which is why class C is compared against an LLM given the same bundle.
+  \item R1 applies in the \textsf{ingest}, \textsf{assimilate} and class-P \textsf{forecast} steps; it does not apply to class C forecasting.
+\end{itemize}
+
+\paragraph{R2: assimilate segment positions, shift agents.} The filter acts on $z$ (plus house effects), whose dimension it can support. Agents follow by a pure shift, so within-segment variance is never overwritten, and every increment is a stored, reversible field.
+
+\paragraph{R3: never let a primary forecaster see a market price.} Markets are the scoring reference. Excluding only a question's own market is not enough: near-duplicates (``ceasefire by Friday'' and ``ceasefire by Sunday'', the same contract on another venue) would let a forecaster copy the reference. The primary forecasters W and B1 therefore see no market price at all; no arm assimilates prices into $z$. Retrieved news for every arm passes a filter that removes sentences quoting prediction-market odds; residual leakage is symmetric between W and B1. In the secondary market-aware arms, prices are prompt text only, and every market in the question's \emph{event cluster} is excluded. The event cluster is defined by a rule hashed at question creation: same normalized entity, same event family, resolution windows within 14 days (Appendix~\ref{app:cluster}).
+
+\section{Position: Why a World and Not a Model}\label{sec:position}
+
+What can a world provide that a model given the same inputs cannot? We see four candidate sources of value, each of which can be absent.
+
+\begin{enumerate}
+  \item \textbf{State correction.} A world carries yesterday's corrected state into today; a model re-derives everything from its weights plus retrieval. If observations are informative and the operators are right, errors shrink over cycles; if not, assimilation adds noise. The anchor pull (Section~\ref{sec:dynamics}) limits how long a correction persists without new polls.
+  \item \textbf{Grounded heterogeneity.} Outcomes such as elections and referenda depend on the distribution of beliefs and on who is where, not only on the mean. A population calibrated to survey cross-tabs encodes that structure explicitly, and the response model uses it in the observation operator. The literature shows the LLM layer erodes it, so this value exists only if the numeric layer preserves it.
+  \item \textbf{Coherence across questions.} One shared state answers many population questions, so class-P probabilities on related questions come from one set of members and are coherent by construction. Class-C probabilities come from separate elicitations and are not. We test whether the shared state makes them more coherent than a model's (H6).
+  \item \textbf{Accountability.} Receipts make the track record unbackfillable. This is a property of the publication process, not of the simulation; every baseline is receipted identically.
+\end{enumerate}
+
+The honest prior is not favourable:
+\begin{itemize}
+  \item A describe-the-population call beats persona aggregation on survey marginals~\citep{jang2026instruction,doudkin2026marginal}, and in some cells nothing beats reciting the national distribution~\citep{doudkin2026marginal}.
+  \item Model ensembles alone rival human crowds~\citep{schoenegger2024wisdom}.
+  \item The LLM result closest to the market on Kalshi events was obtained by models that were shown the market price~\citep{yang2025prophet}, so it says little about how a market-blind LLM will do.
+  \item We know of no published work showing that more simulated agents improve forecasts.
+\end{itemize}
+
+The position is therefore conditional. If a world is worth its cost, the gain must show up as a forward, receipted Brier improvement over a model given the same bundle, models and compute. If it does not, the equivalence test (Section~\ref{sec:protocol}) is designed to say so, and we commit to publishing either outcome.
+
+\section{Pre-Registered Evaluation Protocol}\label{sec:protocol}
+
+All evaluation is forward. Backtests are labelled retrospective and excluded, because LLMs may have seen past outcomes. This section and Appendix~\ref{app:spec} will be hashed into the ledger before the first scored day and also filed with a third-party registry (OSF). Any later change is a new, separately hashed version (see \emph{Versions} below).
+
+\paragraph{Questions.} (i) \emph{Event questions}: binary market contracts, resolving within 1 to 7 days of the scored commit, whose question text and resolution rule are the market contract's own. They are generated by the rule in Appendix~\ref{app:qrule} and must open after every pinned model's knowledge cutoff. (ii) \emph{Attitude questions}: a population share or ordinal distribution on a topic in $\mathcal{T}$, resolved by a named scheduled poll whose fieldwork starts after the commit. A poll fielded before commit already contains its outcome and is not eligible. Every eligible question is reported, hit or miss.
+
+\paragraph{Forecasters.} All arms are scored on identical questions with the same cutoff $c_t$. W and B1 use the same model mixture, assigned to members in the same order, with the same number of calls $K$ per question. Provider-side browsing and retrieval tools are disabled for every arm. Cost per forecast is logged for every arm.
+\begin{itemize}
+  \item[\textbf{W}] The world, market-blind (primary). Assimilation, population, ensemble.
+  \item[\textbf{W$_m$}] Market-aware W: W with non-excluded market prices as prompt text for class C (secondary).
+  \item[\textbf{B0}] Market price at the scheduled call time $T^\star$, recomputed from venue history for the defining contract on the defining venue exactly as \emph{Receipts} defines it (Kalshi: the median bid--ask mid over the one-minute candles of the 15 minutes ending at $T^\star$; Polymarket, descriptive only: the observed price of the one-minute bucket ending at $T^\star$). If too few candles are usable, the median spread exceeds 0.10 or the 24-hour volume is below the \emph{Receipts} floor, B0 is missing. No fee adjustment. Event questions only. Because $T^\star$ follows $c_t$, B0 can use information that W and B1 cannot; this favours the market, and the market mid at $c_t$ is reported as a sensitivity.
+  \item[\textbf{B1}] \emph{Ask a model, matched}: a same-feed LLM. The same model mixture and $K$ calls, given W's observation bundle as text (the retrieved news and the poll table up to $c_t$) without the world-state summary. Market-blind.
+  \item[\textbf{B1$_m$}] B1 with the same market text as W$_m$ (secondary).
+  \item[\textbf{B2}] \emph{Describe the population}: one call per segment asking for the response distribution directly~\citep{jang2026instruction} (attitude questions).
+  \item[\textbf{B2$_q$}] \emph{No-persona prevalence query}: one call asking for the national share directly~\citep{doudkin2026marginal} (attitude questions).
+  \item[\textbf{B3}] Persistence. For attitude questions, the same pollster's last wave, so that its house effect matches. For event questions, the empirical YES rate among resolved questions of the same event family, or 0.5 until 20 have resolved.
+  \item[\textbf{B4}] B1 and B0 blended in logit space with a weight fitted on scored history, as a crowd-weighted LLM~\citep{halawi2024approaching}. Context for H2 only.
+  \item[\textbf{L}] Non-LLM marginal lookup: the survey anchor with no dynamics, reweighted to the poll's frame (attitude questions).
+  \item[\textbf{P}] Poll-only Kalman filter: the filter of Eq.~\eqref{eq:kf} on national toplines, with house effects and random-walk dynamics, but no agents, no news forcing and no anchor, in the spirit of \citet{linzer2013dynamic} (attitude and class-P questions).
+  \item[\textbf{A1}] W without assimilation: news forcing kept, the filter switched off.
+  \item[\textbf{A2}] W with a homogeneous population: one segment per country, with the national anchor and offset spread.
+  \item[\textbf{A3}] W without individual agents: offsets $u\equiv 0$, so $h_F$ becomes the logistic of the segment position.
+\end{itemize}
+
+\paragraph{Hypotheses.} H1 is the only confirmatory hypothesis. H2--H6 and all splits are exploratory and labelled so, with no multiplicity correction.
+\begin{description}
+  \item[H1 (primary).] On eligible event questions, the mean $\bar d$ over questions of the paired Brier difference $d_q=\mathrm{BS}_q(W)-\mathrm{BS}_q(B1)$, both raw (uncalibrated), is below zero. The equivalence alternative is $|\bar d|<\Delta$ with $\Delta=0.01$ (decision rules below). Pre-registered secondaries on the same questions:
+  \begin{itemize}
+    \item A1, A2 and A3 against B1;
+    \item the split by class (P versus C) and by mapped topics ($\mathcal{T}_q\neq\varnothing$ versus $\varnothing$);
+    \item W$_m$ against B1$_m$;
+    \item W and B1 both calibrated by the identical rule (Appendix~\ref{app:calib}).
+  \end{itemize}
+  \item[H2 (estimation).] The difference W$-$B0 in Brier score, with a 90\% interval, overall and by liquidity tercile (24-hour volume at $c_t$; tercile cutpoints computed from all eligible questions' volumes, which are outcome-blind). B1$-$B0 and B4$-$B0 are reported alongside. No directional claim is tested here; the confirmatory test of the market-blind slot against the market belongs to \emph{Receipts} (its H6).
+  \item[H3.] On attitude questions, W has lower MAE than A1, A2, A3, P, L, B2, B2$_q$ and B3. MAE is measured on W's median, which for a point forecast equals CRPS. W also has lower fair CRPS than P. Each comparison is reported with an interval. The resolving poll's own sampling error, $\sqrt{y(1-y)/n_{\mathrm{eff}}}$, is reported as the error floor no forecaster can beat.
+  \item[H4.] Dispersion, on ordinal or continuous items only, with resolving-survey microdata that are newer than and disjoint from the anchor waves. The ratio of W's simulated within-segment SD to the observed SD is compared with three references: W's own day-0 ratio, L (the anchor with no dynamics), and an LLM persona-sampling arm. Interval coverage at 50\% and 90\% is tested prequentially, on intervals issued after their correction factor was fitted. The test is an equivalence test (TOST) with a 5-point margin.
+  \item[H5 (separate research track).] For scheduled events with two or more pre-announced outcomes, the event, the linked topic, the resolving poll and each outcome's fork are committed before the event. The statistic is whether the sign of the fork contrast $\Delta_e(\text{realized})-\Delta_e(\text{alternative})$ matches the sign of the observed change from that pollster's last pre-event poll to the resolving poll. As comparators, we report W's post-event forecast from the actual news and B1 told the realized outcome. These are not user forks and are scored only here. We expect only a handful of qualifying events per year, so H5 is reported descriptively, with no test, until at least 20 have resolved.
+  \item[H6.] Coherence. On question pairs related by a hashed rule, we compare the violation rates of W and B1 (share of pairs violating by more than 0.02) and their mean violation size. The rule covers nested deadlines on the same event ($P(\text{by }T_1)\le P(\text{by }T_2)$), complementary contracts (sum to 1) and mutually exclusive outcomes (sum at most 1).
+\end{description}
+
+\paragraph{Unit of analysis.} An event question's scored forecast is the \emph{first} commit after its creation, giving one forecast per question per arm. Each arm also commits daily updates until resolution. As a secondary, each question's Brier score averaged over all its commits is analysed the same way.
+
+\paragraph{Metrics.} The primary metric is the Brier score, unclipped. The log score is secondary, computed on probabilities clipped to $[0.01,0.99]$ for every arm including B0; clipping makes it not strictly proper at the extremes. Numeric questions use the fair CRPS~\citep{ferro2014fair}. Reliability diagrams and Murphy decompositions~\citep{murphy1973new} are reported only once 300 questions have resolved.
+
+\paragraph{Inference and decision rules.} Questions on the same event are dependent, and a question spans up to seven commit days. We therefore use a cluster bootstrap that resamples \emph{event clusters} (Appendix~\ref{app:cluster}), with $B=10{,}000$ replicates and percentile intervals; BCa intervals are reported as a check. As a robustness check, a Diebold--Mariano test~\citep{diebold1995comparing} is applied to daily mean differences with a Newey--West variance at lag 7; block-bootstrap intervals in the sense of \citet{kunsch1989jackknife} are also reported. For H1, with the two-sided 90\% interval $[\ell,u]$ for $\bar d$:
+\begin{itemize}
+  \item \emph{superiority} if $u<0$, a one-sided test at $\alpha=0.05$;
+  \item \emph{equivalence} if $-\Delta<\ell$ and $u<\Delta$, two one-sided tests at 0.05;
+  \item \emph{inferiority} if $\ell>0$;
+  \item \emph{inconclusive} otherwise.
+\end{itemize}
+Superiority and equivalence can hold together, and we then report ``better, but by less than $\Delta$''. The margin $\Delta=0.01$ is the smallest effect we would call worth the system's cost. It lies between the 0.003 market--LLM gap in Prophet Arena~\citep{yang2025prophet} and the 0.03 LLM--crowd gap in \citet{halawi2024approaching}.
+
+\paragraph{Sample size and stopping.} The primary analysis needs at least $n_{\min}=300$ eligible resolved event questions under the frozen version. On scored day 30 we compute two quantities from paired differences alone: the standard deviation $\hat\sigma$ and the cluster design effect $\widehat{\mathrm{deff}}$. Interim scores are public, so this rule must not depend on means. From them we set
+\[
+n_{\mathrm{req}}=\widehat{\mathrm{deff}}\,\big(\hat\sigma\,(z_{0.95}+z_{0.80})/\Delta\big)^2 .
+\]
+The analysis runs once $\max(n_{\min},n_{\mathrm{req}})$ questions have resolved. If 365 scored days pass first, the analysis runs on what exists and is labelled \emph{underpowered}, reporting the interval only. The first 30 days are included. For illustration only, and not a claim about our data: if $\hat\sigma=0.08$ and $\widehat{\mathrm{deff}}=1$, then $n=300$ gives a standard error of about 0.0046 and a minimum detectable effect of about 0.011. In that case $n_{\mathrm{req}}\approx 396$.
+
+\paragraph{Missing forecasts, voids and versions.}
+\begin{itemize}
+  \item \emph{Missing forecasts.} The question list is committed by a separate step before forecasting. In comparisons between arms (H1, H3, H6), an arm that fails to commit a question's scored forecast is scored as 0.5 on that question, and the count of missing forecasts is reported per arm. A day on which every arm fails scores 0.5 for all arms, which cancels in paired differences but is still counted. Comparisons with B0 follow \emph{Receipts}: an abstention is scored as a copy of the market at $c_t$, and an unrevealed or untimely leaf scores the maximum loss.
+  \item \emph{Voids.} Contracts that are voided or cancelled, resolve 50--50 or ``Too Early'', or remain disputed 30 days after their scheduled resolution are excluded for all arms. Their leaves are still revealed and listed. Otherwise the final resolution after any dispute counts.
+  \item \emph{Eligibility.} Questions failing the eligibility rule are committed, revealed and counted, but not scored. These are questions that could resolve less than 24 hours after the scheduled call time (Section~\ref{sec:receipts}) or whose outcome was public before $c_t$.
+  \item \emph{Calibration and intervals.} Calibration maps and interval factors switch on and update only by the rules in Appendix~\ref{app:calib} and Appendix~\ref{app:vc}. Those rules are part of the frozen W and do not create a new version.
+  \item \emph{Versions.} Any other change creates a new version, and only the version frozen at day 0 counts for the primary analysis. This covers model identifiers, prompts, code that affects forecasts, and the parameters in Table~\ref{tab:params}. A provider retiring a pinned model is a forced version change. Questions first committed under a later version are analysed separately and never pooled into H1.
+\end{itemize}
+
+\paragraph{Breakdowns.} Every result is broken down in four ways:
+\begin{itemize}
+  \item by coverage tier, with Tier A/B against Tier C/D as the primary breakdown;
+  \item by region and by event family;
+  \item by market-price extremity, since Brier differences near 0 or 1 carry little information;
+  \item by days between each model's knowledge cutoff and question open.
+\end{itemize}
+A random 20\% of countries, drawn with a seed taken from the day-0 root, is held out from every pre-period fit and reported separately.
+
+\paragraph{Results.} Table~\ref{tab:pending} lists each hypothesis and the artifact that will produce it. No number in this paper is a result of \RW{}.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Pre-registered hypotheses and the future artifacts that will produce their results. Paths are relative to the \RW{} repository and do not exist yet.}
+\label{tab:pending}
+\begin{tabular}{@{}lL{6.4cm}lL{5.4cm}@{}}
+\toprule
+Hyp. & Comparison & Results & Produced by (future artifact) \\
+\midrule
+H1 & W vs B1 (matched, market-blind), Brier; superiority and equivalence; secondaries A1--A3, by class, W$_m$ vs B1$_m$ & pending & \nolinkurl{eval/ask-a-world/h1_w_vs_model.json} \\
+H2 & W$-$B0 (and B1, B4) by liquidity tercile, estimation & pending & \nolinkurl{eval/ask-a-world/h2_w_vs_market.json} \\
+H3 & W vs A1--A3, P, L, B2, B2$_q$, B3; MAE, fair CRPS & pending & \nolinkurl{eval/ask-a-world/h3_assimilation.json} \\
+H4 & SD ratio vs day-0, L, persona sampling; coverage TOST & pending & \nolinkurl{eval/ask-a-world/h4_dispersion.json} \\
+H5 & fork contrast sign vs observed poll change & pending & \nolinkurl{eval/ask-a-world/h5_forks.json} \\
+H6 & coherence violation rate, W vs B1 & pending & \nolinkurl{eval/ask-a-world/h6_coherence.json} \\
+-- & cost per forecast, every arm & pending & \nolinkurl{eval/ask-a-world/cost.json} \\
+-- & hashed daily ledger (all) & pending & \nolinkurl{ledger/YYYY-MM-DD/root.json} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Limitations and Failure Modes}\label{sec:limits}
+
+\paragraph{The architecture is unvalidated.} Nothing here has been run. The design choices rest on others' results in narrower settings: US surveys, small pedestrian ABMs, seasonal influenza. Any of them may fail to transfer.
+
+\paragraph{The world may reduce to a poll average.} For attitude questions, W differs from the poll-only filter P only through the anchors, the response model and news forcing. For class-C events, it differs from B1 only through a state summary. If W ties P and B1, the population adds nothing, and we will say so.
+
+\paragraph{Variance collapse and stereotyping.} The LLM layer pulls toward modal and stereotyped answers~\citep{bisbee2024synthetic,peng2025funhouse,wang2024misportray,xiao2026chameleon}. We keep the LLM out of the belief state, but Tier D anchors are LLM output, and the interval correction is a mitigation, not a fix. Verbalized sampling, one remedy, overshoots into over-dispersion in non-WEIRD persona modelling~\citep{ozkan2026distribution}, so a fix can fail in the opposite direction. H4 may fail, and its coverage test will likely be underpowered. As an illustration, TOST at a 5-point margin around 90\% coverage needs on the order of 300 independent interval outcomes, and we expect tens.
+
+\paragraph{Unequal coverage.} Assimilation corrects only what is polled. Countries with sparse polling relax to priors that are themselves the most Western-biased part of the system~\citep{durmus2023global,tao2024cultural,wang2026silicon}. Silicon samples can also recover country levels worse than a no-LLM neighbour average~\citep{wang2026silicon}, and the closest non-WEIRD evidence we have finds persona agents piling onto a modal answer~\citep{ozkan2026distribution}. A pooled score can look good while these countries are badly modelled. We therefore make the tier breakdown primary and limit headline claims to Tier A/B.
+
+\paragraph{Operators and identifiability.} News volume and tone are not belief, polls differ in frame and wording, and search trends measure attention. A mis-specified $h$ or $R$ makes the filter confidently wrong, and its own spread will not reveal it. Segment-level splits of a national correction are set by prior variances, not by data.
+
+\paragraph{The anchor pull.} With $\lambda>0$, every correction decays toward survey anchors that may be years old. A real shift persists only while observed. We fit $\lambda$ and report the $\lambda=0$ sensitivity, but the choice shapes every attitude forecast.
+
+\paragraph{Leakage and contamination.} W and B1 see no market prices, but news that reports market moves can survive the odds filter, and correlated public information reflects what markets know. This leakage is symmetric for H1 but makes H2 a test of less-than-independent skill. Provider-side retrieval is disabled, but a provider could still serve a model refreshed past its stated cutoff. LLM training data may contain survey items and historical outcomes, which is why only forward questions count.
+
+\paragraph{Provider drift.} Hosted models change, and synthetic distributions shifted within months in prior work~\citep{bisbee2024synthetic}. We pin dated model identifiers in every leaf, and a retired model forces a new version. A silent provider update can still move results.
+
+\paragraph{Small samples.} We expect a short, clustered record and wide intervals. H1 may end underpowered, and H4 and H5 will very likely have small $n$. A short record proves integrity of publication, not skill.
+
+\paragraph{Forks are mostly unscorable.} Counterfactuals have no outcome. H5 covers only scheduled events, a small and unrepresentative subset; every other fork is untested model output and is labelled as such.
+
+\paragraph{Data licensing.} IPUMS International prohibits commercial use and redistribution~\citep{ipumsi}, so it is excluded from the public build. GLOPOP-S is released under CC BY 4.0, but it is derived from LIS and DHS microdata whose own access terms are restrictive, and we have not obtained written confirmation that commercial use is permitted. Attitude sources, prediction-market data and survey microdata for H4 each carry their own terms. A source whose terms are unknown is blocked, which may leave countries in Tier D.
+
+\paragraph{Cost is unmeasured.} The position is framed as ``worth its cost'', but no cost has been measured. Every arm's cost per forecast is logged and reported with the results.
+
+\section{Ethics Statement}
+
+\paragraph{Re-identification.} Agents are synthetic: GLOPOP-S records are themselves synthetic, and attitude offsets are draws from segment distributions, not any respondent's answers. Even so, small segments in small countries could reveal source cells. Only segment and higher aggregates are published, subject to a minimum segment size. Individual agent records are never exposed, which also respects the redistribution terms of every source.
+
+\paragraph{Misrepresentation.} Tier D countries receive simulated opinions that are LLM priors, the most Western-biased part of the system. Their outputs carry a visible ``model prior only'' label and are excluded from headline claims and from any API use that presents them as measurements. Text an agent produces when asked ``why'' is labelled as model-generated narrative, never testimony.
+
+\paragraph{Elections.} Election-outcome probabilities are aggregate-only and are never revealed during voting or within a jurisdiction's legal pre-election blackout period. Our commit-then-reveal design lets us commit before polls open and reveal after they close. Launch-week elections are subject to this rule.
+
+\paragraph{Fork misuse.} Forks accept shocks, not messages, never return a per-variant ranking, never name private individuals, and report only segments of a fixed lattice above a size floor. These rules, their audits and the release stages they gate are set out in \emph{Governing Public World Simulators}. Forks are rate-capped, labelled unscored and published with their coverage tiers.
+
+\paragraph{Reflexivity and trading.} Scored probabilities are revealed only after the call-time market reference has been read and published, and their effect on later prices is monitored (Section~\ref{sec:receipts}). Neither the company nor its staff trades on any market used as a reference.
+
+\paragraph{User data.} The daily-question product collects user forecasts. These are collected with consent, stored separately, labelled self-selected, and not used by any scored arm in v1.
+
+\paragraph{Remaining risks.} Simulating groups risks reproducing stereotypes~\citep{wang2024misportray}. Coverage tiers and dispersion audits make that risk visible but do not remove it. Publishing failures alongside successes keeps the system's authority no greater than its record.
+
+\section{Conclusion}
+
+Asking a model for what a population thinks or what will happen next yields an answer with no grounding, no state and no receipt. We have described an architecture that asks a world instead: a population calibrated to published marginals, with an explicit response model, whose segment beliefs are corrected every morning against polls. It forecasts with perturbed ensembles, can be forked by anyone, and commits to a public hash chain before outcomes exist. The central claim, that this beats a model given the same bundle, models and compute, is unproven and may be false, and the literature gives specific reasons for doubt. This paper fixes in advance how the claim will be tested, what counts as the world adding nothing, which baselines it must beat, and that the answer will be published whichever way it goes.
+
+\appendix
+\section{Operational Specification (Hashed with the Pre-Registration)}\label{app:spec}
+
+\subsection{Question generation rule}\label{app:qrule}
+\begin{itemize}
+  \item \emph{Sources.} Binary contracts on the prediction-market venues named in the \emph{Receipts} genesis record. Official calendars (central banks, statistical agencies, election authorities) are used only to schedule attitude questions and the H5 research forks.
+  \item \emph{Filters.} The contract is binary. It resolves 1--7 days after the next commit and at least 24 hours after that day's scheduled call time. Its open date is after every pinned model's knowledge cutoff, and its resolution source is public. Question text and resolution follow the contract's own rules.
+  \item \emph{Selection.} Candidates are the questions the \emph{Receipts} selection rule enters into the record that day (venue-record attributes only, ordered by the day's public randomness beacon, a fixed number of new questions per day); this rule only filters them, so no seed or cap is chosen here.
+  \item \emph{Class and topics.} The class (P or C) and $\mathcal{T}_q$ are set by a lookup table from event family and country to topics; the table is hashed.
+  \item \emph{Attitude questions.} One per scheduled poll release on a topic in $\mathcal{T}$ in the next 7 days whose fieldwork starts after commit. The pollster and frame are named at creation.
+\end{itemize}
+
+\subsection{Event clusters}\label{app:cluster}
+Two questions or markets belong to the same event cluster if all three conditions hold:
+\begin{itemize}
+  \item they share a normalized entity (person, organization, country or asset, from a hashed entity list);
+  \item they share an event family (election outcome, rate decision, data-release threshold, conflict or ceasefire, legislation, sports fixture, asset price threshold, other);
+  \item their resolution windows lie within 14 days of each other.
+\end{itemize}
+Clusters are the unit of the bootstrap and the unit of market exclusion for W$_m$ and B1$_m$. They are coarser than the venue event identifiers that \emph{Receipts} uses as clusters for its own inference, and are used only for this paper's analyses.
+
+\subsection{Parameters}\label{app:params}
+Table~\ref{tab:params} lists each parameter of v1 with its value or the procedure that sets it. All procedures run before day 0 on pre-period data, excluding the held-out countries, and their outputs are frozen in the manifest.
+
+\begin{table}[h]
+\centering\small
+\caption{v1 parameters. ``Pre-period fit'' uses historical poll series only, with no LLM outputs, before day 0.}
+\label{tab:params}
+\begin{tabular}{@{}L{3.4cm}L{10.4cm}@{}}
+\toprule
+Parameter & Value or procedure \\
+\midrule
+$N$, $n_{\min}$ & $10^5$ agents; floor of 100 agents per country \\
+Segments $S$ & country $\times$ 3 age bands $\times$ 3 education levels, merged below 30 survey respondents; at most about 1,800 \\
+Topics $\mathcal{T}$ & at most 20, listed in the manifest. Each must have a survey item in the anchor source and at least monthly polling in at least one Tier A/B country \\
+$\lambda$, $q_\tau$, house-effect variance, $v_\tau$ & maximum likelihood, pre-period fit \\
+$\gamma$, $\delta$ & set so that the largest one-day forced move equals the 99th percentile of day-to-day change in pre-period poll averages for the topic class \\
+Offsets $u$, spread $s_{g\tau}$ & moment matching to published cross-tabs; pooled default for binary items without respondent-level data \\
+$K$, $M$ & $K=20$ members; $M=5$ story readings; the model mixture is listed by dated identifier \\
+Ensemble subsample & 5,000 agents, stratified by segment \\
+Signal grade & integer in $\{-2,\dots,2\}$ per story and topic \\
+SESOI $\Delta$, $n_{\min}$ & 0.01 Brier; 300 questions \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Calibration (secondary analyses only)}\label{app:calib}
+Each arm has its own Platt map, fitted on that arm's resolved event questions. The map switches on once 100 of them have resolved and is refitted weekly; before that it is the identity. The primary analysis of H1 uses raw probabilities for both arms, so the calibration warm-up cannot favour either arm.
+
+\subsection{Interval correction}\label{app:vc}
+A published interval for an attitude question has the form median $\pm\,\varphi_t\times$ (raw ensemble half-width). The factor $\varphi_t$ is computed from resolutions before $t$ only. It is the empirical quantile, at the nominal level, of the ratio $|y-\text{median}|/\text{half-width}$ over those resolutions. Until 20 have resolved it is a fixed inflation factor committed in the manifest, and published intervals are labelled provisional until 100 have resolved. Coverage is evaluated only on intervals issued after the factor in use was fitted.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

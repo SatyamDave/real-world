@@ -1,0 +1,407 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[round,authoryear]{natbib}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\pending}[1]{\textbf{Results: pending} (produced by \nolinkurl{#1}).}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\softmax}{softmax}
+\newtheorem{proposition}{Proposition}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\emergencystretch=3em
+\makeatletter\g@addto@macro{\UrlBreaks}{\do\-}\makeatother
+
+\title{Correcting Variance Collapse in LLM-Simulated Survey Respondents:\\
+Typed Probabilities, Dispersion Matching, and Post-Stratification,\\
+with a Pre-Registered Post-Cutoff Evaluation}
+
+\author{Real World Research\\
+\small Draft for internal review. Author list to be finalised.}
+
+\date{Revised draft of 11 October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Populations of large language model (LLM) agents conditioned on demographic personas reproduce group averages better than they reproduce spread: simulated respondents are too similar to each other, crowd onto modal answers, drop minority options, and exaggerate some between-group gaps while erasing within-group disagreement. We propose a readout and correction pipeline with three parts. (1) \emph{Typed probability outputs}: every agent returns a schema-validated probability vector over the response options instead of a single committed answer, and cells are aggregated as mixtures of these vectors. (2) \emph{Dispersion matching}: a map on the log-probability scale with separate slopes for the country-level centre, between-cell differences and within-cell differences between agents, plus a response-style bias for ordinal scales, fitted on pre-cutoff survey waves and applied unchanged to new questions. (3) \emph{Post-stratification} of equal-allocation cells to population counts. We show formally that cross-sectional polls inform the within-cell slope only through the curvature of the softmax, so the primary specification fixes it and bounds the flattening parameter, and a test--retest guard is part of the success criterion. The empirical contribution is a pre-registered evaluation on polls whose fieldwork begins after the protocol is hash-committed (and therefore after the model's training cutoff), with a feasibility census and minimum item and poll counts that decide, before commitment, whether confirmatory tests can run. Four confirmatory hypotheses compare the pipeline with committed-answer persona panels and with the two baselines most likely to beat it: a fitted non-LLM demographic model, and a describe-the-population call given the same fitted calibration. No results exist yet; every result is marked pending and names the artifact that will produce it. Real World's public build never calls the model once per agent, so a pass would license the pipeline for population-level model readouts and for a future per-agent build, not the published forecasts; and the method corrects aggregate distributions, not the validity of any individual simulated person.
+\end{abstract}
+
+\section{Introduction}
+
+A growing literature uses LLMs as stand-ins for survey respondents, from ``silicon samples'' conditioned on real respondents' backstories \citep{argyle2023outofone} to whole synthetic populations of independently prompted agents \citep{ozkan2026distribution}. The consistent finding is that means are easier than variances. Asked to play respondents to the American National Election Study, ChatGPT reproduced group averages but with less variation: in one example in their Table~1 (affective polarization among partisans) the synthetic standard deviation was 16.1 against 31.4 in the ANES, and 48\% of its regression coefficients differed significantly from the survey's \citep{bisbee2024synthetic}. Across topics, model answers to opinion polls show a strong bias and a low variance, with the bias varying from topic to topic \citep{boelaert2025machine}. In 19 pre-registered studies of digital twins built from more than 500 answers per person, twin predictions correlated with the real person's at an average of $r=0.20$, and the authors list insufficient individuation and stereotyping among five systematic distortions \citep{peng2025funhouse}. On Turkish World Values Survey data, independent agents grounded on 2{,}414 real respondents piled onto a modal default \citep{ozkan2026distribution}. Instruction-tuned models describe a distribution more accurately than they sample from it \citep{meister2025benchmarking,jang2026cannot}, and alignment training reduces output and conceptual diversity \citep{kirk2023rlhf,murthy2025onefish}.
+
+Real World is a planned live simulation designed to hold about 100{,}000 synthetic agents and to publish hash-committed forecasts scored in public. None of it is built yet. Its public build is designed so that the forecasting state is numeric and the model is never called once per agent; the model is called per news story, per question or per segment (\emph{Don't Ask a Model, Ask a World}). Variance collapse still matters to it in two places: wherever a model answer is read as a population distribution (segment-level calls and describe-the-population priors), and in any future build that does call the model per agent. This paper evaluates a standalone respondent-simulation pipeline, not the public build, and Section~\ref{sec:scope} states which product surfaces a pass would license.
+
+Existing remedies each fix part of the problem. Verbalized Sampling raises diversity \citep{zhang2025verbalized} but on survey data overshoots into over-dispersion \citep{ozkan2026distribution}. Supervised calibration maps improve distributional alignment in most settings \citep{kambhatla2025supervision}. Fine-tuning on survey distributions helps on US data \citep{suh2025subpop} and, using first-token probabilities against country-level results from two global cultural surveys, also on unseen questions, countries and an unseen survey \citep{cao2025specializing}. Rectification with a small human sample removes bias from aggregate estimates but needs fresh human data for every estimate \citep{krsteski2025valid}. A sharper critique is that marginal agreement may not need simulated respondents at all. In one study of multiselect (``check all that apply'') batteries, a single no-persona query for the population prevalence beat committed persona panels on all nine aligned comparisons; per-option probability vectors, however, averaged a lower error than the query (5.34 against 6.27) and beat it on four of nine \citep{doudkin2026marginal}. In another, fitted non-LLM baselines beat every LLM at the individual level \citep{chen2026synthetic}. A correction method therefore has to be judged against those baselines, given the same calibration data, and not only against an uncorrected panel.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+  \item A readout and correction pipeline whose dispersion map has separate slopes for the country-level centre, between-cell differences and within-cell differences, and a response-style term for ordinal scales, with no question-specific parameters (Section~\ref{sec:method}). Related separations exist: \citet{kambhatla2025supervision} fit supervised per-option maps, and \citet{ozkan2026distribution} model the group distribution before assigning it to individuals. Our contribution is the specific parametrisation and its use on per-agent probability vectors followed by post-stratification.
+  \item A local identification result (Proposition~\ref{prop:ident}) stating which parameters of the map cross-sectional toplines and cell splits inform at first order and which only through softmax curvature, with a pre-registered parameter-recovery simulation that measures how weak the second-order parameters are at realistic spreads (Section~\ref{sec:ident}).
+  \item A pre-registered evaluation protocol on polls fielded after the protocol is committed, with a feasibility census and minimum counts of independent items and polls, item identity defined across waves and pollsters, a falsifiable guard against matching by noise, baselines given the same calibration as the method, a one-sample human sampling floor, and a run-once rule for simulations (Section~\ref{sec:protocol}). Results are pending.
+  \item A list of failure modes the correction can introduce, with the diagnostic for each (Section~\ref{sec:limits}).
+\end{enumerate}
+
+\paragraph{Scope within the Real World paper set.}
+\label{sec:scope}
+The system is described in \emph{Don't Ask a Model, Ask a World}; how agents are built is the subject of \emph{Unequally Known}; daily correction of beliefs toward observations is the subject of \emph{Belief Assimilation}; hash-commitment and scoring mechanics are in \emph{Receipts}; the literature is surveyed in \emph{Silicon Samples, 2022--2026}; benchmark construction is in \emph{The Real World Benchmark}; and the societal questions of publishing simulated opinion are in \emph{Governing Public World Simulators}. This paper evaluates a respondent-simulation pipeline on its own evaluation population (Section~\ref{sec:evalpop}). A pass on the confirmatory hypotheses would license two uses: (i) the readout and map for model calls whose answer is read as a population distribution (segment-level and describe-the-population calls), within the strata where the map was tested; and (ii) the full pipeline for a future per-agent build, after a separate cost decision. It would not be evidence about the accuracy of Real World's published forecasts, which are scored only under \emph{Receipts}, and it would license nothing about any individual simulated agent (Section~\ref{sec:ident}). Priors for countries with no survey are not licensed by this paper either, because those countries have no calibration or test data here (Section~\ref{sec:limits}).
+
+\section{Related Work}
+
+\paragraph{Simulated respondents and their failures.}
+\citet{argyle2023outofone} introduced silicon samples and argued that GPT-3's biases track demographics finely enough to be useful. Subsequent work found lower variance, unstable regression coefficients and drift over a three-month period \citep{bisbee2024synthetic}; a strong bias and low variance on each topic \citep{boelaert2025machine}; misalignment with many US demographic groups that steering does not close \citep{santurkar2023whose}; default answers most similar to those of respondents in the USA and some European and South American countries \citep{durmus2023global}, and culturally skewed defaults more generally \citep{tao2024cultural}; position and labelling artefacts that, once randomised away, push answers toward uniform \citep{dominguez2024questioning}; and flattening and essentialising of identity groups \citep{wang2024flatten}. A position review finds that fewer than half of the simulation studies it examined explicitly assess behavioural variance, and that most of those that do report lower variance than in human populations \citep{wu2025boundary}. At the individual level, grounding agents in long interviews works better than demographics \citep{park2024grounded}, but twins built from hundreds of prior answers still correlate weakly with the person \citep{peng2025funhouse}. In subjective annotation data, persona variables explain less than 10\% of the variance \citep{hu2024persona}, which bounds how much between-group spread demographic conditioning should produce. Cross-nationally, the country label carries most of what models get right, and an average of neighbouring countries, using no LLM, recovers country levels more accurately than every model condition tested \citep{wang2026ess}. Models also over-determine demographics: on a segment-targeting task, the frontier model studied by \citet{chen2026synthetic} inflated between-segment gaps two- to four-fold. Correlations between items are a separate target that marginal matching does not deliver \citep{williams2026beyond}.
+
+\paragraph{Elicitation.}
+How a distribution is read out matters as much as how a persona is written. \citet{meister2025benchmarking} find that verbalized distributions beat sampled answers and token log-probabilities for distributional alignment. \citet{jang2026cannot} report that instruction-tuned models return the same answer for the same persona on more than half of items, that a single describe-the-distribution call more than halves error relative to persona aggregation, and that perturbing prompt wording per persona reduces error by 21\%. On multiselect batteries, \citet{doudkin2026marginal} find that committed sets left 66 of 128 option slots empty, against 0 of 128 under per-option probability elicitation; we use this as evidence about committed versus probabilistic readouts, not as a measurement on single-choice items. Verbalized confidence for single facts is better calibrated than token probabilities in some RLHF models \citep{tian2023justask} but clusters at high round values in others \citep{xiong2023uncertainty}. Prompt formatting alone can move accuracy substantially \citep{sclar2023spurious}; models prefer particular option labels \citep{zheng2023selectors}, and they generally fail to show human-like survey response biases, particularly after RLHF, while reacting to perturbations that do not move people \citep{tjuatja2023response}. Practical constraints also bind. The hosted model planned for Real World rejects sampling temperatures other than 1 and rejects assistant prefill \citep{anthropic2026haiku55}, and the Anthropic API does not provide log-probabilities to users \citep{meister2025benchmarking}, so neither logit access nor temperature is available as a dispersion knob.
+
+\paragraph{Correction and calibration.}
+Temperature scaling is the standard post-hoc calibrator for classifiers \citep{guo2017calibration}, and contextual calibration removes a model's prior bias toward particular answers \citep{zhao2021calibrate}. For opinion distributions, \citet{kambhatla2025supervision} fit a supervised map from model to human distributions on three datasets and many LLMs. \citet{suh2025subpop} fine-tune on US subpopulation distributions. \citet{cao2025specializing} fine-tune on first-token probabilities to minimise divergence from country-level distributions in two global cultural surveys; theirs is the closest prior work to Stage~2 on global data. Our map differs from it in needing no model weights or token probabilities (it acts on verbalized vectors from a hosted model), in having a handful of parameters per stratum rather than a fine-tuned model, and in separating within-cell from between-cell spread. \citet{krsteski2025valid} combine synthesis with prediction-powered rectification \citep{angelopoulos2023ppi}, reducing bias from 24--86\% to below 5\%; design-based supervised learning gives related guarantees for imperfect LLM surrogates \citep{egami2023dsl}. Both need human labels for the target estimate, which a prospective forecast does not have. \citet{ozkan2026distribution} argue for modelling the distribution once and assigning it to agents. \citet{lee2026openweight} find that personas conditioned on real individual answers reproduce human cross-instrument correlations at $r=0.70$--$0.73$, mainly through correct sign rather than magnitude, and that this does not improve monotonically across model releases.
+
+\paragraph{Post-stratification.}
+Raking to known margins dates to \citet{deming1940ipf}. Multilevel regression and post-stratification estimates subgroup opinion from many categories \citep{gelman1997poststrat,park2004mrp} and can produce accurate estimates from highly non-representative samples \citep{wang2015xbox}. A simulated population is a non-representative sample by design, and we borrow the post-stratification step directly. Pew Research Center's own study of synthetic respondents weights its synthetic sample to population benchmarks in the same way, randomises response order within each human--AI pair, and notes that independently answering synthetic respondents add person-to-person variation where aggregate LLM estimates can look flat \citep{pew2026silicon}.
+
+\paragraph{Benchmarks and scoring.}
+SimBench unifies 20 datasets and reports a best score of 40.80 out of 100 relative to a uniform baseline \citep{hu2025simbench}. Its authors argue that the zero-shot aggregation task largely mitigates contamination; we nonetheless test only on polls fielded after commitment, because repeated trackers and widely reported results can leak into training data in ways a task format does not prevent. We score with distributional distances, report proper scores \citep{brier1950,epstein1969rps,gneiting2007scoring} as secondary, compare with a human sampling floor as in \citet{suh2025subpop}, and follow pre-registration practice \citep{nosek2018prereg}.
+
+\section{Method}
+\label{sec:method}
+
+\subsection{Setup}
+A question $q$ has $K_q$ response options, either ordinal with scores $s_k=k$ ($k=1,\dots,K$) or nominal. Each agent $i$ has a cell $c(i)$ within a country $k(i)$; cells are country $\times$ age band (18--34, 35--54, 55+) $\times$ sex $\times$ education (ISCED 0--2, 3--4, 5--8), 18 per country. $M_c$ is the adult population count of cell $c$ and $\omega_c = M_c/\sum_{c'\in k} M_{c'}$ its share of its country. The survey target for a group $G$ is a distribution $\pi_{qG}\in\Delta^{K-1}$ with effective sample size $n_{qG}$; $G$ may be a cell, a single-variable split (all women in a country), or a country.
+
+\subsection{Evaluation population}
+\label{sec:evalpop}
+The evaluation population is built for this paper and is not the product's agent population. Each country receives $m=20$ agents per cell (equal allocation, 360 per country). Each agent is a GLOPOP-S synthetic record \citep{ton2024glopop} drawn at random within its cell, so agents in a cell differ in single-year age band, settlement type, household structure and income or wealth group; cell counts $M_c$ are GLOPOP-S counts raked to UN World Population Prospects 2024 age--sex totals for the fieldwork year \citep{wpp2024,deming1940ipf}. Personas contain these demographic fields and the country, and nothing else: no attitude anchors and no survey answers, so no calibration item enters any persona. Agents have no tools, no retrieval and no web access. IPUMS International is not used: its terms prohibit commercial use and redistribution \citep{ipums2026terms}. (\emph{Don't Ask a Model, Ask a World} allows a separately licensed research build to draw records from IPUMS International under those terms; this evaluation does not use that build. Descriptions of Real World as sampled from IPUMS microdata refer to that research build only.) GLOPOP-S is released under CC BY 4.0 but derived from household surveys whose own terms restrict commercial use; its status for commercial use is unresolved and treated in \emph{Unequally Known}.
+
+\subsection{Stage 1: typed probability outputs}
+Each agent is asked each question under $R=3$ prompt variants: the verbatim published wording, and two paraphrases generated once per question by a committed paraphrase prompt, hashed and logged at generation, and never edited (Appendix~\ref{app:prompts}). The agent returns a structured object with a vector \texttt{probs}, one entry per option in canonical key order, followed by a one-sentence \texttt{reason}. No committed answer is requested in this call, so the probabilities are not anchored on one. Ordinal options are presented either in canonical or in reversed order (random per agent and variant, recorded), which keeps the scale's meaning; nominal options are presented in a random permutation (recorded). All parameters are keyed to the option's canonical index, never to its presented position.
+
+The structured-output layer does not enforce numeric bounds \citep{anthropic2026structured}, so each vector is renormalised in code and then clipped to $[\epsilon,1]$ with $\epsilon=0.005$ and renormalised again. The prompt asks for probabilities to two decimals, so a stated zero means ``below 0.005''; sensitivity analyses use $\epsilon\in\{0.001, 0.01\}$ (Section~\ref{sec:analysis}). A response with \texttt{stop\_reason} \texttt{refusal}, which may not match the schema \citep{anthropic2026structured}, or with invalid output is retried once; if it fails again, that agent--variant is missing (Section~\ref{sec:missing}). The agent's vector $p_i$ is the mean of its valid variant vectors.
+
+The cell estimate is the mixture
+\begin{equation}
+\hat\pi_{qc} \;=\; \frac{1}{m_c}\sum_{i:c(i)=c} p_i,
+\label{eq:mixture}
+\end{equation}
+over the $m_c$ agents in the cell with valid output. The committed-answer estimator replaces $p_i$ by a one-hot vector. At temperature 1, which the model requires, a committed answer is a draw from the model's response distribution, not necessarily the mode. If that draw were from $p_i$, \eqref{eq:mixture} would be its conditional expectation and would have no larger variance (Rao--Blackwell); if the answer is the mode, minority options can vanish from the cell, as committed sets did in the multiselect setting of \citet{doudkin2026marginal}. Stage~1 removes only this readout loss. It cannot widen an agent whose stated $p_i$ is itself too sharp; that is what Stage~2 is for. Where an agent needs one concrete position (for dialogue in a product), it is drawn from $p_i$ in code, not requested from the model.
+
+\subsection{Stage 2: dispersion matching}
+Let $\ell_i=\log p_i$. Decompose it into the country centre $u_k=\sum_{c\in k}\omega_c\bar\ell_c$, the cell deviation $v_c=\bar\ell_c-u_k$, and the agent deviation $d_i=\ell_i-\bar\ell_{c(i)}$, where $\bar\ell_c$ is the mean of $\ell_i$ over agents in cell $c$. For a question on response-scale family $f$ (for example four-point agreement, five-point likelihood), the corrected log-probability is
+\begin{equation}
+\ell'_i \;=\; a\,u_{k(i)} \;+\; b\,v_{c(i)} \;+\; w\,d_i \;+\; \beta_f,
+\qquad p'_i=\softmax(\ell'_i),
+\label{eq:map}
+\end{equation}
+with $\theta=(a,b,w,\beta_f)$:
+\begin{itemize}
+  \item $a>0$ scales the country centre. Values below one flatten every agent in the country by the same amount; values above one sharpen them. This is the direction in which the map can widen marginals by adding noise.
+  \item $b\ge0$ scales differences between cells within a country. Values below one counter inflated between-segment gaps \citep{chen2026synthetic}; values above one counter flattened group differences \citep{wang2024flatten}.
+  \item $w\ge0$ scales differences between agents within a cell. Values above one widen cell marginals by making agents more different from each other, not flatter.
+  \item $\beta_f\in\mathbb{R}^{K_f}$, summing to zero, is an additive bias per \emph{ordinal} scale family, keyed to canonical option index, absorbing systematic response styles of the model, such as acquiescence or midpoint avoidance, which need not match people's \citep{tjuatja2023response}. It is shared across all questions in the family, which is what lets the map apply to unseen questions. Nominal options do not share meaning across questions, so nominal questions have no $\beta$; position effects are handled by randomisation, not by a parameter.
+\end{itemize}
+A single temperature $\tau$ is the special case $a=b=w=1/\tau$: it flattens agents and shrinks group differences together, which is why the slopes are separated. Between-country differences pass through $a\,u_k$ only; the map has no separate between-country slope, so between-country gaps are corrected only as a side effect of $a$ and are reported descriptively (Section~\ref{sec:metrics}). The map has no question-specific parameters and contains the identity at $\theta_0=(1,1,1,0)$.
+
+\paragraph{Fitting.} Parameters are fitted per stratum $s$ = (model version, population tier, scale family). Population tiers come from \emph{Unequally Known}: Tier~1 countries have their own demographic data and a recent own-country attitude survey; Tier~2 have their own demographic data and an older own-country survey; Tier~3 borrow a survey from a similar country or rely on filled demographics; Tier~4 have no attitude survey at all. The fit is
+\begin{equation}
+\hat\theta_s = \argmin_{\theta\in\Theta}\; \sum_{(q,G)\in\mathcal{C}_s} \sqrt{n_{qG}}\; D\big(\hat\pi'_{qG}(\theta),\,\pi_{qG}\big) \;+\; \gamma\,\lVert \theta-\theta_{\text{global}}\rVert_2^2 ,
+\label{eq:fit}
+\end{equation}
+where $\mathcal{C}_s$ is the set of question--group pairs in the calibration split, $\pi_{qG}$ is computed with the survey's weights, and $\hat\pi'_{qG}(\theta)$ is produced by exactly the pipeline that is evaluated: Stage~1 vectors, map \eqref{eq:map}, mixture \eqref{eq:mixture}, and, for any $G$ coarser than a cell, the post-stratification of Stage~3. There is no further pooling or shrinkage step. $D$ is the Wasserstein-1 distance on scores divided by $K-1$ for ordinal questions and total variation for nominal ones; the $\sqrt{n}$ weight is a pre-specified compromise between equal and precision weighting. $\Theta$ bounds $a\in[0.5,2]$, $b\in[0,3]$, $w\in[0,3]$ and $\lvert\beta_{f,k}\rvert\le 3$; the lower bound on $a$ is the flattening ceiling of Section~\ref{sec:noise}, and a binding bound is reported. $\theta_{\text{global}}$ is the fit of \eqref{eq:fit} with $\gamma=0$ on all calibration data for the same model and scale family, pooled over tiers. $\gamma$ is chosen from $\{0, 0.1, 1, 10, 100\}$ by leave-question-family-out cross-validation (folds are WVS thematic sections and their counterparts in other sources), because the deployment shift is to new questions, not new countries; where a source has several waves, a leave-wave-out check is reported. The objective is not smooth, so it is minimised by Nelder--Mead from 20 starting points (a Sobol design over $\Theta$ plus $\theta_0$), with relative tolerance $10^{-6}$ on the objective, and the best solution kept; disagreement among the top five solutions is reported as a fit diagnostic. Tier~4 has no calibration data, so its $\hat\theta$ is $\theta_{\text{global}}$ by construction. Standard-deviation ratio, entropy and modal share are kept out of the objective and used as diagnostics.
+
+On the calibration data the unpenalised fit at a global optimum is no worse than the identity. With $\gamma>0$ the fit is pulled toward $\theta_{\text{global}}$, not toward $\theta_0$, and Nelder--Mead does not guarantee a global optimum, so the fitted map can be worse than Stage~1 even on calibration data; we report the calibration loss of $\theta_0$ and $\hat\theta_s$ side by side.
+
+\subsection{Identification}
+\label{sec:ident}
+For an ordinal item, the variance of a response within a cell decomposes as
+\begin{equation}
+\operatorname{Var}_c(Y) \;=\; \mathbb{E}_{i\in c}\big[\operatorname{Var}(Y\mid p_i)\big] \;+\; \operatorname{Var}_{i\in c}\big(\mathbb{E}[Y\mid p_i]\big),
+\end{equation}
+within-agent plus between-agent. A cross-sectional poll records one answer per person, so it identifies the cell marginal and hence the total, but not the split: a cell of identical agents each holding $\pi_{qc}$ and a cell of decided agents in proportions $\pi_{qc}$ fit the poll equally well. (For nominal items there is no variance, but the same argument applies to the marginal.) The question for the map is which of its parameters the available targets can pin down. Let $\sigma(\cdot)=\softmax(\cdot)$, $J$ its Jacobian and $H$ its second derivative, and write $z_c = a\,u_k + b\,v_c + \beta_f$ for the centre of cell $c$ after the map.
+
+\begin{proposition}
+\label{prop:ident}
+Hold the Stage-1 outputs fixed. For a cell target,
+\[
+\frac{\partial \hat\pi'_{qc}}{\partial w} \;=\; w\,\frac{1}{m_c}\sum_{i\in c} H(z_c)[d_i,d_i] \;+\; O\big(w^2\max_i\lVert d_i\rVert^3\big),
+\]
+so the first-order term in the agent deviations vanishes. For a country topline $\hat\pi'_{qk}=\sum_{c\in k}\omega_c\hat\pi'_{qc}$, the same holds for $b$:
+\[
+\frac{\partial \hat\pi'_{qk}}{\partial b} \;=\; b\sum_{c\in k}\omega_c\, H(z^0_k)[v_c,v_c] \;+\; O\big(\max_c\lVert v_c\rVert^3 + \max_i\lVert d_i\rVert^3\big),\qquad z^0_k = a\,u_k+\beta_f,
+\]
+whereas with cell targets $b$ enters at first order through $J(z_c)\,v_c$. The parameters $a$ and $\beta_f$ enter every target at first order. For a single question, $\beta_f$ has $K-1$ free components and can reproduce any topline at fixed $a$, so $\beta_f$ and $a$ are separated only by pooling questions whose centres $u_k$ differ.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+$\hat\pi'_{qc}=m_c^{-1}\sum_i\sigma(z_c+w\,d_i)$, so $\partial\hat\pi'_{qc}/\partial w = m_c^{-1}\sum_i J(z_c+w\,d_i)\,d_i$. Expanding $J$ around $z_c$ gives $J(z_c)\,m_c^{-1}\sum_i d_i + w\,m_c^{-1}\sum_i H(z_c)[d_i,d_i]+O(w^2\lVert d\rVert^3)$, and $\sum_i d_i=0$ by construction. For the topline, $\partial\hat\pi'_{qk}/\partial b=\sum_c\omega_c m_c^{-1}\sum_i J(z^0_k+b\,v_c+w\,d_i)\,v_c$; expanding around $z^0_k$, the zeroth-order term is $J(z^0_k)\sum_c\omega_c v_c=0$ because $u_k$ is the $\omega$-weighted mean of cell means, the cross term in $d_i$ vanishes because $\sum_i d_i=0$ within each cell, and $b\sum_c\omega_c H(z^0_k)[v_c,v_c]$ remains. The statement about $\beta_f$ follows because $\sigma(a\,u_k+\beta_f)$ ranges over the whole open simplex as $\beta_f$ varies.
+\end{proof}
+
+The proposition is local: it says that cross-sectional data inform $w$ (and, from toplines alone, $b$) only in proportion to the spread of the deviations they scale and to the curvature of the softmax at the cell centre. Log-probabilities of LLM outputs are not small-spread, so how weak the identification is in practice is an empirical question, which a pre-registered parameter-recovery simulation answers before the protocol is committed. It uses real Stage-1 outputs from the pilot, draws $\theta^\ast$ from the grid $a\in\{0.6,1,1.5\}$, $b\in\{0.5,1,2\}$, $w\in\{0.5,1,2\}$ with $\beta^\ast\sim N(0,0.3^2)$, generates multinomial poll targets with $n=1{,}000$, and refits \eqref{eq:fit} once from toplines only and once from cell splits. A parameter counts as recoverable from a target type if its recovery RMSE is below a quarter of its grid range. The result decides the primary specification: any parameter not recoverable from the target mix available in the calibration split is fixed at 1. \pending{artifacts/variance-correction/recovery/results.json}
+
+\paragraph{Primary specification.} We expect $w$ not to be recoverable, and pre-specify $w=1$ in the primary specification, with $a$, $b$ and $\beta_f$ free. Fixing $w$ rather than $a$ follows Proposition~\ref{prop:ident}: $a$ enters at first order and is pinned by the data, whereas $w$ is not, and $w=1$ keeps the agents' elicited relative positions. The cost is explicit. With $w$ fixed, the only way the map can widen a too-sharp cell marginal is $a<1$, which flattens every agent: the matching-by-noise route. The primary specification therefore bounds $a\ge 0.5$ (a fixed flattening ceiling; $a=0.5$ is the old $\tau=2$), and the confirmatory test of Stage~2 succeeds only if a test--retest guard passes (Section~\ref{sec:noise}). The secondary specification S2 frees $w$ and adds the test--retest moment to the objective, which is the only data in this design that bear directly on the within-agent share.
+
+\paragraph{Claim boundary.} The corrected population is a calibrated generator of \emph{cell and group distributions}. No statement about the opinion of any individual agent is validated by this procedure, consistent with the view that rectification validates aggregates only \citep{krsteski2025valid}.
+
+\subsection{Stage 3: post-stratification}
+Because allocation is equal across cells, agent counts do not follow population shares. Group estimates are therefore post-stratified:
+\begin{equation}
+\hat\pi_{q,G} \;=\; \sum_{c\in G} \frac{M_c}{\sum_{c'\in G} M_{c'}}\;\hat\pi'_{qc},
+\end{equation}
+where $G$ is the target group and $\hat\pi'_{qc}$ is the mixture \eqref{eq:mixture} of corrected vectors. Equivalently, each agent carries design weight $w^{\text{d}}_i = M_{c(i)}/m_{c(i)}$. There is no partial pooling across cells: a cell with few valid agents reflects simulation noise, whose remedy is more agents, not shrinkage. The approach follows multilevel regression and post-stratification \citep{gelman1997poststrat,park2004mrp,wang2015xbox}.
+
+\subsection{Uncertainty}
+Each estimate carries an interval from a two-level bootstrap over agents within cells and over prompt variants. This interval measures simulation noise only: it omits uncertainty in $\hat\theta$ and model discrepancy, so it is not a claim about the real population, and we do not test its coverage of poll outcomes.
+
+\section{Pre-Registered Evaluation Protocol}
+\label{sec:protocol}
+
+Everything in this section, the appendices, and the analysis code is fixed before any test data are collected. The protocol file, containing this paper's protocol sections, the item-selection code, the prompt templates of Appendix~\ref{app:prompts} and the analysis code, will be hash-committed using the mechanism described in \emph{Receipts}; the commitment date $F$ defines the start of the prospective window. Deviations after $F$ are recorded with dates and reasons in a deviations log and reported.
+
+\subsection{Model}
+One pinned model, \texttt{claude-haiku-5-5}, with documented training-data cutoff June 2026 \citep{anthropic2026models}; we set $T_c$ = 30 June 2026. The documentation states that every model ID, including dateless ones, is a pinned snapshot \citep{anthropic2026models}; we nonetheless log the response metadata and a hash of every response, and rerun a canary set of 50 calibration questions weekly, treating a change in their outputs beyond the run-to-run band (S11) as drift. Sampling temperature is 1 (the only accepted value), there is no prefill \citep{anthropic2026haiku55}, the effort parameter is set explicitly to \texttt{low} with adaptive thinking left at its default \citep{anthropic2026models}, and \texttt{max\_tokens} is 2{,}000; every call records these settings. A model change after $F$ ends the window for that model; a new model needs a new commitment.
+
+\subsection{Data}
+\paragraph{Calibration data (pre-cutoff).} World Values Survey wave 7 \citep{haerpfer2024wvs7} (cell-level targets from the microdata, with survey weights); GlobalOpinionQA, built from Pew Global Attitudes and WVS \citep{durmus2023global}; OpinionQA \citep{santurkar2023whose}; and the cross-national subsets of SimBench \citep{hu2025simbench}. Several carry non-commercial terms; their use here is research use, and Section~\ref{sec:ethics} states what that does and does not permit. These data are used only to fit \eqref{eq:fit}, for the recovery simulation and for the pilot. Because they predate $T_c$, they may be memorised, which is acceptable for fitting and is why they are never used for testing. Twin-2K-500 \citep{toubia2025twin}, whose final wave repeats tasks from earlier waves, supplies the test--retest items used by the noise guard.
+
+\paragraph{Retrospective split.} Polls \emph{published} after $T_c$ and before $F$. Their outcomes were not in the training data, whatever their fieldwork dates, but question selection could have been influenced by results already visible, so this split is never confirmatory. It includes those items from Pew's spring 2026 Global Attitudes wave whose reports appeared after $T_c$ (fieldwork 8 February to 13 May 2026, 36 countries and 42{,}151 respondents, splits by age, gender, education and income \citep{pew2026ai}), which is \emph{not} eligible for the prospective split because its fieldwork preceded $F$. It also supplies the pilot's variance estimate (Section~\ref{sec:analysis}).
+
+\paragraph{Prospective split.} An item is eligible if its fieldwork starts after $F$ (and hence after $T_c$) and its results are published within 12 months after $F$. The window is defined by publication date because publication lags fieldwork by weeks to months (Table~\ref{tab:feas}).
+
+\paragraph{Feasibility.} Table~\ref{tab:feas} lists the candidate sources. The binding constraint is not polls but ordinal items with published subgroup splits outside the United States. Before $F$, a feasibility census applies the mechanical selection rules of Appendix~\ref{app:selection} to every release of each source in the 12 months before the census (a shadow window), counts the items, polls and subgroup items that would have been eligible, and projects accrual in the prospective window. \pending{artifacts/variance-correction/feasibility/census.json} The decision rule is in Section~\ref{sec:analysis}.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}L{2.6cm}L{3.2cm}L{3.3cm}L{3.6cm}L{2.0cm}@{}}
+\toprule
+Source & Item format & Subgroups published & Observed fieldwork-to-publication lag & Role \\
+\midrule
+Pew Global Attitudes (annual spring wave) & Single-choice items, many ordinal; 36 countries in 2026; telephone, face-to-face or online by country & Age, gender, education (standardised with ISCED), income, ideology & 2026 wave: fieldwork 8 Feb--13 May; reports on 15 Jul and 17 Sep 2026, among others \citep{pew2026china,pew2026ai} & Primary cross-national source \\
+Pew American Trends Panel (US, frequent waves) & Ordinal and nominal; online with some telephone \citep{pew2026china} & Partisan groups in reports; demographic splits where detailed tables are published & Fieldwork 28 Sep--4 Oct 2026, report 8 Oct 2026 \citep{pew2026midterms} & US subgroup source (Tier~1) \\
+Standard Eurobarometer (twice yearly) & Trend items; EU member states & To be confirmed by the census & Wave 104.1: fieldwork 9 Oct--5 Nov 2025; archived data issued 2026 \citep{eb104} & Candidate if report lag fits the window \\
+Ipsos What Worries the World (monthly) & ``Which three'' of a list of worries: multi-select, not a distribution on the simplex & Country by worry on request only; no demographic splits & Monthly \citep{ipsos2026worries} & Excluded \\
+National vote-intention polls & Nominal party shares; electorate frame & None & Days & Descriptive only \\
+\bottomrule
+\end{tabular}
+\caption{Candidate test sources. Counts of eligible items per source are produced by the feasibility census, not estimated here. Other sources (for example regional barometers) enter only if they meet the mechanical criteria of Appendix~\ref{app:selection} and their terms permit use.}
+\label{tab:feas}
+\end{table}
+
+\paragraph{Unit of analysis and item identity.} A row is (poll, item, country, group, option shares, $n$, design effect if reported, fieldwork dates, publication date, source URL, retrieval time), flagged for whether subgroup truth exists. An \emph{item} is an equivalence class of question instances: two instances are the same item if they come from the same source series with identical normalised wording and options, or, across series or pollsters, if a committed embedding model gives cosine similarity at least 0.9 between their wordings and their option lists have the same length and scale family. Item identity is computed by committed code from question text alone. A tracker repeated monthly, or the same question asked by two pollsters, is therefore one item with several instances. An item is a \emph{trend item} if any instance has fieldwork before $T_c$ (its earlier waves may be in training data) and \emph{novel} otherwise; the two strata are analysed separately as well as together.
+
+\paragraph{Selection and exclusions.} All items meeting the mechanical criteria of Appendix~\ref{app:selection} are included; there is no discretionary selection. Exclusions: verbatim wording not published; multi-select items; nominal items with more than 10 options; rows with $n<300$ (country) or $n<100$ (subgroup); vote-intention items (descriptive only, because they need an electorate frame rather than the adult population). No item is excluded for referring to events after $T_c$. Instead, two coders who see only the question text, before any arm is run on it, classify each item as \emph{event-dependent} (its answer plausibly depends on news after $T_c$) or \emph{value} (it does not), with disagreements resolved by a third; the classification is a pre-specified moderator. In the text-only arms, agents cannot know post-cutoff events, which confounds dispersion with missing knowledge on event-dependent items; the stratification makes that visible rather than hiding it. Every excluded row is listed with its reason, and the share of rows excluded per reason is reported.
+
+\paragraph{Run-once rule.} Question wording is usually public only when results are, so simulations necessarily run after outcomes are public. To prevent forking paths, a committed ingestion job detects each newly published eligible item, generates its paraphrases, runs every arm exactly once with committed code, and writes the hash of every output to the Receipts log at run time, before the item's results are parsed into the evaluation table. Every run is logged. Nothing is rerun, except the pre-registered 10\% random subset used to estimate run-to-run variance (S11), whose reruns are reported and never substituted for the first run.
+
+\paragraph{Inputs to agents.} In every arm except S4, agents see only the persona and the question text and options in the published (English) wording; native-language prompting is not part of this protocol. The assimilated-agent arm S4 uses only assimilation inputs dated strictly before the test poll's fieldwork start, and excludes the test poll and every earlier wave of the same item.
+
+\subsection{Arms}
+Table~\ref{tab:arms} lists the arms. All LLM arms use the same model, settings and prompt variants; A3--A7 use the same agents.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}lL{3.0cm}L{9.8cm}@{}}
+\toprule
+Arm & Name & Description \\
+\midrule
+A0 & Uniform & Equal mass on every option. \\
+P & Persistence & Trend items only: the latest published value of the same item for the same country and group, published before the test poll's fieldwork start. \\
+A1 & Fitted non-LLM & Multinomial logistic regression on country, age band, sex and education, fitted to the latest wave of the matched item available before the test poll's fieldwork start. Matching: the same item if it has an earlier instance; else the most similar item in the calibration bank by the committed embedding model, if cosine similarity $\ge0.85$ and the scale family matches; for a country with no data on the matched item, the average of its neighbouring countries \citep{wang2026ess}; else A0. One of the baselines of \citet{chen2026synthetic}. Variants reported as secondary: A1-pre (pre-cutoff data only) and A1-lookup (demographic-cell lookup with back-off, also from \citealp{chen2026synthetic}). \\
+A2 & Describe-the-population & $R$ calls per (question, group), each asking for the group's response distribution, no personas \citep{jang2026cannot,doudkin2026marginal}; mean of the returned vectors. \\
+A2c & A2 + calibration & A2 with the map's group-level terms ($a$, and $\beta_f$ for ordinal families) fitted per stratum by \eqref{eq:fit} on A2's outputs for the same calibration split. \\
+A3 & Committed persona panel & A separate call per agent and variant that asks for a single answer only; histogram over agent--variants; post-stratified. The common practice. \\
+A4 & Verbalized Sampling panel & Each agent lists several answers with probabilities \citep{zhang2025verbalized}; mixture; post-stratified. \\
+A5 & Typed probabilities & Stage~1 only; post-stratified. \\
+A6 & Full method & Stages 1--3, primary specification ($w=1$). \\
+A7 & A6 unweighted & A6 averaged over agents with equal weight per agent, no post-stratification. \\
+\bottomrule
+\end{tabular}
+\caption{Evaluation arms. The pre-registered contrasts are A5 vs A3 (readout), A6 vs A5 (map), A6 vs A1 and A2c (baselines given the same calibration data), A6 vs A7 (post-stratification), A6 vs A4 and A6 vs P (secondary).}
+\label{tab:arms}
+\end{table}
+
+\paragraph{Compute.} Per item and country, A3, A4 and A5--A7 each use $360\times R=1{,}080$ calls (A5--A7 share theirs), and A2 and A2c use $R$ calls per published group. Every call's input and output tokens and its cost are logged per arm and reported. A secondary call-matched A2 (S7) averages as many A2 calls as A6 uses. For scale, a per-agent build of 100{,}000 agents at $R=3$ would make 300{,}000 calls per question; at an assumed 500 input and 150 output tokens per call (an assumption, to be replaced by the pilot's measured tokens) and the listed base price of \$0.10 and \$0.50 per million input and output tokens \citep{anthropic2026models}, that is about \$38 per question before batch discounts. This arithmetic is a planning figure, not a result.
+
+\subsection{Metrics}
+\label{sec:metrics}
+\begin{itemize}
+  \item \textbf{Primary distance} (ordinal items): Wasserstein-1 on scores $1,\dots,K$ divided by $K-1$, between the arm's estimate and the poll distribution, per row, averaged over rows within an item and then over items. Nominal items are analysed separately with total variation (S8); W1 and TV are never averaged together.
+  \item \textbf{Dispersion}: SD ratio (simulated over poll) and $\lvert\log\text{SD ratio}\rvert$ for ordinal rows; entropy ratio; modal share; ``vanished options'' (less than 1\% simulated mass and at least 5\% in the poll), reported at each $\epsilon$.
+  \item \textbf{Within-country gap error} (ordinal items, subgroup rows): for each pair of groups of the same variable in the same country (for example women and men) whose observed difference in mean score exceeds twice its standard error, the absolute difference between simulated and observed gaps, divided by $K-1$, and sign agreement. Pairs with smaller observed gaps are excluded because their sign is unreliable. Between-country gaps (pairs of countries on the same item) are scored the same way as a descriptive secondary (S9), because the map does not target them.
+  \item \textbf{SimBench-style skill} (S10): $100\,(1-\overline{\mathrm{TV}}(\text{arm},\text{poll})/\overline{\mathrm{TV}}(\text{uniform},\text{poll}))$, with means taken over all rows before the ratio, following the form of the SimBench score \citep{hu2025simbench}. We make no claim that our score is comparable to SimBench's published numbers, which come from different data.
+  \item \textbf{Proper scores} (secondary): the expected multiclass Brier score of a randomly drawn respondent, $\mathbb{E}_{y\sim\pi}\lVert\hat\pi-e_y\rVert^2=\lVert\hat\pi-\pi\rVert^2+1-\lVert\pi\rVert^2$, which is an affine function of squared error \citep{brier1950,gneiting2007scoring}; and for ordinal items the expected ranked probability score \citep{epstein1969rps}. Because both are affine in squared distances, they rank arms on a different distance, not on different information.
+  \item \textbf{Human sampling floor}: for each row, the expected distance $\mathbb{E}[D(\pi,\hat\pi_{n_{\text{eff}}})]$ between the poll distribution, treated as true, and a single multinomial sample of size $n_{\text{eff}}=n/\text{deff}$ from it, computed by parametric bootstrap with the pollster's reported design effect, or $\text{deff}=1$ if none is reported (sensitivity: $\text{deff}=2$). This one-sample floor is the error of a noise-free predictor and is the primary floor, as in \citet{suh2025subpop}; the two-sample ``replication floor'' (the expected distance between two independent polls) is reported alongside. Distances are reported raw and as excess over the floor.
+\end{itemize}
+
+\subsection{Guard against matching by noise}
+\label{sec:noise}
+Per-agent entropy rises whenever $a<1$, so comparing entropy alone cannot fail. The guard instead compares the corrected population's implied test--retest agreement with people's. For each Twin-2K-500 retest item with categorical responses, agents are built from the respondents' demographics, run through Stages~1--2 with the US stratum's $\hat\theta$, and the implied probability that an agent gives the same answer twice is $\sum_k p'^2_{ik}$. The guard passes if the mean implied agreement is no more than 0.05 below the observed human agreement between test and retest, averaged over items. Human retest agreement is inflated by memory of the first answer, so the guard is conservative against the method; the 0.05 margin allows for this. Together with the fixed bound $a\ge0.5$, this makes matching by noise a failure condition of H3, not only a diagnostic. \pending{artifacts/variance-correction/guard/retest.json}
+
+\subsection{Hypotheses}
+Table~\ref{tab:hyp} lists the hypotheses. H1 is a manipulation check: it tests the baseline, not the method, so it is outside the confirmatory family and tested at $\alpha=0.05$ uncorrected. Its threshold of 0.8 is a pre-specified smallest collapse worth correcting (simulated spread understated by more than a fifth); the literature suggests larger collapse, with SD ratios of about 0.51 in the \citet{bisbee2024synthetic} example and 0.4--0.56 in \citet{ozkan2026distribution}, so failure of H1 would itself be informative. H2--H5 form the confirmatory family. H3 and H4 are intersection--union tests: each component is tested at the Holm-adjusted level of its hypothesis, and the hypothesis is supported only if every component rejects. H6 and the secondary outcomes are exploratory and reported without multiplicity correction.
+
+Smallest effects of interest, used for the power calculation and for interpretation: a 10\% relative reduction in mean primary distance (H2--H4), and a reduction of 0.02 in mean normalised gap error (H5). A significant effect whose interval lies entirely below its smallest effect of interest is reported as ``significant, below the smallest effect of interest''.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}lL{6.6cm}L{5.2cm}l@{}}
+\toprule
+ID & Hypothesis & Test & Result \\
+\midrule
+H1 & Manipulation check: the median SD ratio of A3 on ordinal rows is below 0.8. & One-sided bootstrap CI on the median; outside the family. & pending \\
+H2 & Typed outputs help: A5 has lower primary distance than A3. & Paired by item; one-sided. & pending \\
+H3 & Dispersion matching helps without matching by noise: A6 has lower primary distance than A5, \emph{and} lower median $\lvert\log \text{SD ratio}\rvert$, \emph{and} the retest guard passes. & Intersection--union; the guard is a pass/fail condition. & pending \\
+H4 & The full method beats both baselines given the same calibration data: A6 beats A1 \emph{and} A2c. & Intersection--union; two paired tests. & pending \\
+H5 & Within-country group gaps are better scaled: mean gap error is lower for A6 than for A3. & Paired by item; subgroup rows only. & pending \\
+H6 & Gains hold outside Tier~1: A6 beats A3 within each population tier with test rows. & Per-tier paired tests; exploratory. & pending \\
+\bottomrule
+\end{tabular}
+\caption{Pre-registered hypotheses. Every entry in the Result column is produced by \texttt{artifacts/variance-correction/prospective/results.json}.}
+\label{tab:hyp}
+\end{table}
+
+\paragraph{Secondary outcomes (exploratory).}
+S1: A6 vs A4 (does a fitted map avoid the over-dispersion of Verbalized Sampling on survey data \citep{ozkan2026distribution}?).
+S2: the specification with $w$ free and the retest moment in the objective.
+S3: A6 vs A7, the value of post-stratification on national toplines. Because allocation is equal across cells, A7 weights each cell equally while A6 weights by population; the expected difference is the gap between equal-cell and population composition (for example, the 55+ and low-education cells are over-represented relative to young cells in some countries and under-represented in others), so the contrast has power only where cell estimates differ.
+S4: the assimilated-agent arm vs A6.
+S5: per-agent entropy and modal-share distributions under A6 vs A5.
+S6: A6 vs P on trend items. Persistence is the obvious winner for trackers; we report this contrast in the main results whatever its sign.
+S7: A6 vs raw A2 and vs call-matched A2.
+S8: all contrasts on nominal items, with total variation.
+S9: between-country gap error.
+S10: SimBench-style skill.
+S11: run-to-run variance from the rerun subset, reported as part of the simulation-noise interval.
+S12: A3 with the drawn answer vs the modal answer of each agent's Stage-1 vector.
+S13: trend vs novel items, and event-dependent vs value items, for every confirmatory contrast.
+S14: item-pair correlation agreement on any poll whose microdata are released within the window, descriptive only.
+S15: refusal and missingness rates per arm, tier and topic.
+S16: A1-pre and A1-lookup.
+
+\subsection{Missing outputs}
+\label{sec:missing}
+Refusals will not be random: they are likely to cluster on political and religious items and in some countries. The primary analysis uses only rows on which every arm produced an estimate, so arms are compared on the same rows; within a cell, the mixture is over agents with valid output, and a row is dropped for all arms if more than 20\% of any of its cells' agent--variants are missing, or if all $R$ calls of A2 are missing. A sensitivity analysis keeps every row and gives any arm with a missing estimate the uniform distribution for that row, which penalises arms that refuse. Refusal and missingness rates are reported per arm, tier and topic (S15).
+
+\subsection{Statistical analysis}
+\label{sec:analysis}
+\paragraph{Clustering.} Inference uses a two-stage cluster bootstrap with 10{,}000 replicates: items are resampled at the top level, then poll--country instances within items. Questions within one poll share sample, mode and fieldwork, and instances of one item share whatever the model gets wrong about it; resampling items treats every instance of a tracker or a multiply polled question as one cluster. A sensitivity analysis uses polls as the top-level cluster. Paired differences are computed per row and averaged within item. Tests are one-sided at $\alpha=0.05$ with Holm correction across H2--H5. Effect sizes with 95\% intervals are reported for every hypothesis regardless of significance, and every eligible item is reported, including those where the method loses. Each confirmatory conclusion is also reported at $\epsilon=0.001$ and $\epsilon=0.01$; a conclusion that changes sign or significance across $\epsilon$ is labelled $\epsilon$-sensitive.
+
+\paragraph{Minimum data.} Confirmatory tests require at least 30 distinct ordinal items drawn from at least 10 distinct polls (H2--H4), and at least 20 distinct ordinal items with within-country subgroup splits (H5). Fewer independent clusters than this make a cluster bootstrap unreliable.
+
+\paragraph{Power and the pre-commitment decision.} The pilot estimates the between-item standard deviation of paired differences. WVS wave 7 has probably been memorised, so variance from a leave-question-family-out pilot on it is likely optimistic; the pilot variance is the larger of that estimate inflated by a factor of two and the estimate from the retrospective split. From it, $n^\ast$ is the number of items giving 80\% power at the smallest effects of interest under Holm correction, with $n^\ast\ge30$. The feasibility census then projects accrual, and before $F$ the protocol is amended once, in this order: (1) if projected accrual reaches $n^\ast$ items within 12 months, proceed; (2) otherwise extend the window to 24 months; (3) if H5's minimum is still not projected, move H5 to the exploratory set; (4) if the H2--H4 minimum is still not projected, register the study as descriptive, with no confirmatory tests. The chosen branch is re-committed with the pilot results, which are labelled pilot and are not test results. \pending{artifacts/variance-correction/pilot/results.json}
+
+\paragraph{Stopping rule.} The confirmatory analysis runs once, at the earlier of (a) the end of the publication window or (b) accrual of $n^\ast$ eligible ordinal items (and the H5 minimum, if H5 is confirmatory). Accrual is counted by committed code from item metadata, without computing any outcome. If the minimum data are not met at the end of the window, confirmatory tests are not run and results are reported as descriptive.
+
+\subsection{Results}
+\sloppy
+\noindent\pending{artifacts/variance-correction/feasibility/census.json} Shadow-window counts of eligible items, polls and subgroup items per source.
+
+\noindent\pending{artifacts/variance-correction/recovery/results.json} Parameter-recovery simulation; decides which parameters are free in the primary specification.
+
+\noindent\pending{artifacts/variance-correction/pilot/results.json} Pilot variance, $n^\ast$, measured tokens per call, and the pre-commitment branch.
+
+\noindent\pending{artifacts/variance-correction/calibration/theta.json} Fitted $\hat\theta_s$, $\theta_{\text{global}}$, cross-validated $\gamma$, and calibration loss of $\theta_0$ vs $\hat\theta_s$.
+
+\noindent\pending{artifacts/variance-correction/guard/retest.json} Test--retest guard.
+
+\noindent\pending{artifacts/variance-correction/retrospective/results.json} Retrospective split (non-confirmatory).
+
+\noindent\pending{artifacts/variance-correction/prospective/results.json} H1--H6 and S1--S16, with the deviations log and per-arm cost.
+
+\noindent All artifacts will be generated by the evaluation harness at \nolinkurl{evals/variance_correction/} (not yet written), and each will record the model identifier, call settings, protocol hash and code commit.
+
+\section{Limitations and Failure Modes}
+\label{sec:limits}
+
+\paragraph{Matching by noise.} The easiest way to match a wide poll distribution is to make every agent flatter. In the primary specification this is the direction $a<1$. The bound $a\ge0.5$ and the retest guard make extreme flattening a failure, but neither proves that a passing map widened marginals through heterogeneity: Proposition~\ref{prop:ident} says cross-sectional data barely distinguish the two, and the retest guard uses US items and a different item pool from the test.
+
+\paragraph{Aggregate validity only.} The correction is fitted to and evaluated on group distributions. It does nothing to make an individual agent a faithful model of a person, where current evidence is weak \citep{peng2025funhouse}. This paper licenses no product surface that presents an individual agent's answer as that of a person.
+
+\paragraph{Evaluation population is not the product population.} Agents here carry demographics only. Product agents carry attitude anchors (\emph{Unequally Known}), which change Stage-1 outputs, so fitted parameters do not transfer to them without refitting and retesting.
+
+\paragraph{Transfer.} The map is fitted on attitude questions from survey programmes with long histories and applied to new questions, some about events after the training cutoff. Calibration that holds on value questions may not hold on event reactions; S13 measures this. A pass on polls does not license claims about forecasts of events, which are scored separately under \emph{Receipts}.
+
+\paragraph{Feasibility.} The test sources are few, US and European items will dominate, and items with subgroup splits outside the United States may be too few for H5. The feasibility census and the pre-commitment decision rule exist because the outcome ``descriptive only'' is a real possibility.
+
+\paragraph{Contamination beyond the cutoff date.} Trend items have earlier waves in training data, so ``post-cutoff'' does not mean ``unseen''. Their results are reported separately (S13), and persistence (S6) shows how much of any success a trend alone explains.
+
+\paragraph{Coverage bias.} Calibration data are richest for Western and high-income countries, where model defaults are already closest \citep{durmus2023global,tao2024cultural}. Supervised calibration has been observed to help poorly aligned groups and hurt some well-aligned ones \citep{kambhatla2025supervision}, though from small per-group supervision sets. Tier~4 countries have no calibration data, so their map is $\theta_{\text{global}}$ by construction, and Tiers 3--4 will probably contribute few or no test rows; H6 may have nothing to say about them.
+
+\paragraph{Model drift.} The same prompt has given different distributions over months \citep{bisbee2024synthetic}, and capability does not improve monotonically across releases \citep{lee2026openweight}. Parameters are tied to one model version; any change invalidates them.
+
+\paragraph{Ground truth is itself a poll.} Poll distributions carry sampling error, mode effects and non-response bias; the sampling floor accounts for the first only. Online samples may under-represent rural and less-educated people, especially in lower-income countries; mode is recorded per row and online rows are also analysed separately.
+
+\paragraph{The baselines may win.} If A1 or A2c beats A6 (H4 fails), the honest conclusion is that for static population marginals the agent population adds nothing over a calibrated direct query or a demographic regression, as \citet{doudkin2026marginal} and \citet{chen2026synthetic} suggest. Because A2c receives the same calibration as A6, a win for A6 is attributable to the agent population and its readout, not to supervised calibration alone. The case for agents would otherwise rest on dynamics and interaction, which this paper does not test. We will report that outcome as prominently as a success.
+
+\paragraph{Marginals are not structure.} Matching each item's distribution does not ensure correct correlations between items \citep{williams2026beyond}. S14 reports item-pair correlation agreement where microdata appear; it is not a hypothesis and remains an open problem (O5 in \emph{Silicon Samples, 2022--2026}).
+
+\section{Ethics Statement}
+\label{sec:ethics}
+The evaluation uses published aggregate poll results and licensed survey files; it collects no new data from people and involves no human subjects. Three harms bear directly on this method. First, \emph{substitution}: corrected simulated distributions look more like real ones, which makes them easier to mistake for measurement and to use instead of polling, most of all in countries with little polling, where the method is least tested (Tier~4 has no calibration data at all). This paper licenses no use of simulated distributions in place of polls, and none for countries without test data. Second, \emph{manufactured consensus}: a simulated majority presented as public opinion can be used to persuade. Third, \emph{political sensitivity}: political and religious items are where models refuse most and where errors carry most weight; refusal rates are reported per topic. Product rules (labelling every simulated distribution as simulated with its evaluation status and coverage tier, no presentation as a poll, aggregate-only outputs for elections) are promises of the product, set in \emph{Governing Public World Simulators}; this paper does not evaluate them. Demographic conditioning can produce stereotyped portrayals of groups \citep{wang2024flatten}; the gap metric is reported partly to detect exaggerated group differences. On licensing: several calibration sources carry non-commercial terms, so parameters fitted on them are for this research evaluation only; any map deployed in a commercial product must be refitted on sources whose terms permit commercial use and published as a new hashed version, and until then the product uses no fitted map. IPUMS International forbids commercial use and redistribution \citep{ipums2026terms} and is not used. Released artifacts will contain derived metrics and links, not redistributed microdata or poll tables.
+
+\section{Conclusion}
+Variance collapse in simulated respondents is well documented and only partly fixed by existing methods. We separate the correction into a probabilistic readout, a map with distinct slopes for the country centre, cell differences and agent differences plus an ordinal response style, and post-stratification, and we state which parts cross-sectional polls can pin down. Because they cannot pin down the within-agent share, the primary specification fixes it, bounds flattening, and makes a test--retest guard part of success. The value of the method depends entirely on the pre-registered prospective test, which includes the two baselines most likely to beat it, given the same calibration, and a decision rule for the real possibility that too few eligible items appear. Until that test reports, this paper makes no empirical claim about the method's performance.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\appendix
+
+\section{Fixed constants}
+\label{app:constants}
+\begin{tabular}{@{}L{5.5cm}L{9.5cm}@{}}
+\toprule
+Quantity & Value \\
+\midrule
+Model, settings & \texttt{claude-haiku-5-5}; temperature 1; effort \texttt{low}; adaptive thinking (default); \texttt{max\_tokens} 2{,}000; no tools \\
+$T_c$ & 30 June 2026 \\
+Cells & country $\times$ 3 age bands $\times$ 2 sexes $\times$ 3 education bands (18 per country) \\
+Agents per cell $m$; per country & 20; 360 \\
+Prompt variants $R$ & 3 (verbatim + 2 frozen paraphrases) \\
+Clipping floor $\epsilon$ & 0.005 (sensitivity 0.001, 0.01) \\
+Ordinal scores & $s_k=k$; W1 divided by $K-1$ \\
+Parameter bounds & $a\in[0.5,2]$, $b,w\in[0,3]$, $\lvert\beta_{f,k}\rvert\le3$; primary $w=1$ \\
+Optimiser & Nelder--Mead, 20 starts (Sobol + identity), relative tolerance $10^{-6}$ \\
+$\gamma$ grid; CV & $\{0,0.1,1,10,100\}$; leave-question-family-out \\
+Retry; missing rule & 1 retry; row dropped if $>20\%$ of a cell missing \\
+Bootstrap & 10{,}000 replicates; items, then instances \\
+Item identity; A1 matching & cosine $\ge0.9$ (identity), $\ge0.85$ (A1 match), committed embedding model \\
+Gap pairs & observed gap $>2$ SE \\
+Retest guard margin & 0.05 \\
+Minimum data & 30 ordinal items, 10 polls (H2--H4); 20 subgroup items (H5) \\
+Window & fieldwork after $F$; published within 12 months of $F$ (24 if extended) \\
+\bottomrule
+\end{tabular}
+
+\section{Prompt templates}
+\label{app:prompts}
+Templates are given in outline; the committed protocol file holds the exact strings, and their hash is part of the commitment. Square brackets mark fields filled per call.
+
+\paragraph{Persona block (A3--A7).} ``You are [age] years old, [sex], living in [settlement type] [country], with [education level] education, in a household of [size], in the [income or wealth group] of your country. Answer as this person would in a survey.''
+
+\paragraph{Stage 1 (A5--A7).} Persona block; ``[question wording]''; the options in their presented order, each with its canonical key; ``For each option, give the probability, to two decimals, that you would choose it if asked. Probabilities should sum to 1. Then give one short sentence explaining your view.'' Output schema: \texttt{probs} (object with one number per canonical key), then \texttt{reason} (string). The \texttt{reason} field asks for a short explanation, not step-by-step reasoning, which the structured-output documentation warns can trigger a refusal \citep{anthropic2026structured}.
+
+\paragraph{A3.} Persona block; question; options; ``Choose one option.'' Output schema: \texttt{answer} (enumerated canonical key) only.
+
+\paragraph{A4.} Persona block; question; options; ``List up to five answers this person might give, each with its probability'', following \citet{zhang2025verbalized}.
+
+\paragraph{A2.} ``Among [group] in [country], what share would choose each option?''; question; options; output schema \texttt{shares} as in Stage~1.
+
+\paragraph{Paraphrase.} ``Rewrite this survey question so that it means exactly the same thing, keeping every option unchanged''; generated once per variant, hashed and frozen.
+
+\section{Mechanical item-selection rules}
+\label{app:selection}
+An instance enters the row table if all of the following hold, as evaluated by committed code: (1) the source is one of those in Table~\ref{tab:feas} marked primary, US subgroup or candidate, or a source added by the feasibility census before $F$; (2) fieldwork start is after $F$ and publication is within the window; (3) the verbatim question wording and the full option list are published; (4) the item is single-choice; (5) it is ordinal, or nominal with at most 10 options; (6) shares for every option, or for every option except a non-substantive one (``don't know'', ``refused''), are published; non-substantive options are dropped and the remaining shares renormalised, for every arm alike; (7) $n\ge300$ for country rows, $n\ge100$ for subgroup rows; (8) the item is not vote intention. Subgroup rows are mapped to cells by a committed table: a published band maps to the union of cells it covers, and a band that cuts across our age or education bands is mapped by the population shares $M_c$; Pew's country-relative education split is mapped to ISCED bands using the mapping in Pew's methodology \citep{pew2026china}, and rows that cannot be mapped are excluded with that reason.
+
+\end{document}

@@ -1,0 +1,86 @@
+key,role,reason,peer_reviewed,single_author,read,country,first_public,A1,A2,A3,A4,base_outcome,base_rule,spread_vs_human,unseen_human_data
+argyle2023,included,LLM stands in for ANES respondents vs human data,yes,no,abstract,US,2022,d,i?,U2;U3,none,,,,no
+bisbee2024,included,ChatGPT synthetic ANES respondents vs ANES,yes,no,fulltext,US,2024,c,i,U1;U3,none,,,lower,no
+santurkar2023,included,LM opinions vs 60 US groups,yes,no,abstract,US,2023,a;b,ii,U1;U2,hum,,,,no
+durmus2023,included,LM opinions vs cross-national surveys,yes,no,abstract,global,2023,a;b,ii,U1,none,,,,no
+ryan2024,included,alignment effect on agreement with country opinions,yes,no,abstract,global,2024,a,?,U1,none,,,,no
+jang2026,included,persona sampling vs human survey data,yes,no,partial,US,2026,c,i;iv,U1,none,,,lower,no
+doudkin2026,included,synthetic panels vs national survey batteries,none_found,yes,partial,3 countries,2026,a;c,i;iii;iv,U1;U2,base,level,"3 unpublished cells: national table 7.00 vs query 7.47 and best contract 7.65 MAE, 3 of 6 pairs each way (partial read)",,yes
+park2024,included,agents of 1052 people vs their own answers,none_found,no,abstract,US,2024,c;e;f,?,U4,ceil,,,,no
+ku2026,included,cross-survey transfer vs TEDS respondents,yes,no,partial,Taiwan,2026,e,i,U4,base,baseline_ahead,random forest 58.3% vs best zero-shot LLM 52.1% (RF supervised on same population; partial read),lower,no
+peng2025funhouse,included,digital twins vs paired humans in 19 studies,yes,no,fulltext,US,2025,a;c;e,i,U1;U4,floor;unif,,,lower,no
+toubia2025twin,included,digital twins vs held-out answers,yes,no,fulltext,US,2025,e,i,U4,ceil;unif,,,,no
+ozkan2026,included,WVS-grounded agents vs respondents,none_found,yes,fulltext,Turkey,2026,d,i;iii,U1,none,,,lower,no
+lee2026openweight,included,personas vs 2058-person panel (likely Twin-2K-500),none_found,no,fulltext,US,2026,a;e,i,U1;U3,floor,,,lower,no
+tao2024,included,model values vs IVS country means,yes,no,fulltext,107 countries,2023,a;b,?,U1;U2,none,,,,no
+wang2024flatten,included,LLM portrayals vs human self-reports (3200 people),yes,no,abstract,US,2024,c,?,U2,none,,,,no
+lukauskas2026,included,synthetic respondents vs Lithuanian employees,none_found,no,partial,Lithuania,2026,c,i,U1;U3,base;ceil,mixed,"copula beats every LLM on sample-driven PSS components; overall best LLM 0.71 vs copula 0.69, authors: barely beats (partial read)",,no
+tornberg2026,included,asker cues shift partisan closeness,none_found,no,abstract,US,2026,a,i,U1,none,,,,no
+hu2025simbench,included,benchmark of 20 human-response datasets,yes,no,fulltext,130+ countries,2025,a;b,ii;iii,U1,unif,,,,no
+suh2025subpop,included,fine-tuned distributions vs OpinionQA/GSS,yes,no,fulltext,US,2025,b,v,U1,floor;unif,,,,no
+zhao2024wvb,included,WVS answer distributions,yes,no,abstract,global,2024,c,i,U1,none,,,,no
+chen2026synthetic,included,GSS and WVS vs non-LLM baselines,none_found,no,partial,US;global,2026,c,i,U2;U4,base,baseline_ahead,GSS: best LLM ties demographic lookup (0.589) and trails logistic (0.622); WVS: every model 11-22 points below the baseline (partial read),,no
+meister2024,included,distributional alignment benchmark,yes,no,fulltext,US;global,2024,b,i;ii;iii,U1,unif;hum,,,,no
+kambhatla2025,included,calibrated distributions vs WGM/OQA/WVS,yes,no,fulltext,global,2025,a;b,ii;iii,U1,none,,,,no
+krsteski2025,included,synthesis plus rectification vs human-only,yes,no,partial,?,2025,c,i;v,U1,base,llm_ahead,"LLM plus rectification (hybrid with human data) beats human-only estimator, ESS gain up to 14% (partial read)",,no
+liu2025global,included,WVS alignment across countries/languages/waves,yes,no,abstract,global,2025,b,?,U1,none,,,,no
+wang2026ess,included,ESS R11 30 countries vs neighbor average,none_found,yes,partial,30 countries,2026,b;c,i?,U2;U4,base,baseline_ahead,"neighbor average: level error 0.056 vs 0.180, better on 41/42 items; rank rbc 0.55 vs 0.44, authors: about as well (partial read)",,no
+williams2026beyond,included,marginals and correlation structure vs WVS,yes,no,abstract,global,2026,c,i;v,U1;U3,none,,,,no
+kim2026korean,included,Korean persona panel vs KMPS,yes,no,abstract,Korea,2026,c,i,U1;U2,base,mixed,calibrated panel ahead only below ~250-860 real responses; direct estimate from 30% holdout better (abstract),,no
+horton2023,included,classic economics experiments,ext-abstract,no,abstract,-,2023,c,i,U5,none,,,,no
+aher2023,included,classic experiments (Turing Experiments),yes,no,abstract,US,2022,c,i,U5,none,,,,no
+lam2026fast,included,silicon samples vs Singapore sample,none_found,no,abstract,Singapore,2026,d?,i,U1,none,,,lower,no
+abels2026,included,value personas vs WVS country means,none_found,no,fulltext,10 countries,2026,c,?,U1,none,,,,no
+schroder2025,included,wording changes LLM vs human ratings,none_found,no,abstract,-,2025,a,i,U1,none,,,,no
+park2023diminished,included,Many Labs 2 replications,yes,no,abstract,US,2023,a,i,U5,none,,,lower,no
+dominguez2024,included,ACS responses of 43 models,yes,no,abstract,US,2023,a;c,ii,U1,unif,,,,no
+binz2025centaur,included,Psych-101 held-out participants vs cognitive models,yes,no,abstract,-,2024,e,v,U4,base,llm_ahead,fine-tuned on Psych-101 (>60000 people); beats cognitive models on held-out participants (abstract),,no
+pew2026,included,ATP waves 185/190/192 replication,report,no,fulltext,US,2026,d,i,U1,none,,,,likely
+bulte2026,included,cultural values across 11 prompt languages,yes,no,abstract,global,2026,b,?,U1,none,,,,no
+atari2023,included,LLM vs cross-cultural data,none_found,no,abstract,global,2023,a,?,U1;U2,none,,,,no
+ashokkumar2026,included,70 survey experiments effects,yes,no,abstract,US,2026,a,?,U5,hum,,,,yes
+rystrom2025,included,WVS distributions in 4 languages,workshop,no,abstract,4 languages,2025,a,?,U1,none,,,,no
+tjuatja2024,included,LLM vs human survey response biases,yes,no,abstract,US,2023,a,i,U5,none,,,,no
+hu2024persona,included,persona prompting vs annotator labels,yes,no,partial,-,2024,c,i,U4,base,baseline_ahead,70B zero-shot persona prompting captures 81% of the variance explained by a linear regression fit on ground truth (partial read),,no
+beck2024,included,sociodemographic prompting vs annotators,yes,no,abstract,-,2023,c,i,U4,none,,,,no
+moon2024anthology,included,backstory personas vs ATP waves,yes,no,abstract,US,2024,c,i,U1,none,,,,no
+sun2024random,included,group-level silicon sampling vs US polls,none_found,no,abstract,US,2024,c,i,U1,none,,,,no
+vonderheyde2025,included,GPT-3.5 vote choice vs GLES 2017,yes,no,abstract,Germany,2024,d,i,U1;U2;U4,none,,,,no
+cao2025,included,fine-tuned country distributions,yes,no,abstract,global,2025,b,v,U1,none,,,,no
+kim2023augmented,included,GSS retrodiction 1972-2021,none_found,no,partial,US,2023,d;e,v,U1;U4,base,mixed,fine-tuned Alpaca-7B rho 0.982/MAE 0.038 vs logistic OLS 0.984/0.030 overall; ahead where regression not applicable (partial read),,no
+sun2023sociodemo,included,sociodemographic prompting vs POPQUORN annotators,yes,no,abstract,US,2023,c,i,U4,none,,,,no
+kozlowski2024,included,GPT-3 (2019 cutoff) liberals/conservatives vs 2020 COVID attitudes,none_found,no,abstract,US,2024,b,?,U2,unif,,,,yes
+boelaert2025,included,LLM answers to opinion polls vs survey data,yes,no,abstract,?,2025,?,?,U1,none,,,lower,no
+wu2025boundary,position,argues validity limits; reviews studies,yes,no,abstract,-,,,,,,,,,
+anthis2025,position,argues validity conditions,yes,no,abstract,-,,,,,,,,,
+dillion2023,position,argues on replacing participants,yes,no,abstract,-,,,,,,,,,
+lin2025,position,six fallacies of substitution,yes,yes,abstract,-,,,,,,,,,
+simmons2023,related,prior review of LLMs as subpopulation models,none_found,no,abstract,-,,,,,,,,,
+mou2024,related,prior survey of LLM social simulation,yes,no,abstract,-,,,,,,,,,
+grossmann2023,related,AI and social science research,yes,no,abstract,-,,,,,,,,,
+bail2024,related,generative AI and social science,yes,yes,abstract,-,,,,,,,,,
+messeri2024,related,AI and illusions of understanding,yes,no,abstract,-,,,,,,,,,
+golchin2023,context,contamination method; no human comparison,yes,no,abstract,-,,,,,,,,,
+karger2024forecastbench,context,forecasting benchmark; no population simulation,none_found,no,abstract,-,,,,,,,,,
+chopra2024archetypes,context,"LLM-archetype ABM scored against aggregate unemployment and infection series (Table 1), not survey answers",none_found,no,partial,-,,,,,,,,,
+park2023generative,context,believability without human comparison,yes,no,abstract,-,,,,,,,,,
+zhang2025vs,context,diversity on creative tasks; mechanism,none_found,no,abstract,-,,,,,,,,,
+xiao2026chameleon,context,persona collapse without human comparison,none_found,no,abstract,-,,,,,,,,,
+rottger2024,context,model's own opinions; elicitation format,yes,no,abstract,-,,,,,,,,,
+wang2024myanswer,context,first-token vs text answers,yes,no,abstract,-,,,,,,,,,
+cheng2023compost,context,caricature without human comparison,yes,no,abstract,-,,,,,,,,,
+chuang2024,context,opinion dynamics not validated on real trajectories,yes,no,abstract,-,,,,,,,,,
+owen2007,context,method (crossed bootstrap),yes,yes,abstract,-,,,,,,,,,
+muthukrishna2020,context,method (cultural distance),yes,no,abstract,-,,,,,,,,,
+hayes2007,context,method (Krippendorff alpha),yes,no,abstract,-,,,,,,,,,
+angelopoulos2023,context,method (prediction-powered inference),yes,no,abstract,-,,,,,,,,,
+egami2023,context,method (design-based supervised learning),yes,no,abstract,-,,,,,,,,,
+broska2024,context,method (mixed subjects design; PPI for LLM predictions),none_found,no,abstract,-,,,,,,,,,
+ludwig2024,context,method (econometric framework; training leakage),none_found,no,abstract,-,,,,,,,,,
+lin1989,context,method (concordance correlation),yes,yes,abstract,-,,,,,,,,,
+chu2023,context,media-diet models; fine-tuned on media not persona-conditioned,none_found,no,abstract,-,,,,,,,,,
+yang2024oasis,context,"social-media ABM scored against real cascades, not survey answers",none_found,no,partial,-,,,,,,,,,
+socialsim,context,pre-LLM simulation scoring program with persistence baseline,report,no,abstract,-,,,,,,,,,
+sarstedt2024,related,review of silicon samples in consumer research,yes,no,abstract,-,,,,,,,,,
+vonderheyde2026review,related,systematic review of LLMs in survey research (supersedes arXiv working paper),none_found,no,abstract,-,,,,,,,,,
+agnew2024,related,ethics of substituting AI for participants,yes,no,abstract,-,,,,,,,,,
