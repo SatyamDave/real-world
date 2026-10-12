@@ -1,6 +1,16 @@
 import { ApiError, type Reveal } from "@real-world/sdk";
 import { type CSSProperties, useState } from "react";
-import { Disclosure, LoadError, Loading, pct, plural, shortDate, useLoad } from "./App";
+import {
+  Disclosure,
+  FORECASTER,
+  failure,
+  LoadError,
+  Loading,
+  pct,
+  plural,
+  shortDate,
+  useLoad,
+} from "./App";
 import { rw } from "./api";
 import { SQUARES, square, weekShareText } from "./share";
 
@@ -27,24 +37,17 @@ const host = (url: string) => {
   }
 };
 
-const time = (iso: string) =>
-  new Date(iso).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-
 export function DailyQuestion({ tiers }: { tiers: string[] }) {
   const [player] = useState(playerId);
   const loaded = useLoad(() => rw.daily(player), player);
   const [value, setValue] = useState(50);
   const [after, setAfter] = useState<Reveal | null>(null);
   const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
 
   if (loaded.error)
     return (
-      <section className="card receipt daily">
+      <section className="card daily">
         <LoadError what="today's question" error={loaded.error} retry={loaded.retry} />
       </section>
     );
@@ -52,7 +55,7 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
   const reveal = after ?? loaded.data?.reveal;
   if (!q || !loaded.data)
     return (
-      <section className="card receipt daily skeleton" aria-busy="true">
+      <section className="card daily skeleton" aria-busy="true">
         <Loading what="today's question" />
       </section>
     );
@@ -61,24 +64,25 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
 
   async function submit() {
     if (!q) return;
-    setStatus("Submitting");
+    setBusy(true);
+    setStatus("");
     try {
       setAfter((await rw.answer_daily(q.id, player, value / 100)).reveal);
-      setStatus("");
     } catch (e) {
       // 409 means this browser already answered, and its reveal applies, or answers closed.
       if (!(e instanceof ApiError && e.status === 409)) {
-        setStatus("Not submitted: the server did not accept the answer. Try again.");
-        return;
-      }
-      try {
-        const reveal = (await rw.daily(player)).reveal;
-        setAfter(reveal);
-        setStatus(reveal ? "" : "Not submitted: answers for this question are closed.");
-      } catch {
-        setStatus("Submitted. The reveal did not load; reload the page to see it.");
+        setStatus(failure(e, "The server did not accept the answer"));
+      } else {
+        try {
+          const reveal = (await rw.daily(player)).reveal;
+          setAfter(reveal);
+          if (!reveal) setStatus(failure(e, "Answers for this question are closed"));
+        } catch {
+          setStatus("Submitted. The reveal did not load. Reload the page to see it.");
+        }
       }
     }
+    setBusy(false);
   }
 
   return (
@@ -124,8 +128,7 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
         <RevealView reveal={reveal} date={date} tiers={tiers} />
       ) : closed ? (
         <p className="closed" role="status">
-          Answers closed {q.closes_at.includes("T") ? time(q.closes_at) : shortDate(q.closes_at)}.
-          The next question opens after the next daily run.
+          Answers closed {shortDate(q.closes_at)}. The next question opens after the next daily run.
         </p>
       ) : (
         <form
@@ -152,11 +155,11 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
               <span>Yes</span>
             </span>
           </label>
-          <button type="submit" className="primary" disabled={status === "Submitting"}>
+          <button type="submit" className="primary" disabled={busy}>
             Submit {value}%
           </button>
-          {status && status !== "Submitting" && (
-            <p className="muted small" role="alert">
+          {status && (
+            <p className="small load-error" role="alert">
               {status}
             </p>
           )}
@@ -177,8 +180,12 @@ function RevealView({ reveal, date, tiers }: { reveal: Reveal; date: string; tie
         ? "you are the first"
         : `${plural(count, "other self-selected visitor")}${count < 20 ? " so far" : ""}`,
     ],
-    ["Simulated world", reveal.sim, "committed forecast"],
-    ["Market", reveal.market, reveal.market === null ? "no market price" : "price at commit"],
+    [FORECASTER.sim, reveal.sim, "committed forecast"],
+    [
+      FORECASTER.market,
+      reveal.market,
+      reveal.market === null ? "no market price" : "price at commit",
+    ],
   ];
   return (
     <div className="reveal" aria-live="polite">

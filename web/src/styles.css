@@ -1,5 +1,13 @@
 :root {
   color-scheme: light dark;
+  --column: 1120px;
+  --edge: max(24px, calc((100% - var(--column)) / 2 + 24px));
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 * {
@@ -29,6 +37,16 @@ h3 {
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
+}
+
+h1 {
+  font-size: clamp(28px, 5vw, 40px);
+  letter-spacing: -0.03em;
+}
+
+strong,
+b {
+  font-weight: 600;
 }
 
 h2 {
@@ -194,6 +212,21 @@ button.primary:hover:not(:disabled) {
   color: var(--accent);
 }
 
+.stamp.plain,
+.label-simulated {
+  color: var(--muted);
+}
+
+.label-simulated {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 1px 8px;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .receipt-top h2 {
   color: var(--ink);
 }
@@ -239,7 +272,7 @@ button.primary:hover:not(:disabled) {
   align-items: center;
   justify-content: space-between;
   height: 64px;
-  padding: 0 24px;
+  padding: 0 var(--edge);
   background: var(--paper);
   border-bottom: 1.5px solid var(--line);
 }
@@ -288,15 +321,14 @@ button.primary:hover:not(:disabled) {
 
 main {
   position: relative;
+  flex: 1 0 auto;
 }
 
-/* The column starts where the receipts page's container does, so every page shares one left edge. */
+/* Header, home column, pages and footer share one left edge: the 1120px column, 24px gutter. */
 .home {
   position: relative;
   z-index: 2;
-  width: min(600px, 100%);
-  margin-left: max(0px, calc((100% - 1040px) / 2));
-  padding: 32px 24px 64px;
+  padding: 32px var(--edge) 64px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -304,13 +336,12 @@ main {
 }
 
 .home > * {
+  max-width: 600px;
   pointer-events: auto;
 }
 
 .page {
-  width: min(1040px, 100%);
-  margin: 0 auto;
-  padding: 32px 24px 80px;
+  padding: 32px var(--edge) 80px;
 }
 
 .card {
@@ -327,7 +358,7 @@ main {
 /* Daily question */
 
 .daily .question {
-  font-size: 26px;
+  font-size: 20px;
   line-height: 1.25;
   text-wrap: balance;
 }
@@ -390,10 +421,6 @@ main {
   margin-top: 8px;
 }
 
-.answer button.primary {
-  min-height: 52px;
-}
-
 .reveal {
   margin-top: 20px;
   animation: rise 0.35s ease-out;
@@ -433,7 +460,7 @@ main {
 }
 
 .stat-3 {
-  --c: var(--accent-2);
+  --c: color-mix(in srgb, var(--ink) 55%, var(--paper));
 }
 
 .stat-name {
@@ -651,7 +678,7 @@ main {
 
 .page > .fork-card {
   max-width: 640px;
-  margin: 0 auto;
+  margin: 16px 0 0;
 }
 
 .setup {
@@ -800,7 +827,7 @@ main {
 
 .globe {
   position: fixed;
-  inset: 64px 0 0 calc(max(0px, (100vw - 1040px) / 2) + min(36vw, 560px));
+  inset: 64px 0 0 calc(max(0px, (100vw - var(--column)) / 2) + min(36vw, 560px));
   z-index: 1;
 }
 
@@ -862,7 +889,6 @@ main {
   align-items: center;
   gap: 8px;
   color: var(--muted);
-  font-family: var(--font-mono);
 }
 
 .legend-ramp {
@@ -971,17 +997,6 @@ button.icon {
   justify-content: space-between;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-}
-
-.label-simulated {
-  display: inline-block;
-  margin-bottom: 8px;
-  padding: 1px 8px;
-  border: 1.5px solid currentColor;
-  border-radius: var(--radius);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--accent-2);
 }
 
 blockquote {
@@ -1139,9 +1154,11 @@ td:first-child {
 }
 
 button.link {
-  min-height: 0;
+  min-height: 44px;
+  margin: -12px 0;
   border: 0;
-  padding: 0;
+  padding: 12px 0;
+  line-height: 20px;
   background: none;
   font-size: inherit;
   font-weight: 600;
@@ -1155,9 +1172,15 @@ button.link:hover:not(:disabled) {
 }
 
 /* Inline links reach 44 px with padding that does not move the text around them. */
-.strip-link,
+.strip-link {
+  display: inline-block;
+  min-height: 44px;
+  margin: -12px 0;
+  padding: 12px 0;
+  line-height: 20px;
+}
+
 .receipt-cols a,
-.agent-links button.link,
 main :is(p, li, dd, h3) a {
   padding: 14px 0;
 }
@@ -1228,7 +1251,7 @@ main :is(p, li, dd, h3) a {
   width: 22px;
   height: 22px;
   vertical-align: middle;
-  border: 1.5px solid var(--line);
+  border: 1.5px solid var(--muted);
   border-radius: var(--radius);
 }
 
@@ -1325,10 +1348,6 @@ main :is(p, li, dd, h3) a {
   gap: 12px;
 }
 
-.policy h1 {
-  font-size: 26px;
-}
-
 .policy h2 {
   margin-top: 12px;
 }
@@ -1420,7 +1439,7 @@ main :is(p, li, dd, h3) a {
   z-index: 2;
   background: var(--paper);
   border-top: 1.5px solid var(--line);
-  padding: 24px max(24px, calc((100% - 1040px) / 2 + 24px)) 56px;
+  padding: 24px var(--edge) 56px;
   font-size: 14px;
   color: var(--muted);
 }
@@ -1452,10 +1471,7 @@ main :is(p, li, dd, h3) a {
   }
 
   .home {
-    width: 100%;
-    margin: 0 auto;
-    max-width: 640px;
-    padding: 16px 16px 24px;
+    padding-block: 16px 24px;
   }
 
   .globe {
@@ -1463,9 +1479,7 @@ main :is(p, li, dd, h3) a {
     position: relative;
     inset: auto;
     height: 480px;
-    margin: 16px auto 0;
-    width: calc(100% - 32px);
-    max-width: 608px;
+    margin: 16px var(--edge) 0;
     overflow: hidden;
     border: 1.5px solid var(--ink);
   }
@@ -1492,11 +1506,7 @@ main :is(p, li, dd, h3) a {
   }
 
   .page {
-    padding: 24px 16px 64px;
-  }
-
-  .site-footer {
-    padding-inline: 16px;
+    padding-block: 24px 64px;
   }
 }
 
@@ -1513,10 +1523,6 @@ main :is(p, li, dd, h3) a {
 }
 
 @media (max-width: 520px) {
-  .topbar {
-    padding: 0 16px;
-  }
-
   .card {
     padding: 16px;
   }

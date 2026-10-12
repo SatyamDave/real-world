@@ -1,5 +1,5 @@
 import { ApiError, type Country, type World } from "@real-world/sdk";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, type ReactNode, Suspense, useEffect, useState } from "react";
 import { AcceptableUse } from "./AcceptableUse";
 import { AgentPanel } from "./AgentPanel";
 import { rw } from "./api";
@@ -16,6 +16,16 @@ const WIDE = "(min-width: 768px)";
 const FEATURED = ["USA", "BRA", "KEN"];
 
 export const DISCLOSURE = "AI-simulated. Not a poll or a prediction of a real person";
+
+/** The one display name for each forecaster, on every screen. */
+export const FORECASTER = { sim: "Simulation", plain_llm: "Plain LLM", market: "Market" } as const;
+
+/** An API error's `detail` sentence (or `fallback`) as a status line with one full stop. */
+export function failure(e: unknown, fallback: string): string {
+  const body = e instanceof ApiError ? (e.body as { detail?: unknown } | null) : null;
+  const detail = typeof body?.detail === "string" && body.detail ? body.detail : fallback;
+  return `${detail.trim().replace(/\.+$/, "")}.`;
+}
 
 export const prefersReducedMotion = () =>
   typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -179,7 +189,7 @@ function Header({ path, date }: { path: string; date?: string }) {
           Receipts
         </a>
         <a href="/docs" aria-current={path === "/docs" ? "page" : undefined}>
-          Docs
+          API
         </a>
       </nav>
     </header>
@@ -206,7 +216,7 @@ function Thesis() {
       ) : first ? (
         <p className="proof">
           Scored in public since {shortDate(first)}: {plural(days.length, "day")},{" "}
-          {plural(leaves, "receipt")}. <a href="/receipts">Check every hash</a>
+          {plural(leaves, "receipt")}. <a href="/receipts">Verify every hash</a>
         </p>
       ) : (
         <p className="proof">No forecast is hashed yet. The record starts with the first one.</p>
@@ -273,13 +283,14 @@ function useIdle() {
   return idle;
 }
 
-function Home({ w, tiers }: { w?: World; tiers: string[] }) {
+function Home({ w, tiers, alert }: { w?: World; tiers: string[]; alert?: ReactNode }) {
   const [selected, setSelected] = useState<Country | null>(null);
   const wide = useWide();
   const idle = useIdle();
   return (
     <>
       <div className="home">
+        {alert}
         <Thesis />
         <DailyQuestion tiers={tiers} />
         {w && wide && <AgentLinks countries={w.countries} onSelect={setSelected} />}
@@ -306,12 +317,12 @@ function Home({ w, tiers }: { w?: World; tiers: string[] }) {
   );
 }
 
-function NotFound() {
+export function NotFound() {
   return (
     <section className="card notfound">
       <h1>Page not found</h1>
       <p className="muted">
-        Nothing lives at this address. <a href="/">Go to today's question</a>
+        No page at this address. <a href="/">Go to today's question</a>
       </p>
     </section>
   );
@@ -336,10 +347,10 @@ function Footer() {
 }
 
 const TITLES: Record<string, string> = {
-  "/": "Real World: don't ask a model, ask a world",
+  "/": "Don't ask a model. Ask a world. · Real World",
   "/receipts": "Receipts · Real World",
   "/acceptable-use": "Acceptable use · Real World",
-  "/docs": "API docs · Real World",
+  "/docs": "API · Real World",
 };
 
 export function App({ path = location.pathname }: { path?: string }) {
@@ -347,6 +358,9 @@ export function App({ path = location.pathname }: { path?: string }) {
   const tiers = w?.countries.map((c) => c.tier) ?? [];
   const fork = path.match(/^\/fork\/([^/]+)$/);
   const known = fork !== null || path in TITLES;
+  const worldError = error && known && (
+    <LoadError what="today's world" error={error} retry={retry} />
+  );
   // A fork names itself once its event text has loaded.
   useEffect(() => {
     if (!path.startsWith("/fork/")) document.title = TITLES[path] ?? "Page not found · Real World";
@@ -355,19 +369,19 @@ export function App({ path = location.pathname }: { path?: string }) {
     <>
       <Header path={path} date={w?.date} />
       <main id="main" tabIndex={-1} className={path === "/" ? undefined : "page"}>
-        {error && known && <LoadError what="today's world" error={error} retry={retry} />}
+        {path !== "/" && worldError}
         {fork ? (
           <ForkRun id={decodeURIComponent(fork[1])} />
         ) : path === "/receipts" ? (
           <ReceiptsPage tiers={tiers} />
         ) : path === "/docs" ? (
-          <Suspense fallback={<Loading what="the API docs" />}>
+          <Suspense fallback={<Loading what="the API" />}>
             <Docs />
           </Suspense>
         ) : path === "/acceptable-use" ? (
           <AcceptableUse />
         ) : path === "/" ? (
-          <Home w={w} tiers={tiers} />
+          <Home w={w} tiers={tiers} alert={worldError} />
         ) : (
           <NotFound />
         )}

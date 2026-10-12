@@ -167,7 +167,7 @@ export default function Globe({
           </select>
         </label>
         <div className="legend">
-          <span>0%</span>
+          <span className="num">0%</span>
           <span
             className="legend-ramp"
             style={{
@@ -175,7 +175,9 @@ export default function Globe({
               background: `linear-gradient(90deg, ${shade(0, colors)}, ${shade(1, colors)})`,
             }}
           />
-          <span>100% lean yes</span>
+          <span>
+            <span className="num">100%</span> lean yes
+          </span>
         </div>
         <p className="legend-note">
           <span className="swatch swatch-empty" /> not simulated
