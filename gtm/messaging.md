@@ -6,9 +6,24 @@ Every morning Real World simulates how the world's population will react to toda
 
 Short form: simulations with receipts.
 
+Sub-line: AI simulates how the world reacts to the news. Every forecast is sealed before the outcome and scored in public. "Sealed" is the plain word for hashed and anchored; it makes no accuracy claim, and every country or result next to it still carries its coverage tier.
+
 Category: a forecast and simulation API with a public score, not a world model or an agent-based modelling platform ([VC lens](../research/lenses/vc.md), [funding landscape](../research/market/012-funding-landscape-2026.md), [world-model state of the art](../research/engineering/100-world-model-sota.md)).
 
 The demo order is receipts, then one fork, then one agent's "what moved it" panel ([CEO lens](../research/lenses/ceo.md)).
+
+## User journeys
+
+Every surface proves one part of the one-liner, and each page offers one next action.
+
+| Who | Starts on | Next action per page |
+| --- | --- | --- |
+| Daily-question visitor | `/` | "See how the world answered" opens `/questions/{id}`; "Fork today's world" opens the fork card; "Run this from your code" opens `/docs`. |
+| Receipts and forecasting skeptic | `/receipts` | Verify the hashes in the browser, then `/scores` (skill with n and interval), then `/research` (papers and experiments). |
+| Analyst forking events | The fork box on `/` | Read the segments and the trace on the fork card, then repeat the same fork through the API. |
+| Developer on the API with a capped key | `/docs` | Request a key with a dollar cap, then run the SDK quickstart. |
+
+Surface specs: [product/README.md](../product/README.md).
 
 ## Positioning
 
