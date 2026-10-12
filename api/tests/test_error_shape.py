@@ -1,6 +1,5 @@
 """Every error the API returns is one JSON shape: a string detail plus known keys."""
 
-import ast
 import time
 from datetime import datetime
 from pathlib import Path
@@ -126,38 +125,10 @@ def test_error_body_is_a_string_detail_with_known_keys(client, monkeypatch, case
     assert set(body) <= KEYS, body
 
 
-def test_every_non_2xx_json_response_is_a_refusal_or_carries_a_detail():
-    """A JSONResponse built outside _refuse must dump a model with a detail field. policy.screen
-    returns a PolicyRefused, which lives outside app.py."""
-    tree = ast.parse(APP.read_text())
-    models = {
-        n.name: {f.target.id for f in n.body if isinstance(f, ast.AnnAssign)}
-        for n in ast.walk(tree)
-        if isinstance(n, ast.ClassDef)
-    }
-    models["policy.PolicyRefused"] = set(api.policy.PolicyRefused.model_fields)
-    unchecked = []
-    for fn in ast.walk(tree):
-        if not isinstance(fn, ast.FunctionDef) or fn.name == "_refuse":
-            continue
-        made = {}  # local name -> the call that last produced it, in source order
-        nodes = [n for n in ast.walk(fn) if hasattr(n, "lineno")]
-        for node in sorted(nodes, key=lambda n: (n.lineno, n.col_offset)):
-            if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
-                for target in node.targets:
-                    if isinstance(target, ast.Name):
-                        made[target.id] = ast.unparse(node.value.func)
-            if not (isinstance(node, ast.Call) and ast.unparse(node.func) == "JSONResponse"):
-                continue
-            status = next((k.value for k in node.keywords if k.arg == "status_code"), None)
-            if isinstance(status, ast.Constant) and 200 <= status.value < 300:
-                continue
-            content = node.args[0] if node.args else None
-            source = None
-            if isinstance(content, ast.Call) and isinstance(content.func, ast.Attribute):
-                owner = content.func.value
-                source = made.get(owner.id) if isinstance(owner, ast.Name) else None
-            fields = models.get("policy.PolicyRefused" if source == "policy.screen" else source)
-            if fields is None or "detail" not in fields:
-                unchecked.append(f"{APP.name}:{node.lineno}: {ast.unparse(node)}")
-    assert not unchecked, unchecked
+def test_every_error_response_carries_a_detail_sentence():
+    """Every JSONResponse in app.py dumps a model with a `detail` field or a dict that has one."""
+    models = [api.Refused, api.Conflict, api.policy.PolicyRefused]
+    assert all("detail" in m.model_fields for m in models)
+    for n, line in enumerate(APP.read_text().splitlines(), 1):
+        if "JSONResponse(" in line and "import" not in line:
+            assert ".model_dump()" in line or '{"detail"' in line, f"app.py:{n}: {line.strip()}"

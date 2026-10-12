@@ -19,13 +19,13 @@ HEX = re.compile(r"#[0-9a-fA-F]{3,8}\b")
 FONT = re.compile(r"font-family:(?!\s*var\(--font-)")
 EXEMPT = re.compile(r"(^|/)styles/(tokens[^/]*|fonts)\.css$|\.test\.tsx?$|/fixtures/")
 INLINE = re.compile(r"""style=(\{\{|")""")
-# A line that says why, such as a canvas position computed per frame, may keep its inline style.
+# An inline style that says why on its line or the next (biome moves the comment down) may stay.
 OPT_OUT = re.compile(r"/\*\s*design:\s*\S")
 # fonts.css loads only 400, 500 and 600; any other weight renders faux-bold or faux-light.
 ALLOWED = {
     "border-radius": ({"var(--radius)", "0", "50%", "inherit"}, "use var(--radius), 0 or 50%"),
     "font-weight": ({"400", "500", "600"}, "use 400, 500 or 600, the weights fonts.css loads"),
-    "box-shadow": ({"var(--card-shadow)", "none"}, "use var(--card-shadow) or none"),
+    "box-shadow": ({"var(--card-shadow)", "none"}, "use var(--card-shadow), none or an inset ring"),
 }
 VALUE = re.compile(r"(border-radius|font-weight|box-shadow):\s*([^;}]+)")
 COMPONENT = re.compile(r"^export (?:default )?(?:function|const|class) ([A-Z]\w*[a-z]\w*)")
@@ -51,20 +51,26 @@ def main():
             rel = path.relative_to(ROOT).as_posix()
             if path.suffix not in {".css", ".ts", ".tsx"} or EXEMPT.search(rel):
                 continue
-            for n, line in enumerate(path.read_text().splitlines(), 1):
+            lines = path.read_text().splitlines()
+            for n, line in enumerate(lines, 1):
                 # Pure black and transparent in a gradient are alpha masks, not colours.
                 masked = re.sub(r"#0{3,4}\b", "", line) if "gradient(" in line else line
                 for pattern, what in ((HEX, "raw hex colour"), (FONT, "literal font-family")):
                     if pattern.search(masked):
                         problems.append(f"{rel}:{n}: {what}; use a token from styles/tokens.css")
-                if path.suffix == ".tsx" and INLINE.search(line) and not OPT_OUT.search(line):
+                if (
+                    path.suffix == ".tsx"
+                    and INLINE.search(line)
+                    and not OPT_OUT.search("\n".join(lines[n - 1 : n + 1]))
+                ):
                     problems.append(
                         f"{rel}:{n}: inline style; put it in styles.css under a class"
                         " (or say why on the line with /* design: ... */)"
                     )
                 for prop, value in VALUE.findall(line):
                     allowed, fix = ALLOWED[prop]
-                    if value.strip() not in allowed:
+                    # An inset ring is a border drawn without layout, not a shadow.
+                    if value.strip() not in allowed and not value.strip().startswith("inset "):
                         problems.append(f"{rel}:{n}: {prop} {value.strip()}; {fix}")
                 name = folder == "web/src" and path.suffix == ".tsx" and COMPONENT.match(line)
                 if name:

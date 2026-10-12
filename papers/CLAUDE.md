@@ -10,6 +10,7 @@
 - Every `refs.bib` entry has a URL or DOI that the adding session opened. Cite research notes for context, never in place of the primary source.
 - The limitations section names the failure modes in the research notes that apply to the result.
 - `STATUS.md` is updated in the same PR.
+- Terms are the ones in [product/glossary.md](../product/glossary.md); define a paper-only term once, in the paper, and do not rename a glossary term.
 
 ## What gets rejected
 

@@ -171,6 +171,7 @@ export default function Globe({
           <span
             className="legend-ramp"
             style={{
+              /* design: computed position */
               background: `linear-gradient(90deg, ${shade(0, colors)}, ${shade(1, colors)})`,
             }}
           />

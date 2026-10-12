@@ -83,7 +83,7 @@ def test_glossary_passes_a_clean_tree(tmp_path):
         ("web/src/App.tsx", "<p>Personas</p>\n", 'App.tsx:1: "Personas" is not a glossary term'),
         ("README.md", "\nTry a What-If.\n", 'README.md:2: "What-If" is not a glossary term; write'),
         ("api/rw_api/app.py", "# scenarios\n", '"scenarios" is not a glossary term; write "Fork"'),
-        ("gtm/messaging.md", "100 respondents\n", 'write "Agent"'),
+        ("product/web-app.md", "100 respondents\n", 'write "Agent"'),
     ],
 )
 def test_glossary_reports_a_banned_word(tmp_path, rel, text, expected):

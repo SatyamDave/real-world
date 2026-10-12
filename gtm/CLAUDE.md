@@ -10,6 +10,7 @@ Go-to-market: who we sell to, at what price, how we launch, and what we may say.
 - Customer evidence is named and dated: which call, which buyer type, what they said. Until calls happen, write "no calls yet".
 - A change to an allowed or forbidden claim in `messaging.md` goes through a decision record.
 - Launch steps have a date, an owner seat and the note or lens they come from.
+- Copy uses one word per thing from [product/glossary.md](../product/glossary.md); `messaging.md` is the voice every surface copies, so a synonym here spreads.
 
 ## What gets rejected
 

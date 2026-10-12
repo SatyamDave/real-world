@@ -17,6 +17,8 @@ The FastAPI app `rw_api`: HTTP, fork jobs, idempotency, server-sent events, the 
 - Numbers shown for a forecast (`sim`, `market`) come from committed ledger entries, never recomputed.
 - Fixture questions (`fx-` ids, `FIXTURE:` text, `example.com` sources) are for local runs and tests. Nothing served to a person may show one: `web/src/liveCheck.ts` fails a production `vite build` against an API that serves one, and `make e2e` proves it against the fixture API [#31, #33, #35].
 - `api/openapi.json` is the contract the SDKs are generated from. Change it only with `make openapi`, in the same PR as the code.
+- One error shape on every route: a JSON object with a one-sentence `detail`, plus `code` and `estimate` when refused and `id` on a conflict; `api/tests/test_error_shape.py` asserts it, and the `RequestValidationError` handler keeps validation errors in it. Status codes mean one thing each: 404 not found, 409 closed or already done, 422 refused or invalid, 402 over a cost cap, 503 a check could not run.
+- Fields, headers and query parameters are snake_case; ids keep their prefix (`fx-` fixtures). Summaries and `detail` sentences use the terms in `product/glossary.md`; `scripts/check_glossary.py` scans `app.py`, `openapi.json` and `README.md`.
 
 ## Test
 

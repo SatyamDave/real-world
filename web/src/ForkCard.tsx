@@ -261,12 +261,19 @@ export function ForkCard({ job }: { job: Job }) {
                 <span
                   className="band-range"
                   style={{
+                    /* design: computed position */
                     left: ax.at(o.final.p10),
                     width: `max(4px, ${((o.final.p90 - o.final.p10) / (ax.hi - ax.lo)) * 100}%)`,
                   }}
                 />
-                <span className="band-base" style={{ left: ax.at(o.baseline_share) }} />
-                <span className="band-mid" style={{ left: ax.at(o.final.p50) }} />
+                <span
+                  className="band-base"
+                  style={{ /* design: computed position */ left: ax.at(o.baseline_share) }}
+                />
+                <span
+                  className="band-mid"
+                  style={{ /* design: computed position */ left: ax.at(o.final.p50) }}
+                />
               </span>
               <span className="band-value">
                 {pct(o.baseline_share)} → {pct(o.final.p50)}

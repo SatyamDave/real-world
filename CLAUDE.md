@@ -16,8 +16,8 @@ Real World is a live simulation of the world's population that takes in each mor
 | `papers/` | Public papers built only from committed artifacts | `papers/CLAUDE.md` |
 | `gtm/` | Launch plan, customers, pricing, builders program, messaging and allowed claims | `gtm/CLAUDE.md` |
 | `company/` | North-star metric, the plan to Nov 2, risks, cadence, and decisions only the founder can make | `company/CLAUDE.md` |
-| `.claude/commands/` | Slash commands that walk a session through each loop step | this file |
-| `scripts/` | Repo checks, such as `check_links.py` | this file |
+| `.claude/commands/`, `.claude/agents/` | Slash commands that walk a session through each loop step; the `consistency-reviewer` agent | this file |
+| `scripts/` | Repo checks: `check_links.py`, `check_design.py`, `check_glossary.py`, `check_sdk_parity.py` | this file |
 | `.github/` | PR template, PR quality check, papers workflow, Claude review | this file |
 | Code folders | Added by the engine and app scaffold; each README links its product spec | the folder's own `CLAUDE.md` once it exists |
 
@@ -56,14 +56,15 @@ If the step you need first does not exist, write it in its own PR before the cod
 - Never leave the repo worse: no failing checks, no broken links, no unrelated files in the diff.
 - Mistakes become guards. `company/rules-log.md` lists every rule and check added because of a real mistake, with the PRs that show it; `/learn-rules` (run daily by `.github/workflows/learn-rules.yml`) reads merged PRs and proposes the next ones. Prefer a check over a sentence.
 
-## One product, one look
+## One product, one look, one voice
 
-Every surface (the landing page in `landing/`, the app in `web/`, share images, ads) is one product and looks like it. The design source is `landing/design/` (direction A, "Commit Slip"); the tokens are `styles/tokens.css`.
+Every surface is one product: the app in `web/`, the landing page, share images, ads, the API and its docs, both SDKs, the CLI output and the READMEs. Nothing may look or read as if two people built it.
 
+- The look is [product/design.md](product/design.md): tokens, type, spacing, one component per pattern, states, dark mode. The terms are [product/glossary.md](product/glossary.md), one word per thing. The voice and the allowed claims are [gtm/messaging.md](gtm/messaging.md). A change to any of them lands in that file first, in its own PR, then in each surface.
+- `make lint` runs the mechanical guards: `scripts/check_design.py` (tokens only, no inline styles, one radius, one shadow, three weights, no duplicate component), `scripts/check_glossary.py` (no banned synonym on a user-facing surface) and `scripts/check_sdk_parity.py` (both SDKs expose the same operations with the same names and defaults); `api/tests/test_error_shape.py` holds every error to one body shape.
 - Before any UI work, run `gh pr list --repo SatyamDave/real-world --state open` and read the open PRs on the same surface or on the design. Build on them or agree with their author first; never start a second look in parallel.
-- Colours and typefaces come only from `styles/tokens*.css` and `styles/fonts.css`. `scripts/check_design.py` (in `make lint`) fails on a raw hex colour or literal `font-family` anywhere else, and on any difference between the `web/` and `landing/` tokens.
-- A change to the look (tokens, type scale, a motif) lands in the design source first, in its own PR, then in each surface.
-- A PR that changes `web/src` or `landing/src` UI includes screenshots at 390 and 1440 px wide. `pr-quality.yml` refuses one without them.
+- A PR that changes `web/src` or `landing/src` UI includes screenshots at 390 and 1440 px wide, compared with the reference shots named in `product/design.md`. `pr-quality.yml` refuses one without them.
+- `/ship-pr` runs the `consistency-reviewer` agent (`.claude/agents/consistency-reviewer.md`) on any diff touching `web/`, `api/`, `sdk/`, `README.md` or copy; the `Claude review` workflow applies the same lens.
 
 ## Definition of done for a PR
 

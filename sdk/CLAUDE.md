@@ -14,6 +14,7 @@ The Python (`realworld`, `sdk/python/`) and TypeScript (`@real-world/sdk`, `sdk/
 - Hand-written: `sdk/python/realworld/client.py` and `sdk/typescript/src/index.ts`, about 100 lines each, with the same method names in both.
 - An API change lands as `make openapi`, then `make sdk`, in the same PR as the endpoint. `make check` regenerates and fails if `sdk/` differs from what is committed.
 - `API_VERSION` in both clients equals `info.version` in `api/openapi.json`; a unit test in each SDK checks it.
+- `scripts/check_sdk_parity.py` (in `make lint`) fails when the two clients differ in a method, a parameter or a default. Add an operation to both in the same commit. Docstrings and README copy use `product/glossary.md` terms; `scripts/check_glossary.py` scans them.
 - The TypeScript SDK pins TypeScript 5 because openapi-typescript runs on the TypeScript 5 compiler API.
 
 ## Test

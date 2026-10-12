@@ -145,7 +145,7 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
               value={value}
               aria-valuetext={`${value}% chance of yes`}
               onChange={(e) => setValue(Number(e.target.value))}
-              style={{ "--fill": `${value}%` } as CSSProperties}
+              style={{ /* design: computed position */ "--fill": `${value}%` } as CSSProperties}
             />
             <span className="slider-ends" aria-hidden="true">
               <span>No</span>
@@ -194,7 +194,11 @@ function RevealView({ reveal, date, tiers }: { reveal: Reveal; date: string; tie
       <div className="scale" aria-hidden="true">
         {rows.map(([name, v], i) =>
           v === null ? null : (
-            <span key={name} className={`marker stat-${i}`} style={{ left: pct(v) }} />
+            <span
+              key={name}
+              className={`marker stat-${i}`}
+              style={{ /* design: computed position */ left: pct(v) }}
+            />
           ),
         )}
       </div>

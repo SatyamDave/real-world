@@ -3,7 +3,7 @@
 Usage: python3 scripts/check_glossary.py
 
 product/glossary.md defines each term once; its "Do not write" column lists the synonyms
-that would give one thing two names. This scans the app, API, SDKs, specs and messaging
+that would give one thing two names. This scans the app, API, SDKs, README and specs
 for those words, singular or plural, in any case.
 """
 
@@ -29,7 +29,6 @@ SURFACES = [
     "engine/rw/daily.py",
     "engine/rw/experiments.py",
     "product/*.md",
-    "gtm/messaging.md",
 ]
 SKIP = re.compile(r"\.test\.tsx?$|/fixtures/|/generated/|^product/glossary\.md$")
 

@@ -94,7 +94,7 @@ button.primary:hover:not(:disabled) {
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
-  border-radius: 2px;
+  border-radius: var(--radius);
 }
 
 .sr-only {
@@ -187,7 +187,7 @@ button.primary:hover:not(:disabled) {
   color: var(--accent-2);
   border: 1.5px solid currentColor;
   padding: 1px 8px;
-  border-radius: 2px;
+  border-radius: var(--radius);
 }
 
 .stamp.good {
@@ -501,7 +501,7 @@ main {
   height: 20px;
   padding: 0 4px;
   border: 1.5px solid currentColor;
-  border-radius: 2px;
+  border-radius: var(--radius);
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 500;
@@ -977,7 +977,7 @@ button.icon {
   margin-bottom: 8px;
   padding: 1px 8px;
   border: 1.5px solid currentColor;
-  border-radius: 2px;
+  border-radius: var(--radius);
   font-size: 12px;
   font-weight: 600;
   color: var(--accent-2);
