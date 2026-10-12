@@ -76,3 +76,11 @@ The fork API and acceptable-use screen now exist in code (engine 0.1.0: `engine/
 - Built: one-event forks (200 agents, 5 members, 7 days by default), `simulated: true` and a disclosure on every result, segment shifts only at >= 5% of the fork sample, a rule pass plus one model classification refusing private persons and election persuasion, an election window (2026-10-27 to 11-04) refusing party, candidate and ballot-measure events, 503 refusal when the screen or the spend check cannot run, per-day and per-address fork caps.
 - Departures: screen covers election persuasion only (no shock-vs-message test); floor is 5% of the sample and the lattice lacks sex and urban; free forks show a p10-p90 band over 5 members, not the min-max "uncalibrated range" label; numeric traces and a first-person model-written `/why` account ship before E4c; the population is illustrative fixture marginals.
 - Stage-0 paragraph, Section 6 opening and the limitation on the classifier updated to match. Every audit E1-E7 is still pending; what produces each is unchanged.
+
+## Update for PRs #39-#46 (2026-10-12)
+
+API keys with a dollar cap now exist (PR #43, `api/rw_api/app.py`, `api/rw_api/keys.py`, `api/rw_api/schema.sql`); the "What is built so far" paragraph now cites repository commit `bff759c` and adds them:
+
+- Built: operator-issued keys (no sign-up), only the SHA-256 stored; a keyed fork skips the per-address count and may raise `max_cost_usd` from $0.50 to $5; refused with 401 for an unknown or revoked key and 402 `key_cap_spent` when spend so far (unfinished forks at their maximum cost) plus this fork's maximum would pass the cap; 503 when the key's spend cannot be read; keyed forks still count against the $10 day budget.
+- Departures added: a key has a spend cap but no run count (the policy table proposes spend and run quotas per key), and forks run without a key under the per-address count, where the staged-release subsection keeps them to research keys until E1, E2, E3 and the fork-relevant E7 checks pass. The second departure predates #43; the #6-#38 pass did not name it.
+- No audit has run; E1-E7 stay pending. E1's budget levels (free and paid keys) are unchanged; the built keys have no free/paid distinction.
