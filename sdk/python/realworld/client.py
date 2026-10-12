@@ -17,6 +17,7 @@ from realworld.generated.models import (
     Estimate,
     Job,
     JobCreated,
+    LeafReceipt,
     ReceiptDay,
     Receipts,
     SimulateRequest,
@@ -189,6 +190,11 @@ class Client:
     def status(self) -> SystemStatus:
         """Returns the live system status: latest cycle, ledger head, anchor, model, spend."""
         return SystemStatus.model_validate(self._send("GET", "/v1/status"))
+
+    def receipt_leaf(self, date: str, leaf_hash: str) -> LeafReceipt:
+        """Returns one receipt with its inclusion proof up to the day record's root."""
+        path = f"/v1/receipts/{date}/leaves/{leaf_hash}"
+        return LeafReceipt.model_validate(self._send("GET", path))
 
     def scores(self) -> dict[str, BaselineSkill]:
         """Returns the skill of the simulation against each baseline."""

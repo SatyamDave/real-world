@@ -204,6 +204,11 @@ class Primary(BaseModel):
     n: int = Field(..., title="N")
 
 
+class ProofStep(BaseModel):
+    position: str = Field(..., title="Position")
+    hash: str = Field(..., title="Hash")
+
+
 class ReceiptQuestion(BaseModel):
     text: str = Field(..., title="Text")
     resolution_source: str = Field(..., title="Resolution Source")
@@ -415,6 +420,21 @@ class JobCreated(BaseModel):
     id: str = Field(..., title="Id")
     status: Status = Field(..., title="Status")
     links: Links
+
+
+class LeafReceipt(BaseModel):
+    day: DayRecord
+    record_hash: str = Field(..., title="Record Hash")
+    entry: dict[str, Any] = Field(..., title="Entry")
+    salt: str = Field(..., title="Salt")
+    leaf_hash: str = Field(..., title="Leaf Hash")
+    proof: list[ProofStep] = Field(..., title="Proof")
+    root: str = Field(..., title="Root")
+    question: ReceiptQuestion | None
+    outcome: int | None = Field(..., title="Outcome")
+    brier: float | None = Field(..., title="Brier")
+    anchor: Anchor1 = Field(..., title="Anchor")
+    anchored_at: str | None = Field(..., title="Anchored At")
 
 
 class Paper(BaseModel):

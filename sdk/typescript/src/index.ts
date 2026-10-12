@@ -15,6 +15,7 @@ export type Daily = Schemas["Daily"];
 export type SystemStatus = Schemas["SystemStatus"];
 export type Receipts = Schemas["Receipts"];
 export type ReceiptDay = Schemas["ReceiptDay"];
+export type LeafReceipt = Schemas["LeafReceipt"];
 export type BaselineSkill = Schemas["BaselineSkill"];
 export type Country = Schemas["Country"];
 export type PrefilledEvent = Schemas["PrefilledEvent"];
@@ -221,6 +222,12 @@ export class Client {
   /** Returns the live system status: latest cycle, ledger head, anchor, model, spend. */
   status(): Promise<SystemStatus> {
     return ok(this.http.GET("/v1/status"));
+  }
+
+  /** Returns one receipt with its inclusion proof up to the day record's root. */
+  receipt_leaf(date: string, leaf_hash: string): Promise<LeafReceipt> {
+    const path = { day: date, leaf_hash };
+    return ok(this.http.GET("/v1/receipts/{day}/leaves/{leaf_hash}", { params: { path } }));
   }
 
   /** Returns the skill of the simulation against each baseline. */

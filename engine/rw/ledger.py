@@ -84,6 +84,36 @@ def merkle_root(leaf_hashes: Sequence[str]) -> str:
     return level[0].hex()
 
 
+def inclusion_proof(leaf_hashes: Sequence[str], target: str) -> list[dict[str, str]]:
+    """The siblings from a leaf up to merkle_root's root, each as {position, hash} where position
+    is the side the sibling sits on. A level's odd last node is promoted and adds no sibling."""
+    ordered = sorted(leaf_hashes)
+    if target not in ordered:
+        raise ValueError("the leaf is not in this day")
+    at = ordered.index(target)
+    level = [bytes.fromhex(h) for h in ordered]
+    proof = []
+    while len(level) > 1:
+        if at ^ 1 < len(level):
+            proof.append({"position": "left" if at % 2 else "right", "hash": level[at ^ 1].hex()})
+        paired = [
+            hashlib.sha256(b"\x01" + level[i] + level[i + 1]).digest()
+            for i in range(0, len(level) - 1, 2)
+        ]
+        level = paired + level[len(level) - 1 :] if len(level) % 2 else paired
+        at //= 2
+    return proof
+
+
+def verify_inclusion(target: str, proof: Sequence[dict[str, str]], root: str) -> bool:
+    node = bytes.fromhex(target)
+    for step in proof:
+        sibling = bytes.fromhex(step["hash"])
+        pair = sibling + node if step["position"] == "left" else node + sibling
+        node = hashlib.sha256(b"\x01" + pair).digest()
+    return node.hex() == root
+
+
 def record_hash(day_record: dict[str, str]) -> str:
     return sha256_hex(canonical_json(day_record))
 

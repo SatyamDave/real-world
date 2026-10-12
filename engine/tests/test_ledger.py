@@ -395,3 +395,58 @@ def test_a_fixture_day_is_never_sent_to_a_timestamp_server(conn, monkeypatch, ca
         ledger.anchor_day(conn, "2026-10-01")
     assert ledger.main(["anchor", "--date", "2026-10-01"]) == 1
     assert "not sent to public timestamp servers" in capsys.readouterr().err
+
+
+# sha256 of the single bytes 0x00..0x04, the same leaves web/src/verify.test.ts proves.
+FIVE = [hashlib.sha256(bytes([i])).hexdigest() for i in range(5)]
+FIVE_ROOT = "03156a7c81bdf6a8609cdad5ccc0592188fa49ff734eb7a66f963fd470ea4101"
+FIVE_PROOFS = {
+    "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d": [
+        {
+            "position": "right",
+            "hash": "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986",
+        },
+        {
+            "position": "left",
+            "hash": "d3ca56e2028d9891d1a52237db85a8c73ede36af9ee037f9f21d44ef7cbfe7a0",
+        },
+        {
+            "position": "right",
+            "hash": "e52d9c508c502347344d8c07ad91cbd6068afc75ff6292f062a09ca381c89e71",
+        },
+    ],
+    # The odd last leaf is promoted twice and meets the rest of the tree only at the root.
+    "e52d9c508c502347344d8c07ad91cbd6068afc75ff6292f062a09ca381c89e71": [
+        {
+            "position": "left",
+            "hash": "81adf34334159cc0cf9b990034055fc1dc628af9384f2b4bf7633f6c8a479be5",
+        }
+    ],
+}
+
+
+def test_inclusion_proofs_match_the_pinned_vector():
+    assert ledger.merkle_root(FIVE) == FIVE_ROOT
+    for leaf, proof in FIVE_PROOFS.items():
+        assert ledger.inclusion_proof(FIVE, leaf) == proof
+        assert ledger.verify_inclusion(leaf, proof, FIVE_ROOT)
+
+
+@pytest.mark.parametrize("n", range(1, 10))
+def test_every_leaf_of_every_size_proves_into_the_root(n):
+    leaves = [hashlib.sha256(bytes([i, n])).hexdigest() for i in range(n)]
+    root = ledger.merkle_root(leaves)
+    for leaf in leaves:
+        assert ledger.verify_inclusion(leaf, ledger.inclusion_proof(leaves, leaf), root)
+
+
+def test_an_inclusion_proof_fails_on_a_changed_leaf_sibling_or_side():
+    leaf = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+    proof = FIVE_PROOFS[leaf]
+    assert not ledger.verify_inclusion(FIVE[1], proof, FIVE_ROOT)
+    flipped = [{**proof[0], "position": "left"}, *proof[1:]]
+    assert not ledger.verify_inclusion(leaf, flipped, FIVE_ROOT)
+    other = [{**proof[0], "hash": FIVE[1]}, *proof[1:]]
+    assert not ledger.verify_inclusion(leaf, other, FIVE_ROOT)
+    with pytest.raises(ValueError):
+        ledger.inclusion_proof(FIVE, "0" * 64)
