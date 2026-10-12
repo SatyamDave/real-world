@@ -279,6 +279,57 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v1/cycle": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One daily cycle as a run log: steps, model calls, news, assimilation, spread audit */
+    get: operations["latest_cycle_v1_cycle_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/cycle/{date}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One daily cycle as a run log: steps, model calls, news, assimilation, spread audit */
+    get: operations["cycle_v1_cycle__date__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/cycle/{date}/replay": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Replay the day's forecasts from the recorded model outputs and diff them against the committed values */
+    get: operations["cycle_replay_v1_cycle__date__replay_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -365,6 +416,46 @@ export interface components {
       /** Probability */
       probability: number;
     };
+    /** Assimilation */
+    Assimilation: {
+      /** Iso3 */
+      iso3: string;
+      /** Topic */
+      topic: string;
+      /** Before */
+      before: number | null;
+      /** After News */
+      after_news: number;
+      /** Observed */
+      observed: number | null;
+      /** Observed N */
+      observed_n: number | null;
+      /** Observed Source */
+      observed_source: string | null;
+      /** Innovation */
+      innovation: number | null;
+      /** Applied */
+      applied: number | null;
+      /** Gain */
+      gain: number | null;
+      /** After */
+      after: number;
+    };
+    /** Audit */
+    Audit: {
+      /** Iso3 */
+      iso3: string;
+      /** Topic */
+      topic: string;
+      /** Sim Sd */
+      sim_sd: number;
+      /** Survey Sd */
+      survey_sd: number;
+      /** Ratio */
+      ratio: number;
+      /** In Band */
+      in_band: boolean;
+    };
     /** Band */
     Band: {
       /** P10 */
@@ -399,6 +490,13 @@ export interface components {
       by_region: {
         [key: string]: components["schemas"]["Skill"];
       };
+    };
+    /** Budget */
+    Budget: {
+      /** Nightly Budget Usd */
+      nightly_budget_usd: number;
+      /** Spent Usd */
+      spent_usd: number;
     };
     /** Cost */
     Cost: {
@@ -455,6 +553,49 @@ export interface components {
        * @description Other visitors' answers; the caller's own is never counted.
        */
       count: number;
+    };
+    /** Cycle */
+    Cycle: {
+      /** Date */
+      date: string;
+      /** Dates */
+      dates: string[];
+      /** Model */
+      model: string;
+      /** Provider */
+      provider: string;
+      /** Engine Version */
+      engine_version: string;
+      /** Config Hash */
+      config_hash: string;
+      /** Steps */
+      steps: components["schemas"]["rw_api__routes_cycle__Step"][];
+      news: components["schemas"]["News"];
+      /** Assimilation */
+      assimilation: components["schemas"]["Assimilation"][];
+      /** Audit */
+      audit: components["schemas"]["Audit"][];
+      /** Experimental */
+      experimental: string[];
+      ledger: components["schemas"]["CycleLedger"] | null;
+      budget: components["schemas"]["Budget"];
+      settings_used: components["schemas"]["SettingsUsed"];
+    };
+    /** CycleLedger */
+    CycleLedger: {
+      /** Root */
+      root: string;
+      /** Leaf Count */
+      leaf_count: number;
+      /** Record Hash */
+      record_hash: string;
+      /**
+       * Anchor
+       * @enum {string}
+       */
+      anchor: "not_anchored" | "pending" | "anchored";
+      /** Anchored At */
+      anchored_at: string | null;
     };
     /** Daily */
     Daily: {
@@ -657,6 +798,19 @@ export interface components {
       /** Events */
       events: string;
     };
+    /** News */
+    News: {
+      /** Source */
+      source: ("fixtures" | "gdelt") | null;
+      /** Articles */
+      articles: number | null;
+      /** Clusters */
+      clusters: number;
+      /** Countries */
+      countries: number;
+      /** By Topic */
+      by_topic: components["schemas"]["TopicNews"][];
+    };
     /** NotFound */
     NotFound: {
       /** Detail */
@@ -813,6 +967,41 @@ export interface components {
        */
       id?: string | null;
     };
+    /** Replay */
+    Replay: {
+      /** Date */
+      date: string;
+      /** Forecasts */
+      forecasts: components["schemas"]["ReplayRow"][];
+      /** Calls Used */
+      calls_used: number;
+      /** Missing */
+      missing: string[];
+    };
+    /** ReplayRow */
+    ReplayRow: {
+      /** Question Id */
+      question_id: string;
+      /** Question */
+      question: string | null;
+      /**
+       * Forecaster
+       * @enum {string}
+       */
+      forecaster: "sim" | "plain_llm";
+      /** Committed */
+      committed: number;
+      /** Replayed */
+      replayed: number | null;
+      /** Low */
+      low: number | null;
+      /** High */
+      high: number | null;
+      /** Diff */
+      diff: number | null;
+      /** Matches */
+      matches: boolean;
+    };
     /** Research */
     Research: {
       /** Experiments */
@@ -861,6 +1050,29 @@ export interface components {
       n_agents: number;
       /** Tier */
       tier: string;
+    };
+    /** SettingsUsed */
+    SettingsUsed: {
+      /** Assimilation */
+      assimilation: string;
+      /** Kalman Walk Sd Logit */
+      kalman_walk_sd_logit: number;
+      /** Kalman Prior Sd Logit */
+      kalman_prior_sd_logit: number;
+      /** Poll Error Factor */
+      poll_error_factor: number;
+      /** Step Cap Logit */
+      step_cap_logit: number;
+      /** Anchor Pull */
+      anchor_pull: number;
+      /** Spread Band */
+      spread_band: number[];
+      /** Daily Forecast Members */
+      daily_forecast_members: number;
+      /** Plain Llm Samples */
+      plain_llm_samples: number;
+      /** Headlines Per Question */
+      headlines_per_question: number;
     };
     /** SimulateRequest */
     SimulateRequest: {
@@ -987,20 +1199,6 @@ export interface components {
        */
       claim: "reportable" | "insufficient_n";
     };
-    /** Step */
-    Step: {
-      /** Day */
-      day: number;
-      /** Topic */
-      topic: string;
-      /** Delta */
-      delta: number;
-      /**
-       * Cause
-       * @enum {string}
-       */
-      cause: "event" | "anchor_pull";
-    };
     /** SystemStatus */
     SystemStatus: {
       /** Date */
@@ -1030,6 +1228,32 @@ export interface components {
       nightly_budget_usd: number;
       /** Engine Version */
       engine_version: string;
+    };
+    /** TopItem */
+    TopItem: {
+      /** Title */
+      title: string;
+      /** Iso3 */
+      iso3: string;
+      /** Tier */
+      tier: string;
+      /** Salience */
+      salience: number;
+      /** Value */
+      value: number;
+    };
+    /** TopicNews */
+    TopicNews: {
+      /** Topic */
+      topic: string;
+      /** Label */
+      label: string;
+      /** Signals */
+      signals: number;
+      /** Mean Value */
+      mean_value: number | null;
+      /** Top */
+      top: components["schemas"]["TopItem"][];
     };
     /** TopicOutput */
     TopicOutput: {
@@ -1067,7 +1291,7 @@ export interface components {
         [key: string]: number;
       };
       /** Steps */
-      steps: components["schemas"]["Step"][];
+      steps: components["schemas"]["rw__simulate__Step"][];
     };
     /** WeekDay */
     WeekDay: {
@@ -1094,6 +1318,52 @@ export interface components {
       daily_question_id: string | null;
       /** Prefilled Events */
       prefilled_events: components["schemas"]["PrefilledEvent"][];
+    };
+    /** Step */
+    rw__simulate__Step: {
+      /** Day */
+      day: number;
+      /** Topic */
+      topic: string;
+      /** Delta */
+      delta: number;
+      /**
+       * Cause
+       * @enum {string}
+       */
+      cause: "event" | "anchor_pull";
+    };
+    /** Step */
+    rw_api__routes_cycle__Step: {
+      /** Step */
+      step: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "ok" | "failed" | "running" | "not_run";
+      /** Started At */
+      started_at: string | null;
+      /** Finished At */
+      finished_at: string | null;
+      /** Seconds */
+      seconds: number | null;
+      /** Detail */
+      detail: {
+        [key: string]: unknown;
+      } | null;
+      /** Model Calls */
+      model_calls: number;
+      /** In Tokens */
+      in_tokens: number;
+      /** Out Tokens */
+      out_tokens: number;
+      /** Cost Usd */
+      cost_usd: number;
+      /** By Purpose */
+      by_purpose: {
+        [key: string]: number;
+      };
     };
   };
   responses: never;
@@ -1698,6 +1968,124 @@ export interface operations {
         };
       };
       /** @description No such receipt */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description The request is invalid */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  latest_cycle_v1_cycle_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Cycle"];
+        };
+      };
+      /** @description No such cycle */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description The request is invalid */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  cycle_v1_cycle__date__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        date: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Cycle"];
+        };
+      };
+      /** @description No such cycle */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description The request is invalid */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  cycle_replay_v1_cycle__date__replay_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        date: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Replay"];
+        };
+      };
+      /** @description No such cycle */
       404: {
         headers: {
           [name: string]: unknown;

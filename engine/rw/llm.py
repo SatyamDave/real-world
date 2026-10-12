@@ -215,7 +215,7 @@ def complete_json(
             " prompt, output_json, in_tokens, out_tokens, cost_usd)"
             " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
-                datetime.now(UTC).isoformat(timespec="seconds"),
+                datetime.now(UTC).isoformat(timespec="milliseconds"),
                 llm.name,
                 settings.MODEL,
                 purpose,

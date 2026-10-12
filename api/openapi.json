@@ -785,6 +785,142 @@
           }
         }
       }
+    },
+    "/v1/cycle": {
+      "get": {
+        "summary": "One daily cycle as a run log: steps, model calls, news, assimilation, spread audit",
+        "operationId": "latest_cycle_v1_cycle_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cycle"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such cycle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cycle/{date}": {
+      "get": {
+        "summary": "One daily cycle as a run log: steps, model calls, news, assimilation, spread audit",
+        "operationId": "cycle_v1_cycle__date__get",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cycle"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such cycle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cycle/{date}/replay": {
+      "get": {
+        "summary": "Replay the day's forecasts from the recorded model outputs and diff them against the committed values",
+        "operationId": "cycle_replay_v1_cycle__date__replay_get",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Replay"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such cycle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -937,6 +1073,149 @@
         "required": ["question_id", "player_id", "probability"],
         "title": "Answer"
       },
+      "Assimilation": {
+        "properties": {
+          "iso3": {
+            "type": "string",
+            "title": "Iso3"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before"
+          },
+          "after_news": {
+            "type": "number",
+            "title": "After News"
+          },
+          "observed": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed"
+          },
+          "observed_n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed N"
+          },
+          "observed_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed Source"
+          },
+          "innovation": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Innovation"
+          },
+          "applied": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied"
+          },
+          "gain": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gain"
+          },
+          "after": {
+            "type": "number",
+            "title": "After"
+          }
+        },
+        "type": "object",
+        "required": [
+          "iso3",
+          "topic",
+          "before",
+          "after_news",
+          "observed",
+          "observed_n",
+          "observed_source",
+          "innovation",
+          "applied",
+          "gain",
+          "after"
+        ],
+        "title": "Assimilation"
+      },
+      "Audit": {
+        "properties": {
+          "iso3": {
+            "type": "string",
+            "title": "Iso3"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "sim_sd": {
+            "type": "number",
+            "title": "Sim Sd"
+          },
+          "survey_sd": {
+            "type": "number",
+            "title": "Survey Sd"
+          },
+          "ratio": {
+            "type": "number",
+            "title": "Ratio"
+          },
+          "in_band": {
+            "type": "boolean",
+            "title": "In Band"
+          }
+        },
+        "type": "object",
+        "required": ["iso3", "topic", "sim_sd", "survey_sd", "ratio", "in_band"],
+        "title": "Audit"
+      },
       "Band": {
         "properties": {
           "p10": {
@@ -1022,6 +1301,21 @@
         "type": "object",
         "required": ["n", "n_pairs", "mean_diff", "low", "high", "claim", "by_tier", "by_region"],
         "title": "BaselineSkill"
+      },
+      "Budget": {
+        "properties": {
+          "nightly_budget_usd": {
+            "type": "number",
+            "title": "Nightly Budget Usd"
+          },
+          "spent_usd": {
+            "type": "number",
+            "title": "Spent Usd"
+          }
+        },
+        "type": "object",
+        "required": ["nightly_budget_usd", "spent_usd"],
+        "title": "Budget"
       },
       "Cost": {
         "properties": {
@@ -1134,6 +1428,137 @@
         "type": "object",
         "required": ["mean", "count"],
         "title": "Crowd"
+      },
+      "Cycle": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "dates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dates"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "engine_version": {
+            "type": "string",
+            "title": "Engine Version"
+          },
+          "config_hash": {
+            "type": "string",
+            "title": "Config Hash"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/rw_api__routes_cycle__Step"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "news": {
+            "$ref": "#/components/schemas/News"
+          },
+          "assimilation": {
+            "items": {
+              "$ref": "#/components/schemas/Assimilation"
+            },
+            "type": "array",
+            "title": "Assimilation"
+          },
+          "audit": {
+            "items": {
+              "$ref": "#/components/schemas/Audit"
+            },
+            "type": "array",
+            "title": "Audit"
+          },
+          "experimental": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Experimental"
+          },
+          "ledger": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CycleLedger"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget"
+          },
+          "settings_used": {
+            "$ref": "#/components/schemas/SettingsUsed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "dates",
+          "model",
+          "provider",
+          "engine_version",
+          "config_hash",
+          "steps",
+          "news",
+          "assimilation",
+          "audit",
+          "experimental",
+          "ledger",
+          "budget",
+          "settings_used"
+        ],
+        "title": "Cycle"
+      },
+      "CycleLedger": {
+        "properties": {
+          "root": {
+            "type": "string",
+            "title": "Root"
+          },
+          "leaf_count": {
+            "type": "integer",
+            "title": "Leaf Count"
+          },
+          "record_hash": {
+            "type": "string",
+            "title": "Record Hash"
+          },
+          "anchor": {
+            "type": "string",
+            "enum": ["not_anchored", "pending", "anchored"],
+            "title": "Anchor"
+          },
+          "anchored_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchored At"
+          }
+        },
+        "type": "object",
+        "required": ["root", "leaf_count", "record_hash", "anchor", "anchored_at"],
+        "title": "CycleLedger"
       },
       "Daily": {
         "properties": {
@@ -1670,6 +2095,51 @@
         "required": ["self", "events"],
         "title": "Links"
       },
+      "News": {
+        "properties": {
+          "source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["fixtures", "gdelt"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "articles": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Articles"
+          },
+          "clusters": {
+            "type": "integer",
+            "title": "Clusters"
+          },
+          "countries": {
+            "type": "integer",
+            "title": "Countries"
+          },
+          "by_topic": {
+            "items": {
+              "$ref": "#/components/schemas/TopicNews"
+            },
+            "type": "array",
+            "title": "By Topic"
+          }
+        },
+        "type": "object",
+        "required": ["source", "articles", "clusters", "countries", "by_topic"],
+        "title": "News"
+      },
       "NotFound": {
         "properties": {
           "detail": {
@@ -2026,6 +2496,124 @@
         "required": ["code", "detail"],
         "title": "Refused"
       },
+      "Replay": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "forecasts": {
+            "items": {
+              "$ref": "#/components/schemas/ReplayRow"
+            },
+            "type": "array",
+            "title": "Forecasts"
+          },
+          "calls_used": {
+            "type": "integer",
+            "title": "Calls Used"
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing"
+          }
+        },
+        "type": "object",
+        "required": ["date", "forecasts", "calls_used", "missing"],
+        "title": "Replay"
+      },
+      "ReplayRow": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          },
+          "forecaster": {
+            "type": "string",
+            "enum": ["sim", "plain_llm"],
+            "title": "Forecaster"
+          },
+          "committed": {
+            "type": "number",
+            "title": "Committed"
+          },
+          "replayed": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replayed"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "diff": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diff"
+          },
+          "matches": {
+            "type": "boolean",
+            "title": "Matches"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question_id",
+          "question",
+          "forecaster",
+          "committed",
+          "replayed",
+          "low",
+          "high",
+          "diff",
+          "matches"
+        ],
+        "title": "ReplayRow"
+      },
       "Research": {
         "properties": {
           "experiments": {
@@ -2159,6 +2747,67 @@
         "type": "object",
         "required": ["segment", "topic", "shift_p10", "shift_p50", "shift_p90", "n_agents", "tier"],
         "title": "SegmentShift"
+      },
+      "SettingsUsed": {
+        "properties": {
+          "assimilation": {
+            "type": "string",
+            "title": "Assimilation"
+          },
+          "kalman_walk_sd_logit": {
+            "type": "number",
+            "title": "Kalman Walk Sd Logit"
+          },
+          "kalman_prior_sd_logit": {
+            "type": "number",
+            "title": "Kalman Prior Sd Logit"
+          },
+          "poll_error_factor": {
+            "type": "number",
+            "title": "Poll Error Factor"
+          },
+          "step_cap_logit": {
+            "type": "number",
+            "title": "Step Cap Logit"
+          },
+          "anchor_pull": {
+            "type": "number",
+            "title": "Anchor Pull"
+          },
+          "spread_band": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Spread Band"
+          },
+          "daily_forecast_members": {
+            "type": "integer",
+            "title": "Daily Forecast Members"
+          },
+          "plain_llm_samples": {
+            "type": "integer",
+            "title": "Plain Llm Samples"
+          },
+          "headlines_per_question": {
+            "type": "integer",
+            "title": "Headlines Per Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "assimilation",
+          "kalman_walk_sd_logit",
+          "kalman_prior_sd_logit",
+          "poll_error_factor",
+          "step_cap_logit",
+          "anchor_pull",
+          "spread_band",
+          "daily_forecast_members",
+          "plain_llm_samples",
+          "headlines_per_question"
+        ],
+        "title": "SettingsUsed"
       },
       "SimulateRequest": {
         "properties": {
@@ -2403,30 +3052,6 @@
         "required": ["n", "n_pairs", "mean_diff", "low", "high", "claim"],
         "title": "Skill"
       },
-      "Step": {
-        "properties": {
-          "day": {
-            "type": "integer",
-            "title": "Day"
-          },
-          "topic": {
-            "type": "string",
-            "title": "Topic"
-          },
-          "delta": {
-            "type": "number",
-            "title": "Delta"
-          },
-          "cause": {
-            "type": "string",
-            "enum": ["event", "anchor_pull"],
-            "title": "Cause"
-          }
-        },
-        "type": "object",
-        "required": ["day", "topic", "delta", "cause"],
-        "title": "Step"
-      },
       "SystemStatus": {
         "properties": {
           "date": {
@@ -2539,6 +3164,70 @@
         ],
         "title": "SystemStatus"
       },
+      "TopItem": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "iso3": {
+            "type": "string",
+            "title": "Iso3"
+          },
+          "tier": {
+            "type": "string",
+            "title": "Tier"
+          },
+          "salience": {
+            "type": "number",
+            "title": "Salience"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": ["title", "iso3", "tier", "salience", "value"],
+        "title": "TopItem"
+      },
+      "TopicNews": {
+        "properties": {
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "signals": {
+            "type": "integer",
+            "title": "Signals"
+          },
+          "mean_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Value"
+          },
+          "top": {
+            "items": {
+              "$ref": "#/components/schemas/TopItem"
+            },
+            "type": "array",
+            "title": "Top"
+          }
+        },
+        "type": "object",
+        "required": ["topic", "label", "signals", "mean_value", "top"],
+        "title": "TopicNews"
+      },
       "TopicOutput": {
         "properties": {
           "baseline_share": {
@@ -2614,7 +3303,7 @@
           },
           "steps": {
             "items": {
-              "$ref": "#/components/schemas/Step"
+              "$ref": "#/components/schemas/rw__simulate__Step"
             },
             "type": "array",
             "title": "Steps"
@@ -2694,6 +3383,126 @@
         "type": "object",
         "required": ["date", "countries", "daily_question_id", "prefilled_events"],
         "title": "World"
+      },
+      "rw__simulate__Step": {
+        "properties": {
+          "day": {
+            "type": "integer",
+            "title": "Day"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "delta": {
+            "type": "number",
+            "title": "Delta"
+          },
+          "cause": {
+            "type": "string",
+            "enum": ["event", "anchor_pull"],
+            "title": "Cause"
+          }
+        },
+        "type": "object",
+        "required": ["day", "topic", "delta", "cause"],
+        "title": "Step"
+      },
+      "rw_api__routes_cycle__Step": {
+        "properties": {
+          "step": {
+            "type": "string",
+            "title": "Step"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ok", "failed", "running", "not_run"],
+            "title": "Status"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seconds"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "model_calls": {
+            "type": "integer",
+            "title": "Model Calls"
+          },
+          "in_tokens": {
+            "type": "integer",
+            "title": "In Tokens"
+          },
+          "out_tokens": {
+            "type": "integer",
+            "title": "Out Tokens"
+          },
+          "cost_usd": {
+            "type": "number",
+            "title": "Cost Usd"
+          },
+          "by_purpose": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Purpose"
+          }
+        },
+        "type": "object",
+        "required": [
+          "step",
+          "status",
+          "started_at",
+          "finished_at",
+          "seconds",
+          "detail",
+          "model_calls",
+          "in_tokens",
+          "out_tokens",
+          "cost_usd",
+          "by_purpose"
+        ],
+        "title": "Step"
       }
     }
   }

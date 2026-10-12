@@ -95,7 +95,7 @@ def _news_block(titles: list[str]) -> str:
     return f"Today's headlines:\n{lines}\n"
 
 
-def _yes_share(answer: dict[str, Any]) -> float:
+def yes_share(answer: dict[str, Any]) -> float:
     yes, no = float(answer["yes"]), float(answer["no"])
     return yes / (yes + no) if yes + no > 0 else 0.5
 
@@ -104,7 +104,7 @@ def _sigmoid(x: np.ndarray) -> np.ndarray:
     return 1 / (1 + np.exp(-x))
 
 
-def _segment_text(segment: str) -> str:
+def segment_text(segment: str) -> str:
     iso3, age_band, education = segment.split("|")
     return f"adults aged {age_band} in {news.country_names()[iso3]} with {education} education"
 
@@ -113,7 +113,7 @@ def sim_prompt(date: str, q: Question, titles: list[str], segment: str, share: f
     options = ["yes", "no"]
     random.Random(f"{date}|{q['id']}|{segment}").shuffle(options)
     return (
-        _news_block(titles) + f"\nYou answer for this group of people: {_segment_text(segment)}.\n"
+        _news_block(titles) + f"\nYou answer for this group of people: {segment_text(segment)}.\n"
         f"Today {share:.0%} of them answer yes to: {news.topics()[q['topic']]}\n"
         f"\nQuestion: {q['text']}\n"
         f"Options, in this order: {', '.join(options)}.\n"
@@ -121,30 +121,50 @@ def sim_prompt(date: str, q: Question, titles: list[str], segment: str, share: f
     )
 
 
-def sim_forecast(
-    conn: sqlite3.Connection, date: str, q: Question, agents: Agents, budget: llm.Budget
-) -> tuple[float, float, float]:
-    """Return (probability, p10, p90) from one call per present segment, spread to agents."""
+def sim_inputs(
+    conn: sqlite3.Connection, date: str, q: Question, agents: Agents
+) -> tuple[np.ndarray, list[tuple[str, np.ndarray, float, str]]]:
+    """The question's agent offsets and, per present segment, (segment, agent mask over those
+    agents, the segment's prior share, the prompt the model is asked)."""
     in_q = np.isin(agents["country"], q["countries"])
     if not in_q.any():
         raise ValueError(f"no agents in {q['countries']} for {q['id']}")
     segments = agents["segment"][in_q]
     beliefs = agents[f"b_{q['topic']}"][in_q]
-    offsets = agents["offset"][in_q]
     titles = headlines(conn, date, q["countries"])
-
-    logits = np.empty(len(segments))
+    asks = []
     for seg in sorted(set(segments.tolist())):
         mask = segments == seg
         share = float(_sigmoid(beliefs[mask]).mean())
-        prompt = sim_prompt(date, q, titles, seg, share)
-        p = _yes_share(llm.complete_json("forecast_sim", prompt, ANSWER_SCHEMA, budget, conn=conn))
-        p = float(np.clip(p, settings.P_EPS, 1 - settings.P_EPS))
-        logits[mask] = np.log(p / (1 - p))
+        asks.append((seg, mask, share, sim_prompt(date, q, titles, seg, share)))
+    return agents["offset"][in_q], asks
 
+
+def sim_forecast(
+    conn: sqlite3.Connection, date: str, q: Question, agents: Agents, budget: llm.Budget
+) -> tuple[float, float, float]:
+    """Return (probability, p10, p90) from one call per present segment, spread to agents."""
+    offsets, asks = sim_inputs(conn, date, q, agents)
+    logits = np.empty(len(offsets))
+    for _, mask, _, prompt in asks:
+        p = yes_share(llm.complete_json("forecast_sim", prompt, ANSWER_SCHEMA, budget, conn=conn))
+        logits[mask] = segment_logit(p)
+    return sim_summary(date, q["id"], logits, offsets)
+
+
+def segment_logit(share: float) -> float:
+    p = float(np.clip(share, settings.P_EPS, 1 - settings.P_EPS))
+    return float(np.log(p / (1 - p)))
+
+
+def sim_summary(
+    date: str, question_id: str, logits: np.ndarray, offsets: np.ndarray
+) -> tuple[float, float, float]:
+    """(probability, p10, p90) of the agents' answers: each draws its segment's logit plus its own
+    offset, and the spread is a bootstrap of DAILY_FORECAST_MEMBERS means."""
     agent_p = _sigmoid(logits + offsets)
     prob = float(agent_p.mean())
-    seed = int.from_bytes(hashlib.sha256(f"{date}|{q['id']}".encode()).digest()[:8], "big")
+    seed = int.from_bytes(hashlib.sha256(f"{date}|{question_id}".encode()).digest()[:8], "big")
     rng = np.random.default_rng(seed)
     picks = rng.integers(0, len(agent_p), (settings.DAILY_FORECAST_MEMBERS, len(agent_p)))
     p10, p90 = np.quantile(agent_p[picks].mean(axis=1), [0.1, 0.9])
@@ -161,20 +181,27 @@ def plain_prompt(q: Question, titles: list[str], sample: int) -> str:
     )
 
 
+def plain_mean(samples: list[float]) -> float:
+    """The mean of the samples without the lowest and the highest."""
+    ps = sorted(samples)
+    kept = ps[1:-1] if len(ps) > 2 else ps
+    return sum(kept) / len(kept)
+
+
 def plain_llm_forecast(
     conn: sqlite3.Connection, date: str, q: Question, budget: llm.Budget
 ) -> float:
     titles = headlines(conn, date, q["countries"])
-    ps = sorted(
-        _yes_share(
-            llm.complete_json(
-                "forecast_plain", plain_prompt(q, titles, i), ANSWER_SCHEMA, budget, conn=conn
+    return plain_mean(
+        [
+            yes_share(
+                llm.complete_json(
+                    "forecast_plain", plain_prompt(q, titles, i), ANSWER_SCHEMA, budget, conn=conn
+                )
             )
-        )
-        for i in range(settings.PLAIN_LLM_SAMPLES)
+            for i in range(settings.PLAIN_LLM_SAMPLES)
+        ]
     )
-    kept = ps[1:-1] if len(ps) > 2 else ps
-    return sum(kept) / len(kept)
 
 
 def forecast_day(
