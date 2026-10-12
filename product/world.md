@@ -11,6 +11,7 @@ Nobody visits "the world" directly. Visitors meet it through the globe and an ag
 ## How we know it works
 
 - `make daily DATE=<fixture date>` runs all six steps on the bundled fixtures with no API key and writes `var/snapshots/<date>/agents.parquet`; re-running it does no new work (checked by a test that counts `llm_calls` rows).
+- `python -m rw.daily --date <past UTC day> --news live` runs the same six steps on that day's real news from GDELT instead of the fixtures. It reads all 96 GKG files of the day, keeps English-feed articles whose locations name one of the 16 countries and whose themes include one of nine GKG themes, and saves them in the fixture shape at `var/news/<date>.csv`; a rerun reads that file and downloads nothing. A missing file, a network error or a day with no kept articles stops the run at `ingest`, so a day without news never forecasts (checked by `engine/tests/test_news_live.py`).
 - Property test: with no signals and no polls, the population mean per topic stays put and per-agent spread does not shrink beyond the stated weekly limit.
 - Property test: a nudge never moves a segment by more than the cap, and the nudge is stored.
 - Test: no market price appears in any prompt or input of the assimilation and `sim` forecast steps.
@@ -22,11 +23,12 @@ Nobody visits "the world" directly. Visitors meet it through the globe and an ag
 - Not 100,000 minds. The model is called per segment and per news cluster; agents are rows of numbers. We say how many calls ran.
 - Not the whole world in the base build: 16 countries from illustrative sample marginals, labelled as such. Real populations come from GLOPOP-S once its licence row is cleared.
 - No social graph, neighbour talk, twins, native-language prompts or fine-tuning.
+- Not the world's news. Live news is GDELT's English GKG feed, which leans toward outlets that publish online in English, and its theme and location tags are machine-assigned and noisy ([research/data/050](../research/data/050-gdelt.md)). Live days carry no polls yet.
 - No market prices as observations. Markets are a baseline to score against, not a signal to copy.
 - No ensemble Kalman filter until a hindcast shows capped nudging overfits.
 
 ## Where the code lives
 
 - `engine/rw/population.py`, `beliefs.py`, `news.py`, `daily.py`; data in `data/` (`sources.csv`, `countries.csv`, `topics.csv`, `sample/`, `fixtures/`).
-- Decisions: [0001-architecture](../research/decisions/0001-architecture.md).
-- Research: [SYNTHESIS](../research/SYNTHESIS.md), [science/022](../research/science/022-data-assimilation-abm.md), [science/025](../research/science/025-news-exposure-diffusion.md), [science/028](../research/science/028-large-scale-llm-sims.md), [engineering/064](../research/engineering/064-agent-state-storage.md), [engineering/065](../research/engineering/065-belief-update-operators.md), [data/057](../research/data/057-global-synthetic-population.md), [data/060](../research/data/060-data-licensing-legal.md), [data/099](../research/data/099-country-coverage-tiers.md).
+- Decisions: [0001-architecture](../research/decisions/0001-architecture.md) (GDELT GKG is the news source the fixture mimics).
+- Research: [SYNTHESIS](../research/SYNTHESIS.md), [science/022](../research/science/022-data-assimilation-abm.md), [science/025](../research/science/025-news-exposure-diffusion.md), [science/028](../research/science/028-large-scale-llm-sims.md), [engineering/064](../research/engineering/064-agent-state-storage.md), [engineering/065](../research/engineering/065-belief-update-operators.md), [data/050](../research/data/050-gdelt.md), [open-source/042](../research/open-source/042-news-ingestion.md), [data/057](../research/data/057-global-synthetic-population.md), [data/060](../research/data/060-data-licensing-legal.md), [data/099](../research/data/099-country-coverage-tiers.md).
