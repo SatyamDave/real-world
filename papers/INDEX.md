@@ -1,6 +1,6 @@
 # Real World papers: index
 
-Eight drafts, one system. Engine 0.1.0 now exists (`engine/rw/`, through PR #38, commit ad95a99) but has committed no live forecast, so no paper reports a forecast result; every result below is pending and names the artifact that will produce it. The only Real World numbers in any paper are the synthetic checks E003 and E006 of the assimilation operator (`experiments/E003/results/2026-10-12-none/`, `experiments/E006/results/2026-10-12-none/`), reported in *Don't Ask a Model* and *Belief Assimilation* as synthetic, not forecast skill. All eight compile with `tectonic paper.tex` (2026-10-12): exit 0, no errors, no undefined citations or references, no overfull boxes. The remaining warnings are underfull boxes, mostly inside bibliographies (long URLs), all present before this pass. `silicon-samples-sok` also passes `python3 data/counts.py --check`.
+Eight drafts, one system. Engine 0.1.0 now exists (`engine/rw/`, through PR #46, commit bff759c) but has committed no live forecast, so no paper reports a forecast result; every result below is pending and names the artifact that will produce it. The only Real World numbers in any paper are the synthetic checks E003 and E006 of the assimilation operator (`experiments/E003/results/2026-10-12-none/`, `experiments/E006/results/2026-10-12-none/`), reported in *Don't Ask a Model* and *Belief Assimilation* as synthetic, not forecast skill. All eight compile with `tectonic paper.tex` (2026-10-12): exit 0, no errors, no undefined citations or references, no overfull boxes; rechecked after the #39-#46 pass with tectonic 0.17.0. The remaining warnings are underfull boxes, mostly inside bibliographies (long URLs), all present before these passes. `silicon-samples-sok` also passes `python3 data/counts.py --check`.
 
 ## Papers
 
@@ -58,6 +58,14 @@ The papers were written at PR #5, before any code. This pass brings them up to w
 - `receipts-protocol`: the pre-genesis ledger is now described as built (one free TSA token with no certificate check, a pending OpenTimestamps proof, no signature, no log, fixed question list, day-block bootstrap); H1 notes that `test_ledger.py` exists but tests only that format.
 - `public-world-sims-ethics`: new paragraph on what is built (forks, labels, screen, election window, fail-closed refusals, spend caps) and where it departs from the proposed rules, including traces and a first-person `/why` account shipping before E4c.
 - `global-population`, `real-world-bench`, `variance-correction`, `silicon-samples-sok`: sentences saying no code exists, or that the population is built from GLOPOP-S, corrected to the illustrative-fixture engine.
+
+## Changes in this pass (2026-10-12, PRs #39-#46)
+
+Two papers change; no result, citation or hypothesis does. #39 (which question the daily page shows), #40 (the E003 registry status; the papers already cite its committed result), #41 (repository rules) and #45 (web theme) change nothing the papers state.
+
+- `receipts-protocol`: "Pre-genesis records" adds what #42 and #46 built: the daily cycle anchors each live day after `publish` (fixture days never sent), a failed anchor is recorded and retried without stopping scoring, `publish` exports each day with every salt but no anchor proofs, so values are revealed at commit, and `make mirror` pushes the exports to a public git repo without force, refusing to change a mirrored day. Token signature, certificate chain and the Bitcoin upgrade remain unchecked; no live day has been anchored.
+- `public-world-sims-ethics`: "What is built so far" adds the #43 API keys (operator-issued, dollar cap, SHA-256 only, exempt from the per-address count, still inside the day's fork budget, 503 when the key's spend cannot be read) and two departures: a key has no run count, and forks run without a key where the staged-release rule keeps them to research keys.
+- `ask-a-world`, `belief-assimilation`, `global-population`, `real-world-bench`, `silicon-samples-sok`, `variance-correction`: no change. *Don't Ask a Model*'s "where the build differs" table still describes the ledger correctly and is pinned to commit ad95a99.
 
 ## Order in which results will arrive
 
