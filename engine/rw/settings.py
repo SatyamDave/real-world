@@ -23,6 +23,9 @@ FORK_MEMBERS_MAX = 20
 
 DAILY_FORECAST_MEMBERS = 5
 PLAIN_LLM_SAMPLES = 5
+HEADLINES_PER_QUESTION = 8
+# Keeps logit finite when the model answers exactly 0 or 1.
+P_EPS = 1e-4
 
 STEP_CAP_LOGIT = 0.5
 ANCHOR_PULL = 0.05

@@ -19,10 +19,6 @@ from rw.population import Agents
 
 FIXTURES = sources.SOURCES_CSV.parent / "fixtures"
 MARKETS_SOURCE = "fixture_markets"
-# Belongs in settings.py, which this slice may not touch; move it there in a follow-up.
-HEADLINES_PER_QUESTION = 8
-# Keeps logit finite when the model answers exactly 0 or 1.
-P_EPS = 1e-4
 
 Question = dict[str, Any]
 
@@ -65,7 +61,7 @@ def headlines(conn: sqlite3.Connection, date: str, countries: list[str]) -> list
     rows = conn.execute(
         f"SELECT title FROM signals WHERE date = ? AND iso3 IN ({marks})"
         " GROUP BY title ORDER BY MAX(salience) DESC, title LIMIT ?",
-        (date, *countries, HEADLINES_PER_QUESTION),
+        (date, *countries, settings.HEADLINES_PER_QUESTION),
     ).fetchall()
     return [r[0] for r in rows]
 
@@ -119,7 +115,7 @@ def sim_forecast(
         share = float(_sigmoid(beliefs[mask]).mean())
         prompt = sim_prompt(date, q, titles, seg, share)
         p = _yes_share(llm.complete_json("forecast_sim", prompt, ANSWER_SCHEMA, budget, conn=conn))
-        p = float(np.clip(p, P_EPS, 1 - P_EPS))
+        p = float(np.clip(p, settings.P_EPS, 1 - settings.P_EPS))
         logits[mask] = np.log(p / (1 - p))
 
     agent_p = _sigmoid(logits + offsets)
