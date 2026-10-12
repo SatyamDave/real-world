@@ -6,7 +6,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock("../analytics", () => ({ track }));
 
-import { Globe } from "./Globe";
+import { Globe, pulseSize } from "./Globe";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -29,4 +29,13 @@ test("with no WebGL (jsdom) the poster is shown and the fallback event fires", a
   expect(poster?.getAttribute("alt")).toMatch(/globe/i);
 
   expect(track).toHaveBeenCalledWith("globe_fallback_shown", { reason: "no_webgl" });
+});
+
+test("a marker pulses once in its own window and is at base size otherwise", () => {
+  expect(pulseSize(0, 0)).toBe(0.05);
+  expect(pulseSize(0, 600 + 800)).toBeGreaterThan(0.1); // peak of the first pulse
+  expect(pulseSize(0, 600 + 1600)).toBe(0.05);
+  expect(pulseSize(1, 600 + 800)).toBe(0.05); // second marker has not started
+  expect(pulseSize(1, 600 + 900 + 800)).toBeGreaterThan(0.1);
+  expect(pulseSize(0, 60_000)).toBe(0.05);
 });
