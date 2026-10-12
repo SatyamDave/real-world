@@ -413,8 +413,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     sub.add_parser(
         "fixture", help="print each exported receipt that is a fixture day"
     ).add_argument("receipts", nargs="+", type=Path)
+    sub.add_parser(
+        "check-export", help="check each exported receipt on its own; exit 1 if any fails"
+    ).add_argument("receipts", nargs="+", type=Path)
     args = parser.parse_args(argv)
 
+    if args.command == "check-export":
+        failed = False
+        for path in args.receipts:
+            try:
+                problems = receipt_problems(json.loads(path.read_text()))
+            except (OSError, ValueError, KeyError, TypeError, AttributeError) as e:
+                problems = [f"cannot be read as a receipt: {e!r}"]
+            for problem in problems:
+                print(f"{path}: {problem}", file=sys.stderr)
+            failed = failed or bool(problems)
+        return 1 if failed else 0
     if args.command == "fixture":
         for path in args.receipts:
             if is_fixture(json.loads(path.read_text())["entries"]):

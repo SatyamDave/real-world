@@ -29,6 +29,12 @@ if [ ${#files[@]} -eq 0 ]; then
   exit 1
 fi
 
+# A tampered day must not reach the public repo; one failure refuses the whole push.
+uv run --quiet python -m rw.ledger check-export "${files[@]}" || {
+  echo "refusing to push: a receipt failed its own check" >&2
+  exit 1
+}
+
 export GIT_TERMINAL_PROMPT=0
 [ -d "$mirror/.git" ] || git init -q -b main "$mirror"
 # Exit 2 means the remote has no main branch yet: the first push creates it.
