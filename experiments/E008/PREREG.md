@@ -1,9 +1,9 @@
-# E007: The self-improving loop on a synthetic question stream
+# E008: The self-improving loop on a synthetic question stream
 
 - Registered: 2026-10-12
 - Owner seat: CTO
-- Rests on: [self-improving loop note](../../research/engineering/103-self-improving-loop.md), [decision 0006](../../research/decisions/0006-self-improving-loop.md), [calibration methods](../../research/science/019-calibration-methods.md), [forecast scoring](../../research/science/030-forecast-scoring.md)
-- Claim it earns or kills: no public claim (the stream is synthetic). It decides whether the daily `improve` step stays in the cycle ([decision 0006](../../research/decisions/0006-self-improving-loop.md)).
+- Rests on: [self-improving loop note](../../research/engineering/103-self-improving-loop.md), [decision 0008](../../research/decisions/0008-self-improving-loop.md), [calibration methods](../../research/science/019-calibration-methods.md), [forecast scoring](../../research/science/030-forecast-scoring.md)
+- Claim it earns or kills: no public claim (the stream is synthetic). It decides whether the daily `improve` step stays in the cycle ([decision 0008](../../research/decisions/0008-self-improving-loop.md)).
 
 ## Hypothesis
 
@@ -39,7 +39,7 @@ The loop runs exactly as the daily step does, with the `rw.improve` functions an
 
 ## Kill criterion
 
-If the calibrated-arm interval lies wholly above zero or its false promotion rate exceeds 10%, the loop promotes noise: the `improve` step is removed from the daily cycle and decision 0006 is revisited before the gate is retuned under a new registration. If only the primary fails, the loop is harmless but useless at this data volume: it stays, and we say it has not shown a gain.
+If the calibrated-arm interval lies wholly above zero or its false promotion rate exceeds 10%, the loop promotes noise: the `improve` step is removed from the daily cycle and decision 0008 is revisited before the gate is retuned under a new registration. If only the primary fails, the loop is harmless but useless at this data volume: it stays, and we say it has not shown a gain.
 
 ## Cost cap
 
@@ -47,4 +47,4 @@ No model calls and no spend. Compute only, a few minutes on one machine. The run
 
 ## Command
 
-`make experiment ID=E007`
+`make experiment ID=E008`

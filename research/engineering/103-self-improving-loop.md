@@ -2,7 +2,7 @@
 
 - Date: 2026-10-12
 - Area: engineering
-- Confidence: medium. Four sources were opened and agree on the direction: a one- or two-parameter recalibration map is the safe first knob, isotonic maps overfit below a few hundred cases, and a holdout reused for many adaptive choices stops being a fair test. None of them studied a daily loop over a few dozen resolved questions, so the thresholds below are judgments to be checked by E007, not measurements.
+- Confidence: medium. Four sources were opened and agree on the direction: a one- or two-parameter recalibration map is the safe first knob, isotonic maps overfit below a few hundred cases, and a holdout reused for many adaptive choices stops being a fair test. None of them studied a daily loop over a few dozen resolved questions, so the thresholds below are judgments to be checked by E008, not measurements.
 
 ## Answer
 
@@ -14,7 +14,7 @@ Real World can improve its own forecasts without a person in the loop only by tu
 
 **Isotonic regression overfits small calibration sets.** Niculescu-Mizil and Caruana compared Platt scaling and isotonic regression over nine learning methods: when the calibration set is small, "less than about 200-1000 cases", Platt scaling beats isotonic regression with all nine; isotonic is more powerful only when there is enough data to prevent overfitting; and for methods that were already well calibrated, calibration "actually hurts performance when the calibration sets are small" ([ICML 2005 paper, PDF](https://www.cs.cornell.edu/~alexn/papers/calibration.icml05.crc.rev3.pdf)). Inference: with tens of resolved questions per month, isotonic is ruled out for now, and even a Platt map must be shrunk toward identity and must have to beat the incumbent on held-out data, since a calibrated forecaster can be made worse.
 
-**Reusing one holdout for adaptive choices overfits it.** Dwork et al. show that when an analyst picks new hypotheses based on earlier results from the same holdout set, each reuse leaks information and the holdout stops predicting performance on new data, even with plenty of data ([arXiv 1506.02629, abstract](https://arxiv.org/abs/1506.02629)). Inference: a daily loop that tests a candidate on yesterday's holdout, then today's overlapping one, is exactly this. The cheapest guard is that each promotion is judged only on questions that resolved after the incumbent was chosen, so a holdout is never used to pick and then to confirm the same incumbent. Daily rejections still reuse overlapping holdouts; the margin and the interval rule are what keep false promotions rare, and E007 measures that rate.
+**Reusing one holdout for adaptive choices overfits it.** Dwork et al. show that when an analyst picks new hypotheses based on earlier results from the same holdout set, each reuse leaks information and the holdout stops predicting performance on new data, even with plenty of data ([arXiv 1506.02629, abstract](https://arxiv.org/abs/1506.02629)). Inference: a daily loop that tests a candidate on yesterday's holdout, then today's overlapping one, is exactly this. The cheapest guard is that each promotion is judged only on questions that resolved after the incumbent was chosen, so a holdout is never used to pick and then to confirm the same incumbent. Daily rejections still reuse overlapping holdouts; the margin and the interval rule are what keep false promotions rare, and E008 measures that rate.
 
 **Selection on a noisy criterion overfits as much as the gap between methods.** Cawley and Talbot show that tuning by optimizing a criterion estimated from a finite sample can chase noise in the estimate; a low-variance criterion matters as much as an unbiased one, and the resulting bias can be as large as the differences between learning algorithms ([JMLR 11, abstract](https://jmlr.org/papers/v11/cawley10a.html)). Inference: the loop should compare one candidate family per day, not search a grid and promote the best, and the bar should be a margin plus an interval, not "lower mean Brier".
 
@@ -31,7 +31,7 @@ Real World can improve its own forecasts without a person in the loop only by tu
 ## Recommendations
 
 1. Build the loop with one candidate family, a global Platt map shrunk toward identity, fitted with each question weighted equally. Owner: engineering.
-2. Gate on at least 50 resolved training questions and 30 fresh holdout questions; promote only with a Brier improvement of at least 0.005 and a 95% day-block bootstrap interval wholly below zero. These are judgments; E007 tests the false-promotion rate they give.
+2. Gate on at least 50 resolved training questions and 30 fresh holdout questions; promote only with a Brier improvement of at least 0.005 and a 95% day-block bootstrap interval wholly below zero. These are judgments; E008 tests the false-promotion rate they give.
 3. Record every promotion as an append-only row and a hashed ledger leaf that applies from the next day; roll back by appending a row that re-pins an earlier version.
 4. Keep the incumbent whenever scoring or evaluation cannot run or any number is not finite.
 5. Before running on Jev probabilities in production, get the MCA §2.3(b) review recorded in the vendor ADR.
@@ -39,7 +39,7 @@ Real World can improve its own forecasts without a person in the loop only by tu
 
 ## Open questions
 
-- What false-promotion rate do these thresholds give on a forecaster that is already calibrated? E007 measures it on synthetic data.
+- What false-promotion rate do these thresholds give on a forecaster that is already calibrated? E008 measures it on synthetic data.
 - How many resolved questions per month will the live lists produce? Unknown until the first approved list runs; it sets when the loop can first act.
 
 ## Sources

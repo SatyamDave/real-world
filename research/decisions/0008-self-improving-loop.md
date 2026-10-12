@@ -1,4 +1,4 @@
-# 0006: A self-improving loop that promotes a recalibration map only on fresh held-out evidence
+# 0008: A self-improving loop that promotes a recalibration map only on fresh held-out evidence
 
 - Date: 2026-10-12
 - Status: proposed
@@ -24,7 +24,7 @@ It is the smallest loop that can improve the published number without a person a
 
 ## What would make us revisit it
 
-- E007 shows a false-promotion rate above 10% of seeds on a calibrated forecaster, or a promoted map that raises Brier on later questions: tighten the gate or switch the loop off.
+- E008 shows a false-promotion rate above 10% of seeds on a calibrated forecaster, or a promoted map that raises Brier on later questions: tighten the gate or switch the loop off.
 - The MCA §2.3(b) review says a map fitted on Jev probabilities is not allowed: the loop runs only on non-Jev forecasters.
 - A topic reaches the gate on its own: per-topic maps become the next candidate family.
 - A budgeted replay path exists: assimilation, prompt and sample-size candidates join, each with its own registered experiment.

@@ -9,7 +9,7 @@ One definition per term. Specs, code comments and UI copy use these words with t
 | Topic | One belief every agent holds, listed in `data/topics.csv` (for example `inflation_worry`). Stored on a logit scale, shown as a share from 0 to 1. | |
 | World snapshot | The full agent table for one date, `var/snapshots/YYYY-MM-DD/agents.parquet`. Its id is the date. "Today's world" is the latest committed snapshot. | |
 | Daily cycle | The eight steps that produce a snapshot and the day's forecasts: ingest, assimilate, forecast, publish, anchor, score, learn, improve. | |
-| Engine config version | One promoted set of tuned parameters (today, the recalibration map over `sim`), identified by the SHA-256 of its record and in force from a stated date ([decision 0006](../research/decisions/0006-self-improving-loop.md)). | |
+| Engine config version | One promoted set of tuned parameters (today, the recalibration map over `sim`), identified by the SHA-256 of its record and in force from a stated date ([decision 0008](../research/decisions/0008-self-improving-loop.md)). | |
 | Signal | A signed push on one or more topics, extracted once from a news cluster or a fork event. | |
 | Assimilation nudge | The per-segment shift that moves simulated beliefs toward an observed poll, sized by a Kalman gain since [decision 0005](../research/decisions/0005-assimilation-v2.md). Stored per segment, topic and day. | |
 | Fork | A simulation that starts from a world snapshot, adds one event and runs forward N days. In the API a fork is a simulation job. | scenario, what-if |
