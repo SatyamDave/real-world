@@ -1,0 +1,76 @@
+# Landing page inspiration
+
+Competitor and reference design analysis for the Real World landing page. We borrow patterns, never assets. Competitor copy appears below only as quoted observation. Screenshots are referenced by filename and live in the git-ignored `landing/design/inspo/` folder.
+
+## Method
+
+- Competitor figures are described, not repeated: this file is reviewed without the screenshots, so a number we cannot show a reviewer stays out. Reproduce them from the live pages if needed.
+- Date: 2026-10-12. Tool: Playwright Chromium, no login, a US IP.
+- Viewports: 390x844 (mobile) and 1440x900 (desktop). Each site has `<site>-mobile.png`, `<site>-desktop.png` and `<site>-mobile-full.png`. Aaru also has `aaru-desktop-scroll1.png` and `aaru-desktop-scroll2.png`.
+- Sites: aaru.com, simile.com, metaculus.com, polymarket.com, kalshi.com, plus two picks: linear.app and vercel.com.
+- Blocked: none. Overlays met:
+  - Polymarket showed a US geo modal ("It looks like you're in the US"). Dismissed with its "Continue in view only mode" link.
+  - Kalshi showed a sign-up modal on desktop only. Closed.
+  - Metaculus showed a cookie banner that covers the lower third of the mobile shot and part of the desktop shot. Left in place.
+  - Linear's desktop hero stayed blank (header only) 4 and 8 seconds after load in the automated browser, until a scroll or resize event fired. The mobile shot rendered normally.
+- Text, fonts and counts come from the DOM (headings, `innerText`, computed styles, canvas/video counts), not from memory. Anything I did not see is marked "not verified". Only the first viewport and a few scroll positions per site were inspected visually, so "no globe" means none seen there, not a proof about every section.
+- The `design:design-critique` skill was available and loaded. Its framework (first impression, usability, hierarchy, consistency, accessibility, what works) was applied to every site. Its output is not reproduced here.
+- Proposed copy was checked against [gtm/messaging.md](../../gtm/messaging.md). Landing boundaries are in [landing/CLAUDE.md](../CLAUDE.md).
+
+## Corrections to the starting assumptions
+
+| Assumption | What the live pages show |
+| --- | --- |
+| Aaru is dark | Partly. The first viewport is a saturated electric blue (desktop and mobile). Below the hero the page is black with dark rounded panels. |
+| Simile is dark | Wrong. The page is a light, warm off-white with black text and an orange-red button. |
+| Aaru and Simile are verb-led | Right. Aaru: "Simulate what people will do before you [commit / decide / expand]". The last word changes: I read "expand" in the DOM, "commit" on the desktop shot and "decide" on the mobile shot. Simile: "Simulate every decision at scale". |
+| Both prove credibility with client logos and self-reported accuracy | Right. Aaru has a logo strip pinned to the bottom of the hero and a validation line in it that states a question count and a mean error figure. It also has an "In Good Company / Partners & Clients" section and an EY case study headed "How Aaru demonstrates superior accuracy". Simile has a scrolling logo row in the hero, customer quotes, and an evaluation count. |
+| Neither uses a globe | Not seen in the hero or the sections I scrolled. Aaru uses circular "lens" photos in the hero and a perspective dot-field in a later section. Simile uses scattered isometric city tiles. Neither is a globe, but I did not scroll every section. |
+| Metaculus uses forecast cards (probability, forecaster count, change) | Right, with a caveat. Cards show forecaster count and comment count, a "% chance" gauge and a weekly change ("49.9% this week" with an arrow). Some cards show bars per option or a numeric range instead. The page has no headline or h1: it is a hub of tiles. |
+
+## Site comparison
+
+Competitor wording is quoted as observed.
+
+| Site | Hero structure and headline pattern | How it proves credibility | Motion and interaction | Type, colour, spacing | CTA design | Mobile quality | Best thing to borrow |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Aaru | Left headline, short paragraph, two buttons. Right: five circular photo "lenses", one large. Full-bleed blue. Verb-led, last word swaps. | Logo strip at the foot of the hero with a self-reported accuracy line. Later: stated-versus-simulated example card, an EY case study with count-up numbers, "In Good Company". | Nine canvases and one video on the page. Floating pill nav appears on scroll. Pill tabs switch use-case cards. Dot-field plane section. Count-up numbers. | ABC Oracle, 48px headline at weight 400, 14px body. White on blue, then black with grey panels. Wide margins, large gaps. | White pill "Test your decision" plus a text link with an arrow, "See how it works". "Contact us" button in the nav. | Hero object moves above the headline. Both buttons go full width and stack. Clean. | The paired stated-versus-simulated card: two labelled columns and an outcome line. It maps to forecast-versus-outcome. |
+| Simile | Centred headline, grey subline, one button, logo row, with isometric city tiles floating around the edges. A pill above the headline announces a funding round. | Funding pill, scrolling logo row (CVS, Gallup, Itau, Deloitte, Wealthfront, Suntory and others), named customer quotes, "Validation comes first" section with weekly validation claims, Stanford research lineage. | Logo row scrolls. Tiles are scattered and likely animated (not verified). Two canvases. | gtStandard 38px headline, Archivo body. Warm off-white, black text, orange-red accent. Generous whitespace, very calm. | One solid orange-red button, "Run a simulation", repeated in the nav. | Good. Same hero, tiles crop at the edges, logo row still visible above the fold. | Centred, short, quiet hero with one accent colour. Sample question-and-answer rows ("In Simile today") as proof of output. |
+| Metaculus | No headline. A navy panel with two large tiles (Forecasting Platform, Services) and three slim product rows. Under it, topic chips ("Staff picks") and a card row. | Counts of work done (predictions, questions and years running) and live question cards with forecaster counts. | Horizontal card scroll, dithered dot texture, gauge graphics on cards. Cookie banner at the bottom. | Inter. Pale blue-grey page, dark navy panel, soft blue and lilac tiles. Dense but ordered. | Whole tiles are links with an arrow. No single primary button. | Tiles collapse to two columns, cards swipe. Cookie banner covers about a third of the viewport. | Card anatomy: question, forecaster and comment counts, one clear current value, and a change label. |
+| Polymarket | No hero. A market dashboard: one large featured market, a "Breaking news" list with a percent and a change on each row, "Hot topics", then a grid. | Live market data: percentages, volume, comments, dated outcome ladder, news links. | Auto-rotating featured carousel with dots, live-looking charts, dot-matrix map on election cards. Six canvases. | Inter. White, dense, small type, red and green deltas. | Blue "Go to polymarket.us" button in the nav. Log in and Sign up. | Search, chips and cards stack. A modal sheet covers the page until dismissed. | Ranked list rows that show value plus change in one line. |
+| Kalshi | No hero. A featured-market carousel ("1 of 7") with odds pills, a payout multiplier, volume and a news snippet. Right rail of trending rows. | Volume figures, news context on each card, "Market integrity" explainer tiles. | Carousel, charts, a "Live" counter in the nav. | kalshiSans. White, green brand colour, rounded cards with soft gradients. | Green "Sign up" pill, "Log in" outlined. Modal asks for Google, Apple or email. | Strong: a bottom tab bar (Predict, Live, Search, Social), swipeable cards, large tap targets. | A one-line news context under each forecast card. Bottom tab bar pattern. |
+| Linear (pick) | Left headline over a full-width product screenshot that bleeds off the bottom of the first viewport. Small "New / Loops" link beside the subline. | Shows the real product in use with timestamps and an activity log. Customer logos and a changelog section lower down (not scrolled in detail). Caption labels such as "FIG 0.1". | No canvas or video. Reveal animation: in the automated desktop run the hero stayed blank until a scroll event. | Inter Variable, 64px at weight 510 with tight tracking (-1.4px), near-black `#08090A`, one grey for secondary text. Very little colour. | White pill "Sign up" in the nav, a quiet "Log in" beside it. The hero itself has no button, only the product. | Headline wraps to four lines, UI crop runs off the right edge. Reads well. | The real artifact as the hero proof, with timestamps and an audit trail. |
+| Vercel (pick) | Left headline "Agentic Infrastructure", two buttons. A single huge black triangle in the middle. Three short lines on the right. Logo marquee across the bottom. Announcement bar on top. | Logo marquee (Meta, OpenAI, SpaceX, Polymarket and others) and customer statements lower down ("Notion powers millions of agent conversations daily on Vercel"). | One canvas (the triangle glow). Rotating sub-line in a monospace face. Logos scroll. | Geist, 64px with very tight tracking (-3.84px), off-white `#FAFAFA` page, near-black text. Almost no colour. | Filled black pill "Deploy now" plus an outlined "Talk to sales". | Triangle sits above the headline, buttons stack at full width, logos peek below. | One iconic object as the entire hero, plus a filled and an outlined button. |
+
+Why the two extra picks. Linear is the clearest case of proving a product by showing the artifact itself with times and history, and its restraint (one typeface, no accent, no logos in the hero) is the opposite of a crowded AI page. Vercel is the clearest case of a single object carrying a hero, with the shortest headline and the tightest two-button CTA of the set, which is the layout a globe-led page needs.
+
+## Top 8 patterns for Real World
+
+Ranked by expected effect on trust and clarity.
+
+1. **A receipt strip where competitors put logos.** Seen in: Aaru (logo strip at hero foot), Simile (logo row), Vercel (marquee). Apply: directly under the hero, a row of three or four receipt cards in the exact spot a logo strip would sit. Each card is a real committed forecast in its honest state. With no results yet the state is "pending", straight from `src/data/receipts.json`. Label it "Forecasts hashed before the outcome, scored in public" (allowed claim).
+2. **A hero object that is the product.** Seen in: Vercel (triangle), Aaru (lens photos), Linear (live UI). Apply: the globe is the one hero object, on the right at 1440 and above the headline on mobile (the Aaru and Vercel mobile order). Event pulses land on it. Receipt cards attach to pulses.
+3. **A forecast card anatomy that compares like for like.** Seen in: Metaculus (counts, "% chance", weekly change), Polymarket (value plus change per row), Kalshi (one-line news context). Apply: every receipt card shows the question, a status (pending, committed, resolved), when it was committed, when it resolves and the resolution source, plus one line of news context. It shows no probability and no score until a real one is published. Add "AI-simulated" on each card.
+4. **Forecast beside outcome, as two labelled columns.** Seen in: Aaru ("Stated" and "Simulated" with an outcome line). Apply: a resolved receipt card has two columns, "Committed" and "Resolved", with the hash timestamp between them. A miss is shown in the same layout as a hit. Build the layout now with the pending state in both columns.
+5. **A quiet two-button CTA.** Seen in: Aaru, Vercel (filled pill plus a secondary), Simile (one accent button repeated in the nav). Apply: a filled primary "Join the waitlist" and a secondary "See the receipts" that scrolls to the strip. Repeat the primary in the nav. Stack both at full width on mobile. "Try it" links stay hidden while `APP_URL` is empty.
+6. **One typeface, large headline, tight tracking, almost no accent colour.** Seen in: Linear (64px, weight 510), Vercel (64px, -3.84px tracking), Aaru (48px, weight 400). Apply: one variable sans family, headline at 56 to 64px on desktop and about 40px on mobile, body at 16px, one accent reserved for the pulses and the primary button. Candidate headline: "Simulations with receipts." (the short form in messaging.md), with the one-liner as the subline.
+7. **Motion that shows state, not decoration, and never hides the hero.** Seen in: Polymarket and Kalshi (carousel counters, live rows), Aaru (count-ups, tabbed cards), Linear (negative case: hero blank until an event fired). Apply: globe pulses mark real events only. A receipt card slides in when its pulse lands. Render the headline and CTA in plain HTML so they show without JS or animation. Respect `prefers-reduced-motion` with a static globe.
+8. **A mobile first viewport of object, headline, CTA, and a peek of the next card.** Seen in: Aaru and Vercel (object, headline, stacked buttons), Kalshi (swipeable cards, bottom tab bar), Metaculus (negative: cookie banner covers about a third of the viewport). Apply: at 390x844 show the globe, the headline, the two stacked buttons and the top edge of the first receipt card. Swipe the receipt cards horizontally. Keep any consent or notice element to a single slim line.
+
+## What Real World does differently
+
+- Credibility device. Aaru and Simile lean on client logos and their own accuracy numbers. We have no logos and [gtm/messaging.md](../../gtm/messaging.md) forbids accuracy claims. Our device is the receipt: a forecast hashed before the outcome and scored in public, misses included. It replaces the logo strip and is shown in that spot.
+- Metaculus and the market sites show live odds. We show commitment state first, and a number only when a real one has been published.
+- The globe is ours. Aaru and Simile use lens photos, a dot-field and isometric tiles instead. The globe carries event pulses and receipt cards.
+- Both Aaru and Simile sell to enterprises ("Test your decision", "Run a simulation"). Our page asks for a waitlist signup and invites people to read the record.
+- Aaru and Simile sit at opposite ends in colour (blue and black versus warm off-white and orange-red). Pick our palette deliberately away from both, and decide it in the direction work under `landing/design/`.
+
+## What we deliberately do not copy
+
+- Accuracy numbers, validation statistics or "superior accuracy" case studies (Aaru's validation line, Simile's evaluation counts). Forbidden by messaging.md.
+- Client or partner logos, and any funding or valuation announcement pill. We have none.
+- "World model" language, and agent or population counts as a headline.
+- Trading framing: payout multipliers, odds pills used as a sales device, "Sign up to trade", any "bet on our forecast" offer.
+- "Beats the market" or ranking language next to the receipts. Any skill figure appears only as the receipts page computes it, with n and an interval.
+- Competitor assets: images, icons, fonts (ABC Oracle, gtStandard, Geist, kalshiSans), the triangle, lens photos and isometric tiles. Layouts here are patterns, not templates.
+- Hiding the pending state. A pending receipt is shown as pending.
