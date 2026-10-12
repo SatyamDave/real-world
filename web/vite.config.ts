@@ -23,6 +23,6 @@ function noFixtureQuestions(): Plugin {
 
 export default defineConfig(({ command, mode }) => ({
   plugins: command === "build" && mode === "production" ? [noFixtureQuestions()] : [],
-  // Vitest blanks CSS by default; theme.test.ts reads the font rules as text.
-  test: { css: { include: [/fonts\.css/] } },
+  // Vitest blanks CSS by default; theme.test.ts reads the font rules and share.ts the tokens as text.
+  test: { css: { include: [/fonts\.css/, /tokens\.css/] } },
 }));

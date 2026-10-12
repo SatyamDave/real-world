@@ -55,6 +55,15 @@ If the step you need first does not exist, write it in its own PR before the cod
 - Read the lenses in `research/lenses/` before changing scope. They record what the company refuses to build before Nov 2.
 - Never leave the repo worse: no failing checks, no broken links, no unrelated files in the diff.
 
+## One product, one look
+
+Every surface (the landing page in `landing/`, the app in `web/`, share images, ads) is one product and looks like it. The design source is `landing/design/` (direction A, "Commit Slip"); the tokens are `styles/tokens.css`.
+
+- Before any UI work, run `gh pr list --repo SatyamDave/real-world --state open` and read the open PRs on the same surface or on the design. Build on them or agree with their author first; never start a second look in parallel.
+- Colours and typefaces come only from `styles/tokens*.css` and `styles/fonts.css`. `scripts/check_design.py` (in `make lint`) fails on a raw hex colour or literal `font-family` anywhere else, and on any difference between the `web/` and `landing/` tokens.
+- A change to the look (tokens, type scale, a motif) lands in the design source first, in its own PR, then in each surface.
+- A PR that changes `web/src` or `landing/src` UI includes screenshots at 390 and 1440 px wide. `pr-quality.yml` refuses one without them.
+
 ## Definition of done for a PR
 
 A PR is done when all of these hold:

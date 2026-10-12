@@ -12,7 +12,7 @@ The Vite + React + TypeScript web app: daily question, receipts with an in-brows
 
 - All data comes through `@real-world/sdk` (`sdk/typescript/`); no hand-written fetch calls. `src/api.ts` holds the one client instance, and components call its methods.
 - Every result view shows "AI-simulated. Not a poll or a prediction of a real person" and the coverage tier.
-- Colours, type and radius come from `src/styles/tokens.css`, a copy of the landing page's tokens. Change both together; no colour literals in component CSS.
+- Colours, type and radius come from `src/styles/tokens.css`, a copy of the landing page's tokens, and `src/styles/tokens-dark.css`. `scripts/check_design.py` enforces both rules in the root `CLAUDE.md` section "One product, one look". Canvas code (the share image) reads token values from `tokens.css`, never hard-coded colours.
 - No sign-in, accounts, onboarding popups or server-rendered images in the base build.
 - Lint and format with Biome; type check with `tsc --noEmit`; test with Vitest.
 
@@ -27,6 +27,7 @@ make check
 ## A reviewer rejects
 
 - A result view without the simulation disclaimer or coverage tier.
+- A UI change without 390 and 1440 px screenshots, or one that departs from `landing/design/` without a design PR first.
 - A fetch call that bypasses the SDK.
 - A dependency beyond those the slice brief names.
 - UI copy that is not literal status, or a popup that only explains the next step.

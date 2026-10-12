@@ -1,6 +1,7 @@
 // Share artifacts built in the browser from API data: the week grid, fork text and fork image.
 import type { Agent, Job, Reveal, SimulateResult } from "@real-world/sdk";
 import { DISCLOSURE, topicLabel } from "./App";
+import tokensCss from "./styles/tokens.css?raw";
 
 export type WeekDay = Reveal["week"][number];
 
@@ -111,19 +112,24 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, width: number): strin
   return line ? [...lines, line] : lines;
 }
 
-// The share image is always the light receipt, whatever the viewer's theme: the light values of
-// styles/tokens.css.
-const SLIP = {
-  paper: "#f2f4f3",
-  paper2: "#e7eae8",
-  surface: "#ffffff",
-  ink: "#15201b",
-  muted: "#5c6660",
-  clay: "#b23a2e",
-  line: "#cdd3cf",
+// The share image is always the light receipt, whatever the viewer's theme, so it reads the light
+// values straight from styles/tokens.css rather than the computed (possibly dark) ones.
+const token = (name: string) => {
+  const m = tokensCss.match(new RegExp(`--${name}:\\s*([^;]+);`));
+  if (!m) throw new Error(`token --${name} missing from styles/tokens.css`);
+  return m[1].trim();
 };
-const SANS = "'IBM Plex Sans', system-ui, sans-serif";
-const MONO = "'IBM Plex Mono', ui-monospace, monospace";
+const SLIP = {
+  paper: token("paper"),
+  paper2: token("paper-2"),
+  surface: token("surface"),
+  ink: token("ink"),
+  muted: token("muted"),
+  clay: token("accent-2"),
+  line: token("line"),
+};
+const SANS = token("font-sans");
+const MONO = token("font-mono");
 
 /** A 1200x630 PNG of the fork card as a receipt, the Open Graph size. */
 export async function forkImage(job: Job, link: string): Promise<Blob> {

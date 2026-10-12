@@ -1,26 +1,3 @@
-/* Colours, type and radius come from styles/tokens.css. The landing work defines no dark
-   theme, so this one is built from the same hues: green paper, light ink, a lighter verify
-   green and clay so both keep AA contrast. */
-@media (prefers-color-scheme: dark) {
-  .globe-poster {
-    filter: invert(0.9) hue-rotate(180deg);
-  }
-
-  :root {
-    --paper: #111814;
-    --paper-2: #1a231e;
-    --surface: #18201c;
-    --ink: #e4eae6;
-    --muted: #9aa69f;
-    --accent: #6dbd90;
-    --accent-2: #e8806f;
-    --line: #34413a;
-    --focus: #6dbd90;
-    --on-accent: #111814;
-    --globe-dot: #6dbd90;
-  }
-}
-
 :root {
   color-scheme: light dark;
 }
@@ -184,8 +161,11 @@ button.primary:hover:not(:disabled) {
   border-bottom: 0;
   padding: 0 20px 34px;
   -webkit-mask:
-    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
-  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%;
+    conic-gradient(from -45deg at bottom, transparent, black 1deg 89deg, transparent 90deg) 50% /
+    14px 100%;
+  mask:
+    conic-gradient(from -45deg at bottom, transparent, black 1deg 89deg, transparent 90deg) 50% /
+    14px 100%;
 }
 
 .receipt-top {
