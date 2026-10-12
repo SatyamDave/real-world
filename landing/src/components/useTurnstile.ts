@@ -59,6 +59,7 @@ export function useTurnstile(siteKey: string) {
     return () => {
       cancelled = true;
       if (widgetId.current) window.turnstile?.remove(widgetId.current);
+      widgetId.current = undefined;
     };
   }, [siteKey]);
 

@@ -103,12 +103,13 @@ describe.skipIf(!DATABASE_URL_DEV)("waitlist storage (Neon dev branch)", () => {
     const real = connect(DATABASE_URL_DEV);
     if (signupIds.length)
       await real("DELETE FROM waitlist_signups WHERE id = ANY($1::uuid[])", [signupIds]);
-    const hashed = await real(
-      "SELECT id FROM typeform_events WHERE id LIKE 'unverified:%' AND payload::text LIKE '%' || $1 || '%'",
-      [run],
-    );
-    const ids = [...eventIds, ...hashed.map((r) => String(r.id))];
-    if (ids.length) await real("DELETE FROM typeform_events WHERE id = ANY($1::text[])", [ids]);
+    if (eventIds.length)
+      await real("DELETE FROM typeform_events WHERE id = ANY($1::text[])", [eventIds]);
+    // Unverified rows are keyed by a body hash, so we cannot list them up front. The dev
+    // branch holds only test data; delete the ones this run logged.
+    await real("DELETE FROM typeform_events WHERE id LIKE 'unverified:%' AND received_at >= $1", [
+      startedAt,
+    ]);
     if (ipHashes.length)
       await real("DELETE FROM signup_rate_limit WHERE ip_hash = ANY($1::text[])", [ipHashes]);
   });
