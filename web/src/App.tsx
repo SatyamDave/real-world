@@ -96,8 +96,7 @@ export function Disclosure({ tiers }: { tiers: string[] }) {
           {". Coverage "}
           {counts.map(([t, n]) => (
             <span key={t} className="disclosure-tier">
-              <TierBadge tier={t} />
-              {n > 1 && `×${n}`}
+              <TierBadge tier={t} />×{n}
             </span>
           ))}
         </>

@@ -15,9 +15,10 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import spec from "../../api/openapi.json";
 import vector from "../../data/fixtures/receipts_test_vector.json";
 import { AgentPanel } from "./AgentPanel";
-import { App, DISCLOSURE, whenIdle } from "./App";
-import { rw } from "./api";
+import { App, DISCLOSURE, Disclosure, whenIdle } from "./App";
+import { API_URL, rw } from "./api";
 import { DailyQuestion } from "./DailyQuestion";
+import { atApi } from "./Docs";
 import { Fork, ForkCard, ForkRun } from "./ForkCard";
 import agentFixture from "./fixtures/agent.json";
 import whyFixture from "./fixtures/agent_why.json";
@@ -472,4 +473,36 @@ test("the docs page lists every operation in openapi.json with its refusal codes
   expect(py).toContain("rw = Client(");
   expect(ts).toContain("const rw = new Client(");
   expect(el.querySelector("header nav a[href='/docs']")?.textContent).toBe("Docs");
+});
+
+test("the docs snippets point at the API this app talks to, not localhost:8000", async () => {
+  const base = "https://api.example.com";
+  expect(
+    atApi('curl -s -X POST localhost:8000/v1/simulate\nnew Client("http://localhost:8000")', base),
+  ).toBe(
+    'curl -s -X POST https://api.example.com/v1/simulate\nnew Client("https://api.example.com")',
+  );
+  const el = await render(<App path="/docs" />);
+  await until(() => expect(el.querySelector(".op")).not.toBeNull());
+  const snippets = [...el.querySelectorAll("pre")].map((p) => p.textContent).join("\n");
+  expect(snippets).toContain(`${API_URL}/v1/simulate`);
+});
+
+test("the coverage line shows a count for every tier, including one", async () => {
+  const el = await render(<Disclosure tiers={["A", "A", "B", "D"]} />);
+  const rows = [...el.querySelectorAll(".disclosure-tier")].map((t) => t.textContent);
+  expect(rows).toEqual(["Coverage tier A×2", "Coverage tier B×1", "Coverage tier D×1"]);
+});
+
+test("an unknown fork sets a not-found title", async () => {
+  vi.mocked(rw.get_simulation).mockRejectedValue(new ApiError(404, { detail: "no simulation" }));
+  await render(<ForkRun id="job_doesnotexist" />);
+  expect(document.title).toBe("Fork not found · Real World");
+});
+
+test("a succeeded fork has one h1, its setup sentence", async () => {
+  const el = await render(<ForkCard job={job} />);
+  const h1 = el.querySelectorAll("h1");
+  expect(h1).toHaveLength(1);
+  expect(h1[0].textContent).toContain("A chip shortage doubles phone prices worldwide");
 });
