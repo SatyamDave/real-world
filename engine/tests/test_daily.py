@@ -1,5 +1,6 @@
 import csv
 import json
+import sqlite3
 from pathlib import Path
 
 import numpy as np
@@ -220,10 +221,16 @@ def stage(conn, day, step):
     return row["status"], json.loads(row["detail"])
 
 
+def live_day(day):
+    """A day whose ledger names no fixture question, on a fixture snapshot."""
+    daily.run(day, ["ingest", "assimilate"], world_agents=AGENTS)
+    entry = {"kind": "forecast", "date": day, "question_id": "us-cpi-oct", "probability": "0.6250"}
+    ledger.commit_day(db.connect(), day, [entry], "a" * 64)
+
+
 def test_fixture_run_sends_nothing_to_timestamp_servers_and_exports_each_day(monkeypatch):
     sent = fake_post(monkeypatch)
     summaries = run_fixtures()
-    assert sent == []
     conn = db.connect()
     for s in summaries:
         assert s["ran"].index("anchor") == s["ran"].index("publish") + 1
@@ -235,12 +242,19 @@ def test_fixture_run_sends_nothing_to_timestamp_servers_and_exports_each_day(mon
         assert ledger.receipt_problems(receipt) == []
         assert receipt["day"]["root"] == s["root"]
 
+    with conn:
+        conn.execute("UPDATE stage_runs SET status = 'failed' WHERE step = 'anchor'")
+    assert daily.run(DAYS[0], ["anchor"], questions="live")["ran"] == ["anchor"]
+    assert sent == []
 
-def test_anchor_failure_is_recorded_and_score_and_learn_still_run(monkeypatch):
+
+def test_a_live_day_anchors_under_default_flags_and_a_failure_never_stops_score_and_learn(
+    monkeypatch,
+):
     day = DAYS[0]
-    daily.run(day, daily.STEPS[:4], world_agents=AGENTS)
+    live_day(day)
     sent = fake_post(monkeypatch, tsa=TimeoutError("timed out"), ots=OSError("unreachable"))
-    s = daily.run(day, world_agents=AGENTS, questions="live")
+    s = daily.run(day, ["anchor", "score", "learn"], world_agents=AGENTS)
     conn = db.connect()
     assert s["ran"] == ["score", "learn"] and len(sent) == 2
     status, detail = stage(conn, day, "anchor")
@@ -249,7 +263,7 @@ def test_anchor_failure_is_recorded_and_score_and_learn_still_run(monkeypatch):
     assert ledger.anchor_status(conn, day) == ("not_anchored", None)
 
     sent = fake_post(monkeypatch, tsa=TimeoutError("timed out"))
-    s = daily.run(day, world_agents=AGENTS, questions="live")
+    s = daily.run(day, ["anchor"], world_agents=AGENTS)
     assert s["ran"] == [] and len(sent) == 2
     assert s["anchor"] == "pending (OpenTimestamps)"
     assert stage(conn, day, "anchor")[0] == "failed"
@@ -257,6 +271,8 @@ def test_anchor_failure_is_recorded_and_score_and_learn_still_run(monkeypatch):
 
 
 def test_anchor_step_marks_the_day_anchored_and_an_anchored_day_sends_nothing(monkeypatch):
+    # The recorded token vouches for the test vector, whose question is a fixture one.
+    monkeypatch.setattr(ledger, "is_fixture", lambda items: False)
     vector = json.loads(VECTOR.read_text())
     salts = iter(item["salt"] for item in vector["entries"])
     monkeypatch.setattr(ledger.secrets, "token_hex", lambda n: next(salts))
@@ -266,7 +282,7 @@ def test_anchor_step_marks_the_day_anchored_and_an_anchored_day_sends_nothing(mo
     ledger.commit_day(conn, day, entries, vector["day"]["protocol_hash"])
 
     sent = fake_post(monkeypatch)
-    s = daily.run(day, ["anchor"], questions="live")
+    s = daily.run(day, ["anchor"])
     assert s["ran"] == ["anchor"] and len(sent) == 2
     assert s["anchor"] == "anchored by freetsa.org at 2026-10-12T17:19:19Z"
     assert stage(conn, day, "anchor")[0] == "ok"
@@ -274,5 +290,24 @@ def test_anchor_step_marks_the_day_anchored_and_an_anchored_day_sends_nothing(mo
     with conn:
         conn.execute("UPDATE stage_runs SET status = 'failed' WHERE step = 'anchor'")
     sent = fake_post(monkeypatch)
-    assert daily.run(day, ["anchor"], questions="live")["ran"] == ["anchor"]
+    assert daily.run(day, ["anchor"])["ran"] == ["anchor"]
     assert sent == []
+
+
+def test_a_stage_table_from_before_the_anchor_step_is_rebuilt_and_every_step_runs():
+    settings.rw_home().mkdir(parents=True)
+    old = sqlite3.connect(settings.rw_home() / "rw.sqlite")
+    old.executescript(
+        "CREATE TABLE stage_runs (date TEXT NOT NULL, step TEXT NOT NULL"
+        " CHECK (step IN ('ingest', 'assimilate', 'forecast', 'publish', 'score', 'learn')),"
+        " status TEXT NOT NULL CHECK (status IN ('running', 'ok', 'failed')),"
+        " started_at TEXT NOT NULL, finished_at TEXT, detail TEXT, PRIMARY KEY (date, step));"
+        "INSERT INTO stage_runs VALUES ('2026-09-30', 'learn', 'ok', 't0', 't1', '{}');"
+    )
+    old.close()
+    s = daily.run(DAYS[0], world_agents=AGENTS)
+    assert s["ran"] == list(daily.STEPS)
+    conn = db.connect()
+    assert stage(conn, "2026-09-30", "learn") == ("ok", {})
+    sql = conn.execute("SELECT sql FROM sqlite_master WHERE name = 'stage_runs'").fetchone()[0]
+    assert "CHECK (step" not in sql

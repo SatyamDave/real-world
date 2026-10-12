@@ -1,10 +1,18 @@
+import json
 import os
 import subprocess
 from pathlib import Path
 
 import pytest
 
-SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "mirror_receipts.sh"
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "scripts" / "mirror_receipts.sh"
+
+
+@pytest.fixture(autouse=True)
+def no_user_git_config(monkeypatch):
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", "/dev/null")
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
 
 
 @pytest.fixture
@@ -25,7 +33,7 @@ def mirror(remote: str | None) -> subprocess.CompletedProcess[str]:
     env = {k: v for k, v in os.environ.items() if k != "RECEIPTS_MIRROR_REMOTE"}
     if remote is not None:
         env["RECEIPTS_MIRROR_REMOTE"] = remote
-    return subprocess.run([str(SCRIPT)], env=env, capture_output=True, text=True)
+    return subprocess.run([str(SCRIPT)], cwd=ROOT, env=env, capture_output=True, text=True)
 
 
 def git(remote: str, *args: str) -> str:
@@ -35,8 +43,8 @@ def git(remote: str, *args: str) -> str:
 
 
 def receipt(home: Path, date: str, question_id: str = "us-cpi-oct") -> None:
-    text = f'{{"day": {{"date": "{date}"}}, "question_id": "{question_id}"}}\n'
-    (home / "receipts" / f"{date}.json").write_text(text)
+    body = {"day": {"date": date}, "entries": [{"entry": {"question_id": question_id}}]}
+    (home / "receipts" / f"{date}.json").write_text(json.dumps(body) + "\n")
 
 
 def test_off_when_the_remote_is_unset(home):
@@ -72,7 +80,7 @@ def test_pushes_new_days_once_and_never_rewrites_a_mirrored_day(home, remote):
     ]
     assert git(remote, "diff", "--name-only", head, "main").split() == ["receipts/2026-10-16.json"]
 
-    (home / "receipts" / "2026-10-14.json").write_text("{}\n")
+    receipt(home, "2026-10-14", "us-cpi-nov")
     head = git(remote, "rev-parse", "main").strip()
     out = mirror(remote)
     assert out.returncode == 1 and "2026-10-14.json differs" in out.stderr
