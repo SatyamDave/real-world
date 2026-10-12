@@ -27,8 +27,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse,
 from pydantic import BaseModel, ConfigDict, Field
 
 from rw import db, forecast, ledger, llm, policy, population, score, settings, simulate
-from rw_api import routes_research
-from rw_api import routes_cycle
+from rw_api import routes_cycle, routes_research
 
 log = logging.getLogger("rw_api")
 SCHEMA = Path(__file__).parent / "schema.sql"
