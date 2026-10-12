@@ -1,6 +1,6 @@
 // Share artifacts built in the browser from API data: the week grid, fork text and fork image.
 import type { Agent, Job, Reveal, SimulateResult } from "@real-world/sdk";
-import { DISCLOSURE, topicLabel } from "./App";
+import { DISCLOSURE, pct, plural, pts, topicLabel } from "./App";
 import tokensCss from "./styles/tokens.css?raw";
 
 export type WeekDay = Reveal["week"][number];
@@ -22,32 +22,37 @@ export function square(w: WeekDay): string {
 
 /** The answer itself is left out so the grid does not spoil the day's question. */
 export function weekShareText(reveal: Reveal, date: string, origin: string): string {
-  const days = reveal.streak === 1 ? "day" : "days";
   return [
     `Real World daily forecast, week to ${date}`,
     reveal.week.map(square).join(""),
-    `${reveal.streak} ${days} answered in a row`,
+    `${plural(reveal.streak, "day")} answered in a row`,
     `${origin}/receipts#${date}`,
   ].join("\n");
 }
 
-const points = (share: number) => Math.round(Math.abs(share) * 100);
+const unsigned = (delta: number) => pts(Math.abs(delta)).slice(1);
 
-/** One sentence of meaning for a fork: the largest median move and how far the runs spread. */
+type Output = SimulateResult["outputs"][string];
+
+/** "52% to 58% (49-61%)": the median move, then the spread across ensemble members. */
+export const bandText = (o: Output) =>
+  `${pct(o.baseline_share)} to ${pct(o.final.p50)} (${Math.round(o.final.p10 * 100)}-${pct(o.final.p90)})`;
+
+/** One sentence of meaning for a fork: the largest median move and how far the members spread. */
 export function forkSentence(r: SimulateResult): string {
   const topics = Object.entries(r.outputs);
-  const countries = `${r.coverage.length} ${r.coverage.length === 1 ? "country" : "countries"}`;
-  const spread = Math.max(0, ...topics.map(([, o]) => points(o.final.p90 - o.final.p10)));
-  const agree = `the ${r.members} runs agree within ${spread} ${spread === 1 ? "pt" : "pts"}`;
+  const countries = r.coverage.length === 1 ? "1 country" : `${r.coverage.length} countries`;
+  const spread = Math.max(0, ...topics.map(([, o]) => o.final.p90 - o.final.p10));
+  const agree = `all ${r.members} members agree within ${unsigned(spread)}`;
   const [topic, o] = topics.reduce((a, b) =>
     Math.abs(b[1].final.p50 - b[1].baseline_share) > Math.abs(a[1].final.p50 - a[1].baseline_share)
       ? b
       : a,
   );
   const move = o.final.p50 - o.baseline_share;
-  if (points(move) < 1) return `No topic moved 1 pt or more across ${countries}; ${agree}.`;
-  const n = points(move);
-  return `${topicLabel(topic)} ${move > 0 ? "rose" : "fell"} ${n} ${n === 1 ? "pt" : "pts"} across ${countries}; ${agree}.`;
+  if (Math.abs(move) < 0.005)
+    return `No topic moved ${unsigned(0.005)} or more across ${countries}; ${agree}.`;
+  return `${topicLabel(topic)} ${move > 0 ? "rose" : "fell"} ${unsigned(move)} across ${countries}; ${agree}.`;
 }
 
 export function forkShareText(job: Job, link: string): string {
@@ -122,11 +127,9 @@ const token = (name: string) => {
 };
 const SLIP = {
   paper: token("paper"),
-  paper2: token("paper-2"),
   surface: token("surface"),
   ink: token("ink"),
   muted: token("muted"),
-  clay: token("accent-2"),
   accent: token("accent"),
   line: token("line"),
 };
@@ -140,7 +143,7 @@ export async function forkImage(job: Job, link: string): Promise<Blob> {
   canvas.width = 1200;
   canvas.height = 630;
   const ctx = canvas.getContext("2d");
-  if (!ctx || !r) throw new Error("This browser cannot draw the image");
+  if (!ctx || !r) throw new Error("Could not draw the image in this browser.");
   // Canvas text does not wait for web fonts, so load the ones it uses first.
   await Promise.all(
     [
@@ -155,7 +158,7 @@ export async function forkImage(job: Job, link: string): Promise<Blob> {
   const [x, w, top, bottom] = [56, 1088, 40, 590];
   ctx.fillStyle = SLIP.paper;
   ctx.fillRect(0, 0, 1200, 630);
-  // The slip: offset shadow, white body, ink border, torn bottom edge.
+  // The slip: white body, ink border, torn bottom edge.
   const slip = (dx: number) => {
     ctx.beginPath();
     ctx.moveTo(x + dx, bottom + dx);
@@ -167,9 +170,6 @@ export async function forkImage(job: Job, link: string): Promise<Blob> {
       ctx.lineTo(i - 14 + dx, bottom + dx);
     }
   };
-  slip(6);
-  ctx.fillStyle = SLIP.paper2;
-  ctx.fill();
   slip(0);
   ctx.fillStyle = SLIP.surface;
   ctx.fill();
@@ -193,13 +193,13 @@ export async function forkImage(job: Job, link: string): Promise<Blob> {
   ctx.fillText(".", pad + brand, 92);
   ctx.font = `400 24px ${SANS}`;
   ctx.fillStyle = SLIP.muted;
-  ctx.fillText("fork of today's world", pad + brand + 28, 92);
+  ctx.fillText("Fork result", pad + brand + 28, 92);
   const stamp = "AI-simulated";
   ctx.font = `600 22px ${SANS}`;
   const sw = ctx.measureText(stamp).width + 24;
-  ctx.strokeStyle = SLIP.clay;
+  ctx.strokeStyle = SLIP.muted;
   ctx.strokeRect(x + w - 32 - sw, 64, sw, 38);
-  ctx.fillStyle = SLIP.clay;
+  ctx.fillStyle = SLIP.muted;
   ctx.fillText(stamp, x + w - 32 - sw + 12, 91);
   ctx.strokeStyle = SLIP.line;
   ctx.setLineDash([6, 6]);
@@ -233,8 +233,7 @@ export async function forkImage(job: Job, link: string): Promise<Blob> {
       ctx.fillText(topicLabel(topic), cx, cy);
       ctx.fillStyle = SLIP.ink;
       ctx.font = `500 22px ${MONO}`;
-      const range = `${points(o.baseline_share)}% → ${points(o.final.p50)}% (${points(o.final.p10)}–${points(o.final.p90)}%)`;
-      ctx.fillText(range, cx + 210, cy);
+      ctx.fillText(bandText(o), cx + 210, cy);
     });
   ctx.fillStyle = SLIP.muted;
   ctx.font = `400 20px ${SANS}`;
@@ -243,7 +242,7 @@ export async function forkImage(job: Job, link: string): Promise<Blob> {
   ctx.fillText(link, pad, 566);
   return new Promise((resolve, reject) =>
     canvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error("The image could not be made"))),
+      (b) => (b ? resolve(b) : reject(new Error("Could not make the image."))),
       "image/png",
     ),
   );

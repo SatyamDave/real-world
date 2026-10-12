@@ -36,11 +36,11 @@ test("the week share text is the grid, the streak and the day's receipt, without
   expect(text).not.toContain("62");
 });
 
-test("the fork sentence names the largest move and the run spread", () => {
+test("the fork sentence names the largest move and the member spread", () => {
   const r = job.result;
   if (!r) throw new Error("fixture has a result");
   expect(forkSentence(r)).toBe(
-    "Inflation worry rose 6 pts across 3 countries; the 5 runs agree within 5 pts.",
+    "Inflation worry rose 6.0 pts across 3 countries; all 5 members agree within 5.0 pts.",
   );
   const flat = Object.fromEntries(
     Object.entries(r.outputs).map(([t, o]) => [
@@ -49,7 +49,7 @@ test("the fork sentence names the largest move and the run spread", () => {
     ]),
   );
   expect(forkSentence({ ...r, outputs: flat })).toBe(
-    "No topic moved 1 pt or more across 3 countries; the 5 runs agree within 0 pts.",
+    "No topic moved 0.5 pts or more across 3 countries; all 5 members agree within 0.0 pts.",
   );
   const text = forkShareText(job, "https://rw.test/fork/job_fixture1");
   expect(text).toContain("“A chip shortage doubles phone prices worldwide”");
