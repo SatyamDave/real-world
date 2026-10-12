@@ -211,6 +211,8 @@ test("the fork card renders a fixture SimulateResult", async () => {
   );
   expect(text).toContain("p10-p90 range across 5 ensemble members, not a confidence interval yet");
   expect(text).toContain("52% to 58% (56-61%)");
+  expect(el.querySelectorAll("figure.chart")).toHaveLength(2);
+  expect(text).toContain("Get this via API");
   expect(el.querySelector(".card.receipt")?.closest(".card.fork")).toBeNull();
   expect(text).toContain("$0.01 (estimated $0.01)");
   expect(text).toContain("Counterfactual: not scored");
