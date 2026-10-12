@@ -133,7 +133,7 @@ function SkillCard({ name, s }: { name: string; s?: Skill }) {
       <h3>Simulation vs {name}</h3>
       {s.claim === "insufficient_n" ? (
         <>
-          <p className="skill-value">No claim yet</p>
+          <p className="skill-claim">No claim yet</p>
           <p className="small">
             n = {plural(s.n, "resolved question")}. A comparison is claimed only after 100 resolve.
           </p>
@@ -204,7 +204,6 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
   return (
     <div className="receipts">
       <section className="hero">
-        <p className="eyebrow">Receipts</p>
         <h1>Every forecast, hashed before its outcome existed</h1>
         <p className="muted">
           Each forecast is salted, hashed into that day's Merkle root, and chained to the day

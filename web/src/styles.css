@@ -290,10 +290,12 @@ main {
   position: relative;
 }
 
+/* The column starts where the receipts page's container does, so every page shares one left edge. */
 .home {
   position: relative;
   z-index: 2;
   width: min(600px, 100%);
+  margin-left: max(0px, calc((100% - 1040px) / 2));
   padding: 32px 24px 64px;
   display: flex;
   flex-direction: column;
@@ -678,6 +680,10 @@ main {
   font-weight: 500;
 }
 
+.shift-who .small {
+  white-space: nowrap;
+}
+
 .shift-topic {
   grid-area: topic;
   font-size: 14px;
@@ -793,7 +799,7 @@ main {
 
 .globe {
   position: fixed;
-  inset: 64px 0 0 min(36vw, 560px);
+  inset: 64px 0 0 calc(max(0px, (100vw - 1040px) / 2) + min(36vw, 560px));
   z-index: 1;
 }
 
@@ -831,7 +837,7 @@ main {
   bottom: 24px;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 8px;
   padding: 12px 14px;
   border-radius: var(--radius);
@@ -881,7 +887,7 @@ main {
 }
 
 .swatch-exp {
-  border: 2px solid var(--accent-2);
+  background: var(--accent-2);
 }
 
 .globe-tip {
@@ -1024,9 +1030,16 @@ blockquote {
   margin-top: 12px;
 }
 
-.skill-value {
+/* The n is data and prints in mono; "No claim yet" is words. */
+.skill-value,
+.skill-claim {
   font-size: 26px;
   font-weight: 500;
+}
+
+.skill-claim {
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .day-head {
@@ -1034,6 +1047,7 @@ blockquote {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+  padding-top: 12px;
 }
 
 .day-head h2 {
@@ -1192,8 +1206,43 @@ button.link:hover:not(:disabled) {
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 22px;
   line-height: 1;
+}
+
+/* The week's squares, in the palette: filled green, half green, clay, hatched (open), empty. */
+.sq {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  vertical-align: middle;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.sq-close {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.sq-fair {
+  background: color-mix(in srgb, var(--accent) 40%, var(--surface));
+  border-color: var(--accent);
+}
+
+.sq-worse {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+}
+
+.sq-open {
+  background: repeating-linear-gradient(-45deg, var(--line) 0 2px, transparent 2px 6px);
+  border-color: var(--ink);
+}
+
+.week-legend .sq {
+  width: 12px;
+  height: 12px;
+  margin-right: 2px;
 }
 
 .week-legend {
@@ -1254,9 +1303,14 @@ button.link:hover:not(:disabled) {
   max-width: 560px;
 }
 
-/* Phones and narrow windows: the globe joins the page flow */
+/* Phones and narrow windows: the globe joins the page flow, above the headline as on the landing page */
 
 @media (max-width: 960px) {
+  main {
+    display: flex;
+    flex-direction: column;
+  }
+
   .home {
     width: 100%;
     margin: 0 auto;
@@ -1265,10 +1319,11 @@ button.link:hover:not(:disabled) {
   }
 
   .globe {
+    order: -1;
     position: relative;
     inset: auto;
     height: 480px;
-    margin: 0 auto 32px;
+    margin: 16px auto 0;
     width: calc(100% - 32px);
     max-width: 608px;
     overflow: hidden;
@@ -1298,6 +1353,18 @@ button.link:hover:not(:disabled) {
 
   .page {
     padding: 24px 16px 64px;
+  }
+}
+
+/* Below 768px only the poster shows, at the landing page's 240px, so no frame and no three.js. */
+@media (max-width: 767px) {
+  .globe {
+    height: 240px;
+    border: 0;
+  }
+
+  .globe-poster {
+    width: 240px;
   }
 }
 

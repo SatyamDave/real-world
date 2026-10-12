@@ -5,12 +5,13 @@ import tokensCss from "./styles/tokens.css?raw";
 
 export type WeekDay = Reveal["week"][number];
 
+// The emoji is for copied text; on the page each square is drawn in the palette by its kind.
 export const SQUARES = [
-  ["🟩", "Close: Brier under 0.10"],
-  ["🟨", "At least as good as a constant 50%"],
-  ["🟥", "Worse than a constant 50%"],
-  ["🟦", "Answered, not resolved yet"],
-  ["⬜", "No answer that day"],
+  ["🟩", "Close: Brier under 0.10", "close"],
+  ["🟨", "At least as good as a constant 50%", "fair"],
+  ["🟥", "Worse than a constant 50%", "worse"],
+  ["🟦", "Answered, not resolved yet", "open"],
+  ["⬜", "No answer that day", "none"],
 ] as const;
 
 export function square(w: WeekDay): string {
@@ -126,6 +127,7 @@ const SLIP = {
   ink: token("ink"),
   muted: token("muted"),
   clay: token("accent-2"),
+  accent: token("accent"),
   line: token("line"),
 };
 const SANS = token("font-sans");
@@ -141,9 +143,14 @@ export async function forkImage(job: Job, link: string): Promise<Blob> {
   if (!ctx || !r) throw new Error("This browser cannot draw the image");
   // Canvas text does not wait for web fonts, so load the ones it uses first.
   await Promise.all(
-    [`600 40px ${SANS}`, `400 26px ${SANS}`, `400 24px ${MONO}`, `500 24px ${MONO}`].map((f) =>
-      document.fonts?.load(f).catch(() => []),
-    ),
+    [
+      `600 40px ${SANS}`,
+      `600 26px ${SANS}`,
+      `400 26px ${SANS}`,
+      `400 22px ${SANS}`,
+      `500 22px ${MONO}`,
+      `400 20px ${MONO}`,
+    ].map((f) => document.fonts?.load(f).catch(() => [])),
   );
   const [x, w, top, bottom] = [56, 1088, 40, 590];
   ctx.fillStyle = SLIP.paper;
@@ -178,9 +185,15 @@ export async function forkImage(job: Job, link: string): Promise<Blob> {
   const pad = x + 32;
   const inner = w - 64;
   ctx.textBaseline = "alphabetic";
+  ctx.font = `600 26px ${SANS}`;
+  ctx.fillStyle = SLIP.ink;
+  ctx.fillText("Real World", pad, 92);
+  const brand = ctx.measureText("Real World").width;
+  ctx.fillStyle = SLIP.accent;
+  ctx.fillText(".", pad + brand, 92);
   ctx.font = `400 24px ${SANS}`;
   ctx.fillStyle = SLIP.muted;
-  ctx.fillText("Real World · fork of today's world", pad, 92);
+  ctx.fillText("fork of today's world", pad + brand + 28, 92);
   const stamp = "AI-simulated";
   ctx.font = `600 22px ${SANS}`;
   const sw = ctx.measureText(stamp).width + 24;
@@ -209,16 +222,20 @@ export async function forkImage(job: Job, link: string): Promise<Blob> {
     y += 36;
   }
   y += 36;
-  for (const [topic, o] of Object.entries(r.outputs).slice(0, 3)) {
-    ctx.fillStyle = SLIP.muted;
-    ctx.font = `400 24px ${SANS}`;
-    ctx.fillText(topicLabel(topic), pad, y);
-    ctx.fillStyle = SLIP.ink;
-    ctx.font = `500 24px ${MONO}`;
-    const range = `${points(o.baseline_share)}% → ${points(o.final.p50)}%  (runs ${points(o.final.p10)}–${points(o.final.p90)}%)`;
-    ctx.fillText(range, pad + 380, y);
-    y += 38;
-  }
+  // Every topic, in two columns, as the card's band list shows them.
+  Object.entries(r.outputs)
+    .slice(0, 8)
+    .forEach(([topic, o], i) => {
+      const cx = pad + (i % 2) * (inner / 2);
+      const cy = y + Math.floor(i / 2) * 36;
+      ctx.fillStyle = SLIP.muted;
+      ctx.font = `400 22px ${SANS}`;
+      ctx.fillText(topicLabel(topic), cx, cy);
+      ctx.fillStyle = SLIP.ink;
+      ctx.font = `500 22px ${MONO}`;
+      const range = `${points(o.baseline_share)}% → ${points(o.final.p50)}% (${points(o.final.p10)}–${points(o.final.p90)}%)`;
+      ctx.fillText(range, cx + 210, cy);
+    });
   ctx.fillStyle = SLIP.muted;
   ctx.font = `400 20px ${SANS}`;
   ctx.fillText(`${DISCLOSURE}.`, pad, 536);

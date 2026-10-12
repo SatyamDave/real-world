@@ -104,7 +104,7 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
         </button>
       </div>
       {status && status !== "Starting" && (
-        <p className="muted small" role="alert">
+        <p className="bad small" role="alert">
           {status}
         </p>
       )}
@@ -147,9 +147,12 @@ export function ForkRun({ id }: { id: string }) {
 
   if (error instanceof ApiError && error.status === 404)
     return (
-      <p className="muted">
-        This fork does not exist or has expired. <a href="/">Fork today's world</a>
-      </p>
+      <section className="card notfound">
+        <h1>Fork not found</h1>
+        <p className="muted">
+          This fork does not exist or has expired. <a href="/">Fork today's world</a>
+        </p>
+      </section>
     );
   if (error) return <LoadError what="this fork" error={error} />;
   if (job?.status === "failed")
@@ -210,8 +213,8 @@ export function ForkCard({ job }: { job: Job }) {
         <span className="stamp">AI-simulated</span>
       </div>
       <p className="setup" id={`fork-${job.id}`}>
-        “{job.request.event.text}”, applied to the {r.world_snapshot_id} world and run for {r.days}{" "}
-        days on {r.agents_sampled.toLocaleString()} sampled agents.
+        “{job.request.event.text.replace(/\.$/, "")}”, applied to the {r.world_snapshot_id} world
+        and run for {r.days} days on {r.agents_sampled.toLocaleString()} sampled agents.
       </p>
       <p className="meaning">{forkSentence(r)}</p>
 

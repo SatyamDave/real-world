@@ -7,7 +7,7 @@ import { Fork, ForkRun } from "./ForkCard";
 import { ReceiptsPage, ReceiptsStrip } from "./Receipts";
 
 // three.js is most of the bundle, so the globe loads once the page is idle, and only on screens
-// wide enough to use it. A still poster holds its place until then.
+// wide enough to use it. A still poster holds its place until then, and is all a phone shows.
 const Globe = lazy(() => import("./Globe"));
 const WIDE = "(min-width: 768px)";
 const FEATURED = ["USA", "BRA", "KEN"];
@@ -166,7 +166,7 @@ function Header({ path, date }: { path: string; date?: string }) {
           <span className="brand-mark" aria-hidden="true">
             .
           </span>
-          {date && <span className="brand-date">World of {shortDate(date)}</span>}
+          <span className="brand-date">{date ? `World of ${shortDate(date)}` : " "}</span>
         </span>
       </a>
       <nav aria-label="Pages">
@@ -282,22 +282,20 @@ function Home({ w, tiers }: { w?: World; tiers: string[] }) {
         {w && <Fork events={w.prefilled_events} />}
         {w && !wide && <CountryList countries={w.countries} onSelect={setSelected} />}
       </div>
-      {wide && (
-        <div className="globe">
-          <img
-            className="globe-poster"
-            src="/globe-poster.svg"
-            width={500}
-            height={500}
-            alt="A dot-sampled globe of the world's land."
-          />
-          {w && idle && (
-            <Suspense fallback={null}>
-              <Globe countries={w.countries} onSelect={setSelected} paused={selected !== null} />
-            </Suspense>
-          )}
-        </div>
-      )}
+      <div className="globe">
+        <img
+          className="globe-poster"
+          src="/globe-poster.svg"
+          width={500}
+          height={500}
+          alt="A dot-sampled globe of the world's land."
+        />
+        {w && wide && idle && (
+          <Suspense fallback={null}>
+            <Globe countries={w.countries} onSelect={setSelected} paused={selected !== null} />
+          </Suspense>
+        )}
+      </div>
       {selected && <AgentPanel country={selected} onClose={() => setSelected(null)} />}
     </>
   );

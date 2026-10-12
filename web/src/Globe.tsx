@@ -24,10 +24,11 @@ function palette(): Palette {
 
 const rgb = (hex: string) => [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
 
-/** A share from 0 to 1 on a ramp from the line colour to verify green. */
+/** A share from 0 to 1 on a ramp towards verify green; 0 is still a visible green on paper. */
 function shade(share: number, p: Palette) {
-  const [lo, hi] = [rgb(p.line), rgb(p.accent)];
-  return `rgb(${lo.map((c, i) => Math.round(c + (hi[i] - c) * share)).join(",")})`;
+  const [lo, hi] = [rgb(p.paper2), rgb(p.accent)];
+  const t = 0.5 + 0.5 * share;
+  return `rgb(${lo.map((c, i) => Math.round(c + (hi[i] - c) * t)).join(",")})`;
 }
 
 const alpha = (hex: string, a: number) => `rgba(${rgb(hex).join(",")},${a})`;
@@ -105,7 +106,7 @@ export default function Globe({
     if (!still) setRings(countries);
   }
 
-  const empty = alpha(colors.ink, 0.06);
+  const empty = colors.line;
 
   return (
     <div className={`globe-live${ready ? " ready" : ""}`} ref={box}>
@@ -127,19 +128,17 @@ export default function Globe({
           ringMaxRadius={5}
           ringPropagationSpeed={3}
           ringRepeatPeriod={PULSE_MS * 2}
-          polygonsData={shapes}
-          polygonAltitude={(f) => (f === hover ? 0.03 : 0.008)}
-          polygonCapColor={(f) => {
+          hexPolygonsData={shapes}
+          hexPolygonResolution={3}
+          hexPolygonMargin={0.4}
+          hexPolygonUseDots
+          hexPolygonAltitude={(f) => (f === hover ? 0.02 : 0.004)}
+          hexPolygonColor={(f) => {
             const c = byIso.get((f as Feature).properties.iso3);
-            return c ? shade(c.shares[topic] ?? 0, colors) : empty;
+            if (!c) return empty;
+            return c.experimental ? colors.clay : shade(c.shares[topic] ?? 0, colors);
           }}
-          polygonSideColor={() => alpha(colors.accent, 0.15)}
-          polygonStrokeColor={(f) =>
-            byIso.get((f as Feature).properties.iso3)?.experimental
-              ? colors.clay
-              : alpha(colors.ink, 0.2)
-          }
-          polygonLabel={(f) => {
+          hexPolygonLabel={(f) => {
             const p = (f as Feature).properties;
             const c = byIso.get(p.iso3);
             if (!c)
@@ -148,12 +147,12 @@ export default function Globe({
               c.experimental ? " · experimental" : ""
             }<br/>${escapeHtml(topicLabel(topic))}: ${pct(c.shares[topic] ?? 0)} lean yes<br/><span>Click to read one agent</span></div>`;
           }}
-          onPolygonHover={(f) => setHover(f as Feature | null)}
-          onPolygonClick={(f) => {
+          onHexPolygonHover={(f) => setHover(f as Feature | null)}
+          onHexPolygonClick={(f) => {
             const c = byIso.get((f as Feature).properties.iso3);
             if (c) onSelect(c);
           }}
-          polygonsTransitionDuration={300}
+          hexPolygonsTransitionDuration={300}
         />
       )}
       <div className="globe-controls">

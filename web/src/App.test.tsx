@@ -99,8 +99,10 @@ test("the reveal shows you, visitors, the simulated world and the market after s
     expect(text).toContain(s);
   expect(text).toContain("Market61%");
   expect(text).toContain("3 days answered in a row");
-  const squares = [...el.querySelectorAll(".week-grid [aria-hidden]")].map((x) => x.textContent);
-  expect(squares.join("")).toBe("⬜⬜🟩🟥🟩🟦🟦");
+  const squares = [...el.querySelectorAll(".week-grid [data-square]")].map((x) =>
+    x.getAttribute("data-square"),
+  );
+  expect(squares).toEqual(["none", "none", "close", "worse", "close", "open", "open"]);
   expect(el.querySelector(".week-grid")?.textContent).toContain("Oct 2: Worse than a constant 50%");
   expect(text).toContain(DISCLOSURE);
 });
@@ -403,7 +405,10 @@ test("the home page states the thesis with the record as proof", async () => {
     `Scored in public since Oct 1: 1 day, ${vector.day.leaf_count} receipts.`,
   );
   expect(el.textContent).toContain("World of Oct 5");
-  // Without a wide screen the globe is not loaded; every country is a button instead.
+  // Without a wide screen the globe is not loaded; the still poster shows and every country is a
+  // button instead.
+  expect(el.querySelector(".globe-poster")).not.toBeNull();
+  expect(el.querySelector(".globe-live")).toBeNull();
   expect(el.querySelectorAll(".countries button")).toHaveLength(world.countries.length);
 });
 
