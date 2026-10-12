@@ -15,18 +15,67 @@ Read this first. Everything below was done on draft PRs and a preview deploy. No
 | [#24](https://github.com/SatyamDave/real-world/pull/24) | feat(landing): amplitude tracking | #23 | pass |
 | [#25](https://github.com/SatyamDave/real-world/pull/25) | chore(landing): launch readiness | #24 | pass |
 
-CI was read from GitHub after the last push of code (head `6c6c3e7` on #25); the `review` job shows "skipping" while a PR is a draft. A docs-only commit with this file follows, and its CI is the last thing to glance at.
+CI was read from GitHub after the last push of code (head `db73246` on #25, which removed the Brazil card); the `review` job shows "skipping" while a PR is a draft. A docs-only commit with this file follows it, and its CI was checked too.
 
 ## What needs you (in order of weight)
 
-1. **The LCP budget is not reliably met on the live preview.** In Lighthouse's simulated slow phone the final build is under 2.0 s on 3 of 6 runs, median about 2.05 s; it passes against a local server and in what the browser actually measures (about 0.35 s). I self-hosted the fonts, and deferred the bot check and the analytics so they stop competing with the first paint; that cut main-thread work by 40% but not enough. The remaining cost is the 76 KB React bundle. Options (Preact swap, or pre-rendering per headline behind a Pages Function) and all 28 runs are in [perf/LIGHTHOUSE.md](perf/LIGHTHOUSE.md). I stopped because both are launch-risk choices. Your call: do one, or treat 2.0 s as a lab target and judge on real users once ads run.
-2. **The Brazilian runoff card.** The receipt strip shows "Who wins the Brazilian presidential runoff on October 25, 2026?" (the globe chips on the hero show only the Fed and ECB decisions). [prelaunch-ads.md](../gtm/prelaunch-ads.md) bans election content in ad creative, and [decisions-needed item 2](../company/decisions-needed.md) (elections) is open. I did not edit `src/data/receipts.json`; removing it is deleting one object.
+1. **LCP: decided, ship as-is.** Rohit's decision: leave the current React bundle as it is, with no Preact swap and no pre-rendering. We will judge LCP on real-user numbers once ads run. For the record, on the live preview in Lighthouse's simulated slow phone the final build is under 2.0 s on 3 of 6 runs, median about 2.05 s (it passes against a local server, and the browser's own measurement is about 0.35 s); the remaining cost is the 76 KB React bundle. All 28 runs are in [perf/LIGHTHOUSE.md](perf/LIGHTHOUSE.md), which also lists the options that were declined.
+2. **The Brazilian runoff card: removed.** The receipts data now holds three central-bank decisions (US Fed, ECB, Bank of Japan); the election question is gone from the page, the globe and the tests. [decisions-needed item 2](../company/decisions-needed.md) (elections) is untouched and still open. To bring an election question back, add an object to `src/data/receipts.json` after that decision.
 3. **Connect `tryrealworld.com`** when you are ready: [RUNBOOK.md section 1](RUNBOOK.md) has the Namecheap and Cloudflare steps. I did not run any of them.
 4. **Real keys on a real host are untested.** The preview uses Cloudflare's always-pass Turnstile test keys and the Neon `dev` branch, so automation could sign up and production data stayed untouched. Before go-live: add the host to the real Turnstile widget's allowed hostnames and do one real signup against the production environment (go-live steps 5 and 6).
 5. **The legal pages are drafts** (banner on both). Founders must read them. No retention period is set (the page says so), and the contact route appears only once `contactEmail` is set. Sending the launch email is not set up: Cloudflare Email Routing only receives.
 6. **Reddit and X pixels are unexercised.** No pixel ids exist yet. The call shapes in `src/pixels.ts` come from secondary descriptions because the vendors' help pages did not load for me. [RUNBOOK section 9](RUNBOOK.md) is where they get checked against a live pixel.
-7. **Amplitude cleanup.** Verification left test events in project 877388 (4 devices, `utm_source=test`, campaigns `preview_check*`). I had no tool to delete events. The dashboard I built labels them. You may want to filter them out or delete the users.
+7. **Amplitude cleanup.** Verification left test events from **20 devices** in project 877388 (an earlier version of this file, and the dashboard note, said 4: that was wrong). The full list of ids is in "Verification traffic in Amplitude" below. I had no tool to delete events.
 8. **`landing/BRIEF.md` does not exist** on any branch or on disk. I worked from your message, PLAN.md, the product spec and decision 0003. If it holds anything else, add it.
+
+## What Rohit still has to do
+
+- [ ] **Pick the design.** Direction A, "Commit Slip", is built and is what the preview shows. Directions B (dark observatory) and C (almanac) exist only as token sets, `src/styles/tokens-b.css` and `tokens-c.css`; switching is the one `tokens.css` import in `src/main.tsx`. B and C were designed with their own display fonts (a serif for B, a grotesque for C); those font files are not in the repo, because the page now serves only IBM Plex. Screenshots of all three are in `landing/design/direction-*/` and the scores are under "Design decisions" below.
+- [ ] **Replace the Typeform token.** `TYPEFORM_TOKEN` in `landing/.dev.vars` is read only by `scripts/typeform-sync.mjs` (it is not a Pages secret). Put the new token there and revoke the old one in Typeform. If the new token belongs to a different Typeform account, delete `landing/typeform/form-id.txt` and run `node landing/scripts/typeform-sync.mjs --webhook-url <the /api/typeform URL>` to create the form and its webhook there, then set `VITE_TYPEFORM_FORM_ID` and rebuild ([RUNBOOK section 6](RUNBOOK.md)). The current form is `xHCo5APC`, with its webhook pointing at the preview.
+- [ ] **Real Turnstile keys.** The preview uses Cloudflare's always-pass test keys. For production, create a widget, add `tryrealworld.com` to its allowed hostnames, set the site key as `VITE_TURNSTILE_SITE_KEY` at build time and the secret as the `TURNSTILE_SECRET_KEY` production secret, then do one real signup ([RUNBOOK sections 1 and 4](RUNBOOK.md)).
+- [ ] **Connect `tryrealworld.com` to Cloudflare.** Nameservers at Namecheap, then the Pages custom domain, `www` redirect and SSL ([RUNBOOK section 1](RUNBOOK.md)). Then set `VITE_PUBLIC_BASE_URL`, repoint the Typeform webhook, and redeploy. Not done by me.
+- [ ] **Ad accounts and pixels.** Create the Reddit and X ad accounts and their pixels, set `VITE_REDDIT_PIXEL_ID`, `VITE_X_PIXEL_ID` and the X Lead event id, and check the pixel calls against the live pixels, which I could not do ([RUNBOOK section 9](RUNBOOK.md)). The images are in `landing/ads/`; the caps and the kill rule are in [prelaunch-ads.md](../gtm/prelaunch-ads.md).
+- [ ] **Typeform Plus.** Upgrade the Typeform account to the Plus plan. I do not know which plan the current account is on, or what response limits, hidden fields and webhooks the plans include: that is unknown to me, so check the plan page before the ads run. The page depends on hidden fields (`signup_id` and three others) and on the webhook.
+- [ ] **Read the draft legal pages.** `/privacy` and `/terms` carry a draft banner. Read them, decide a retention period, set `contactEmail` in `src/brand.ts` once `hello@tryrealworld.com` exists, then remove the banner (`src/pages/DraftBanner.tsx`).
+- [ ] **Test a real Typeform submission through the embed on the deployed preview.** Open `https://landing-preview.real-world-landing.pages.dev/?utm_source=test&utm_content=hashed`, sign up with your own address, and answer both questions in the embedded form. Then check that the row in the Neon `dev` branch has `role`, `forecast_probability` and `completed_at` (the preview writes to `dev`, not `main`), and that Amplitude shows `waitlist_completed`. I tested the webhook only with a correctly signed request, never with Typeform's own delivery. Delete your test row afterwards by id ([RUNBOOK section 8](RUNBOOK.md)).
+
+## Verification traffic in Amplitude (filter these out)
+
+Amplitude project 877388. Everything in the project so far is test traffic: nothing has been sent by a real visitor, and no ads have run. As of the last verification on 2026-10-12 there are **20 devices, 30 `landing_viewed` events and 6 `signup_saved` events**. There are no user ids: every event, browser and server, carries a device id, and the server events reuse the browser's. I got the list by grouping `landing_viewed`, `signup_saved` and `waitlist_email_saved` by Device ID over the last 30 days.
+
+Filter on the device ids, not on `utm_source=test`: only the first three carry it; the Lighthouse devices visited the bare URL.
+
+**Three browser-driven verification devices** (all UTM `utm_source=test`, campaigns `preview_check*`; all 6 signups and all server events are on these):
+
+| Device id | `landing_viewed` | `signup_saved` |
+| --- | --- | --- |
+| `e38f14cb-ef4e-4e19-b694-d0f16571ec41` | 5 | 2 |
+| `5db773f5-b724-4f9f-a222-95040fb20ab4` | 3 | 1 |
+| `de5c7080-43e1-4f19-95fb-e8c2303bfc0f` | 5 | 3 |
+
+**Seventeen Lighthouse devices** (one `landing_viewed` each, no UTM; one per live Lighthouse run, 5 + 6 + 6):
+
+```
+1932e556-c592-42a4-95e0-65df5666c191
+1bc48e85-03ba-436f-a148-0c0aa51bcfa0
+2bd2b61a-9a50-47ba-9e8d-c3e970ab140c
+2edcbff6-9a87-4109-8848-0983084c7913
+4ccd0492-8217-4658-ad00-6a0df7793378
+51a6b9c4-fbf6-4319-8146-6e043ab9491c
+6252a66f-e9ff-4fc2-871c-0c8c6e676659
+66974115-e7b7-45cb-8366-2b59be61924c
+85c7a839-29ca-4e96-b119-1adc6f8dda2f
+b9216ca3-b24a-44a9-b817-6274ae0b7870
+bd842940-62a6-4c8f-81c7-44fbdd60ff57
+cc80fb4d-900e-4784-b926-918da07cd9fb
+d450610a-41f2-4c02-a012-358fad3ae74d
+e00a057b-f36e-4772-ace3-218a7f928eab
+e6819914-b6f0-44ea-a4fe-b6344136a9d1
+e9f779b4-d860-4da7-aa54-a54b90febe72
+f82afa3e-deb3-443e-8704-188bbcdbd2a4
+```
+
+The list covers everything up to the last verification. Any later visit to the preview, including yours, creates another device, so also filter by date: the simplest rule is to exclude everything before the first ad flight. The six test signups' rows were deleted from Neon; their addresses were all `test+...@example.com`. The dashboard note ("4 devices with `utm_source = test`") and the PR #24 body are out of date on this point; this section is correct.
 
 ## Evidence for the definition of done
 
@@ -93,6 +142,7 @@ Scope: a preview-only Cloudflare Pages deploy.
 - A pnpm install had added a release-age exemption to `pnpm-workspace.yaml` for a one-day-old package; I reverted it and pinned an older version.
 - CI failed on #20 because I had fixed a lint line on the wrong branch. Fixed on #20 and logged.
 - During the last re-cascade of the stack I passed the wrong rebase upstream and reset three local branches. Nothing was pushed; I restored each from its known tip and checked by diff. Details in the log.
+- I first counted 4 verification devices in Amplitude. The real count is 20: the 17 live Lighthouse runs each created a device, and those visited the bare URL, so they carry no `utm_source=test`. The PR #24 body and the dashboard note still say 4.
 - Two scripted edits and one rebase were silent no-ops at different points. After the second I started asserting on commit counts and diffs rather than trusting the exit code.
 
 ## External changes I made (all reversible, listed in the log with how to reverse)
