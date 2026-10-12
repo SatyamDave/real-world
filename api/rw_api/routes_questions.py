@@ -94,7 +94,7 @@ class QuestionPage(BaseModel):
     outcome: QuestionOutcome | None
     members: int = Field(description="Bootstrap resamples behind each sim spread.")
     plain_llm_samples: int
-    log_clip: tuple[float, float]
+    log_clip: list[float] = Field(description="Low and high clip on p before the log score.")
     min_resolved: int = Field(description="Resolved questions before a skill claim is reported.")
     model: str | None
     provider: str | None
@@ -162,7 +162,6 @@ def _plain_samples(conn: sqlite3.Connection, titles: list[str], text: str) -> li
         " and its score"
     ),
     response_model=QuestionPage,
-    responses={404: {"description": "No such question"}},
 )
 def question(question_id: str) -> QuestionPage:
     conn = connect()
@@ -243,7 +242,7 @@ def question(question_id: str) -> QuestionPage:
         outcome=None if res is None else QuestionOutcome(**dict(res)),
         members=settings.DAILY_FORECAST_MEMBERS,
         plain_llm_samples=settings.PLAIN_LLM_SAMPLES,
-        log_clip=tuple(protocol["log_clip"]),
+        log_clip=list(protocol["log_clip"]),
         min_resolved=protocol["min_resolved_for_claims"],
         model=latest["model"] if latest else None,
         provider=latest["provider"] if latest else None,

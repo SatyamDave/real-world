@@ -766,11 +766,6 @@ export interface components {
       /** Outcome */
       outcome: string;
     };
-    /** HTTPValidationError */
-    HTTPValidationError: {
-      /** Detail */
-      detail?: components["schemas"]["ValidationError"][];
-    };
     /** Job */
     Job: {
       /** Id */
@@ -1135,8 +1130,11 @@ export interface components {
       members: number;
       /** Plain Llm Samples */
       plain_llm_samples: number;
-      /** Log Clip */
-      log_clip: [number, number];
+      /**
+       * Log Clip
+       * @description Low and high clip on p before the log score.
+       */
+      log_clip: number[];
       /**
        * Min Resolved
        * @description Resolved questions before a skill claim is reported.
@@ -1566,19 +1564,6 @@ export interface components {
       };
       /** Steps */
       steps: components["schemas"]["rw__simulate__Step"][];
-    };
-    /** ValidationError */
-    ValidationError: {
-      /** Location */
-      loc: (string | number)[];
-      /** Message */
-      msg: string;
-      /** Error Type */
-      type: string;
-      /** Input */
-      input?: unknown;
-      /** Context */
-      ctx?: Record<string, never>;
     };
     /** WeekDay */
     WeekDay: {
@@ -2482,15 +2467,17 @@ export interface operations {
         headers: {
           [name: string]: unknown;
         };
-        content?: never;
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
       };
-      /** @description Validation Error */
+      /** @description The request is invalid */
       422: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": components["schemas"]["Refused"];
         };
       };
     };

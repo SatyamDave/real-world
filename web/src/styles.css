@@ -1803,3 +1803,10 @@ main :is(p, li, dd, h3) a {
   font-weight: 600;
   margin: 0;
 }
+
+/* ---- Question page ---- */
+
+/* Question and list hashes are 64 hex characters with no break point. */
+.question-page {
+  overflow-wrap: anywhere;
+}

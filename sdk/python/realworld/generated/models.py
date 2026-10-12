@@ -520,14 +520,6 @@ class TopicOutput(BaseModel):
     by_day: list[DayBand] = Field(..., title="By Day")
 
 
-class ValidationError(BaseModel):
-    loc: list[str | int] = Field(..., title="Location")
-    msg: str = Field(..., title="Message")
-    type: str = Field(..., title="Error Type")
-    input: Any | None = Field(None, title="Input")
-    ctx: dict[str, Any] | None = Field(None, title="Context")
-
-
 class WeekDay(BaseModel):
     date: str = Field(..., title="Date")
     probability: float | None = Field(
@@ -632,10 +624,6 @@ class ExperimentResult(BaseModel):
     outcome: str = Field(..., title="Outcome")
 
 
-class HTTPValidationError(BaseModel):
-    detail: list[ValidationError] | None = Field(None, title="Detail")
-
-
 class JobCreated(BaseModel):
     id: str = Field(..., title="Id")
     status: Status = Field(..., title="Status")
@@ -715,7 +703,9 @@ class QuestionPage(BaseModel):
         ..., description="Bootstrap resamples behind each sim spread.", title="Members"
     )
     plain_llm_samples: int = Field(..., title="Plain Llm Samples")
-    log_clip: tuple[float, float] = Field(..., title="Log Clip")
+    log_clip: list[float] = Field(
+        ..., description="Low and high clip on p before the log score.", title="Log Clip"
+    )
     min_resolved: int = Field(
         ...,
         description="Resolved questions before a skill claim is reported.",

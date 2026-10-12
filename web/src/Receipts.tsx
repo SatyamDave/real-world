@@ -15,10 +15,16 @@ const isForecast = (r: ReceiptEntry) => r.entry.kind === "forecast";
 /** "0.4139" as "41%"; an empty value as a dash. */
 const prob = (v: unknown) => (str(v) ? pct(Number(v)) : "—");
 
-/** The question's text, with its id on hover; the id alone on a leaf with no question. */
+/** The question's text linking its page, with its id on hover; the id alone on a leaf with no question. */
 function Question({ r }: { r: ReceiptEntry }) {
   const id = str(r.entry.question_id);
-  return r.question ? <span title={id}>{r.question.text}</span> : <>{id}</>;
+  return r.question ? (
+    <a href={`/questions/${id}`} title={id}>
+      {r.question.text}
+    </a>
+  ) : (
+    id
+  );
 }
 
 const DAY_MS = 86_400_000;

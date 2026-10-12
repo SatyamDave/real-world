@@ -970,14 +970,21 @@
             }
           },
           "404": {
-            "description": "No such question"
-          },
-          "422": {
-            "description": "Validation Error",
+            "description": "No such question",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -1970,19 +1977,6 @@
         ],
         "title": "ExperimentResult"
       },
-      "HTTPValidationError": {
-        "properties": {
-          "detail": {
-            "items": {
-              "$ref": "#/components/schemas/ValidationError"
-            },
-            "type": "array",
-            "title": "Detail"
-          }
-        },
-        "type": "object",
-        "title": "HTTPValidationError"
-      },
       "Job": {
         "properties": {
           "id": {
@@ -2933,18 +2927,12 @@
             "title": "Plain Llm Samples"
           },
           "log_clip": {
-            "prefixItems": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "number"
-              }
-            ],
+            "items": {
+              "type": "number"
+            },
             "type": "array",
-            "maxItems": 2,
-            "minItems": 2,
-            "title": "Log Clip"
+            "title": "Log Clip",
+            "description": "Low and high clip on p before the log score."
           },
           "min_resolved": {
             "type": "integer",
@@ -3992,42 +3980,6 @@
         "type": "object",
         "required": ["agent_id", "iso3", "segment", "belief_start", "belief_end", "steps"],
         "title": "TraceAgent"
-      },
-      "ValidationError": {
-        "properties": {
-          "loc": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "integer"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Location"
-          },
-          "msg": {
-            "type": "string",
-            "title": "Message"
-          },
-          "type": {
-            "type": "string",
-            "title": "Error Type"
-          },
-          "input": {
-            "title": "Input"
-          },
-          "ctx": {
-            "type": "object",
-            "title": "Context"
-          }
-        },
-        "type": "object",
-        "required": ["loc", "msg", "type"],
-        "title": "ValidationError"
       },
       "WeekDay": {
         "properties": {
