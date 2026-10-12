@@ -39,6 +39,14 @@ def cost_usd(in_tokens: int, out_tokens: int) -> float:
     ) / 1e6
 
 
+def cost_text(usd: float, provider: str) -> str:
+    """Dollars as a surface shows them. A fake-model run spends nothing; its dollars are what the
+    real model would have cost, so they are labelled as an estimate (#34)."""
+    if provider == "fake":
+        return f"fake model, nothing spent (estimated ${usd:.4f} at {settings.MODEL} prices)"
+    return f"${usd:.4f}"
+
+
 def estimate_cost(prompt_chars: int, max_tokens: int) -> float:
     return cost_usd(math.ceil(prompt_chars / 4), max_tokens)
 

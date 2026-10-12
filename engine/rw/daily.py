@@ -439,10 +439,7 @@ def anchor_line(conn: sqlite3.Connection, date: str) -> str:
 
 
 def format_summary(s: Detail) -> str:
-    # A fake-model run spends nothing; its dollars are what the real model would have cost (#34).
-    cost = f"${s['usd']:.4f}"
-    if s["model"] == "fake":
-        cost = f"fake model, nothing spent (estimated {cost} at {settings.MODEL} prices)"
+    cost = llm.cost_text(s["usd"], s["model"])
     return (
         f"{s['date']}  ran: {', '.join(s['ran']) or 'nothing (all steps ok)'}\n"
         f"  model calls {s['model_calls']}, {cost}, "

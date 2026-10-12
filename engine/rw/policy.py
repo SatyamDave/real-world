@@ -83,9 +83,15 @@ def _in(span: str, text: str) -> bool:
     return bool(span) and span in text.lower()
 
 
-def screen(text: str, conn: sqlite3.Connection, today: date | None = None) -> PolicyRefused | None:
+def screen(
+    text: str,
+    conn: sqlite3.Connection,
+    today: date | None = None,
+    budget: llm.Budget | None = None,
+) -> PolicyRefused | None:
     """Return why the event is refused, or None if it may run. A classifier call that cannot run
-    raises (llm.BudgetExceeded, ValueError, a provider error); the caller refuses on it."""
+    raises (llm.BudgetExceeded, ValueError, a provider error); the caller refuses on it. Pass
+    budget, limited to SCREEN_MAX_COST_USD, to read what the call spent, even if it raises."""
     today = today or datetime.now(UTC).date()
     start, end = settings.ELECTION_WINDOW
     in_window = start <= today <= end
@@ -104,7 +110,7 @@ def screen(text: str, conn: sqlite3.Connection, today: date | None = None) -> Po
         "screen",
         _prompt(text),
         SCHEMA,
-        llm.Budget(settings.SCREEN_MAX_COST_USD),
+        budget or llm.Budget(settings.SCREEN_MAX_COST_USD),
         max_tokens=settings.SCREEN_MAX_OUTPUT_TOKENS,
         conn=conn,
     )
