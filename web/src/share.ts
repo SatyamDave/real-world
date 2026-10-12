@@ -111,47 +111,113 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, width: number): strin
   return line ? [...lines, line] : lines;
 }
 
-/** A 1200x630 PNG of the fork card, the Open Graph size. */
-export function forkImage(job: Job, link: string): Promise<Blob> {
+// The share image is always the light receipt, whatever the viewer's theme: the light values of
+// styles/tokens.css.
+const SLIP = {
+  paper: "#f2f4f3",
+  paper2: "#e7eae8",
+  surface: "#ffffff",
+  ink: "#15201b",
+  muted: "#5c6660",
+  clay: "#b23a2e",
+  line: "#cdd3cf",
+};
+const SANS = "'IBM Plex Sans', system-ui, sans-serif";
+const MONO = "'IBM Plex Mono', ui-monospace, monospace";
+
+/** A 1200x630 PNG of the fork card as a receipt, the Open Graph size. */
+export async function forkImage(job: Job, link: string): Promise<Blob> {
   const r = job.result;
   const canvas = document.createElement("canvas");
   canvas.width = 1200;
   canvas.height = 630;
   const ctx = canvas.getContext("2d");
-  if (!ctx || !r) return Promise.reject(new Error("This browser cannot draw the image"));
-  const sans = "-apple-system, 'Segoe UI', system-ui, sans-serif";
-  ctx.fillStyle = "#0f1222";
+  if (!ctx || !r) throw new Error("This browser cannot draw the image");
+  // Canvas text does not wait for web fonts, so load the ones it uses first.
+  await Promise.all(
+    [`600 40px ${SANS}`, `400 26px ${SANS}`, `400 24px ${MONO}`, `500 24px ${MONO}`].map((f) =>
+      document.fonts?.load(f).catch(() => []),
+    ),
+  );
+  const [x, w, top, bottom] = [56, 1088, 40, 590];
+  ctx.fillStyle = SLIP.paper;
   ctx.fillRect(0, 0, 1200, 630);
-  ctx.fillStyle = "#818cf8";
-  ctx.font = `600 26px ${sans}`;
-  ctx.fillText("Real World · fork of today's world", 64, 84);
-  ctx.fillStyle = "#ecedf3";
-  ctx.font = `700 44px ${sans}`;
-  let y = 160;
-  for (const l of wrap(ctx, `“${job.request.event.text}”`, 1072).slice(0, 3)) {
-    ctx.fillText(l, 64, y);
-    y += 56;
+  // The slip: offset shadow, white body, ink border, torn bottom edge.
+  const slip = (dx: number) => {
+    ctx.beginPath();
+    ctx.moveTo(x + dx, bottom + dx);
+    ctx.lineTo(x + dx, top + dx);
+    ctx.lineTo(x + w + dx, top + dx);
+    ctx.lineTo(x + w + dx, bottom + dx);
+    for (let i = x + w; i > x; i -= 14) {
+      ctx.lineTo(i - 7 + dx, bottom + 7 + dx);
+      ctx.lineTo(i - 14 + dx, bottom + dx);
+    }
+  };
+  slip(6);
+  ctx.fillStyle = SLIP.paper2;
+  ctx.fill();
+  slip(0);
+  ctx.fillStyle = SLIP.surface;
+  ctx.fill();
+  ctx.strokeStyle = SLIP.ink;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, bottom);
+  ctx.lineTo(x, top);
+  ctx.lineTo(x + w, top);
+  ctx.lineTo(x + w, bottom);
+  ctx.stroke();
+
+  const pad = x + 32;
+  const inner = w - 64;
+  ctx.textBaseline = "alphabetic";
+  ctx.font = `400 24px ${SANS}`;
+  ctx.fillStyle = SLIP.muted;
+  ctx.fillText("Real World · fork of today's world", pad, 92);
+  const stamp = "AI-simulated";
+  ctx.font = `600 22px ${SANS}`;
+  const sw = ctx.measureText(stamp).width + 24;
+  ctx.strokeStyle = SLIP.clay;
+  ctx.strokeRect(x + w - 32 - sw, 64, sw, 38);
+  ctx.fillStyle = SLIP.clay;
+  ctx.fillText(stamp, x + w - 32 - sw + 12, 91);
+  ctx.strokeStyle = SLIP.line;
+  ctx.setLineDash([6, 6]);
+  ctx.beginPath();
+  ctx.moveTo(pad, 122);
+  ctx.lineTo(x + w - 32, 122);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = SLIP.ink;
+  ctx.font = `600 40px ${SANS}`;
+  let y = 180;
+  for (const l of wrap(ctx, `“${job.request.event.text}”`, inner).slice(0, 2)) {
+    ctx.fillText(l, pad, y);
+    y += 50;
   }
-  ctx.font = `400 28px ${sans}`;
-  ctx.fillStyle = "#c7cad8";
-  for (const l of wrap(ctx, forkSentence(r), 1072).slice(0, 2)) {
-    ctx.fillText(l, 64, y + 8);
-    y += 40;
+  ctx.font = `400 26px ${SANS}`;
+  for (const l of wrap(ctx, forkSentence(r), inner).slice(0, 2)) {
+    ctx.fillText(l, pad, y + 6);
+    y += 36;
   }
-  ctx.font = `500 26px ${sans}`;
-  y += 32;
+  y += 36;
   for (const [topic, o] of Object.entries(r.outputs).slice(0, 3)) {
-    ctx.fillStyle = "#ecedf3";
-    ctx.fillText(topicLabel(topic), 64, y);
-    ctx.fillStyle = "#9095a8";
+    ctx.fillStyle = SLIP.muted;
+    ctx.font = `400 24px ${SANS}`;
+    ctx.fillText(topicLabel(topic), pad, y);
+    ctx.fillStyle = SLIP.ink;
+    ctx.font = `500 24px ${MONO}`;
     const range = `${points(o.baseline_share)}% → ${points(o.final.p50)}%  (runs ${points(o.final.p10)}–${points(o.final.p90)}%)`;
-    ctx.fillText(range, 480, y);
-    y += 40;
+    ctx.fillText(range, pad + 380, y);
+    y += 38;
   }
-  ctx.fillStyle = "#9095a8";
-  ctx.font = `400 22px ${sans}`;
-  ctx.fillText(`${DISCLOSURE}.`, 64, 560);
-  ctx.fillText(link, 64, 594);
+  ctx.fillStyle = SLIP.muted;
+  ctx.font = `400 20px ${SANS}`;
+  ctx.fillText(`${DISCLOSURE}.`, pad, 536);
+  ctx.font = `400 20px ${MONO}`;
+  ctx.fillText(link, pad, 566);
   return new Promise((resolve, reject) =>
     canvas.toBlob(
       (b) => (b ? resolve(b) : reject(new Error("The image could not be made"))),

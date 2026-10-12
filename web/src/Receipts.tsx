@@ -62,7 +62,8 @@ function Committed({ r }: { r: ReceiptEntry }) {
 }
 
 function Outcome({ r }: { r: ReceiptEntry }) {
-  if (r.outcome === undefined || r.outcome === null) return <span className="muted">open</span>;
+  if (r.outcome === undefined || r.outcome === null)
+    return <span className="pending">Pending</span>;
   return (
     <span>
       {r.outcome ? "yes" : "no"}
@@ -85,11 +86,11 @@ async function latestEntries(n: number): Promise<ReceiptEntry[]> {
 export function ReceiptsStrip() {
   const { data, error, retry } = useLoad(() => latestEntries(10));
   return (
-    <section className="card strip">
-      <div className="strip-head">
+    <section className="card receipt strip">
+      <div className="receipt-top">
         <h2>Latest receipts</h2>
         <a href="/receipts" className="strip-link">
-          All receipts and verify →
+          Verify all receipts
         </a>
       </div>
       {error && <LoadError what="receipts" error={error} retry={retry} />}
@@ -149,7 +150,7 @@ function AnchorBadge({ d }: { d: ReceiptDay }) {
   const token = d.anchors.find((a) => a.kind === "rfc3161");
   if (d.anchor === "anchored" && token) {
     return (
-      <span className="badge good">
+      <span className="badge stamp good">
         anchored {d.anchored_at?.replace("T", " ").replace("Z", " UTC")} by{" "}
         {new URL(token.service).host} (
         <a
@@ -164,10 +165,12 @@ function AnchorBadge({ d }: { d: ReceiptDay }) {
   }
   if (d.anchor === "pending") {
     return (
-      <span className="badge">anchor pending: OpenTimestamps proof awaits a Bitcoin block</span>
+      <span className="badge stamp">
+        anchor pending: OpenTimestamps proof awaits a Bitcoin block
+      </span>
     );
   }
-  return <span className="badge">not yet anchored</span>;
+  return <span className="badge stamp">not yet anchored</span>;
 }
 
 export function ReceiptsPage({ tiers }: { tiers: string[] }) {
@@ -243,7 +246,7 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
       {!all.data && !all.error && <Loading what="receipts" />}
       {all.data && !all.data.length && <p className="muted">No days committed yet.</p>}
       {all.data?.map((d) => (
-        <section key={d.day.date} id={d.day.date} className="card day">
+        <section key={d.day.date} id={d.day.date} className="card receipt day">
           <div className="day-head">
             <h2>{d.day.date}</h2>
             <AnchorBadge d={d} />
@@ -251,7 +254,7 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
               (result[d.day.date].length ? (
                 <span className="bad small">{result[d.day.date].join("; ")}</span>
               ) : (
-                <span className="good small">verified</span>
+                <span className="stamp good">Verified</span>
               ))}
           </div>
           <dl className="hashes">

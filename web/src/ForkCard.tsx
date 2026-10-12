@@ -204,8 +204,11 @@ export function ForkCard({ job }: { job: Job }) {
     }
   }
   return (
-    <article className="fork-card" aria-labelledby={`fork-${job.id}`}>
-      <p className="eyebrow">Fork result</p>
+    <article className="fork-card receipt" aria-labelledby={`fork-${job.id}`}>
+      <div className="receipt-top">
+        <span>Fork result</span>
+        <span className="stamp">AI-simulated</span>
+      </div>
       <p className="setup" id={`fork-${job.id}`}>
         “{job.request.event.text}”, applied to the {r.world_snapshot_id} world and run for {r.days}{" "}
         days on {r.agents_sampled.toLocaleString()} sampled agents.
