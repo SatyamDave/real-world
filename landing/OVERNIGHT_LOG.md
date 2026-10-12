@@ -67,3 +67,16 @@ Running unattended from ~02:55 PT on 2026-10-12. One line per decision: time (PT
 - CI: PR #23 `description` failed once because a `feat` PR must link a `research/` path in "Why"; added decision 0003 and product/101 and it passes. `check`, `description`, `size` pass on #20, #22 and #23.
 - Lighthouse ran with `npx lighthouse` against `vite preview`, Chrome from /Applications. Final: LCP 1.81 / 1.70 / 1.81 s, CLS 0.0003, performance 99, accessibility 100, best-practices 100, SEO 100.
 - Instruction from Rohit (mid-run): domain bought, tryrealworld.com on Namecheap. Do NOT configure DNS and do NOT deploy to it. Put it in RUNBOOK.md (PR5) as the production domain with the steps to connect it to Cloudflare Pages. Preview deploys stay on *.pages.dev. `VITE_PUBLIC_BASE_URL` stays empty until Rohit connects the domain.
+
+## Rebase (plan step 5, per Rohit's instruction)
+
+- 2026-10-12: PR #19 (landing/1-docs) is merged; I never touched that branch. origin/main is 5cd1281 (the #19 merge). landing/2-page was already rebased onto it (merge-base 5cd1281; PR #20's base is `main`), so it needed no rebase and kept its tip a2829ab (the CI fix).
+- The branches above it still sat on the old 2-page tip 99c8774, so I used `git rebase --onto` for each, in order, then pushed with `--force-with-lease` pinned to the old remote tips. No conflicts. Old tip to new tip:
+  - landing/3-data: `git rebase --onto landing/2-page 99c8774 landing/3-data`; bae0068 to 262b95c
+  - landing/design-pass: `--onto landing/3-data bae0068`; 7ef5957 to 5186004
+  - landing/4-analytics: `--onto landing/design-pass 7ef5957`; db61327 to 53c9057
+  - landing/5-readiness: `--onto landing/4-analytics db61327`; 40afa27 to 8dfaadf
+- Rohit named only 2-page and 3-data. I applied the same `--onto` rebase to the three branches stacked above 3-data so the stack stays linear on main; they are my own draft branches. Reverse: each old tip is above; `git push --force-with-lease origin <old tip>:<branch>` restores it (the objects remain on GitHub for a while, and locally in the reflog).
+- Checked before pushing: `git diff` of the old and new tips under landing/ is empty (rebase changed no content); on the rebased top: biome, link check, landing typecheck, 24 tests, build, bundle check (75.7 KB gz) pass.
+- After the push, every landing branch has merge-base 5cd1281 with origin/main. PR bases: #20 `main`, #22 `landing/2-page`, #23 `landing/3-data`, #24 `landing/design-pass`, #25 `landing/4-analytics`; all five are drafts.
+- Housekeeping: a leftover git worktree of the old 3-data blocked the first rebase attempt (the later commands ran as no-ops against an unchanged base; nothing changed). I removed the worktree and local test servers and redid it step by step.
