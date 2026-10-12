@@ -1,6 +1,16 @@
 import type { Country } from "@real-world/sdk";
 import { useEffect, useRef } from "react";
-import { Disclosure, LoadError, Loading, pct, pts, TierBadge, topicLabel, useLoad } from "./App";
+import {
+  Disclosure,
+  LoadError,
+  Loading,
+  pct,
+  pts,
+  shortDate,
+  TierBadge,
+  topicLabel,
+  useLoad,
+} from "./App";
 import { rw } from "./api";
 import { shareDeltas, traitWords } from "./share";
 
@@ -28,7 +38,6 @@ export function AgentPanel({ country, onClose }: { country: Country; onClose: ()
     <aside className="panel" aria-label={`One sampled agent in ${country.name}`}>
       <header className="panel-head">
         <div>
-          <p className="eyebrow">One sampled agent</p>
           <h2>
             {country.name} <TierBadge tier={country.tier} />
           </h2>
@@ -65,7 +74,7 @@ export function AgentPanel({ country, onClose }: { country: Country; onClose: ()
                     </span>
                   </span>
                   <span className="muted small">
-                    {m.date} · {m.cause}
+                    {shortDate(m.date)} · {m.cause}
                     {a.data?.shares[m.topic] !== undefined &&
                       ` · now ${pct(a.data.shares[m.topic])}`}
                   </span>
@@ -78,11 +87,15 @@ export function AgentPanel({ country, onClose }: { country: Country; onClose: ()
       </section>
 
       <section>
-        <h3>In its own words</h3>
-        <p className="label-simulated">
-          Simulated account, not the cause
-          {why.data?.provider === "fake" && " · fake model, placeholder text"}
-        </p>
+        <h3>What it says</h3>
+        {why.data && (
+          <p>
+            <span className="stamp">
+              {why.data.label}
+              {why.data.provider === "fake" && ", fake model, placeholder text"}
+            </span>
+          </p>
+        )}
         {why.error && <LoadError what="this account" error={why.error} retry={why.retry} />}
         {why.data ? (
           <blockquote>{why.data.text}</blockquote>

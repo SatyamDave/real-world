@@ -281,15 +281,14 @@ test("the agent panel labels the trace and the simulated account", async () => {
 
   const el = await render(<AgentPanel country={world.countries[0]} onClose={() => {}} />);
   const headings = [...el.querySelectorAll("h3")].map((h) => h.textContent);
-  expect(headings).toEqual(["What moved this agent", "In its own words"]);
+  expect(headings).toEqual(["What moved this agent", "What it says"]);
   expect(rw.agent).toHaveBeenCalledWith(world.countries[0].sample_agent_id);
   expect(el.textContent).toContain("FIXTURE: Fuel prices rise for a third week");
   expect(el.querySelector(".traits")?.textContent).toContain("female · 25-34 · tertiary · urban");
   // 0.031 logit at a share of about 61% is under 1 point, never "+3.1 pts".
   expect(el.querySelector(".moves .up")?.textContent).toBe("+0.7 pts");
-  expect(el.querySelector(".label-simulated")?.textContent).toBe(
-    "Simulated account, not the cause",
-  );
+  expect(el.querySelector(".stamp")?.textContent).toBe(whyFixture.label);
+  expect(whyFixture.label).toBe("Simulated account, not the cause");
   expect(el.querySelector("blockquote")?.textContent).toBe(whyFixture.text);
   expect(el.textContent).toContain(DISCLOSURE);
 });
@@ -299,8 +298,8 @@ test("the agent panel says when the account came from the fake model", async () 
   vi.mocked(rw.agent_why).mockResolvedValue({ ...(whyFixture as AgentWhy), provider: "fake" });
   const el = await render(<AgentPanel country={world.countries[0]} onClose={() => {}} />);
   await until(() =>
-    expect(el.querySelector(".label-simulated")?.textContent).toBe(
-      "Simulated account, not the cause · fake model, placeholder text",
+    expect(el.querySelector(".stamp")?.textContent).toBe(
+      "Simulated account, not the cause, fake model, placeholder text",
     ),
   );
 });
@@ -346,7 +345,7 @@ test("the receipts page verifies the served chain and states the reference and c
   const text = el.textContent ?? "";
   expect(text).toContain(QUESTION.text);
   expect(text).toContain("1 day before resolution");
-  expect(text).toContain("not yet anchored");
+  expect(text).toContain("Not yet anchored");
   expect(el.querySelector("tbody td:last-child .pending")?.textContent).toBe("Pending");
   const wrap = el.querySelector(".table-wrap");
   expect(wrap?.getAttribute("tabindex")).toBe("0");
@@ -377,35 +376,42 @@ test("the receipts page verifies the served chain and states the reference and c
 });
 
 test.each([
-  ["anchored", "anchored 2026-10-12 17:19:19 UTC by freetsa.org (RFC 3161 token)"],
-  ["pending", "anchor pending: OpenTimestamps proof awaits a Bitcoin block"],
-] as const)("a %s day says so on the receipts page", async (anchor, copy) => {
-  const anchored = anchor === "anchored";
-  const anchored_at = anchored ? "2026-10-12T17:19:19Z" : null;
-  vi.mocked(rw.receipts).mockResolvedValue({
-    days: [{ ...vector.day, record_hash: vector.record_hash, anchor, anchored_at }],
-  });
-  vi.mocked(rw.receipt_day).mockResolvedValue({
-    ...vector,
-    anchor,
-    anchored_at,
-    anchors: [
-      {
-        kind: anchored ? "rfc3161" : "opentimestamps",
-        service: anchored ? "https://freetsa.org/tsr" : "https://a.pool.opentimestamps.org/digest",
-        requested_at: "2026-10-12T17:19:19Z",
-        proof_base64: "AA==",
-      },
-    ],
-    entries: [],
-  });
-  vi.mocked(rw.scores).mockResolvedValue({});
-  const el = await render(<App path="/receipts" />);
-  await until(() => expect(el.querySelector(".day-head .badge")?.textContent).toBe(copy));
-  expect(el.textContent).not.toContain("not yet anchored");
-  // Verify green marks an anchored day; a pending one keeps the clay stamp.
-  expect(el.querySelector(".day-head .badge")?.classList.contains("good")).toBe(anchored);
-});
+  ["anchored", "Anchored", "2026-10-12 17:19:19 UTCby freetsa.org (RFC 3161 token)", "Z"],
+  ["anchored", "Anchored", "2026-10-12 17:19:19 UTCby freetsa.org (RFC 3161 token)", "+00:00"],
+  ["pending", "Anchor pending", "OpenTimestamps proof awaits a Bitcoin block", "Z"],
+] as const)(
+  "a %s day says so on the receipts page (%s, %s, %s)",
+  async (anchor, stamp, detail, zone) => {
+    const anchored = anchor === "anchored";
+    const anchored_at = anchored ? `2026-10-12T17:19:19${zone}` : null;
+    vi.mocked(rw.receipts).mockResolvedValue({
+      days: [{ ...vector.day, record_hash: vector.record_hash, anchor, anchored_at }],
+    });
+    vi.mocked(rw.receipt_day).mockResolvedValue({
+      ...vector,
+      anchor,
+      anchored_at,
+      anchors: [
+        {
+          kind: anchored ? "rfc3161" : "opentimestamps",
+          service: anchored
+            ? "https://freetsa.org/tsr"
+            : "https://a.pool.opentimestamps.org/digest",
+          requested_at: "2026-10-12T17:19:19Z",
+          proof_base64: "AA==",
+        },
+      ],
+      entries: [],
+    });
+    vi.mocked(rw.scores).mockResolvedValue({});
+    const el = await render(<App path="/receipts" />);
+    await until(() => expect(el.querySelector(".receipt-top .stamp")?.textContent).toBe(stamp));
+    expect(el.querySelector(".receipt-cols div:last-child dd")?.textContent).toBe(detail);
+    expect(el.textContent).not.toContain("Not yet anchored");
+    // Green marks an anchored day; a pending one keeps the clay stamp.
+    expect(el.querySelector(".receipt-top .stamp")?.classList.contains("good")).toBe(anchored);
+  },
+);
 
 test("the home page states the thesis with the record as proof", async () => {
   vi.mocked(rw.world).mockResolvedValue(world);
@@ -458,8 +464,8 @@ test("the acceptable-use page shows the three rules and the refusal codes", asyn
   expect(el.textContent).toContain("calibrated to published marginals");
   expect(el.textContent).toContain("From 2026-10-27 to 2026-11-04");
   expect([...el.querySelectorAll("tbody tr")].map((r) => r.textContent)).toEqual([
-    "private_person2",
-    "election_persuasion1",
+    "private_personNo real private people",
+    "election_persuasionNo persuasion testing on elections or candidates",
     "election_windowElection window",
   ]);
 });

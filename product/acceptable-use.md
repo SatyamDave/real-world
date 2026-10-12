@@ -18,8 +18,8 @@ The fork does not start. A refusal from the rule pass costs nothing; one from th
 
 | `code` | Rule |
 | --- | --- |
-| `private_person` | 2 |
-| `election_persuasion` | 1 |
+| `private_person` | No real private people |
+| `election_persuasion` | No persuasion testing on elections or candidates |
 | `election_window` | Election window |
 
 The check runs a fixed rule pass and then one short model classification of the event text. If the classification cannot run, the API answers `503` and starts nothing. A refused request writes no job.
