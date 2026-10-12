@@ -8,6 +8,8 @@ import asyncio
 import base64
 import hashlib
 import json
+import os
+import re
 import secrets
 import sqlite3
 from collections.abc import AsyncIterator
@@ -17,7 +19,7 @@ from pathlib import Path
 from typing import Annotated, Any, Literal
 
 import numpy as np
-from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Query
+from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
@@ -30,7 +32,8 @@ HEARTBEAT_SECONDS = 15.0
 POLL_SECONDS = 0.2
 WHY_MAX_COST_USD = 0.01
 WHY_LABEL = "Simulated account, not the cause"
-# Vite moves to the next port when 5173 is taken, so any local port is a valid origin.
+# Vite moves to the next port when 5173 is taken, so any local port is a valid origin. Other
+# origins come from RW_ALLOWED_ORIGINS.
 CORS_ORIGIN_REGEX = r"^http://(localhost|127\.0\.0\.1):\d+$"
 TERMINAL = ("succeeded", "failed")
 
@@ -58,9 +61,15 @@ class Job(BaseModel):
     finished_at: str | None = None
 
 
+RefusedCode = Literal[
+    "over_max_cost", "fork_budget_spent", "anon_daily_limit", "client_unknown", "spend_unreadable"
+]
+
+
 class Refused(BaseModel):
-    detail: str
-    estimate: simulate.Estimate
+    code: RefusedCode
+    detail: str = Field(description="One sentence saying what was refused and why, for display.")
+    estimate: simulate.Estimate | None = None
 
 
 class Conflict(BaseModel):
@@ -113,6 +122,7 @@ class Agent(BaseModel):
 class AgentWhy(BaseModel):
     agent_id: str
     text: str
+    provider: str = Field(description='Who wrote the text: "anthropic", or "fake" (no model ran).')
     label: Literal["Simulated account, not the cause"] = WHY_LABEL
     simulated: Literal[True] = True
 
@@ -292,8 +302,25 @@ app = FastAPI(
     ),
     lifespan=lifespan,
 )
+
+
+def env_list(name: str) -> list[str]:
+    return [v.strip() for v in os.environ.get(name, "").split(",") if v.strip()]
+
+
+def allowed_origins() -> list[str]:
+    """RW_ALLOWED_ORIGINS, comma-separated; empty means localhost only. A malformed entry stops
+    the app at startup instead of quietly blocking the origin."""
+    origins = env_list("RW_ALLOWED_ORIGINS")
+    bad = [o for o in origins if not re.fullmatch(r"https?://[^/\s]+", o)]
+    if bad:
+        raise ValueError(f"RW_ALLOWED_ORIGINS entries are not origins like https://host: {bad}")
+    return origins
+
+
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=allowed_origins(),
     allow_origin_regex=CORS_ORIGIN_REGEX,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -358,6 +385,58 @@ def _estimate(req: simulate.SimulateRequest) -> simulate.Estimate:
         raise HTTPException(422, str(e)) from e
 
 
+def _anonymous(req: simulate.SimulateRequest) -> simulate.SimulateRequest:
+    """Every caller is anonymous until there are API keys, so max_cost_usd is clamped."""
+    cap = min(req.max_cost_usd, settings.FORK_MAX_COST_USD_DEFAULT)
+    return req.model_copy(update={"max_cost_usd": cap})
+
+
+def _refuse(
+    status: int, code: RefusedCode, detail: str, est: simulate.Estimate | None = None
+) -> JSONResponse:
+    body = Refused(code=code, detail=detail, estimate=est)
+    return JSONResponse(body.model_dump(), status_code=status)
+
+
+def _client(request: Request) -> str | None:
+    """A hash of the caller's address: the peer, or the last X-Forwarded-For hop when the peer is
+    a proxy listed in RW_TRUSTED_PROXIES. None when there is no address to key on."""
+    ip = request.client.host if request.client else None
+    if ip is not None and ip in env_list("RW_TRUSTED_PROXIES"):
+        hops = ",".join(request.headers.getlist("x-forwarded-for")).split(",")
+        ip = hops[-1].strip() or None
+    return ip and hashlib.sha256(ip.encode()).hexdigest()
+
+
+def _limits(conn: sqlite3.Connection, client: str, reserve: float) -> JSONResponse | None:
+    """Refuse when this client has started FORK_ANON_PER_DAY forks today, or when today's public
+    spend plus the cap of every unfinished fork plus reserve would pass FORK_DAILY_BUDGET_USD."""
+    try:
+        started = conn.execute(
+            "SELECT count(*) FROM fork_clients WHERE client_sha256 = ? AND day = ?",
+            (client, _clock().date().isoformat()),
+        ).fetchone()[0]
+        pending = conn.execute(
+            "SELECT COALESCE(SUM(json_extract(request_json, '$.max_cost_usd')), 0) FROM jobs"
+            " WHERE status IN ('queued', 'running')"
+        ).fetchone()[0]
+        left = settings.FORK_DAILY_BUDGET_USD - llm.spent_today(conn, public=True) - pending
+    except Exception as e:
+        return _refuse(503, "spend_unreadable", f"today's fork spend could not be read: {e}")
+    if started >= settings.FORK_ANON_PER_DAY:
+        return _refuse(
+            429,
+            "anon_daily_limit",
+            f"this address has started {settings.FORK_ANON_PER_DAY} forks today, the limit"
+            " without an API key; try again after 00:00 UTC",
+        )
+    if not reserve <= left:
+        return _refuse(
+            402, "fork_budget_spent", "today's fork budget is spent; try again after 00:00 UTC"
+        )
+    return None
+
+
 @app.post(
     "/v1/simulate",
     summary="Start a fork of today's world with one event; returns a job id",
@@ -367,41 +446,51 @@ def _estimate(req: simulate.SimulateRequest) -> simulate.Estimate:
         400: {"description": "Real-World-Version is not the current version"},
         402: {
             "model": Refused,
-            "description": "The estimate exceeds max_cost_usd or the day's budget",
+            "description": "The estimate exceeds max_cost_usd, or today's fork budget is spent",
         },
         409: {"model": Conflict, "description": "A job with this Idempotency-Key is running"},
         422: {
             "model": policy.PolicyRefused,
             "description": "The event breaks the acceptable-use policy (or the body is invalid)",
         },
-        503: {"description": "The acceptable-use check could not run; nothing was started"},
+        429: {"model": Refused, "description": "This address has used today's anonymous forks"},
+        503: {
+            "description": "A spend, address or acceptable-use check could not run; nothing was"
+            " started"
+        },
     },
 )
 def create_simulation(
     req: simulate.SimulateRequest,
+    request: Request,
     background: BackgroundTasks,
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=1, max_length=255)],
     real_world_version: Annotated[str | None, Header(alias="Real-World-Version")] = None,
 ) -> JobCreated | JSONResponse:
     if real_world_version is not None and real_world_version != settings.API_VERSION:
         raise HTTPException(400, f"Real-World-Version must be {settings.API_VERSION}")
+    req = _anonymous(req)
     body_sha = hashlib.sha256(req.model_dump_json().encode()).hexdigest()
     conn = connect()
     replay = _replay(conn, idempotency_key, body_sha)
     if replay is not None:
         return replay
 
+    client = _client(request)
+    if client is None:
+        return _refuse(503, "client_unknown", "the caller's address could not be read")
+    refusal = _limits(conn, client, req.max_cost_usd)
+    if refusal is not None:
+        return refusal
     est = _estimate(req)
     if not est.within_cap:
-        body = Refused(detail="the estimate exceeds max_cost_usd", estimate=est)
-        return JSONResponse(body.model_dump(), status_code=402)
-    try:
-        left = settings.NIGHTLY_BUDGET_USD - llm.spent_today(conn)
-    except Exception as e:
-        raise HTTPException(503, f"the day's spend could not be read: {e}") from e
-    if not est.estimated_cost_usd <= left:
-        body = Refused(detail="the day's budget is spent; try again tomorrow", estimate=est)
-        return JSONResponse(body.model_dump(), status_code=402)
+        return _refuse(
+            402,
+            "over_max_cost",
+            f"the estimate ${est.estimated_cost_usd:.4f} exceeds the"
+            f" ${req.max_cost_usd:g} cost cap",
+            est,
+        )
 
     try:
         refusal = policy.screen(req.event.text, conn)
@@ -414,6 +503,12 @@ def create_simulation(
     cutoff = (datetime.now(UTC) - IDEMPOTENCY_TTL).isoformat(timespec="seconds")
     try:
         with conn:
+            # The write lock makes the second limits check and the insert one step, so concurrent
+            # requests cannot all pass on the same remaining budget.
+            conn.execute("BEGIN IMMEDIATE")
+            refusal = _limits(conn, client, req.max_cost_usd)
+            if refusal is not None:
+                return refusal
             conn.execute(
                 "DELETE FROM idempotency_keys WHERE key = ? AND created_at < ?",
                 (idempotency_key, cutoff),
@@ -427,6 +522,10 @@ def create_simulation(
                 "INSERT INTO idempotency_keys (key, body_sha256, job_id, created_at)"
                 " VALUES (?, ?, ?, ?)",
                 (idempotency_key, body_sha, job_id, _now()),
+            )
+            conn.execute(
+                "INSERT INTO fork_clients (job_id, client_sha256, day) VALUES (?, ?, ?)",
+                (job_id, client, _clock().date().isoformat()),
             )
     except sqlite3.IntegrityError:
         # A concurrent request with the same key committed first.
@@ -444,7 +543,7 @@ def create_simulation(
     response_model=simulate.Estimate,
 )
 def estimate(req: simulate.SimulateRequest) -> simulate.Estimate:
-    return _estimate(req)
+    return _estimate(_anonymous(req))
 
 
 @app.get(
@@ -681,7 +780,7 @@ def agent_why(agent_id: str) -> AgentWhy:
         out = llm.complete_json("why", prompt, WHY_SCHEMA, llm.Budget(WHY_MAX_COST_USD), conn=conn)
     except llm.BudgetExceeded as e:
         raise HTTPException(402, str(e)) from e
-    return AgentWhy(agent_id=agent_id, text=out["text"])
+    return AgentWhy(agent_id=agent_id, text=out["text"], provider=llm.provider().name)
 
 
 def _streak(conn: sqlite3.Connection, player_id: str, day: str) -> int:

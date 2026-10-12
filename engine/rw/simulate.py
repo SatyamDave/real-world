@@ -153,8 +153,10 @@ class Trace(BaseModel):
 
 
 class Cost(BaseModel):
-    estimated_usd: float
-    actual_usd: float
+    estimated_usd: float = Field(
+        description="An estimate made before the run, at the configured model's (Haiku) prices."
+    )
+    actual_usd: float = Field(description="Dollars the provider charged; 0 with the fake model.")
 
 
 class Coverage(BaseModel):
@@ -168,6 +170,9 @@ class SimulateResult(BaseModel):
     world_snapshot_id: str
     engine_version: str
     model: str
+    provider: str = Field(
+        description='Who answered the model calls: "anthropic", or "fake" when no model ran.'
+    )
     seed: int
     members: int
     agents_sampled: int
@@ -311,7 +316,10 @@ def run(
     topics = req.topics or list(news.topics())
     budget = llm.Budget(req.max_cost_usd)
     segments, seg_of = np.unique(sub["segment"], return_inverse=True)
-    raw = [news.extract_signal(req.event.text, describe(s), budget, conn=conn) for s in segments]
+    raw = [
+        news.extract_signal(req.event.text, describe(s), budget, conn=conn, purpose="fork_signal")
+        for s in segments
+    ]
     seg_signal = np.array([[sig[t] for t in topics] for sig in raw])
     seg_salience = np.array([sig["salience"] for sig in raw])
     seg_tier = np.array([sub["tier"][seg_of == j][0] for j in range(len(segments))])
@@ -417,15 +425,20 @@ def run(
     countries = np.unique(sub["country"])
     floor = math.ceil(settings.TOP_SHIFT_MIN_SHARE * n)
     big = [s for s in shifts if s.n_agents >= floor]
+    provider = llm.provider().name
     result = SimulateResult(
         world_snapshot_id=snapshot_id,
         engine_version=settings.ENGINE_VERSION,
         model=llm.model_name(),
+        provider=provider,
         seed=req.seed,
         members=req.members,
         agents_sampled=n,
         days=req.days,
-        cost=Cost(estimated_usd=_r(est.estimated_cost_usd), actual_usd=_r(budget.spent_usd)),
+        cost=Cost(
+            estimated_usd=_r(est.estimated_cost_usd),
+            actual_usd=0.0 if provider == "fake" else _r(budget.spent_usd),
+        ),
         coverage=[
             Coverage(iso3=str(c), tier=str(sub["tier"][sub["country"] == c][0])) for c in countries
         ],

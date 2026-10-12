@@ -11,6 +11,11 @@ PRICE_OUTPUT_USD_PER_MTOK = 0.50
 NIGHTLY_BUDGET_USD = 25.0
 FORK_MAX_COST_USD_DEFAULT = 0.50
 FORK_MAX_COST_USD_LIMIT = 5.00
+# Public spend per UTC day (forks, their screens and agent accounts), kept apart from
+# NIGHTLY_BUDGET_USD so forks never starve the daily run. Both this and FORK_ANON_PER_DAY are
+# provisional until the founder decides the free fork allowance (company/decisions-needed.md, 7).
+FORK_DAILY_BUDGET_USD = 10.0
+FORK_ANON_PER_DAY = 20
 
 WORLD_AGENTS = 10000
 WORLD_SEED = 20261011

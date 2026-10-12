@@ -74,7 +74,11 @@ def signal_schema() -> llm.Schema:
 
 
 def extract_signal(
-    text: str, audience: str | None, budget: llm.Budget, conn: sqlite3.Connection | None = None
+    text: str,
+    audience: str | None,
+    budget: llm.Budget,
+    conn: sqlite3.Connection | None = None,
+    purpose: str = "signal",
 ) -> dict[str, float]:
     """Return {topic: push in [-1, 1], ..., "salience": [0, 1]} for one piece of news."""
     questions = "\n".join(f"- {t}: {q}" for t, q in topics().items())
@@ -88,7 +92,7 @@ def extract_signal(
         f"Topics:\n{questions}\n"
         f"News:\n{text}"
     )
-    out = llm.complete_json("signal", prompt, signal_schema(), budget, conn=conn)
+    out = llm.complete_json(purpose, prompt, signal_schema(), budget, conn=conn)
     # A provider schema check can loosen numeric bounds, so the range is enforced here too.
     signal = {t: float(np.clip(out[t], -1, 1)) for t in topics()}
     signal["salience"] = float(np.clip(out["salience"], 0, 1))

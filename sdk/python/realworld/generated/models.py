@@ -19,6 +19,11 @@ class AgentStep(BaseModel):
 class AgentWhy(BaseModel):
     agent_id: str = Field(..., title="Agent Id")
     text: str = Field(..., title="Text")
+    provider: str = Field(
+        ...,
+        description='Who wrote the text: "anthropic", or "fake" (no model ran).',
+        title="Provider",
+    )
     label: Literal["Simulated account, not the cause"] = Field(
         "Simulated account, not the cause", title="Label"
     )
@@ -63,8 +68,14 @@ class Conflict(BaseModel):
 
 
 class Cost(BaseModel):
-    estimated_usd: float = Field(..., title="Estimated Usd")
-    actual_usd: float = Field(..., title="Actual Usd")
+    estimated_usd: float = Field(
+        ...,
+        description="An estimate made before the run, at the configured model's (Haiku) prices.",
+        title="Estimated Usd",
+    )
+    actual_usd: float = Field(
+        ..., description="Dollars the provider charged; 0 with the fake model.", title="Actual Usd"
+    )
 
 
 class Country(BaseModel):
@@ -185,9 +196,22 @@ class Receipts(BaseModel):
     days: list[DaySummary] = Field(..., title="Days")
 
 
+class Code1(StrEnum):
+    over_max_cost = "over_max_cost"
+    fork_budget_spent = "fork_budget_spent"
+    anon_daily_limit = "anon_daily_limit"
+    client_unknown = "client_unknown"
+    spend_unreadable = "spend_unreadable"
+
+
 class Refused(BaseModel):
-    detail: str = Field(..., title="Detail")
-    estimate: Estimate
+    code: Code1 = Field(..., title="Code")
+    detail: str = Field(
+        ...,
+        description="One sentence saying what was refused and why, for display.",
+        title="Detail",
+    )
+    estimate: Estimate | None = None
 
 
 class SegmentShift(BaseModel):
@@ -391,6 +415,11 @@ class SimulateResult(BaseModel):
     world_snapshot_id: str = Field(..., title="World Snapshot Id")
     engine_version: str = Field(..., title="Engine Version")
     model: str = Field(..., title="Model")
+    provider: str = Field(
+        ...,
+        description='Who answered the model calls: "anthropic", or "fake" when no model ran.',
+        title="Provider",
+    )
     seed: int = Field(..., title="Seed")
     members: int = Field(..., title="Members")
     agents_sampled: int = Field(..., title="Agents Sampled")

@@ -91,6 +91,15 @@ def test_spent_today_sums_todays_calls():
     assert llm.spent_today(conn) == pytest.approx(budget.spent_usd)
 
 
+def test_spent_today_keeps_public_spend_apart_from_the_nightly_run():
+    conn = db.connect()
+    nightly, public = llm.Budget(1.0), llm.Budget(1.0)
+    llm.complete_json("signal", "news", SCHEMA, nightly, conn=conn)
+    llm.complete_json("fork_signal", "fork", SCHEMA, public, conn=conn)
+    assert llm.spent_today(conn) == pytest.approx(nightly.spent_usd)
+    assert llm.spent_today(conn, public=True) == pytest.approx(public.spent_usd)
+
+
 def test_claude_is_used_only_when_the_key_is_set(monkeypatch):
     assert isinstance(llm.provider(), llm.FakeLLM)
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")

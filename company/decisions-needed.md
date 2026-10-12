@@ -17,7 +17,7 @@ Open product decisions only the founder can make, ordered by when they block wor
 
 ## Before pricing is published (by Gate 2, Oct 22)
 
-7. **Free fork allowance.** Options: 3 a day ([CEO lens](../research/lenses/ceo.md), [CTO lens](../research/lenses/cto.md), [CRO lens](../research/lenses/cro.md)); 3 a month at 200 agents ([CFO lens](../research/lenses/cfo.md)); or a dollar cap per fork with the sample sized to fit ([CPO lens](../research/lenses/cpo.md)).
+7. **Free fork allowance.** Options: 3 a day ([CEO lens](../research/lenses/ceo.md), [CTO lens](../research/lenses/cto.md), [CRO lens](../research/lenses/cro.md)); 3 a month at 200 agents ([CFO lens](../research/lenses/cfo.md)); or a dollar cap per fork with the sample sized to fit ([CPO lens](../research/lenses/cpo.md)). Until decided, the API runs provisional defaults: 20 forks a day per address (`FORK_ANON_PER_DAY`), $0.50 per fork (`FORK_MAX_COST_USD_DEFAULT`) and $10 a day across all forks (`FORK_DAILY_BUDGET_USD`), in `engine/rw/settings.py`; these are placeholders, not a choice among the options.
 8. **Pro plan at launch.** Options: $49 a month with 50,000 agent-steps ([pricing models](../research/product/079-pricing-models.md), [CRO lens](../research/lenses/cro.md)), or pay-as-you-go credits only until there is usage data ([CFO lens](../research/lenses/cfo.md), [CPO lens](../research/lenses/cpo.md)).
 9. **The insights-team pilot offer.** Approve or change $7,500 for 6 weeks, converting to $2,000 a month, before the first buyer call quotes it. ([CRO lens](../research/lenses/cro.md), [`gtm/pricing.md`](../gtm/pricing.md))
 

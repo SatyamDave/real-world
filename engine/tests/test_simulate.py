@@ -123,9 +123,13 @@ def test_over_cap_request_refuses_before_any_model_call(conn):
     assert conn.execute("SELECT count(*) FROM simulations").fetchone()[0] == 0
 
 
-def test_estimate_bounds_the_actual_cost(conn):
+def test_fake_model_reports_zero_spent_and_the_estimate_bounds_its_recorded_cost(conn):
     result = simulate.run(conn, req())
-    assert 0 < result.cost.actual_usd <= result.cost.estimated_usd
+    assert result.provider == "fake" and result.cost.actual_usd == 0
+    recorded = conn.execute(
+        "SELECT SUM(cost_usd) FROM llm_calls WHERE purpose = 'fork_signal'"
+    ).fetchone()[0]
+    assert 0 < recorded <= result.cost.estimated_usd
 
 
 def test_trace_deltas_sum_to_each_agents_belief_change(conn):

@@ -17,6 +17,7 @@
     "world_snapshot_id": "2026-10-05",
     "engine_version": "0.1.0",
     "model": "claude-haiku-5-5",
+    "provider": "anthropic",
     "seed": 0,
     "members": 5,
     "agents_sampled": 200,
