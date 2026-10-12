@@ -15,7 +15,7 @@ Open http://localhost:8000/docs, or http://localhost:8000/llms.txt for the same 
 
 | Method and path | What it returns |
 | --- | --- |
-| `POST /v1/simulate` | `202 {id, status, links}` and runs `simulate.run` in the background. Needs `Idempotency-Key` (at most 255 characters); `Real-World-Version`, if sent, must be `2026-10-27`. `402` with the estimate when it exceeds `max_cost_usd` or the day's remaining budget (`503` when today's spend cannot be read); `422 {code, detail}` when `policy.screen` refuses the event ([acceptable use](../product/acceptable-use.md)); `503` when the screen could not run. |
+| `POST /v1/simulate` | `202 {id, status, links}` and runs `simulate.run` in the background. Needs `Idempotency-Key` (at most 255 characters); `Real-World-Version`, if sent, must be `2026-10-27`. `402`/`429 {code, detail}` when a spend check refuses: the clamped `max_cost_usd`, the day's fork budget or the per-address daily count (`503` when a check cannot run; codes in [simulate-api](../product/simulate-api.md)); `422 {code, detail}` when `policy.screen` refuses the event ([acceptable use](../product/acceptable-use.md)); `503` when the screen could not run. |
 | `POST /v1/simulate/estimate` | Estimated cost, model calls and whether it fits the cap. No job. |
 | `GET /v1/simulations/{id}` | Job status and, once done, the result (`simulated: true`) or the error. |
 | `GET /v1/simulations/{id}/events` | Server-sent events, one `id:` each; `Last-Event-ID` resumes; a `: heartbeat` comment every 15 s; closes after `succeeded` or `failed`. |

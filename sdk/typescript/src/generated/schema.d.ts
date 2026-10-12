@@ -276,6 +276,11 @@ export interface components {
       /** Text */
       text: string;
       /**
+       * Provider
+       * @description Who wrote the text: "anthropic", or "fake" (no model ran).
+       */
+      provider: string;
+      /**
        * Label
        * @default Simulated account, not the cause
        * @constant
@@ -355,9 +360,15 @@ export interface components {
     };
     /** Cost */
     Cost: {
-      /** Estimated Usd */
+      /**
+       * Estimated Usd
+       * @description An estimate made before the run, at the configured model's (Haiku) prices.
+       */
       estimated_usd: number;
-      /** Actual Usd */
+      /**
+       * Actual Usd
+       * @description Dollars the provider charged; 0 with the fake model.
+       */
       actual_usd: number;
     };
     /** Country */
@@ -598,9 +609,22 @@ export interface components {
     };
     /** Refused */
     Refused: {
-      /** Detail */
+      /**
+       * Code
+       * @enum {string}
+       */
+      code:
+        | "over_max_cost"
+        | "fork_budget_spent"
+        | "anon_daily_limit"
+        | "client_unknown"
+        | "spend_unreadable";
+      /**
+       * Detail
+       * @description One sentence saying what was refused and why, for display.
+       */
       detail: string;
-      estimate: components["schemas"]["Estimate"];
+      estimate?: components["schemas"]["Estimate"] | null;
     };
     /** Reveal */
     Reveal: {
@@ -705,6 +729,11 @@ export interface components {
       engine_version: string;
       /** Model */
       model: string;
+      /**
+       * Provider
+       * @description Who answered the model calls: "anthropic", or "fake" when no model ran.
+       */
+      provider: string;
       /** Seed */
       seed: number;
       /** Members */
@@ -892,7 +921,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description The estimate exceeds max_cost_usd or the day's budget */
+      /** @description The estimate exceeds max_cost_usd, or today's fork budget is spent */
       402: {
         headers: {
           [name: string]: unknown;
@@ -919,7 +948,16 @@ export interface operations {
           "application/json": components["schemas"]["PolicyRefused"];
         };
       };
-      /** @description The acceptable-use check could not run; nothing was started */
+      /** @description This address has used today's anonymous forks */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description A spend, address or acceptable-use check could not run; nothing was started */
       503: {
         headers: {
           [name: string]: unknown;

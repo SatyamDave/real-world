@@ -79,7 +79,10 @@ export function AgentPanel({ country, onClose }: { country: Country; onClose: ()
 
       <section>
         <h3>In its own words</h3>
-        <p className="label-simulated">Simulated account, not the cause</p>
+        <p className="label-simulated">
+          Simulated account, not the cause
+          {why.data?.provider === "fake" && " · fake model, placeholder text"}
+        </p>
         {why.error && <LoadError what="this account" error={why.error} retry={why.retry} />}
         {why.data ? (
           <blockquote>{why.data.text}</blockquote>

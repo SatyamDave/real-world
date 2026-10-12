@@ -185,6 +185,34 @@ test("the fork form shows an acceptable-use refusal inline", async () => {
   await until(() => expect(el.textContent).toContain(`Refused: ${detail}`));
 });
 
+test("the fork form shows a spend refusal's sentence", async () => {
+  const detail = "today's fork budget is spent; try again after 00:00 UTC";
+  vi.spyOn(rw, "estimate").mockResolvedValue({
+    estimated_cost_usd: 0.001,
+    model_calls: 3,
+    segments: 3,
+    within_cap: true,
+  });
+  vi.spyOn(rw, "simulate").mockRejectedValue(
+    new ApiError(402, { code: "fork_budget_spent", detail, estimate: null }),
+  );
+  const el = await render(<Fork events={world.prefilled_events} />);
+  await act(async () => button(world.prefilled_events[0].text).click());
+  await until(() => expect(button("Run fork").disabled).toBe(false));
+  await act(async () => button("Run fork").click());
+  await until(() => expect(el.textContent).toContain(`Not started: ${detail}.`));
+});
+
+test("a fake-model fork says nothing was spent and labels the estimate", async () => {
+  const r = job.result;
+  if (!r) throw new Error("fixture has a result");
+  const fake = { ...r, provider: "fake", cost: { estimated_usd: 0.0061, actual_usd: 0 } };
+  const el = await render(<ForkCard job={{ ...job, result: fake }} />);
+  expect(el.textContent).toContain(
+    "Fake model, nothing spent (a real run is estimated at $0.01 at Haiku prices)",
+  );
+});
+
 test("a fork with no shift past the floor says so", async () => {
   const r = job.result;
   if (!r) throw new Error("fixture has a result");
@@ -216,6 +244,17 @@ test("the agent panel labels the trace and the simulated account", async () => {
   );
   expect(el.querySelector("blockquote")?.textContent).toBe(whyFixture.text);
   expect(el.textContent).toContain(DISCLOSURE);
+});
+
+test("the agent panel says when the account came from the fake model", async () => {
+  vi.mocked(rw.agent).mockResolvedValue(agentFixture as Agent);
+  vi.mocked(rw.agent_why).mockResolvedValue({ ...(whyFixture as AgentWhy), provider: "fake" });
+  const el = await render(<AgentPanel country={world.countries[0]} onClose={() => {}} />);
+  await until(() =>
+    expect(el.querySelector(".label-simulated")?.textContent).toBe(
+      "Simulated account, not the cause · fake model, placeholder text",
+    ),
+  );
 });
 
 const QUESTION = {

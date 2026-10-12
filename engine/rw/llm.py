@@ -17,6 +17,9 @@ from typing import Any, Protocol
 from rw import db, settings
 
 Schema = dict[str, Any]
+# What the public API spends on: settings.FORK_DAILY_BUDGET_USD caps these, and the nightly run's
+# budget leaves them out.
+PUBLIC_PURPOSES = ("fork_signal", "screen", "why")
 
 
 class BudgetExceeded(Exception):
@@ -222,11 +225,16 @@ def complete_json(
     return output
 
 
-def spent_today(conn: sqlite3.Connection | None = None) -> float:
+def spent_today(conn: sqlite3.Connection | None = None, public: bool = False) -> float:
+    """Today's recorded cost of PUBLIC_PURPOSES calls if public, else of every other call. A fake
+    provider's calls count at the price they would have had, so caps hold without a key."""
     if conn is None:
         conn = db.connect()
     today = datetime.now(UTC).date().isoformat()
+    marks = ", ".join("?" * len(PUBLIC_PURPOSES))
     row = conn.execute(
-        "SELECT COALESCE(SUM(cost_usd), 0) FROM llm_calls WHERE substr(at, 1, 10) = ?", (today,)
+        "SELECT COALESCE(SUM(cost_usd), 0) FROM llm_calls WHERE substr(at, 1, 10) = ?"
+        f" AND (purpose IN ({marks})) = ?",
+        (today, *PUBLIC_PURPOSES, public),
     ).fetchone()
     return float(row[0])

@@ -38,13 +38,13 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
       setJobId((await rw.simulate({ event: { text: trimmed } })).id);
       setStatus("");
     } catch (e) {
-      const refused = e instanceof ApiError && e.status === 422 ? policyDetail(e.body) : null;
+      const detail = e instanceof ApiError ? refusalDetail(e.body) : null;
       setStatus(
-        refused
-          ? `Refused: ${refused}`
-          : e instanceof ApiError && e.status === 402
-            ? "Not started: the estimate is over the cost cap."
-            : "Not started: the server did not accept the fork. Try again.",
+        !detail
+          ? "Not started: the server did not accept the fork. Try again."
+          : e instanceof ApiError && e.status === 422
+            ? `Refused: ${detail}`
+            : `Not started: ${detail}.`,
       );
     }
   }
@@ -113,7 +113,8 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
   );
 }
 
-function policyDetail(body: unknown): string | null {
+/** The API's literal sentence from a refusal that carries a stable code. */
+function refusalDetail(body: unknown): string | null {
   const b = body as { code?: unknown; detail?: unknown } | null;
   return typeof b?.code === "string" && typeof b.detail === "string" ? b.detail : null;
 }
@@ -286,8 +287,19 @@ export function ForkCard({ job }: { job: Job }) {
         <div>
           <dt>Cost</dt>
           <dd>
-            {usd(r.cost.actual_usd)}{" "}
-            <span className="muted">(estimated {usd(r.cost.estimated_usd)})</span>
+            {r.provider === "fake" ? (
+              <>
+                Fake model, nothing spent{" "}
+                <span className="muted">
+                  (a real run is estimated at {usd(r.cost.estimated_usd)} at Haiku prices)
+                </span>
+              </>
+            ) : (
+              <>
+                {usd(r.cost.actual_usd)}{" "}
+                <span className="muted">(estimated {usd(r.cost.estimated_usd)})</span>
+              </>
+            )}
           </dd>
         </div>
         <div>

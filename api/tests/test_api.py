@@ -1,4 +1,5 @@
 import base64
+import importlib
 import json
 import time
 from datetime import UTC, datetime
@@ -81,6 +82,9 @@ def test_simulate_runs_a_prefilled_event_to_a_simulated_result(client):
     assert job["status"] == "succeeded", job["error"]
     assert job["result"]["simulated"] is True
     assert job["result"]["world_snapshot_id"] == daily.FIXTURE_DAYS[-1]
+    assert job["result"]["provider"] == "fake" and job["result"]["model"] == "fake"
+    assert job["result"]["cost"]["actual_usd"] == 0
+    assert job["result"]["cost"]["estimated_usd"] > 0
 
 
 def test_idempotency_key_replays_conflicts_and_refuses_a_new_body(client, conn):
@@ -135,7 +139,8 @@ def test_over_the_cap_is_refused_with_the_estimate_and_no_model_call(client, con
     jobs = conn.execute("SELECT count(*) FROM jobs").fetchone()[0]
     body = {"event": {"text": "A brand new event nobody has simulated."}, "max_cost_usd": 1e-9}
     r = simulate(client, body)
-    assert r.status_code == 402
+    assert r.status_code == 402 and r.json()["code"] == "over_max_cost"
+    assert r.json()["detail"].endswith("exceeds the $1e-09 cost cap")
     assert r.json()["estimate"]["within_cap"] is False
     assert r.json()["estimate"]["estimated_cost_usd"] > 1e-9
     assert calls(conn) == before
@@ -146,23 +151,107 @@ def jobs(conn):
     return conn.execute("SELECT count(*) FROM jobs").fetchone()[0]
 
 
-def test_the_days_budget_refuses_a_fork_before_any_model_call(client, conn, monkeypatch):
-    before = conn.execute("SELECT count(*) FROM llm_calls").fetchone()[0]
-    monkeypatch.setattr(settings, "NIGHTLY_BUDGET_USD", llm.spent_today(conn))
-    r = client.post("/v1/simulate", json=CHIPS, headers={"Idempotency-Key": "k-day-budget"})
-    assert r.status_code == 402 and "day's budget" in r.json()["detail"]
-    assert conn.execute("SELECT count(*) FROM llm_calls").fetchone()[0] == before
-    assert (
-        conn.execute("SELECT count(*) FROM jobs WHERE id = ?", (r.json().get("id"),)).fetchone()[0]
-        == 0
-    )
+def refused_and_spent_nothing(conn, r, status, code):
+    assert r.status_code == status and r.json()["code"] == code, r.json()
+    return r.json()
 
-    def broken(_conn=None):
+
+def test_the_fork_budget_refuses_before_any_model_call(client, conn, monkeypatch):
+    before, before_jobs = calls(conn), jobs(conn)
+    monkeypatch.setattr(settings, "FORK_DAILY_BUDGET_USD", llm.spent_today(conn, public=True))
+    body = refused_and_spent_nothing(conn, simulate(client, CHIPS), 402, "fork_budget_spent")
+    assert body["detail"] == "today's fork budget is spent; try again after 00:00 UTC"
+    assert body["estimate"] is None
+    assert (calls(conn), jobs(conn)) == (before, before_jobs)
+
+
+def test_unfinished_forks_hold_their_cap_against_the_fork_budget(client, conn, monkeypatch):
+    left = settings.FORK_DAILY_BUDGET_USD - llm.spent_today(conn, public=True)
+    held = json.dumps({**CHIPS, "max_cost_usd": left})
+    with conn:
+        conn.execute(
+            "INSERT INTO jobs (id, status, request_json, created_at) VALUES"
+            " ('job_held', 'running', ?, '2026-10-12T00:00:00+00:00')",
+            (held,),
+        )
+    try:
+        before = calls(conn)
+        refused_and_spent_nothing(conn, simulate(client, CHIPS), 402, "fork_budget_spent")
+        assert calls(conn) == before
+    finally:
+        with conn:
+            conn.execute("DELETE FROM jobs WHERE id = 'job_held'")
+
+
+def test_forks_do_not_count_against_the_nightly_budget(conn):
+    with conn:
+        conn.execute(
+            "INSERT INTO llm_calls (at, provider, model, purpose, prompt_sha256, schema_sha256,"
+            " prompt, in_tokens, out_tokens, cost_usd) VALUES (?, 'fake', 'm', 'fork_signal',"
+            " 'x', 'y', 'p', 1, 1, 100.0)",
+            (datetime.now(UTC).isoformat(timespec="seconds"),),
+        )
+    try:
+        assert llm.spent_today(conn, public=True) >= 100
+        assert llm.spent_today(conn) < 100
+    finally:
+        with conn:
+            conn.execute("DELETE FROM llm_calls WHERE prompt_sha256 = 'x'")
+
+
+def test_a_spend_that_cannot_be_read_refuses_with_503(client, conn, monkeypatch):
+    before, before_jobs = calls(conn), jobs(conn)
+
+    def broken(_conn=None, public=False):
         raise RuntimeError("no spend table")
 
     monkeypatch.setattr(llm, "spent_today", broken)
-    r = client.post("/v1/simulate", json=CHIPS, headers={"Idempotency-Key": "k-day-budget-2"})
-    assert r.status_code == 503
+    refused_and_spent_nothing(conn, simulate(client, CHIPS), 503, "spend_unreadable")
+    assert (calls(conn), jobs(conn)) == (before, before_jobs)
+
+
+def test_the_anonymous_daily_cap_is_per_address(client, conn, monkeypatch):
+    monkeypatch.setenv("RW_TRUSTED_PROXIES", "testclient")
+    monkeypatch.setattr(settings, "FORK_ANON_PER_DAY", 1)
+
+    def fork(ip, text):
+        body = {"event": {"text": text}, "days": 1, "members": 1}
+        return simulate(client, body, **{"X-Forwarded-For": f"10.0.0.1, {ip}"})
+
+    assert fork("203.0.113.7", "Cap test one.").status_code == 202
+    before, before_jobs = calls(conn), jobs(conn)
+    body = refused_and_spent_nothing(
+        conn, fork("203.0.113.7", "Cap test two."), 429, "anon_daily_limit"
+    )
+    assert body["detail"] == (
+        "this address has started 1 forks today, the limit without an API key;"
+        " try again after 00:00 UTC"
+    )
+    assert (calls(conn), jobs(conn)) == (before, before_jobs)
+    assert fork("203.0.113.8", "Cap test one.").status_code == 202
+    stored = conn.execute("SELECT client_sha256 FROM fork_clients").fetchall()
+    assert all("203.0.113" not in r[0] for r in stored)
+
+
+def test_forwarded_for_is_ignored_unless_the_peer_is_a_trusted_proxy(client, monkeypatch):
+    monkeypatch.delenv("RW_TRUSTED_PROXIES", raising=False)
+    monkeypatch.setattr(settings, "FORK_ANON_PER_DAY", 0)
+    r = simulate(client, CHIPS, **{"X-Forwarded-For": "198.51.100.9"})
+    assert r.status_code == 429
+
+
+def test_a_trusted_proxy_without_forwarded_for_refuses_with_503(client, conn, monkeypatch):
+    monkeypatch.setenv("RW_TRUSTED_PROXIES", "testclient")
+    before, before_jobs = calls(conn), jobs(conn)
+    refused_and_spent_nothing(conn, simulate(client, CHIPS), 503, "client_unknown")
+    assert (calls(conn), jobs(conn)) == (before, before_jobs)
+
+
+def test_anonymous_max_cost_is_clamped_to_the_default(client, conn):
+    body = {"event": {"text": "Clamp test event."}, "days": 1, "members": 1, "max_cost_usd": 5.0}
+    job_id = simulate(client, body).json()["id"]
+    request = client.get(f"/v1/simulations/{job_id}").json()["request"]
+    assert request["max_cost_usd"] == settings.FORK_MAX_COST_USD_DEFAULT
 
 
 def test_a_rule_refusal_returns_422_with_its_code_and_spends_nothing(client, conn):
@@ -313,6 +402,7 @@ def test_why_is_labelled_simulated_and_cached(client, conn):
     agent_id = client.get("/v1/world").json()["countries"][1]["sample_agent_id"]
     first = client.get(f"/v1/agents/{agent_id}/why").json()
     assert first["label"] == "Simulated account, not the cause" and first["simulated"] is True
+    assert first["provider"] == "fake"
     row = conn.execute("SELECT purpose FROM llm_calls ORDER BY id DESC LIMIT 1").fetchone()
     assert row[0] == "why"
     before = calls(conn)
@@ -524,3 +614,21 @@ def test_healthz_and_cors(client):
         headers={"Origin": "http://localhost:5173", "Access-Control-Request-Method": "GET"},
     )
     assert r.headers["access-control-allow-origin"] == "http://localhost:5173"
+
+
+def test_allowed_origins_add_to_localhost_and_a_malformed_one_fails_startup(monkeypatch):
+    preflight = {"Access-Control-Request-Method": "GET"}
+    try:
+        monkeypatch.setenv("RW_ALLOWED_ORIGINS", "https://realworld.example")
+        with TestClient(importlib.reload(api).app) as c:
+            for origin in ("https://realworld.example", "http://localhost:5173"):
+                r = c.options("/v1/world", headers={"Origin": origin, **preflight})
+                assert r.headers["access-control-allow-origin"] == origin
+            r = c.options("/v1/world", headers={"Origin": "https://evil.example", **preflight})
+            assert "access-control-allow-origin" not in r.headers
+        monkeypatch.setenv("RW_ALLOWED_ORIGINS", "realworld.example")
+        with pytest.raises(ValueError, match="not origins"):
+            importlib.reload(api)
+    finally:
+        monkeypatch.delenv("RW_ALLOWED_ORIGINS")
+        importlib.reload(api)

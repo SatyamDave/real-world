@@ -23,6 +23,16 @@ CREATE TABLE IF NOT EXISTS idempotency_keys (
     created_at TEXT NOT NULL
 );
 
+-- One row per fork started, for the anonymous per-address daily cap. Only a hash of the address
+-- is kept.
+CREATE TABLE IF NOT EXISTS fork_clients (
+    job_id TEXT PRIMARY KEY REFERENCES jobs (id),
+    client_sha256 TEXT NOT NULL,
+    day TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS fork_clients_day ON fork_clients (client_sha256, day);
+
 CREATE TABLE IF NOT EXISTS daily_answers (
     question_id TEXT NOT NULL,
     player_id TEXT NOT NULL,

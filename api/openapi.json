@@ -64,7 +64,7 @@
             "description": "Real-World-Version is not the current version"
           },
           "402": {
-            "description": "The estimate exceeds max_cost_usd or the day's budget",
+            "description": "The estimate exceeds max_cost_usd, or today's fork budget is spent",
             "content": {
               "application/json": {
                 "schema": {
@@ -93,8 +93,18 @@
               }
             }
           },
+          "429": {
+            "description": "This address has used today's anonymous forks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
           "503": {
-            "description": "The acceptable-use check could not run; nothing was started"
+            "description": "A spend, address or acceptable-use check could not run; nothing was started"
           }
         }
       }
@@ -597,6 +607,11 @@
             "type": "string",
             "title": "Text"
           },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Who wrote the text: \"anthropic\", or \"fake\" (no model ran)."
+          },
           "label": {
             "type": "string",
             "const": "Simulated account, not the cause",
@@ -611,7 +626,7 @@
           }
         },
         "type": "object",
-        "required": ["agent_id", "text"],
+        "required": ["agent_id", "text", "provider"],
         "title": "AgentWhy"
       },
       "Anchor": {
@@ -767,11 +782,13 @@
         "properties": {
           "estimated_usd": {
             "type": "number",
-            "title": "Estimated Usd"
+            "title": "Estimated Usd",
+            "description": "An estimate made before the run, at the configured model's (Haiku) prices."
           },
           "actual_usd": {
             "type": "number",
-            "title": "Actual Usd"
+            "title": "Actual Usd",
+            "description": "Dollars the provider charged; 0 with the fake model."
           }
         },
         "type": "object",
@@ -1368,16 +1385,35 @@
       },
       "Refused": {
         "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "over_max_cost",
+              "fork_budget_spent",
+              "anon_daily_limit",
+              "client_unknown",
+              "spend_unreadable"
+            ],
+            "title": "Code"
+          },
           "detail": {
             "type": "string",
-            "title": "Detail"
+            "title": "Detail",
+            "description": "One sentence saying what was refused and why, for display."
           },
           "estimate": {
-            "$ref": "#/components/schemas/Estimate"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Estimate"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
-        "required": ["detail", "estimate"],
+        "required": ["code", "detail"],
         "title": "Refused"
       },
       "Reveal": {
@@ -1583,6 +1619,11 @@
             "type": "string",
             "title": "Model"
           },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Who answered the model calls: \"anthropic\", or \"fake\" when no model ran."
+          },
           "seed": {
             "type": "integer",
             "title": "Seed"
@@ -1655,6 +1696,7 @@
           "world_snapshot_id",
           "engine_version",
           "model",
+          "provider",
           "seed",
           "members",
           "agents_sampled",
