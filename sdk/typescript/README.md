@@ -1,6 +1,6 @@
 # @real-world/sdk
 
-TypeScript client for the Real World Simulate API ([product/sdks.md](../../product/sdks.md)). Start the API with `make dev`, then save this as `quickstart.mts` in a workspace package that lists `"@real-world/sdk": "workspace:*"` and run `node quickstart.mts` (Node 22.18 or newer, which runs TypeScript as is):
+TypeScript client for the Real World API ([product/sdks.md](../../product/sdks.md)). Start the API with `make dev`, save this as `quickstart.mts` in a workspace package that lists `"@real-world/sdk": "workspace:*"`, and run `node quickstart.mts` (Node 22.18 or newer, which runs TypeScript as is):
 
 ```ts
 import { Client } from "@real-world/sdk";
@@ -16,25 +16,38 @@ for (const [topic, out] of Object.entries(result.outputs)) {
 }
 ```
 
-No key is needed. With an API key, `new Client("http://localhost:8000", fetch, "rw_...")` sends it as `Authorization: Bearer`, and forks count against the key's dollar cap instead of the per-address daily count.
+## Authentication
 
-`result` is a typed `SimulateResult`. The band is the p10-p90 range across simulated runs, not a confidence interval.
+No key is needed. With an API key, `new Client("http://localhost:8000", { apiKey: "rw_..." })` sends it as `Authorization: Bearer`, and forks count against the key's dollar cap instead of the per-address daily count.
+
+## Result
+
+`result` is a typed `SimulateResult`. Shares are numbers from 0 to 1. The spread is the p10-p90 range across ensemble members; it is raw and uncalibrated, not a confidence interval.
 
 ## Methods
 
-The method names match the Python client.
+The method names and what they do match the Python client.
 
-| Method | Call |
+| Method | What it does |
 | --- | --- |
-| `simulate(request, idempotency_key?)` | `POST /v1/simulate`; generates an `Idempotency-Key` when none is given |
-| `estimate(request)` | `POST /v1/simulate/estimate` |
-| `get_simulation(id)` | `GET /v1/simulations/{id}` |
-| `wait(id, timeout = 120)` | polls `get_simulation` and resolves to the result; rejects if the job failed or `timeout` seconds pass |
-| `events(id)` | async iterator over the job's server-sent events, reconnecting once with `Last-Event-ID` |
-| `world()`, `agent(id)`, `agent_why(id)` | the world, one agent, and its labelled simulated account |
-| `daily(player_id?)`, `answer_daily(question_id, player_id, probability)` | the daily question and its reveal |
-| `receipts()`, `receipt_day(date)`, `scores()` | the ledger and the scores |
+| `simulate(request, idempotency_key?)` | Starts a fork of today's world with one event and returns its job. Generates an `Idempotency-Key` when none is given. |
+| `estimate(request)` | Estimates the cost of a fork without running it. |
+| `get_simulation(id)` | Returns a fork's job, with its result once it has succeeded. |
+| `wait(id, timeout = 120, interval = 0.5)` | Polls until the fork finishes and returns its result, or fails if the fork failed or `timeout` seconds pass. |
+| `events(id, last_event_id?)` | Yields the fork's progress events until it finishes, reconnecting once with `Last-Event-ID` if the connection drops. |
+| `world()` | Returns today's world: countries, coverage tiers, topic shares and prefilled fork events. |
+| `agent(id)` | Returns one simulated agent: its traits, beliefs and what moved them. |
+| `agent_why(id)` | Returns a short model-written account of what moved one agent, labelled simulated. |
+| `daily(player_id?)` | Returns today's question, with the reveal once this player has answered. |
+| `answer_daily(question_id, player_id, probability)` | Answers today's question once and returns the reveal. |
+| `receipts()` | Lists every day record with its root and record hash. |
+| `receipt_day(date)` | Returns one day record with each receipt's entry, salt and leaf hash. |
+| `scores()` | Returns the skill of the simulation against each baseline. |
 
-Every request sends `Real-World-Version`. An error status rejects with an `ApiError` carrying `status` and the response `body`. Pass a `fetch` as the second constructor argument to replace the transport.
+## Errors
+
+An error status rejects with `ApiError`, with `status`, `body` (parsed as JSON when it is JSON), `detail` and `code`. A connection error is retried once. Pass `{ fetch }` as the second constructor argument to replace the transport.
+
+## Generated types
 
 Types in `src/generated/schema.d.ts` are generated from `api/openapi.json` by `make sdk`; see [sdk/CLAUDE.md](../CLAUDE.md).
