@@ -50,12 +50,13 @@ Legend: [ ] todo · [x] done · [~] in progress · [B] blocked (see OVERNIGHT_LO
 - [x] Lighthouse (LCP 1.81 s median, CLS 0.0003, perf 99, a11y 100) and JS budget pass; before/after screenshots in PR
 - [x] code review, draft PR, CI green
 
-## PR 4 — analytics (`landing/4-analytics`, title `feat(landing): amplitude tracking`)
-- [ ] `@amplitude/analytics-browser` autocapture+attribution+UTM; session-replay plugin w/ sample rate; mask email
-- [ ] `landing/analytics/TRACKING_PLAN.md` with the full event list; all carry headline_variant
-- [ ] One `track()` wrapper fanning out to Reddit + X pixels (env-flagged, event_id dedupe, Lead on save)
-- [ ] Register event definitions + build dashboard via Amplitude connector; link in MORNING.md
-- [ ] /ship-pr draft PR
+## PR 4 — analytics (`landing/4-analytics`, title `feat(landing): amplitude tracking`) — in review
+- [x] `@amplitude/analytics-browser` 2.47.2 with autocapture + attribution + UTM; session-replay plugin 1.35.5 (sample rate, email masked); both lazy
+- [x] `landing/analytics/TRACKING_PLAN.md` with the full event list; every event carries headline_variant
+- [x] One `track()` wrapper fanning out to Reddit + X pixels (env-flagged, signup id as dedupe key, Lead on save only); GPC/DNT off-switch
+- [x] 15 event definitions registered in Amplitude project 877388 (planned events)
+- [ ] Funnel dashboard: built after the preview verification, once real events exist (step 5); link goes in MORNING.md
+- [ ] draft PR
 
 ## PR 5 — launch readiness (`landing/5-readiness`, title `chore(landing): launch readiness`)
 - [ ] `/privacy` + `/terms` (draft, reviewed by founders); processors list; US-only; consent-banner follow-up

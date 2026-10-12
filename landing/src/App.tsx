@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { track } from "./analytics";
 import { BRAND } from "./brand";
 import { Footer } from "./components/Footer";
@@ -8,6 +8,7 @@ import { ReceiptStrip } from "./components/ReceiptStrip";
 import type { Headline } from "./copy/headlines";
 import { Privacy } from "./pages/Privacy";
 import { Terms } from "./pages/Terms";
+import { useViewed } from "./useViewed";
 
 export function App({ headline, path = "/" }: { headline: Headline; path?: string }) {
   if (path === "/privacy") return <LegalShell>{<Privacy />}</LegalShell>;
@@ -59,8 +60,10 @@ function Home({ headline }: { headline: Headline }) {
 }
 
 function RepeatCta() {
+  const viewRef = useRef<HTMLElement>(null);
+  useViewed(viewRef, "repeat_cta");
   return (
-    <section className="cta-band wrap">
+    <section className="cta-band wrap" ref={viewRef}>
       <h2>Watch the record start.</h2>
       <button type="button" className="btn" onClick={() => focusEmail("repeat")}>
         Join the waitlist

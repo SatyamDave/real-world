@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { setHeadlineVariant, track } from "./analytics";
+import { initAfterPaint, setHeadlineVariant, track } from "./analytics";
 import { resolveHeadline } from "./copy/headlines";
 import "./styles/tokens.css";
 import "./styles/global.css";
@@ -20,4 +20,13 @@ createRoot(root).render(
   </StrictMode>,
 );
 
-track("landing_viewed", { path: window.location.pathname });
+track("landing_viewed", {
+  path: window.location.pathname,
+  referrer: document.referrer,
+  ...Object.fromEntries(
+    ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]
+      .map((k) => [k, params.get(k)] as const)
+      .filter(([, v]) => v),
+  ),
+});
+initAfterPaint();

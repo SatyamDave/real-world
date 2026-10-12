@@ -30,7 +30,9 @@ Preview deploy: `wrangler pages deploy ./dist --branch <branch>` (see `RUNBOOK.m
 | `src/copy/headlines.ts` | message-matched headlines keyed by `utm_content` |
 | `src/copy/consent.ts` | the consent line and its stored version |
 | `src/data/receipts.json` | pending receipt cards (no hash, no probability) |
-| `src/analytics.ts` | one `track()` wrapper (Amplitude + pixels wired in PR4) |
+| `src/analytics.ts` | one `track()` wrapper: queues until the SDKs load after first paint, honours Global Privacy Control |
+| `src/amplitude.ts`, `src/pixels.ts` | the Amplitude SDK with session replay, and the Reddit and X pixels; each is a lazy chunk |
+| `analytics/TRACKING_PLAN.md` | every event, its properties, the pixel mapping and how to verify |
 | `src/components/Globe.tsx` | cobe globe, lazy after first paint, poster fallback |
 | `src/styles/tokens.css` | chosen design tokens (A); `tokens-b/-c.css` are swappable |
 | `scripts/gen_globe_poster.py` | builds `public/globe-poster.svg` from Natural Earth |

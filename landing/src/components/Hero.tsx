@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { appDeepLink, track } from "../analytics";
 import { config, hasAppUrl } from "../config";
 import type { Headline } from "../copy/headlines";
 import receiptsData from "../data/receipts.json";
+import { useViewed } from "../useViewed";
 import { Globe, type GlobePhase } from "./Globe";
 import { SignupForm } from "./SignupForm";
 
 const receipts = receiptsData.receipts;
 
 export function Hero({ headline }: { headline: Headline }) {
+  const viewRef = useRef<HTMLElement>(null);
+  useViewed(viewRef, "hero");
   // The chips appear as their marker pulses. Until the globe says which mode it
   // is in they wait; if it never says (slow network), they show after 3s.
   const [phase, setPhase] = useState<GlobePhase | "pending">("pending");
@@ -17,7 +20,7 @@ export function Hero({ headline }: { headline: Headline }) {
     return () => window.clearTimeout(t);
   }, []);
   return (
-    <section className="hero wrap">
+    <section ref={viewRef} className="hero wrap">
       <div className="hero-copy">
         <p className="eyebrow">A daily, public, scored forecast of the world. Launching Oct 27.</p>
         <h1>{headline.h1}</h1>
