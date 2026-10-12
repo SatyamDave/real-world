@@ -1,0 +1,16 @@
+pair,study_a,claim_a,study_b,claim_b,within_study,conflict,conflict_note,axis,status,direction_predicted
+1,ashokkumar2026,effect predictions correlate strongly with real effects,bisbee2024,32% of significantly different coefficients flip sign,no,yes,opposite verdicts,A3 (U5 across studies vs U3 within study),reconciled,yes (P1: U5 above U3)
+2,park2024,83-86% of test-retest on held-out GSS items,peng2025funhouse,r=0.20 on new outcomes,no,yes,opposite verdicts,A4 (test-retest ceiling vs none) and scope of items,reconciled,no
+3,argyle2023,algorithmic fidelity on ANES subgroups,hu2025simbench,ten of 45 models below uniform,no,yes,opposite verdicts,A1 (real profiles vs group labels) and A4 (none vs uniform); populations also differ,partial,no
+4,meister2024,verbalized distributions beat uniform,dominguez2024,responses trend to uniform once order randomized,no,yes,opposite verdicts,A2 (verbalized vector vs log-probs),reconciled,no (P2 does not sign the contract effect)
+5,bisbee2024,means correspond closely to ANES,pew2026,11.2-14.7 point errors on ATP items,no,yes,opposite verdicts,none (both US U1 levels),unexplained,na
+6,kim2026korean,item-mean r=0.70-0.91,kim2026korean,MAE 14-19 pp,yes,no,within one study; authors report both,A3 (U2 ordering vs U1 levels),not_conflict,na
+7,wang2026ess,country correlation 0.52,wang2026ess,negligible individual recovery,yes,no,within one study; distinction is the paper's title,A3 (U2 vs U4),not_conflict,na
+8,williams2026beyond,fine-tuning best on marginals,williams2026beyond,persona prompting marginally best on correlations,yes,no,within one study; authors report both,A3 (U1 vs U3),not_conflict,na
+9,doudkin2026,no-persona query beats persona panels,park2024,richer conditioning raises accuracy,no,yes,opposite verdicts on persona simulation; different tasks,A3 (U1 vs U4),reconciled,no
+10,ku2026,within 6 pp of random forest,chen2026synthetic,no LLM beats strongest baseline individually,no,no,same verdict (baseline ahead in both),A1 (respondent answers vs demographics),not_conflict,na
+11,ashokkumar2026,accuracy similar to pooled human forecasters,lukauskas2026,Gaussian copula beats every LLM on sample-driven components,no,yes,opposite verdicts; different tasks,A4 (human forecasters vs fitted model) and A3,reconciled,yes (P1: U5 strong; P3: fitted baseline ahead)
+12,lam2026fast,moderately faithful means,vonderheyde2025,inaccurate vote choice in Germany,no,yes,opposite verdicts,none (country differs; outside taxonomy),unexplained,na
+13,hu2025simbench,fidelity scales log-linearly with size,lee2026openweight,newest Llama lowest sign agreement,no,yes,opposite verdicts on scaling,none (release vs size; 14-pair panel),unexplained,na
+14,durmus2023,translation does not move answers to speakers,liu2025global,questionnaire language steers best,no,yes,opposite verdicts on language,none (language as conditioning not separated),unexplained,na
+15,jang2026,instruct worse than base in every family,hu2025simbench,instruct beats base above 10B,no,yes,opposite verdicts on post-training,none on our axes (item entropy moderates),unexplained,na

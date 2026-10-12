@@ -1,0 +1,90 @@
+table,key,version_read,location,subset,quantity,value,checked_against
+dist,bisbee2024,Political Analysis 32(4),abstract,ANES thermometers,ChatGPT means vs ANES means,correspond closely,publisher HTML 2026-10-11
+dist,bisbee2024,Political Analysis 32(4),introduction,ANES regressions,share of coefficients significantly different,48%,publisher HTML 2026-10-11
+dist,bisbee2024,Political Analysis 32(4),introduction,significantly different coefficients,share with flipped sign,32%,publisher HTML 2026-10-11
+dist,bisbee2024,Political Analysis 32(4),Table 1 caption,affective polarization among partisans (power example),ChatGPT effect / SD,12.5 / 16.1,publisher HTML 2026-10-11
+dist,bisbee2024,Political Analysis 32(4),Table 1 caption,affective polarization among partisans (power example),ANES effect / SD,7.8 / 31.4,publisher HTML 2026-10-11
+dist,bisbee2024,Political Analysis 32(4),power-analysis text,same,required partisan respondents from ChatGPT inputs,33,publisher HTML 2026-10-11
+dist,santurkar2023,arXiv v1,abstract,OpinionQA 60 US groups,misalignment,on par with Democrat-Republican divide on climate,arXiv API 2026-10-11
+dist,dominguez2024,arXiv v4,abstract,ACS; 43 models,randomized order,trend to uniform,arXiv API 2026-10-11
+dist,meister2024,arXiv v1,Table 1,avg over OpinionQA+GlobalOpinionQA+NYT,verbalized JSON TV (best: Opus),0.226,HTML 2026-10-11
+dist,meister2024,arXiv v1,Table 1,same,sequence TV range,0.278-0.328,HTML 2026-10-11
+dist,meister2024,arXiv v1,Table 1,same,log-prob TV range,0.455-0.550,HTML 2026-10-11
+dist,meister2024,arXiv v1,Table 1,same,uniform TV,0.363,HTML 2026-10-11
+dist,meister2024,arXiv v1,Table 2,avg over OpinionQA+NYT only,human annotator TV,0.250,HTML 2026-10-11
+dist,meister2024,arXiv v1,Table 2,same,GPT-4 verbalized TV,0.204,HTML 2026-10-11
+dist,hu2025simbench,arXiv v4 (ICLR 2026),abstract,all,best score,40.80,HTML 2026-10-11
+dist,hu2025simbench,arXiv v4,Sec 4.1,45 LLMs,models scoring below 0,10,HTML 2026-10-11
+dist,hu2025simbench,arXiv v4,Table 2,Religiosity/Practice conditioning,Delta S,-9.91,HTML 2026-10-11
+dist,hu2025simbench,arXiv v4,Sec 2.2 / Sec 3,participants / models,countries; models,130; 45,HTML 2026-10-11
+dist,suh2025subpop,arXiv v2 (ACL 2025),Table 1,OpinionQA,W1 zero-shot best per model,0.138-0.173 (range over all formats 0.138-0.209),HTML 2026-10-11
+dist,suh2025subpop,arXiv v2,Table 1,OpinionQA,W1 fine-tuned,0.094-0.106,HTML 2026-10-11
+dist,suh2025subpop,arXiv v2,Table 1,OpinionQA,human lower bound / uniform,0.031 / 0.178,HTML 2026-10-11
+dist,suh2025subpop,arXiv v2,Sec 4.2,OpinionQA,W1 reduction,32-46%,HTML 2026-10-11
+dist,zhao2024wvb,arXiv v1 (LREC-COLING 2024),abstract,WVS 94728 people,share of questions W1<0.2,11.1% (Alpaca-7B) to 75.0% (GPT-3.5),arXiv API 2026-10-11
+dist,tao2024,arXiv v2 (PNAS Nexus),Sec 2,IVS 107 countries,GPT-4o cultural distance,2.42 -> 1.57,HTML 2026-10-11
+dist,tao2024,arXiv v2,abstract,"GPT-4, GPT-4-turbo, GPT-4o",share of countries improved,71-81%,arXiv API 2026-10-11
+dist,atari2023,PsyArXiv,abstract,cross-cultural data,correlation with distance from WEIRD populations,-.70,HKS page 2026-10-11
+dist,ozkan2026,arXiv v1,abstract,2414 WVS respondents,respondents,2414,abstract 2026-10-11
+dist,ozkan2026,arXiv v1,main analysis,4 scenarios x 5 seeds = 20 units,entropy nats Route A -> Route B,1.464 -> 0.770,HTML 2026-10-11
+dist,ozkan2026,arXiv v1,main analysis,20 units,TVD,0.437,HTML 2026-10-11
+dist,ozkan2026,arXiv v1,main analysis,20 units; collapsed = concentration > human modal mass + 0.15,share of units collapsed,85%,HTML 2026-10-11
+dist,ozkan2026,arXiv v1,Table 2,3 model families,SD ratio before -> after Verbalized Sampling,0.40-0.56 -> 1.26-1.37,HTML 2026-10-11
+dist,ozkan2026,arXiv v1,Table 2,3 model families,fidelity gain (100*(1-TVD)),+6.8 to +10.1,HTML 2026-10-11
+dist,lee2026openweight,arXiv v1,Sec 4.1,null persona,entropy bits; midpoint share,1.24; 60%,HTML 2026-10-11
+dist,lee2026openweight,arXiv v1,Sec 4.1,conditioned on Big Five answers,entropy bits,2.01 (human 2.20),HTML 2026-10-11
+dist,lee2026openweight,arXiv v1,Sec 4.3 Table 3,139 pairs,cross-instrument r,0.70-0.73,HTML 2026-10-11
+dist,lee2026openweight,arXiv v1,Sec 4.7 Table 8,14-pair panel (authors: indicative only),sign agreement llama3.3 vs llama3/3.1,71.4% vs 92.9%,HTML 2026-10-11
+dist,lee2026openweight,arXiv v1,Sec 4.2 Table 2,3 models,MAE rises above default temperature,without exception,HTML 2026-10-11
+dist,doudkin2026,arXiv,abstract,9 aligned model-battery pairs,MAE committed panels / no-persona query,12.39 / 6.27 (query wins 9/9),abstract 2026-10-11
+dist,doudkin2026,arXiv,abstract,same,constraint-aware probability vectors MAE; wins vs query,5.34; 4 of 9,abstract 2026-10-11
+dist,doudkin2026,arXiv,abstract,panels up to 500,empty option slots,66 of 128,abstract 2026-10-11
+dist,jang2026,arXiv v2 (EMNLP Findings 2026),abstract,public-opinion benchmark,same persona same answer,> half of items,arXiv API 2026-10-11
+dist,jang2026,arXiv v2,abstract,same,describe call vs persona aggregation error,more than halves,arXiv API 2026-10-11
+dist,jang2026,arXiv v2,abstract,same,PPA error reduction,21%,arXiv API 2026-10-11
+dist,kim2026korean,arXiv v2 (IEEE Access 14),abstract,KMPS,MAE; item-mean r,14-19 pp; 0.70-0.91,abstract 2026-10-11
+dist,kim2026korean,arXiv v2,abstract,30% real holdout,calibrated cell MAE; direct estimate,4.9/4.4 pp; 3.6 pp,abstract 2026-10-11
+dist,kim2026korean,arXiv v2,abstract,below ~250-860 real responses,calibrated panel advantage over real-only shrinkage,at most 2.3 pp,abstract 2026-10-11
+dist,wang2026ess,arXiv,abstract,ESS R11 30 countries,median per-item correlation of country means,-0.03 -> 0.52,abstract 2026-10-11
+dist,krsteski2025,arXiv v2,abstract,two panel surveys,bias synthesis-only; with rectification,24-86%; <5%,arXiv API 2026-10-11
+dist,lukauskas2026,arXiv,abstract,Lithuania n=263; 37 models,acquiescence shift; inter-LLM PSS; R2 synthetic-trained vs 0.28,+0.84 SD; 0.73; -0.18,abstract 2026-10-11
+dist,lukauskas2026,arXiv,abstract,counterfactual swaps,mean |d| education / role / gender,0.56 / 0.18 / 0.12,abstract 2026-10-11
+dist,peng2025funhouse,Science Advances 12(36) eaeh8260 (Europe PMC PMC13537255),Insufficient Individuation; Performance comparisons,164 outcomes,twin SD below human; means differ; mean gap,154/164; 105/164; 0.352 SD,published full text 2026-10-11
+dist,tornberg2026,arXiv,abstract,6 models N=30990,fall in share of items closer to Democrats under conservative cue; right/left ratio,28-62 pp; 8.0x,abstract 2026-10-11
+dist,chen2026synthetic,arXiv v2,abstract,GSS+WVS 4 models,between-segment gap inflation,2-4x,arXiv API 2026-10-11
+dist,pew2026,report + methodology page (2026-09-30),methodology table,Opus 4.6 ext. profile + expert reflection,avg abs error waves 185/190/192,11.3 (main report; methodology page 11.4) / 14.7 / 11.2,Pew pages 2026-10-11
+dist,pew2026,methodology page,model selection,Wave 185 6700-panelist subsample,GPT-5.1 extended profile,13.3,Pew pages 2026-10-11
+dist,pew2026,methodology page,model selection,Wave 185 full 8512 sample,GPT-5.1 standard profile only,16,Pew pages 2026-10-11
+dist,pew2026,methodology page,field dates,waves 185/190/192,fieldwork,Jan 20-25 / Mar 23-30 / Apr 20-26 2026,Pew pages 2026-10-11
+indiv,park2024,arXiv v3,abstract,1052 US adults held-out GSS,share of test-retest: interview/survey/both/demographics,83/82/86/74%,arXiv API 2026-10-11
+indiv,toubia2025twin,arXiv v1,main text,text persona GPT-4.1-mini (main configuration),accuracy,71.72%,HTML 2026-10-11
+indiv,toubia2025twin,arXiv v1,Table 2,JSON persona predicted output GPT-4.1 (best),accuracy,71.92%,HTML 2026-10-11
+indiv,toubia2025twin,arXiv v1,Table 2 / text,17 tasks,random; test-retest,59.17%; 81.72%,HTML 2026-10-11
+indiv,peng2025funhouse,Science Advances 12(36) eaeh8260 (Europe PMC PMC13537255),Results; Performance comparisons,164 outcomes,twin-human r; demographics-only; empty persona,0.197; 0.145; 0.080,published full text 2026-10-11
+indiv,ku2026,arXiv v1,abstract,TEDS 2024,accuracy unseen items; gap to RF; construct range,52%; 6 pp; 67% to 23%,arXiv API 2026-10-11
+indiv,ashokkumar2026,Nature 656,abstract,70 experiments 469 effects 119330 people,correlation / post-cutoff,strong; remained high for studies not published by cutoff; 15 megastudies: lower but comparable to pooled expert forecasters,GSB page 2026-10-11
+indiv,aher2023,arXiv v5 (ICML 2023),abstract,4 experiments,replicated,3 of 4,arXiv API 2026-10-11
+indiv,park2023diminished,arXiv v6,abstract,14 Many Labs 2 studies,replicated of 8 analyzable; unanalyzable,37.5%; 6,arXiv API 2026-10-11
+indiv,binz2025centaur,arXiv v3 / Nature 644,abstract,Psych-101 160 experiments >60000 participants,vs cognitive models,better on held-out participants,arXiv API 2026-10-11
+mitig,zhang2025vs,arXiv v4,abstract,creative writing,diversity gain,1.6-2.1x,arXiv API 2026-10-11
+mitig,kambhatla2025,arXiv v4 (ACL 2026),Sec 3.5; App C; results,15 LLMs 3 datasets,calibration vs uncalibrated/SD prompting; few-shot inconsistent; drops for Aus/NZ N. Europe,see text,HTML 2026-10-11
+mitig,abels2026,arXiv v1,full text,10 WVS countries,value personas vs generic/country/sociodemographic prompts,outperform on most model-country pairs (figures only),HTML 2026-10-11
+dist,meister2024,arXiv v1,Sec 3 (Sequence of Tokens),sequence contract,samples per sequence (panel size),30,HTML 2026-10-11
+dist,jang2026,arXiv v2,Abstract; Sec 6; Table 7,100 OpinionQA items (Pew ATP),describe-call TV vs persona aggregation TV,0.22 vs 0.46,HTML 2026-10-11
+dist,jang2026,arXiv v2,Table 7,same,personas per item (panel size),100,HTML 2026-10-11
+dist,doudkin2026,arXiv v1,Abstract; Sec 4,national batteries,panel size,up to 500 respondents,HTML 2026-10-11
+dist,doudkin2026,arXiv v1,Sec 6,3 unpublished cells x 2 models,MAE national table / no-persona query / better contract,7.00 / 7.47 / 7.65; 3 of 6 pairs each way,HTML 2026-10-11
+dist,lee2026openweight,arXiv v1,Table 3,139 pairs; n=40 human subsample,Pearson agreement vs n=40 human sample,0.530 / 0.557 / 0.568,HTML 2026-10-11
+dist,lukauskas2026,arXiv v1,Abstract; Sec 5.2,PSS overall,copula / best LLM / human ceiling,0.69 / 0.71 / 0.825,HTML 2026-10-11
+dist,wang2026ess,arXiv v1,Sec 5 (comparators),ESS R11 30 countries,neighbor average vs model: normalized error; items better; rbc,0.056 vs 0.180; 41 of 42; 0.55 vs 0.44,PDF 2026-10-11
+dist,kim2026korean,arXiv v2,abstract,KMPS,personas per model,"about 8,000",arXiv API 2026-10-11
+dist,kozlowski2024,arXiv v1,abstract,US liberals/conservatives; LLM trained through 2019,share of observed partisan differences reproduced,84%,arXiv API 2026-10-11
+dist,boelaert2025,SMR 54(3),abstract,opinion polls,variance and bias,low variance per topic; bias varies randomly across topics,Crossref 2026-10-11
+dist,chen2026synthetic,arXiv v2,Sec 4; Table 2,GSS / WVS individual accuracy,marginal / lookup / logistic / RF / best LLM,GSS 0.568/0.589/0.622/0.583/0.589; WVS 0.348/0.388/0.393/0.366/0.277,HTML 2026-10-11
+indiv,ku2026,arXiv v1 (IEEE IRI 2026),Sec V.A Table II,TEDS 2024 N=1206,RF accuracy vs best LLM,58.3% vs 52.1% (LR demographics 47.0%),PDF 2026-10-11
+indiv,hu2024persona,ACL 2024,abstract,70B model zero-shot,share of regression-achievable annotation variance captured,81%,HTML 2026-10-11
+indiv,kim2023augmented,arXiv v4,Results (public opinion prediction),pooled variable-year pairs,Alpaca-7B vs logistic OLS (rho; MAE),"0.982, 0.038 vs 0.984, 0.030",HTML 2026-10-11
+mitig,krsteski2025,arXiv v2,Sec 5.1,persona-guided + rectification,average / peak ESS gain,6.92% / 14.19%,HTML 2026-10-11
+mitig,chopra2024archetypes,arXiv v3,Table 1,NYC unemployment / infection,MSE archetype / heuristic / LLM-as-agent,24.59/41.05/56.98; 95.17/2914.73/4311.70,HTML 2026-10-11
+mitig,chopra2024archetypes,arXiv v3,Sec 5,5 NYC boroughs,boroughs with positive correlation to BLS,3 of 5,HTML 2026-10-11
+open,yang2024oasis,arXiv v5,Sec 3.3.1; Fig 4,198 Twitter15/16 cascades,normalized RMSE; depth,about 30%; depth too low,HTML 2026-10-11
