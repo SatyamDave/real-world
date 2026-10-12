@@ -1,6 +1,8 @@
 import base64
+import hashlib
 import importlib
 import json
+import re
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -11,6 +13,7 @@ from fastapi.testclient import TestClient
 
 from rw import daily, ledger, llm, policy, population, settings
 from rw_api import app as api
+from rw_api import keys
 
 ROOT = Path(__file__).resolve().parents[2]
 AGENTS = 2000
@@ -252,6 +255,98 @@ def test_anonymous_max_cost_is_clamped_to_the_default(client, conn):
     job_id = simulate(client, body).json()["id"]
     request = client.get(f"/v1/simulations/{job_id}").json()["request"]
     assert request["max_cost_usd"] == settings.FORK_MAX_COST_USD_DEFAULT
+
+
+def bearer(conn, cap_usd=100.0):
+    return {"Authorization": f"Bearer {keys.create(conn, 'test', cap_usd)}"}
+
+
+def test_a_keyed_fork_skips_the_address_count_and_clamp_and_records_its_spend(
+    client, conn, monkeypatch
+):
+    monkeypatch.setattr(settings, "FORK_ANON_PER_DAY", 0)
+    auth = bearer(conn)
+    first_call = conn.execute("SELECT COALESCE(max(id), 0) FROM llm_calls").fetchone()[0]
+    body = {"event": {"text": "Keyed fork event."}, "days": 1, "members": 1, "max_cost_usd": 5.0}
+    r = simulate(client, body, **auth)
+    assert r.status_code == 202, r.json()
+    job_id = r.json()["id"]
+    assert client.get(f"/v1/simulations/{job_id}").json()["request"]["max_cost_usd"] == 5.0
+    assert conn.execute("SELECT 1 FROM fork_clients WHERE job_id = ?", (job_id,)).fetchone() is None
+    spent = conn.execute("SELECT spent_usd FROM key_forks WHERE job_id = ?", (job_id,)).fetchone()
+    charged = conn.execute(
+        "SELECT sum(cost_usd) FROM llm_calls WHERE id > ? AND purpose = 'fork_signal'",
+        (first_call,),
+    ).fetchone()[0]
+    assert spent[0] == pytest.approx(charged) and charged > 0
+    assert simulate(client, body).status_code == 429
+
+
+def test_a_key_over_its_cap_or_the_fork_budget_is_refused_before_any_model_call(
+    client, conn, monkeypatch
+):
+    before, before_jobs = calls(conn), jobs(conn)
+    body = refused_and_spent_nothing(
+        conn, simulate(client, CHIPS, **bearer(conn, 0.01)), 402, "key_cap_spent"
+    )
+    assert body["detail"] == (
+        "this API key has $0.0100 of its $0.01 cap left, less than this fork's max_cost_usd $0.5"
+    )
+    monkeypatch.setattr(settings, "FORK_DAILY_BUDGET_USD", llm.spent_today(conn, public=True))
+    refused_and_spent_nothing(
+        conn, simulate(client, CHIPS, **bearer(conn)), 402, "fork_budget_spent"
+    )
+    assert (calls(conn), jobs(conn)) == (before, before_jobs)
+
+
+def test_unfinished_keyed_forks_hold_their_cap_until_they_record_their_spend(client, conn):
+    auth = bearer(conn, 1.0)
+    key_id = conn.execute("SELECT max(id) FROM api_keys").fetchone()[0]
+    held = json.dumps({**CHIPS, "max_cost_usd": 0.8})
+    with conn:
+        conn.execute(
+            "INSERT INTO jobs (id, status, request_json, created_at) VALUES"
+            " ('job_key_held', 'running', ?, '2026-10-12T00:00:00+00:00')",
+            (held,),
+        )
+        conn.execute("INSERT INTO key_forks VALUES ('job_key_held', ?, NULL)", (key_id,))
+    try:
+        refused_and_spent_nothing(conn, simulate(client, CHIPS, **auth), 402, "key_cap_spent")
+    finally:
+        api._finish(conn, "job_key_held", error="test", spent_usd=0.1)
+    assert api.key_spent(conn, key_id) == pytest.approx(0.1)
+    assert simulate(client, CHIPS, **auth).status_code == 202
+
+
+def test_unknown_malformed_and_revoked_keys_are_refused_with_401(client, conn):
+    before_jobs = jobs(conn)
+    live = keys.create(conn, "revoke me", 10.0)
+    for auth in ("Bearer rw_" + "0" * 32, f"Basic {live}", live):
+        r = simulate(client, CHIPS, Authorization=auth)
+        refused_and_spent_nothing(conn, r, 401, "invalid_api_key")
+        est = client.post("/v1/simulate/estimate", json=CHIPS, headers={"Authorization": auth})
+        assert est.status_code == 401 and est.json()["code"] == "invalid_api_key"
+    keys.revoke(conn, conn.execute("SELECT max(id) FROM api_keys").fetchone()[0])
+    r = simulate(client, CHIPS, Authorization=f"Bearer {live}")
+    assert r.json()["detail"] == "this API key is unknown or revoked"
+    assert jobs(conn) == before_jobs
+
+
+def test_the_keys_cli_prints_a_key_once_lists_its_spend_and_revokes_it(conn, capsys):
+    keys.main(["create", "--label", "builder-a", "--cap-usd", "100"])
+    key = capsys.readouterr().out.strip()
+    assert re.fullmatch(r"rw_[0-9a-f]{32}", key)
+    row = conn.execute("SELECT * FROM api_keys WHERE label = 'builder-a'").fetchone()
+    assert row["key_sha256"] == hashlib.sha256(key.encode()).hexdigest()
+    assert key not in json.dumps(dict(row))
+    keys.main(["list"])
+    assert f"{row['id']}\tbuilder-a\tcap $100\tspent $0.0000\tlive" in capsys.readouterr().out
+    keys.main(["revoke", "--id", str(row["id"])])
+    keys.main(["list"])
+    assert f"{row['id']}\tbuilder-a\tcap $100\tspent $0.0000\trevoked " in capsys.readouterr().out
+    with pytest.raises(SystemExit) as gone:
+        keys.main(["revoke", "--id", str(row["id"])])
+    assert gone.value.code == 1
 
 
 def test_a_rule_refusal_returns_422_with_its_code_and_spends_nothing(client, conn):

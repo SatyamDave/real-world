@@ -36,6 +36,9 @@ WHY_LABEL = "Simulated account, not the cause"
 # origins come from RW_ALLOWED_ORIGINS.
 CORS_ORIGIN_REGEX = r"^http://(localhost|127\.0\.0\.1):\d+$"
 TERMINAL = ("succeeded", "failed")
+KEY_HEADER = (
+    "Bearer rw_... API key. Without one the caller is anonymous and max_cost_usd is clamped."
+)
 
 Status = Literal["queued", "running", "succeeded", "failed"]
 
@@ -62,7 +65,13 @@ class Job(BaseModel):
 
 
 RefusedCode = Literal[
-    "over_max_cost", "fork_budget_spent", "anon_daily_limit", "client_unknown", "spend_unreadable"
+    "over_max_cost",
+    "fork_budget_spent",
+    "anon_daily_limit",
+    "client_unknown",
+    "spend_unreadable",
+    "invalid_api_key",
+    "key_cap_spent",
 ]
 
 
@@ -275,6 +284,7 @@ def _finish(
     job_id: str,
     result: simulate.SimulateResult | None = None,
     error: str | None = None,
+    spent_usd: float | None = None,
 ) -> None:
     status = "failed" if result is None else "succeeded"
     with conn:
@@ -282,6 +292,7 @@ def _finish(
             "UPDATE jobs SET status = ?, result_json = ?, error = ?, finished_at = ? WHERE id = ?",
             (status, result and result.model_dump_json(), error, _now(), job_id),
         )
+        conn.execute("UPDATE key_forks SET spent_usd = ? WHERE job_id = ?", (spent_usd, job_id))
         _event(conn, job_id, {"type": status} | ({"error": error} if error else {}))
 
 
@@ -348,12 +359,13 @@ def run_job(job_id: str, req: simulate.SimulateRequest) -> None:
                 },
             )
 
+    budget = llm.Budget(req.max_cost_usd)
     try:
-        result = simulate.run(conn, req, progress)
+        result = simulate.run(conn, req, progress, budget)
     except Exception as e:
-        _finish(conn, job_id, error=f"{type(e).__name__}: {e}")
+        _finish(conn, job_id, error=f"{type(e).__name__}: {e}", spent_usd=budget.spent_usd)
     else:
-        _finish(conn, job_id, result=result)
+        _finish(conn, job_id, result=result, spent_usd=budget.spent_usd)
     finally:
         conn.close()
 
@@ -387,8 +399,10 @@ def _estimate(req: simulate.SimulateRequest) -> simulate.Estimate:
         raise HTTPException(422, str(e)) from e
 
 
-def _anonymous(req: simulate.SimulateRequest) -> simulate.SimulateRequest:
-    """Every caller is anonymous until there are API keys, so max_cost_usd is clamped."""
+def _capped(req: simulate.SimulateRequest, key: int | None) -> simulate.SimulateRequest:
+    """An anonymous caller's max_cost_usd is clamped to the default; a keyed one's is not."""
+    if key is not None:
+        return req
     cap = min(req.max_cost_usd, settings.FORK_MAX_COST_USD_DEFAULT)
     return req.model_copy(update={"max_cost_usd": cap})
 
@@ -398,6 +412,30 @@ def _refuse(
 ) -> JSONResponse:
     body = Refused(code=code, detail=detail, estimate=est)
     return JSONResponse(body.model_dump(), status_code=status)
+
+
+def _key(conn: sqlite3.Connection, authorization: str | None) -> int | JSONResponse | None:
+    """The id of the live key sent as `Authorization: Bearer rw_...`; None without the header."""
+    if authorization is None:
+        return None
+    scheme, _, token = authorization.partition(" ")
+    row = conn.execute(
+        "SELECT id FROM api_keys WHERE key_sha256 = ? AND revoked_at IS NULL",
+        (hashlib.sha256(token.strip().encode()).hexdigest(),),
+    ).fetchone()
+    if scheme.lower() != "bearer" or row is None:
+        return _refuse(401, "invalid_api_key", "this API key is unknown or revoked")
+    return row[0]
+
+
+def key_spent(conn: sqlite3.Connection, key: int) -> float:
+    """What a key's forks have cost, counting each unfinished or interrupted fork at its cap."""
+    return conn.execute(
+        "SELECT COALESCE(SUM(COALESCE(k.spent_usd, json_extract(j.request_json,"
+        " '$.max_cost_usd'))), 0) FROM key_forks k JOIN jobs j ON j.id = k.job_id"
+        " WHERE k.api_key_id = ?",
+        (key,),
+    ).fetchone()[0]
 
 
 def _client(request: Request) -> str | None:
@@ -410,9 +448,14 @@ def _client(request: Request) -> str | None:
     return ip and hashlib.sha256(ip.encode()).hexdigest()
 
 
-def _limits(conn: sqlite3.Connection, client: str, reserve: float) -> JSONResponse | None:
-    """Refuse when this client has started FORK_ANON_PER_DAY forks today, or when today's public
-    spend plus the cap of every unfinished fork plus reserve would pass FORK_DAILY_BUDGET_USD."""
+def _limits(
+    conn: sqlite3.Connection, client: str | None, key: int | None, reserve: float
+) -> JSONResponse | None:
+    """Refuse when an anonymous client has started FORK_ANON_PER_DAY forks today, when a key's
+    spend plus reserve would pass its cap, or when today's public spend plus the cap of every
+    unfinished fork plus reserve would pass FORK_DAILY_BUDGET_USD. A keyed caller passes client
+    None, an anonymous one key None."""
+    cap, spent = None, 0.0
     try:
         started = conn.execute(
             "SELECT count(*) FROM fork_clients WHERE client_sha256 = ? AND day = ?",
@@ -423,9 +466,24 @@ def _limits(conn: sqlite3.Connection, client: str, reserve: float) -> JSONRespon
             " WHERE status IN ('queued', 'running')"
         ).fetchone()[0]
         left = settings.FORK_DAILY_BUDGET_USD - llm.spent_today(conn, public=True) - pending
+        if key is not None:
+            row = conn.execute(
+                "SELECT cap_usd FROM api_keys WHERE id = ? AND revoked_at IS NULL", (key,)
+            ).fetchone()
+            cap, spent = row and row[0], key_spent(conn, key)
     except Exception as e:
         return _refuse(503, "spend_unreadable", f"today's fork spend could not be read: {e}")
-    if started >= settings.FORK_ANON_PER_DAY:
+    if key is not None:
+        if cap is None:
+            return _refuse(401, "invalid_api_key", "this API key is unknown or revoked")
+        if not spent + reserve <= cap:
+            return _refuse(
+                402,
+                "key_cap_spent",
+                f"this API key has ${max(cap - spent, 0):.4f} of its ${cap:g} cap left, less than"
+                f" this fork's max_cost_usd ${reserve:g}",
+            )
+    elif started >= settings.FORK_ANON_PER_DAY:
         return _refuse(
             429,
             "anon_daily_limit",
@@ -446,9 +504,11 @@ def _limits(conn: sqlite3.Connection, client: str, reserve: float) -> JSONRespon
     response_model=JobCreated,
     responses={
         400: {"description": "Real-World-Version is not the current version"},
+        401: {"model": Refused, "description": "The API key is unknown or revoked"},
         402: {
             "model": Refused,
-            "description": "The estimate exceeds max_cost_usd, or today's fork budget is spent",
+            "description": "The estimate exceeds max_cost_usd, the key's cap or today's fork"
+            " budget is spent",
         },
         409: {"model": Conflict, "description": "A job with this Idempotency-Key is running"},
         422: {
@@ -468,20 +528,26 @@ def create_simulation(
     background: BackgroundTasks,
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=1, max_length=255)],
     real_world_version: Annotated[str | None, Header(alias="Real-World-Version")] = None,
+    authorization: Annotated[str | None, Header(description=KEY_HEADER)] = None,
 ) -> JobCreated | JSONResponse:
     if real_world_version is not None and real_world_version != settings.API_VERSION:
         raise HTTPException(400, f"Real-World-Version must be {settings.API_VERSION}")
-    req = _anonymous(req)
-    body_sha = hashlib.sha256(req.model_dump_json().encode()).hexdigest()
     conn = connect()
+    key = _key(conn, authorization)
+    if isinstance(key, JSONResponse):
+        return key
+    req = _capped(req, key)
+    body_sha = hashlib.sha256(req.model_dump_json().encode()).hexdigest()
     replay = _replay(conn, idempotency_key, body_sha)
     if replay is not None:
         return replay
 
-    client = _client(request)
-    if client is None:
-        return _refuse(503, "client_unknown", "the caller's address could not be read")
-    refusal = _limits(conn, client, req.max_cost_usd)
+    client = None
+    if key is None:
+        client = _client(request)
+        if client is None:
+            return _refuse(503, "client_unknown", "the caller's address could not be read")
+    refusal = _limits(conn, client, key, req.max_cost_usd)
     if refusal is not None:
         return refusal
     est = _estimate(req)
@@ -508,7 +574,7 @@ def create_simulation(
             # The write lock makes the second limits check and the insert one step, so concurrent
             # requests cannot all pass on the same remaining budget.
             conn.execute("BEGIN IMMEDIATE")
-            refusal = _limits(conn, client, req.max_cost_usd)
+            refusal = _limits(conn, client, key, req.max_cost_usd)
             if refusal is not None:
                 return refusal
             conn.execute(
@@ -525,10 +591,15 @@ def create_simulation(
                 " VALUES (?, ?, ?, ?)",
                 (idempotency_key, body_sha, job_id, _now()),
             )
-            conn.execute(
-                "INSERT INTO fork_clients (job_id, client_sha256, day) VALUES (?, ?, ?)",
-                (job_id, client, _clock().date().isoformat()),
-            )
+            if key is None:
+                conn.execute(
+                    "INSERT INTO fork_clients (job_id, client_sha256, day) VALUES (?, ?, ?)",
+                    (job_id, client, _clock().date().isoformat()),
+                )
+            else:
+                conn.execute(
+                    "INSERT INTO key_forks (job_id, api_key_id) VALUES (?, ?)", (job_id, key)
+                )
     except sqlite3.IntegrityError:
         # A concurrent request with the same key committed first.
         replay = _replay(conn, idempotency_key, body_sha)
@@ -543,9 +614,16 @@ def create_simulation(
     "/v1/simulate/estimate",
     summary="Estimate a fork's cost and model calls without running it",
     response_model=simulate.Estimate,
+    responses={401: {"model": Refused, "description": "The API key is unknown or revoked"}},
 )
-def estimate(req: simulate.SimulateRequest) -> simulate.Estimate:
-    return _estimate(_anonymous(req))
+def estimate(
+    req: simulate.SimulateRequest,
+    authorization: Annotated[str | None, Header(description=KEY_HEADER)] = None,
+) -> simulate.Estimate | JSONResponse:
+    key = None if authorization is None else _key(connect(), authorization)
+    if isinstance(key, JSONResponse):
+        return key
+    return _estimate(_capped(req, key))
 
 
 @app.get(

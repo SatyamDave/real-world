@@ -50,12 +50,19 @@ def _sse(lines: Iterator[str]) -> Iterator[tuple[str | None, dict[str, Any]]]:
 
 class Client:
     def __init__(
-        self, base_url: str = "http://localhost:8000", transport: httpx.BaseTransport | None = None
+        self,
+        base_url: str = "http://localhost:8000",
+        transport: httpx.BaseTransport | None = None,
+        api_key: str | None = None,
     ) -> None:
+        """Without api_key the API treats the caller as anonymous (product/simulate-api.md)."""
+        headers = {"Real-World-Version": API_VERSION}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
         self._http = httpx.Client(
             base_url=base_url,
             transport=transport or httpx.HTTPTransport(retries=1),
-            headers={"Real-World-Version": API_VERSION},
+            headers=headers,
             timeout=30,
         )
 

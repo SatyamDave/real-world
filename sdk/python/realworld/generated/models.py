@@ -202,6 +202,8 @@ class Code1(StrEnum):
     anon_daily_limit = "anon_daily_limit"
     client_unknown = "client_unknown"
     spend_unreadable = "spend_unreadable"
+    invalid_api_key = "invalid_api_key"
+    key_cap_spent = "key_cap_spent"
 
 
 class Refused(BaseModel):

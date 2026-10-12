@@ -31,6 +31,8 @@ curl -s -X POST localhost:8000/v1/simulate -H 'Content-Type: application/json' \
 
 It returns `202` with a job id; `GET /v1/simulations/{id}` has the result once `status` is `succeeded`, and `GET /v1/simulations/{id}/events` streams its progress. The same again with the same key returns the same job (`409` while it is still running). The SDK quickstarts in [sdk/python/README.md](sdk/python/README.md) and [sdk/typescript/README.md](sdk/typescript/README.md) do the same in ten lines; `make e2e` runs both against a local API.
 
+To fork with an API key instead of the anonymous limits, mint one with `uv run python -m rw_api.keys create --label me --cap-usd 100`, which prints the key once. Send it as `-H "Authorization: Bearer rw_..."`, or pass `api_key=` (Python) or `apiKey` (TypeScript) to the SDK client.
+
 | Command | What it does |
 | --- | --- |
 | `make check` | Runs lint, type checks, every test, the SDK drift check and `make e2e`, exactly as CI does. |

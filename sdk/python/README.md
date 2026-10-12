@@ -16,6 +16,8 @@ for topic, out in result.outputs.items():
     print(f"{topic}: p10 {out.final.p10:.3f}, p90 {out.final.p90:.3f}")
 ```
 
+No key is needed. With an API key, `Client("http://localhost:8000", api_key="rw_...")` sends it as `Authorization: Bearer`, and forks count against the key's dollar cap instead of the per-address daily count.
+
 `result` is a typed `SimulateResult`. The band is the p10-p90 range across simulated runs, not a confidence interval.
 
 ## Methods

@@ -33,6 +33,19 @@ def test_simulate_generates_an_idempotency_key_and_sends_the_version():
     assert json.loads(first.content) == EVENT
 
 
+def test_an_api_key_is_sent_as_a_bearer_token_and_no_key_sends_none():
+    seen = []
+
+    def handle(request):
+        seen.append(request)
+        return httpx.Response(202, json=CREATED)
+
+    Client(transport=httpx.MockTransport(handle), api_key="rw_abc").simulate(EVENT)
+    Client(transport=httpx.MockTransport(handle)).simulate(EVENT)
+    assert seen[0].headers["Authorization"] == "Bearer rw_abc"
+    assert "Authorization" not in seen[1].headers
+
+
 def test_simulate_sends_the_given_idempotency_key():
     client, seen = recording([lambda r: httpx.Response(202, json=CREATED)])
     client.simulate(EVENT, idempotency_key="k-1")

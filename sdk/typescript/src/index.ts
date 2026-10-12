@@ -63,15 +63,15 @@ export function parseSse(buffer: string): { events: [string | null, JobEvent][];
 export class Client {
   private http;
 
+  /** Without apiKey the API treats the caller as anonymous (product/simulate-api.md). */
   constructor(
     private baseUrl = "http://localhost:8000",
     private fetcher: typeof fetch = (...args) => fetch(...args),
+    apiKey?: string,
   ) {
-    this.http = createClient<paths>({
-      baseUrl,
-      fetch: fetcher,
-      headers: { "Real-World-Version": API_VERSION },
-    });
+    const headers: Record<string, string> = { "Real-World-Version": API_VERSION };
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+    this.http = createClient<paths>({ baseUrl, fetch: fetcher, headers });
   }
 
   simulate(request: SimulateRequest, idempotency_key?: string): Promise<JobCreated> {

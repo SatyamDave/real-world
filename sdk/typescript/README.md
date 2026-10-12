@@ -16,6 +16,8 @@ for (const [topic, out] of Object.entries(result.outputs)) {
 }
 ```
 
+No key is needed. With an API key, `new Client("http://localhost:8000", fetch, "rw_...")` sends it as `Authorization: Bearer`, and forks count against the key's dollar cap instead of the per-address daily count.
+
 `result` is a typed `SimulateResult`. The band is the p10-p90 range across simulated runs, not a confidence interval.
 
 ## Methods

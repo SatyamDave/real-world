@@ -43,3 +43,23 @@ CREATE TABLE IF NOT EXISTS daily_answers (
 );
 
 CREATE INDEX IF NOT EXISTS daily_answers_player ON daily_answers (player_id, date);
+
+-- A key is shown once when it is made; only its hash is kept.
+CREATE TABLE IF NOT EXISTS api_keys (
+    id INTEGER PRIMARY KEY,
+    label TEXT NOT NULL,
+    key_sha256 TEXT NOT NULL UNIQUE,
+    cap_usd REAL NOT NULL CHECK (cap_usd > 0),
+    created_at TEXT NOT NULL,
+    revoked_at TEXT
+);
+
+-- One row per fork started with a key. spent_usd is what its model calls cost, written when it
+-- finishes; until then, or if it never finishes, the fork counts at its max_cost_usd.
+CREATE TABLE IF NOT EXISTS key_forks (
+    job_id TEXT PRIMARY KEY REFERENCES jobs (id),
+    api_key_id INTEGER NOT NULL REFERENCES api_keys (id),
+    spent_usd REAL
+);
+
+CREATE INDEX IF NOT EXISTS key_forks_key ON key_forks (api_key_id);

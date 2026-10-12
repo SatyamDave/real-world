@@ -293,7 +293,9 @@ def run(
     conn: sqlite3.Connection,
     req: SimulateRequest,
     on_progress: Callable[[int, int], None] | None = None,
+    budget: llm.Budget | None = None,
 ) -> SimulateResult:
+    """Pass budget, limited to req.max_cost_usd, to read what the run spent, even if it raises."""
     snapshot_id = _snapshot_id(req)
     sub = _subsample(req, population.read_snapshot(snapshot_id))
     est = _estimate(req, sub)
@@ -314,7 +316,8 @@ def run(
             pass
 
     topics = req.topics or list(news.topics())
-    budget = llm.Budget(req.max_cost_usd)
+    if budget is None:
+        budget = llm.Budget(req.max_cost_usd)
     segments, seg_of = np.unique(sub["segment"], return_inverse=True)
     raw = [
         news.extract_signal(req.event.text, describe(s), budget, conn=conn, purpose="fork_signal")

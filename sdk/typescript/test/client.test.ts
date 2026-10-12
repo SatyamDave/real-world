@@ -45,6 +45,18 @@ describe("simulate", () => {
     expect(await first.json()).toEqual(EVENT);
   });
 
+  it("sends an api key as a bearer token, and none without one", async () => {
+    const seen: Request[] = [];
+    const fetcher = async (input: RequestInfo | URL, init?: RequestInit) => {
+      seen.push(new Request(input, init));
+      return json(202, CREATED)();
+    };
+    await new Client("http://test", fetcher, "rw_abc").simulate(EVENT);
+    await new Client("http://test", fetcher).simulate(EVENT);
+    expect(seen[0].headers.get("Authorization")).toBe("Bearer rw_abc");
+    expect(seen[1].headers.get("Authorization")).toBeNull();
+  });
+
   it("sends the given idempotency key", async () => {
     const { client, seen } = recording([json(202, CREATED)]);
     await client.simulate(EVENT, "k-1");

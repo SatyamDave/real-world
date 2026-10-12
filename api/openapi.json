@@ -37,6 +37,24 @@
               ],
               "title": "Real-World-Version"
             }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer rw_... API key. Without one the caller is anonymous and max_cost_usd is clamped.",
+              "title": "Authorization"
+            },
+            "description": "Bearer rw_... API key. Without one the caller is anonymous and max_cost_usd is clamped."
           }
         ],
         "requestBody": {
@@ -63,8 +81,18 @@
           "400": {
             "description": "Real-World-Version is not the current version"
           },
+          "401": {
+            "description": "The API key is unknown or revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
           "402": {
-            "description": "The estimate exceeds max_cost_usd, or today's fork budget is spent",
+            "description": "The estimate exceeds max_cost_usd, the key's cap or today's fork budget is spent",
             "content": {
               "application/json": {
                 "schema": {
@@ -113,15 +141,35 @@
       "post": {
         "summary": "Estimate a fork's cost and model calls without running it",
         "operationId": "estimate_v1_simulate_estimate_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer rw_... API key. Without one the caller is anonymous and max_cost_usd is clamped.",
+              "title": "Authorization"
+            },
+            "description": "Bearer rw_... API key. Without one the caller is anonymous and max_cost_usd is clamped."
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SimulateRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -130,6 +178,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Estimate"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The API key is unknown or revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -1392,7 +1450,9 @@
               "fork_budget_spent",
               "anon_daily_limit",
               "client_unknown",
-              "spend_unreadable"
+              "spend_unreadable",
+              "invalid_api_key",
+              "key_cap_spent"
             ],
             "title": "Code"
           },

@@ -618,7 +618,9 @@ export interface components {
         | "fork_budget_spent"
         | "anon_daily_limit"
         | "client_unknown"
-        | "spend_unreadable";
+        | "spend_unreadable"
+        | "invalid_api_key"
+        | "key_cap_spent";
       /**
        * Detail
        * @description One sentence saying what was refused and why, for display.
@@ -895,6 +897,8 @@ export interface operations {
       header: {
         "Idempotency-Key": string;
         "Real-World-Version"?: string | null;
+        /** @description Bearer rw_... API key. Without one the caller is anonymous and max_cost_usd is clamped. */
+        authorization?: string | null;
       };
       path?: never;
       cookie?: never;
@@ -921,7 +925,16 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description The estimate exceeds max_cost_usd, or today's fork budget is spent */
+      /** @description The API key is unknown or revoked */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description The estimate exceeds max_cost_usd, the key's cap or today's fork budget is spent */
       402: {
         headers: {
           [name: string]: unknown;
@@ -969,7 +982,10 @@ export interface operations {
   estimate_v1_simulate_estimate_post: {
     parameters: {
       query?: never;
-      header?: never;
+      header?: {
+        /** @description Bearer rw_... API key. Without one the caller is anonymous and max_cost_usd is clamped. */
+        authorization?: string | null;
+      };
       path?: never;
       cookie?: never;
     };
@@ -986,6 +1002,15 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Estimate"];
+        };
+      };
+      /** @description The API key is unknown or revoked */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
         };
       };
       /** @description Validation Error */
