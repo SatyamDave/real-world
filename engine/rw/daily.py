@@ -1,4 +1,4 @@
-"""The daily cycle: six re-runnable steps, each recorded in stage_runs and skipped once ok.
+"""The daily cycle: seven re-runnable steps, each recorded in stage_runs and skipped once ok.
 
 The only module that composes the others for a day (decision 0001, product/world.md).
 """
@@ -13,16 +13,22 @@ from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from functools import partial
 from typing import Any
+from urllib.parse import urlparse
 
 import numpy as np
 
 from rw import beliefs, db, forecast, ledger, llm, news, population, score, settings, sources
 
-STEPS = ("ingest", "assimilate", "forecast", "publish", "score", "learn")
+STEPS = ("ingest", "assimilate", "forecast", "publish", "anchor", "score", "learn")
 FIXTURE_DAYS = sorted(p.stem for p in (forecast.FIXTURES / "news").glob("*.csv"))
 BIGGEST_MISSES = 5
 
 Detail = dict[str, Any]
+FIXTURE_ANCHOR = "fixture questions are not sent to public timestamp servers"
+
+
+class NotAnchored(Exception):
+    pass
 
 
 def _now() -> str:
@@ -221,7 +227,29 @@ def publish(
     questions: str = "fixtures",
 ) -> Detail:
     out = ledger.commit_day(conn, date, day_entries(conn, date, questions), score.protocol_hash())
-    return {"leaves": int(out["day"]["leaf_count"]), "root": out["day"]["root"]}
+    return {
+        "leaves": int(out["day"]["leaf_count"]),
+        "root": out["day"]["root"],
+        "receipt": str(ledger.export_day(conn, date)),
+    }
+
+
+def anchor(
+    conn: sqlite3.Connection,
+    date: str,
+    budget: llm.Budget,
+    world_agents: int,
+    questions: str = "fixtures",
+) -> Detail:
+    if questions == "fixtures":
+        return {"skipped": FIXTURE_ANCHOR}
+    failures = (
+        [] if ledger.anchor_status(conn, date)[0] == "anchored" else ledger.anchor_day(conn, date)
+    )
+    status, at = ledger.anchor_status(conn, date)
+    if status != "anchored":
+        raise NotAnchored("; ".join(failures) or "no proof stored")
+    return {"status": status, "at": at, "failures": failures}
 
 
 def score_step(
@@ -302,6 +330,7 @@ STEP_FUNCS: dict[str, Callable[..., Detail]] = {
     "assimilate": assimilate,
     "forecast": forecast_step,
     "publish": publish,
+    "anchor": anchor,
     "score": score_step,
     "learn": learn,
 }
@@ -325,7 +354,8 @@ def run(
 ) -> Detail:
     """Run the named steps (default all) for date, skipping any already ok; return a summary.
 
-    Any failure, including BudgetExceeded, marks the step failed and stops the run."""
+    Any failure, including BudgetExceeded, marks the step failed and stops the run, except in
+    anchor: it records what already happened, so score and learn still run; a rerun retries it."""
     conn = db.connect()
     calls_before = conn.execute("SELECT count(*) FROM llm_calls").fetchone()[0]
     budget = llm.Budget(settings.NIGHTLY_BUDGET_USD - llm.spent_today(conn))
@@ -341,6 +371,7 @@ def run(
         "ingest": partial(ingest, live=live_news),
         "forecast": partial(STEP_FUNCS["forecast"], questions=questions),
         "publish": partial(STEP_FUNCS["publish"], questions=questions),
+        "anchor": partial(STEP_FUNCS["anchor"], questions=questions),
     }
     ran = []
     for step in steps or STEPS:
@@ -358,6 +389,8 @@ def run(
             detail = funcs[step](conn, date, budget, world_agents)
         except BaseException as e:
             _finish(conn, date, step, "failed", {"error": f"{type(e).__name__}: {e}"})
+            if step == "anchor" and isinstance(e, Exception):
+                continue
             raise
         _finish(conn, date, step, "ok", detail)
         ran.append(step)
@@ -387,7 +420,22 @@ def summary(
         "root": day["root"] if day else None,
         "questions_scored": scored.fetchone()[0],
         "experimental": [r[0] for r in experimental],
+        "anchor": anchor_line(conn, date),
     }
+
+
+def anchor_line(conn: sqlite3.Connection, date: str) -> str:
+    status, at = ledger.anchor_status(conn, date)
+    if status == "anchored":
+        tsa = next(a["service"] for a in ledger.anchors(conn, date) if a["kind"] == "rfc3161")
+        return f"anchored by {urlparse(tsa).hostname} at {at}"
+    if status == "pending":
+        return "pending (OpenTimestamps)"
+    row = conn.execute(
+        "SELECT detail FROM stage_runs WHERE date = ? AND step = 'anchor'", (date,)
+    ).fetchone()
+    detail = json.loads(row["detail"] or "{}") if row else {}
+    return f"not anchored: {detail.get('skipped') or detail.get('error') or 'anchor step not run'}"
 
 
 def format_summary(s: Detail) -> str:
@@ -400,7 +448,8 @@ def format_summary(s: Detail) -> str:
         f"  model calls {s['model_calls']}, {cost}, "
         f"forecasts committed {s['forecasts_committed']}, root {s['root']}\n"
         f"  questions scored {s['questions_scored']}, "
-        f"experimental: {', '.join(s['experimental']) or 'none'}"
+        f"experimental: {', '.join(s['experimental']) or 'none'}\n"
+        f"  {s['anchor']}"
     )
 
 

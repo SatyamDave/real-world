@@ -48,7 +48,8 @@ Beliefs are logits in an `(n_agents, n_topics)` array `B`; `B0` is each agent's 
 | `ingest` | `news.ingest_day`: polls become observations, each news cluster becomes one signal call. With `--news live`, the news is the day's GDELT GKG instead of the fixture and no fixture polls are read (see below). |
 | `assimilate` | Loads the previous day's snapshot (or samples a fresh `WORLD_AGENTS` world on the first day), applies the day's signals through `news.exposure` and `beliefs.update_beliefs` with the anchor `b0 + c`, moves each polled country toward the day's polls with `beliefs.kalman_update` (or `beliefs.nudge`), writes `var/snapshots/<date>/agents.parquet` with the offset `c_<topic>` and variance `p_<topic>` columns, and records each move in `nudges`. No market price is read. |
 | `forecast` | `forecast.forecast_day`: sim, plain-LLM and market forecasts for every open question. |
-| `publish` | `ledger.commit_day` with a `protocol` entry when the protocol hash is new, a `question_set` entry when the question file hash is new, and one 0002-format `forecast` entry per forecast row, carrying `snapshot_sha256` and the `config_hash` of `settings.py`. |
+| `publish` | `ledger.commit_day` with a `protocol` entry when the protocol hash is new, a `question_set` entry when the question file hash is new, and one 0002-format `forecast` entry per forecast row, carrying `snapshot_sha256` and the `config_hash` of `settings.py`, then writes the day's export to `var/receipts/<date>.json` with `ledger.export_day`. |
+| `anchor` | Sends the day's record hash to `settings.TSA_URL` and `settings.OTS_CALENDAR_URL` through `ledger.anchor_day` and stores each proof. It only records what already happened, so a failure marks the step `failed` with the reason and the run goes on to `score` and `learn`; a rerun retries it, and a day already `anchored` sends nothing. A day on the fixture questions is not sent (the step is `ok` with `skipped` in `detail`), so fixture runs and CI stay off the network. |
 | `score` | Records outcomes resolved on or before the date in `resolutions`, then scores every committed forecast entry on a resolved question into `scores`. |
 | `learn` | Spread audit against the survey SD in `data/sample/attitudes.csv` into `audits`, one `country_status` row per country (experimental when any topic is outside `SPREAD_BAND`), and the five biggest sim misses in the step's `detail`. |
 
@@ -83,12 +84,12 @@ uv run python -m rw.daily --date 2026-10-14 --questions live  # the approved lis
 - Fixtures stay the default, and `--fixtures` refuses `--questions live`.
 - The live lists carry no market price (`market_source` is empty), so `forecast` stops at the market lookup until a forecast path without one is decided ([decisions-needed](../company/decisions-needed.md) item 4).
 
-Each day prints the steps that ran, model calls, dollars, forecasts committed, the day's root hash, questions scored and countries marked experimental.
+Each day prints the steps that ran, model calls, dollars, forecasts committed, the day's root hash, questions scored, countries marked experimental, and the anchor status: `anchored by freetsa.org at <time>`, `pending (OpenTimestamps)` or `not anchored: <reason>`.
 
-- The nightly budget is `NIGHTLY_BUDGET_USD` minus `llm.spent_today()`. `BudgetExceeded`, or any other error, marks the step `failed` and stops the run; the CLI exits 1. Rerun the same command once the cause is fixed.
+- The nightly budget is `NIGHTLY_BUDGET_USD` minus `llm.spent_today()`. `BudgetExceeded`, or any other error outside `anchor`, marks the step `failed` and stops the run; the CLI exits 1. Rerun the same command once the cause is fixed.
 - To see what happened: `SELECT * FROM stage_runs WHERE date = '2026-10-01'` in `var/rw.sqlite`; `detail` holds the step's counts or its error.
 - To check a day's receipts: `uv run python -m rw.ledger verify --date 2026-10-01`.
-- To anchor a committed day: `uv run python -m rw.ledger anchor --date 2026-10-01`. It sends only the day's record hash to `settings.TSA_URL` and `settings.OTS_CALENDAR_URL`, prints `anchored <time>`, `pending` or `not_anchored`, and exits 1 if either service failed; rerun it to retry the one that failed.
+- To anchor a committed day by hand: `uv run python -m rw.ledger anchor --date 2026-10-01`, or `uv run python -m rw.daily --date 2026-10-14 --questions live --step anchor`. It sends only the day's record hash to `settings.TSA_URL` and `settings.OTS_CALENDAR_URL`, prints `anchored <time>`, `pending` or `not_anchored`, and exits 1 if either service failed; rerun it to retry the one that failed.
 
 ## Test
 

@@ -1,5 +1,6 @@
 import csv
 import json
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -8,6 +9,9 @@ from rw import daily, db, forecast, ledger, llm, population, settings
 
 AGENTS = 2000
 DAYS = daily.FIXTURE_DAYS
+VECTOR = Path(__file__).resolve().parents[2] / "data" / "fixtures" / "receipts_test_vector.json"
+TSR = (Path(__file__).parent / "data" / "freetsa_2026-10-01.tsr").read_bytes()
+OTS = (Path(__file__).parent / "data" / "ots_2026-10-01.bin").read_bytes()
 
 
 @pytest.fixture(autouse=True)
@@ -172,7 +176,7 @@ def test_crash_after_forecast_resumes_at_publish(monkeypatch):
     before = counts(conn)
 
     s = daily.run(day, world_agents=AGENTS)
-    assert s["ran"] == ["publish", "score", "learn"] and s["model_calls"] == 0
+    assert s["ran"] == ["publish", "anchor", "score", "learn"] and s["model_calls"] == 0
     assert counts(conn)["llm_calls"] == before["llm_calls"]
     assert counts(conn)["forecasts"] == before["forecasts"]
     assert ledger.verify_day(conn, day) == []
@@ -193,3 +197,82 @@ def test_zero_budget_fails_closed_without_a_snapshot(monkeypatch):
     assert not population.snapshot_path(day).exists()
     assert counts(conn)["llm_calls"] == 0
     assert daily.main(["--date", day]) == 1
+
+
+def fake_post(monkeypatch, tsa: bytes | Exception = TSR, ots: bytes | Exception = OTS):
+    sent = []
+
+    def post(url, body, headers):
+        sent.append(url)
+        reply = tsa if url == settings.TSA_URL else ots
+        if isinstance(reply, Exception):
+            raise reply
+        return reply
+
+    monkeypatch.setattr(ledger, "_post", post)
+    return sent
+
+
+def stage(conn, day, step):
+    row = conn.execute(
+        "SELECT status, detail FROM stage_runs WHERE date = ? AND step = ?", (day, step)
+    ).fetchone()
+    return row["status"], json.loads(row["detail"])
+
+
+def test_fixture_run_sends_nothing_to_timestamp_servers_and_exports_each_day(monkeypatch):
+    sent = fake_post(monkeypatch)
+    summaries = run_fixtures()
+    assert sent == []
+    conn = db.connect()
+    for s in summaries:
+        assert s["ran"].index("anchor") == s["ran"].index("publish") + 1
+        assert stage(conn, s["date"], "anchor") == ("ok", {"skipped": daily.FIXTURE_ANCHOR})
+        assert daily.format_summary(s).splitlines()[-1] == f"  not anchored: {daily.FIXTURE_ANCHOR}"
+        path = settings.rw_home() / "receipts" / f"{s['date']}.json"
+        assert stage(conn, s["date"], "publish")[1]["receipt"] == str(path)
+        receipt = json.loads(path.read_text())
+        assert ledger.receipt_problems(receipt) == []
+        assert receipt["day"]["root"] == s["root"]
+
+
+def test_anchor_failure_is_recorded_and_score_and_learn_still_run(monkeypatch):
+    day = DAYS[0]
+    daily.run(day, daily.STEPS[:4], world_agents=AGENTS)
+    sent = fake_post(monkeypatch, tsa=TimeoutError("timed out"), ots=OSError("unreachable"))
+    s = daily.run(day, world_agents=AGENTS, questions="live")
+    conn = db.connect()
+    assert s["ran"] == ["score", "learn"] and len(sent) == 2
+    status, detail = stage(conn, day, "anchor")
+    assert status == "failed" and "timed out" in detail["error"]
+    assert s["anchor"].startswith("not anchored: NotAnchored: ") and "timed out" in s["anchor"]
+    assert ledger.anchor_status(conn, day) == ("not_anchored", None)
+
+    sent = fake_post(monkeypatch, tsa=TimeoutError("timed out"))
+    s = daily.run(day, world_agents=AGENTS, questions="live")
+    assert s["ran"] == [] and len(sent) == 2
+    assert s["anchor"] == "pending (OpenTimestamps)"
+    assert stage(conn, day, "anchor")[0] == "failed"
+    assert ledger.anchor_status(conn, day) == ("pending", None)
+
+
+def test_anchor_step_marks_the_day_anchored_and_an_anchored_day_sends_nothing(monkeypatch):
+    vector = json.loads(VECTOR.read_text())
+    salts = iter(item["salt"] for item in vector["entries"])
+    monkeypatch.setattr(ledger.secrets, "token_hex", lambda n: next(salts))
+    day = vector["day"]["date"]
+    conn = db.connect()
+    entries = [item["entry"] for item in vector["entries"]]
+    ledger.commit_day(conn, day, entries, vector["day"]["protocol_hash"])
+
+    sent = fake_post(monkeypatch)
+    s = daily.run(day, ["anchor"], questions="live")
+    assert s["ran"] == ["anchor"] and len(sent) == 2
+    assert s["anchor"] == "anchored by freetsa.org at 2026-10-12T17:19:19Z"
+    assert stage(conn, day, "anchor")[0] == "ok"
+
+    with conn:
+        conn.execute("UPDATE stage_runs SET status = 'failed' WHERE step = 'anchor'")
+    sent = fake_post(monkeypatch)
+    assert daily.run(day, ["anchor"], questions="live")["ran"] == ["anchor"]
+    assert sent == []
