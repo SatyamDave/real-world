@@ -11,7 +11,7 @@ The Python package `rw`: the simulation engine behind the daily cycle, forks and
 | `rw/llm.py` | The only way to call a model. `complete_json(purpose, prompt, schema, budget, max_tokens)` returns a dict that matches the JSON schema. |
 | `rw/sources.py` | `require(source_id)` refuses any data source in `data/sources.csv` that is not cleared for commercial use, unless it is a fixture. |
 | `rw/policy.py` | `screen(text, conn, today)` checks a fork event against [product/acceptable-use.md](../product/acceptable-use.md): a regex rule pass, then one `screen` classification through `complete_json` with its own `SCREEN_MAX_COST_USD` budget. Returns a `PolicyRefused(code, detail)` or `None`; a classifier that cannot run raises. A classifier refusal counts only when its quote appears in the event, so the fake model never refuses. |
-| `rw/beliefs.py` | The only operators that change agent beliefs: `update_beliefs`, `nudge`, `spread_audit`. Pure numpy, no model calls. |
+| `rw/beliefs.py` | The only operators that change agent beliefs: `update_beliefs`, `nudge`, `kalman_update`, `spread_audit`. Pure numpy, no model calls. |
 
 ## The model gateway
 
@@ -29,10 +29,14 @@ Beliefs are logits in an `(n_agents, n_topics)` array `B`; `B0` is each agent's 
 | --- | --- |
 | `update_beliefs(B, B0, s, signal, exposed)` | One day: exposed agents move by `clip(signal * (1 - s), ±STEP_CAP_LOGIT)`, then every agent moves `ANCHOR_PULL * (B0 - B)` back toward its anchor. |
 | `nudge(B, group_ids, targets, cap)` | For each `(group, topic) -> observed share`, shifts the whole group by `logit(share) - group mean logit`, capped at `cap`, and returns a `Nudge(group_id, topic_index, wanted, applied)` record per nudge. |
+| `kalman_update(B, C, P, group_ids, targets, walk_sd)` | Assimilation v2 ([decision 0005](../research/decisions/0005-assimilation-v2.md)): for each `(group, topic) -> (observed share, error SD in logit)`, a scalar Kalman update of the group mean. `P` grows by `walk_sd**2` each day and is raised to `innovation**2 - R` when that is larger; the whole group and its anchor offset `C` move by `K * innovation` with `K = P / (P + R)`. Returns the same `Nudge` records, with `applied` the increment. |
 | `spread_audit(B, country_ids, survey_sd)` | For each `(country, topic) -> survey SD`, returns `AuditRow(country, topic_index, sim_sd, survey_sd, ratio, in_band)`; a collapsed country has ratio 0 and is out of band. |
 | `STEP_CAP_LOGIT` (0.5) | Largest move one day of news can cause on one topic, so one headline cannot flip an agent. |
 | `ANCHOR_PULL` (0.05) | Share of the gap to the anchor closed each day; with no news an agent's distance to its anchor shrinks by `(1 - 0.05)^7`, about 0.70, per week. |
-| `NUDGE_CAP_LOGIT` (0.3) | Largest shift one poll can apply to a group's mean in one day. |
+| `ASSIMILATION` (`kalman`) | Which operator the daily cycle uses, `kalman` or `nudge`; `kalman` beat persistence in [E006](../experiments/E006/results/2026-10-12-none/RESULTS.md). |
+| `KALMAN_WALK_SD_LOGIT` (0.05), `KALMAN_PRIOR_SD_LOGIT` (1.0) | Daily random-walk SD of a group mean and the starting SD; neither is measured on real polls ([note 102](../research/engineering/102-assimilation-v2.md)). |
+| `POLL_ERROR_FACTOR` (2.0) | A poll's logit error SD is this times its sampling SD, from US election polls ([note 102](../research/engineering/102-assimilation-v2.md)). |
+| `NUDGE_CAP_LOGIT` (0.3) | Largest shift one poll can apply to a group's mean in one day, when `ASSIMILATION` is `nudge`. |
 | `SPREAD_BAND` (0.8, 1.2) | Allowed range of simulated SD over survey SD; outside it the country is marked experimental. |
 
 ## Daily cycle runbook
@@ -42,7 +46,7 @@ Beliefs are logits in an `(n_agents, n_topics)` array `B`; `B0` is each agent's 
 | Step | What it does |
 | --- | --- |
 | `ingest` | `news.ingest_day`: polls become observations, each news cluster becomes one signal call. With `--news live`, the news is the day's GDELT GKG instead of the fixture and no fixture polls are read (see below). |
-| `assimilate` | Loads the previous day's snapshot (or samples a fresh `WORLD_AGENTS` world on the first day), applies the day's signals through `news.exposure` and `beliefs.update_beliefs`, nudges each country toward the day's polls with `beliefs.nudge`, writes `var/snapshots/<date>/agents.parquet` and records each nudge in `nudges`. No market price is read. |
+| `assimilate` | Loads the previous day's snapshot (or samples a fresh `WORLD_AGENTS` world on the first day), applies the day's signals through `news.exposure` and `beliefs.update_beliefs` with the anchor `b0 + c`, moves each polled country toward the day's polls with `beliefs.kalman_update` (or `beliefs.nudge`), writes `var/snapshots/<date>/agents.parquet` with the offset `c_<topic>` and variance `p_<topic>` columns, and records each move in `nudges`. No market price is read. |
 | `forecast` | `forecast.forecast_day`: sim, plain-LLM and market forecasts for every open question. |
 | `publish` | `ledger.commit_day` with a `protocol` entry when the protocol hash is new, a `question_set` entry when the question file hash is new, and one 0002-format `forecast` entry per forecast row, carrying `snapshot_sha256` and the `config_hash` of `settings.py`. |
 | `score` | Records outcomes resolved on or before the date in `resolutions`, then scores every committed forecast entry on a resolved question into `scores`. |

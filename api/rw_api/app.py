@@ -547,16 +547,19 @@ def world() -> World:
 
 def _agent(conn: sqlite3.Connection, agent_id: str) -> Agent:
     """The agent in the latest snapshot, with each day's belief change split into the news step,
-    the poll nudge and the anchor pull, the same split daily.assimilate applies."""
+    the poll nudge and the anchor pull toward b0 plus the previous day's assimilated offset, the
+    same split daily.assimilate applies."""
     tps = population.topics()
     moved: list[AgentStep] = []
     prev: dict[str, float] | None = None
+    offset = {t: 0.0 for t in tps}
     found = None
     for day in _snapshot_dates():
         agents = population.read_snapshot(day)
         hit = np.flatnonzero(agents["agent_id"] == agent_id)
         if hit.size == 0:
             prev = None
+            offset = {t: 0.0 for t in tps}
             continue
         found = {name: values[hit[0]] for name, values in agents.items()}
         b = {t: float(found[f"b_{t}"]) for t in tps}
@@ -574,7 +577,7 @@ def _agent(conn: sqlite3.Connection, agent_id: str) -> Agent:
             (day, found["country"]),
         ).fetchall()
         for t in tps:
-            anchor = settings.ANCHOR_PULL * (b0[t] - old[t])
+            anchor = settings.ANCHOR_PULL * (b0[t] + offset[t] - old[t])
             nudge = nudges.get(t, 0.0)
             news = b[t] - old[t] - anchor - nudge
             on_topic = [s for s in signals if s["topic"] == t]
@@ -587,6 +590,7 @@ def _agent(conn: sqlite3.Connection, agent_id: str) -> Agent:
                 if round(delta, 6) != 0:
                     moved.append(AgentStep(date=day, topic=t, delta=round(delta, 6), cause=cause))
         prev = b
+        offset = {t: float(found.get(f"c_{t}", 0.0)) for t in tps}
     if found is None or prev is None:
         raise HTTPException(404, f"no agent {agent_id} in the latest snapshot")
     return Agent(

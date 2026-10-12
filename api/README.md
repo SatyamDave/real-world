@@ -20,7 +20,7 @@ Open http://localhost:8000/docs. Every endpoint works with `ANTHROPIC_API_KEY` u
 | `GET /v1/simulations/{id}` | Job status and, once done, the result (`simulated: true`) or the error. |
 | `GET /v1/simulations/{id}/events` | Server-sent events, one `id:` each; `Last-Event-ID` resumes; a `: heartbeat` comment every 15 s; closes after `succeeded` or `failed`. |
 | `GET /v1/world` | Latest snapshot date, per-country cells, today's daily question id, prefilled fork events. |
-| `GET /v1/agents/{id}` | Traits, shares, tier, and per day per topic the logit change split into the news step (with the signal title), the poll nudge and the anchor pull. |
+| `GET /v1/agents/{id}` | Traits, shares, tier, and per day per topic the logit change split into the news step (with the signal title), the poll nudge and the anchor pull toward `b0` plus the assimilated offset. |
 | `GET /v1/agents/{id}/why` | A model-written account from that trace, labelled "Simulated account, not the cause". Cached by prompt. |
 | `GET /v1/daily` | Today's question; with `?player_id=` after answering, the reveal: you, crowd, committed `sim` and `market`, outcome, Brier, streak. |
 | `POST /v1/daily/answers` | One answer per player per question (`409` on a repeat); returns the reveal. |

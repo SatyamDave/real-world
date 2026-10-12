@@ -31,9 +31,9 @@ P_EPS = 1e-4
 STEP_CAP_LOGIT = 0.5
 ANCHOR_PULL = 0.05
 NUDGE_CAP_LOGIT = 0.3
-# Decision 0005; research/engineering/102-assimilation-v2.md. The walk SD equals the E003
-# generator's and the prior SD is a judgment: neither is measured on real polls yet.
-ASSIMILATION = "nudge"
+# Decision 0005 and experiments/E006 results. The walk SD equals the E003 generator's and the
+# prior SD is a judgment: neither is measured on real polls yet.
+ASSIMILATION = "kalman"
 KALMAN_WALK_SD_LOGIT = 0.05
 KALMAN_PRIOR_SD_LOGIT = 1.0
 POLL_ERROR_FACTOR = 2.0

@@ -86,7 +86,8 @@ def test_fixture_days_run_verify_and_chain():
     assert all(s["ran"] == [] and s["model_calls"] == 0 for s in again)
 
 
-def test_nudges_are_capped_and_recorded():
+def test_nudges_are_capped_and_recorded(monkeypatch):
+    monkeypatch.setattr(settings, "ASSIMILATION", "nudge")
     run_fixtures()
     conn = db.connect()
     rows = conn.execute("SELECT * FROM nudges").fetchall()
