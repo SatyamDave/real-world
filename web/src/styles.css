@@ -530,18 +530,6 @@ main {
   white-space: nowrap;
 }
 
-/* Inline links reach 44 px with padding that does not move the text around them. */
-.strip-link,
-.receipt-cols a,
-.agent-links button.link,
-main :is(p, li, dd, h3) a {
-  padding: 14px 0;
-}
-
-.receipt-cols .src {
-  margin: -15px 0;
-}
-
 .strip-rows {
   list-style: none;
   margin: 0;
@@ -1163,6 +1151,18 @@ button.link {
 button.link:hover:not(:disabled) {
   background: none;
   color: var(--accent);
+}
+
+/* Inline links reach 44 px with padding that does not move the text around them. */
+.strip-link,
+.receipt-cols a,
+.agent-links button.link,
+main :is(p, li, dd, h3) a {
+  padding: 14px 0;
+}
+
+.receipt-cols .src {
+  margin: -15px 0;
 }
 
 .thesis {

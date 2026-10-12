@@ -274,9 +274,8 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
               <dd>{d.day.leaf_count}</dd>
             </div>
           </dl>
-          <div
+          <section
             className="table-wrap"
-            role="region"
             aria-label={`Forecasts committed ${d.day.date}`}
             // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be keyboard reachable
             tabIndex={0}
@@ -303,11 +302,17 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
                         `Question set, ${(r.entry.question_ids as string[])?.length ?? 0} questions`
                       )}
                     </td>
-                    <td data-label="Forecaster">{FORECASTER[str(r.entry.forecaster)] ?? str(r.entry.forecaster)}</td>
+                    <td data-label="Forecaster">
+                      {FORECASTER[str(r.entry.forecaster)] ?? str(r.entry.forecaster)}
+                    </td>
                     <td data-label="Probability" className="num" title={str(r.entry.probability)}>
                       {prob(r.entry.probability)}
                     </td>
-                    <td data-label="Market at commit" className="num" title={str(r.entry.market_price_at_commit)}>
+                    <td
+                      data-label="Market at commit"
+                      className="num"
+                      title={str(r.entry.market_price_at_commit)}
+                    >
                       {prob(r.entry.market_price_at_commit)}
                     </td>
                     <td data-label="Committed">
@@ -323,7 +328,7 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
                 ))}
               </tbody>
             </table>
-          </div>
+          </section>
         </section>
       ))}
       <Disclosure tiers={tiers} />
