@@ -824,7 +824,7 @@ main {
 
 .globe {
   position: fixed;
-  inset: 64px 0 0 calc(max(0px, (100vw - var(--column)) / 2) + min(36vw, 560px));
+  inset: 64px var(--edge) 0 calc(var(--edge) + 600px);
   z-index: 1;
 }
 
@@ -832,7 +832,7 @@ main {
   position: absolute;
   inset: 0 0 var(--globe-controls) 0;
   margin: auto;
-  width: min(72%, 72vh);
+  width: min(100%, 72vh);
   height: auto;
   aspect-ratio: 1;
 }
@@ -858,7 +858,7 @@ main {
 
 .globe-controls {
   position: absolute;
-  right: 24px;
+  right: 0;
   bottom: 24px;
   display: flex;
   flex-direction: column;
