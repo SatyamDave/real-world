@@ -50,6 +50,11 @@ jobs:
             claims allowed by gtm/messaging.md, no edit to a published forecast or a registered PREREG.md,
             and every relative link resolving (`python3 scripts/check_links.py`).
 
+            Then apply the consistency lens in .claude/agents/consistency-reviewer.md: one look
+            (product/design.md), one term per thing (product/glossary.md), one voice and allowed
+            claims (gtm/messaging.md), one error shape and SDK parity. For a UI change, compare
+            the PR's screenshots with the reference shots product/design.md names.
+
             Quote the rule and the file and line for each problem. Do not suggest work outside the PR's scope.
             Post exactly one comment with `gh pr comment ${{ github.event.pull_request.number }} --body-file <file>`:
             a one-line verdict (ready, or changes needed), then the problems, most serious first, or "No problems found."

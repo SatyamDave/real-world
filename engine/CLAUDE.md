@@ -19,6 +19,7 @@ The Python package `rw`: settings, storage, the model gateway, the licence gate,
 - Beliefs change only through the operators in `beliefs.py`; the model never sets a step size.
 - Market prices never enter assimilation or the `sim` forecast prompt.
 - A keyless run reports `model: fake`, `provider: fake` and nothing spent, on every surface: fork results, ledger entries, the daily summary and experiment results. Its would-be dollars appear only labelled as an estimate at `settings.MODEL` prices [#18, #26, #27, #33, #34].
+- CLI output (`rw.daily`, `rw.experiments`, `scripts/`) is literal status in the voice of `gtm/messaging.md`: one line per step, what happened and the number it produced, sentence case, no exclamation marks, glossary terms only (`scripts/check_glossary.py` scans `daily.py` and `experiments.py`).
 
 ## Test
 

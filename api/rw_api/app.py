@@ -20,6 +20,7 @@ from typing import Annotated, Any, Literal
 
 import numpy as np
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Query, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
@@ -315,6 +316,13 @@ app = FastAPI(
     ),
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(_: Request, e: RequestValidationError) -> JSONResponse:
+    """One error shape on every route: a sentence under `detail`, not FastAPI's list."""
+    parts = [f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}" for err in e.errors()]
+    return JSONResponse({"detail": "invalid request: " + "; ".join(parts)}, status_code=422)
 
 
 def env_list(name: str) -> list[str]:
