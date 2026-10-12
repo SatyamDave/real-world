@@ -18,7 +18,8 @@ pnpm --filter web exec vite build --mode fixtures   # local smoke build on fixtu
 | File | What it does |
 | --- | --- |
 | `src/api.ts` | The one `@real-world/sdk` client, pointed at `VITE_API_URL`. Every component calls it; nothing else fetches. |
-| `src/App.tsx` | Routes on `location.pathname` (`/`, `/fork/{id}`, `/receipts`) and the shared bits: disclosure line, tier badge, formatting. |
+| `src/App.tsx` | Routes on `location.pathname` (`/`, `/fork/{id}`, `/receipts`, `/acceptable-use`) and the shared bits: disclosure line, tier badge, formatting, footer. |
+| `src/AcceptableUse.tsx` | The `/acceptable-use` page: [product/acceptable-use.md](../product/acceptable-use.md) word for word. |
 | `src/DailyQuestion.tsx` | Slider, submit, four-way reveal and streak. The player id lives in `localStorage`. |
 | `src/ForkCard.tsx` | Fork box with cost estimate, SSE progress, and the fork card. |
 | `src/Globe.tsx` | Loaded only at 768 px and wider, once the page has loaded and gone idle; a still poster holds its place. react-globe.gl over `public/countries-110m.geojson` (Natural Earth 1:110m admin-0, public domain). Each simulated country rings once when it appears; with reduced motion it does not rotate or ring. |

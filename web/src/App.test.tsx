@@ -228,7 +228,8 @@ test("the fork form shows an acceptable-use refusal inline", async () => {
   await act(async () => button(world.prefilled_events[0].text).click());
   await until(() => expect(button("Run fork").disabled).toBe(false));
   await act(async () => button("Run fork").click());
-  await until(() => expect(el.textContent).toContain(`Refused: ${detail}`));
+  await until(() => expect(el.textContent).toContain(`Refused: ${detail} See acceptable use.`));
+  expect(el.querySelector(".bad a")?.getAttribute("href")).toBe("/acceptable-use");
 });
 
 test("the fork form shows a spend refusal's sentence", async () => {
@@ -416,4 +417,32 @@ test("an unknown path renders not found, not the home page", async () => {
   const el = await render(<App path="/nothing-here" />);
   expect(el.textContent).toContain("Page not found");
   expect(el.textContent).not.toContain("Don't ask a model");
+});
+
+test.each(["/", "/receipts", "/fork/x", "/nothing-here"])("%s has the footer", async (path) => {
+  const el = await render(<App path={path} />);
+  const links = [...el.querySelectorAll("footer nav a")].map((a) => a.textContent);
+  expect(links).toEqual(["Receipts", "Acceptable use", "API", "Source"]);
+  expect(el.querySelector("footer")?.textContent).toContain(
+    "Real World outputs are AI-simulated. Simulated populations are not polls and not predictions about real people.",
+  );
+  expect(el.querySelector("footer")?.textContent).toContain("© 2026 Real World.");
+});
+
+test("the acceptable-use page shows the three rules and the refusal codes", async () => {
+  const el = await render(<App path="/acceptable-use" />);
+  expect(document.title).toBe("Acceptable use · Real World");
+  expect(el.querySelector("h1")?.textContent).toBe("Acceptable use");
+  expect([...el.querySelectorAll(".rules strong")].map((s) => s.textContent)).toEqual([
+    "No persuasion testing on elections or candidates.",
+    "No real private people.",
+    "Outputs are labelled simulated.",
+  ]);
+  expect(el.textContent).toContain("calibrated to published marginals");
+  expect(el.textContent).toContain("From 2026-10-27 to 2026-11-04");
+  expect([...el.querySelectorAll("tbody tr")].map((r) => r.textContent)).toEqual([
+    "private_person2",
+    "election_persuasion1",
+    "election_windowElection window",
+  ]);
 });
