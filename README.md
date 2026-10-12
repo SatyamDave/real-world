@@ -15,7 +15,7 @@ make dev              # API on http://localhost:8000, web app on http://localhos
 What you see at each step:
 
 1. `make daily-fixtures` prints one block per day: the steps that ran, model calls and dollars, forecasts committed, the day's root hash, questions scored and countries marked experimental. The first run makes about 180-210 fake model calls per day; a second run prints `ran: nothing (all steps ok)` with `model calls 0` for every day. `make dev` seeds these days on its own when `var/` is empty.
-2. `make dev` prints the web URL (Vite moves to the next port when 5173 is taken) and the API docs are at http://localhost:8000/docs. `curl localhost:8000/healthz` returns `{"ok":true}`.
+2. `make dev` prints the web URL (Vite moves to the next port when 5173 is taken) and the API docs are at http://localhost:8000/docs. `curl localhost:8000/healthz` returns `{"ok":true}`. To run a second stack beside the first, pick other ports and another state folder: `RW_HOME=var2 make dev API_PORT=8001 WEB_PORT=5174`.
 3. The web app opens on today's question. Move the slider, submit, and the reveal shows you, visitors, the simulated world and the market, with your streak. A second visit shows the reveal straight away.
 4. "All receipts and verify" lists every day's forecasts; "Verify in this browser" recomputes every leaf, root and chain link with WebCrypto and reports `Verified 5 days and N receipts back to the first day`. The same check from the terminal: `uv run python -m rw.ledger verify --date 2026-10-05` prints `OK`.
 5. "Fork today's world": pick a prefilled event, read the estimate, run it. On the fake model the card appears within a second: top shifts, the p10-p90 band per topic, coverage tiers, cost, and a `/fork/{id}` link that reopens the card.
