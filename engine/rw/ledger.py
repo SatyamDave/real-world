@@ -10,14 +10,21 @@ import math
 import secrets
 import sqlite3
 import sys
+import urllib.request
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from datetime import date as Date
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from rw import db, settings
 
 GENESIS_ROOT = "0" * 64
+AnchorStatus = Literal["not_anchored", "pending", "anchored"]
+SHA256_OID = bytes.fromhex("608648016503040201")
+TSTINFO_OID = bytes.fromhex("2a864886f70d0109100104")
+# The attestation tag an OpenTimestamps calendar puts on a proof not yet in a Bitcoin block.
+OTS_PENDING_TAG = bytes.fromhex("83dfe30d2ef90c8e")
 
 
 class LedgerConflict(Exception):
@@ -75,6 +82,146 @@ def merkle_root(leaf_hashes: Sequence[str]) -> str:
 
 def record_hash(day_record: dict[str, str]) -> str:
     return sha256_hex(canonical_json(day_record))
+
+
+def _der(tag: int, body: bytes) -> bytes:
+    n = len(body)
+    if n < 0x80:
+        return bytes([tag, n]) + body
+    size = n.to_bytes((n.bit_length() + 7) // 8, "big")
+    return bytes([tag, 0x80 | len(size)]) + size + body
+
+
+def _der_items(der: bytes) -> list[tuple[int, bytes]]:
+    """The (tag, body) of each element in a run of DER; raises ValueError on malformed input."""
+    items, i = [], 0
+    while i < len(der):
+        if i + 2 > len(der):
+            raise ValueError("truncated DER header")
+        tag, n, i = der[i], der[i + 1], i + 2
+        if n & 0x80:
+            width = n & 0x7F
+            if not 1 <= width <= 4 or i + width > len(der):
+                raise ValueError("unsupported DER length")
+            n, i = int.from_bytes(der[i : i + width], "big"), i + width
+        if i + n > len(der):
+            raise ValueError("truncated DER body")
+        items.append((tag, der[i : i + n]))
+        i += n
+    return items
+
+
+def _der_seq(der: bytes) -> list[tuple[int, bytes]]:
+    items = _der_items(der)
+    if not items or items[0][0] != 0x30:
+        raise ValueError("expected a DER SEQUENCE")
+    return _der_items(items[0][1])
+
+
+def rfc3161_request(digest: bytes) -> bytes:
+    """A DER TimeStampReq for a SHA-256 digest, asking the TSA to include its certificate."""
+    algorithm = _der(0x30, _der(0x06, SHA256_OID) + b"\x05\x00")
+    imprint = _der(0x30, algorithm + _der(0x04, digest))
+    return _der(0x30, b"\x02\x01\x01" + imprint + b"\x01\x01\xff")
+
+
+def rfc3161_imprint(response: bytes) -> tuple[bytes, str]:
+    """The SHA-256 digest and genTime a granted TimeStampResp vouches for. Raises ValueError
+    otherwise. The CMS signature and certificate chain are not checked here."""
+    try:
+        resp = _der_seq(response)
+        if _der_items(resp[0][1])[0][1] not in (b"\x00", b"\x01") or len(resp) < 2:
+            raise ValueError("the TSA did not grant the request")
+        signed_data = _der_seq(_der_items(resp[1][1])[1][1])
+        content_type, content = _der_items(signed_data[2][1])[:2]
+        if content_type[1] != TSTINFO_OID:
+            raise ValueError("the token does not hold a TSTInfo")
+        tst_info = _der_seq(_der_items(content[1])[0][1])
+        algorithm, digest = _der_items(tst_info[2][1])
+        if _der_items(algorithm[1])[0][1] != SHA256_OID:
+            raise ValueError("the token imprint is not SHA-256")
+        if tst_info[4][0] != 0x18:
+            raise ValueError("the token has no GeneralizedTime")
+        t = tst_info[4][1].decode()
+    except IndexError as e:
+        raise ValueError(f"malformed TimeStampResp: {e}") from e
+    return digest[1], f"{t[0:4]}-{t[4:6]}-{t[6:8]}T{t[8:10]}:{t[10:12]}:{t[12:14]}Z"
+
+
+def _post(url: str, body: bytes, headers: dict[str, str]) -> bytes:
+    request = urllib.request.Request(url, data=body, headers=headers, method="POST")
+    with urllib.request.urlopen(request, timeout=settings.ANCHOR_TIMEOUT_S) as response:
+        return response.read()
+
+
+def anchors(conn: sqlite3.Connection, date: str) -> list[sqlite3.Row]:
+    return conn.execute(
+        "SELECT * FROM ledger_anchors WHERE date = ? ORDER BY kind", (date,)
+    ).fetchall()
+
+
+def anchor_status(conn: sqlite3.Connection, date: str) -> tuple[AnchorStatus, str | None]:
+    """("anchored", genTime) only when a stored RFC 3161 token vouches for the day's record_hash;
+    otherwise "pending" with an OpenTimestamps calendar proof, else "not_anchored"."""
+    row = _day_row(conn, date)
+    if row is None:
+        return "not_anchored", None
+    pending = False
+    for a in anchors(conn, date):
+        if a["kind"] == "rfc3161":
+            try:
+                digest, at = rfc3161_imprint(a["proof"])
+            except ValueError:
+                continue
+            if digest.hex() == row["record_hash"]:
+                return "anchored", at
+        elif OTS_PENDING_TAG in a["proof"]:
+            pending = True
+    return ("pending" if pending else "not_anchored"), None
+
+
+def anchor_day(conn: sqlite3.Connection, date: str) -> list[str]:
+    """Send a verified day's record_hash to the TSA and the OpenTimestamps calendar, store each
+    proof that checks out, and return what failed. A kind already stored is not requested again."""
+    problems = verify_day(conn, date)
+    if problems:
+        raise LedgerConflict(f"{date} fails verification: " + "; ".join(problems))
+    row = _day_row(conn, date)
+    assert row is not None
+    digest = bytes.fromhex(row["record_hash"])
+    done = {a["kind"] for a in anchors(conn, date)}
+    requests = {
+        "rfc3161": (
+            settings.TSA_URL,
+            rfc3161_request(digest),
+            {"Content-Type": "application/timestamp-query"},
+        ),
+        "opentimestamps": (
+            settings.OTS_CALENDAR_URL + "/digest",
+            digest,
+            {"Accept": "application/vnd.opentimestamps.v1"},
+        ),
+    }
+    failures = []
+    for kind, (url, body, headers) in requests.items():
+        if kind in done:
+            continue
+        try:
+            proof = _post(url, body, headers)
+            if kind == "rfc3161" and rfc3161_imprint(proof)[0] != digest:
+                raise ValueError("the token vouches for a different digest")
+            if kind == "opentimestamps" and OTS_PENDING_TAG not in proof:
+                raise ValueError("the calendar reply is not a pending timestamp")
+        except (OSError, ValueError) as e:
+            failures.append(f"{date}: {kind} via {url} failed: {e}")
+            continue
+        with conn:
+            conn.execute(
+                "INSERT INTO ledger_anchors (date, kind, service, requested_at, proof)"
+                " VALUES (?, ?, ?, ?, ?)",
+                (date, kind, url, datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"), proof),
+            )
+    return failures
 
 
 def _check_date(date: str) -> None:
@@ -209,6 +356,16 @@ def verify_day(conn: sqlite3.Connection, date: str) -> list[str]:
             problems.append(f"{row['date']}: a stored entry is not valid JSON: {e}")
         else:
             problems.extend(receipt_problems(receipt))
+        for a in anchors(conn, row["date"]):
+            if a["kind"] != "rfc3161":
+                continue
+            try:
+                digest = rfc3161_imprint(a["proof"])[0].hex()
+            except ValueError as e:
+                problems.append(f"{row['date']}: the RFC 3161 token cannot be read: {e}")
+                continue
+            if digest != row["record_hash"]:
+                problems.append(f"{row['date']}: the RFC 3161 token vouches for {digest}")
         prev_root = row["root"]
     return problems
 
@@ -237,11 +394,22 @@ def export_day(conn: sqlite3.Connection, date: str) -> Path:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m rw.ledger")
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("verify", "export"):
+    for name in ("verify", "export", "anchor"):
         sub.add_parser(name).add_argument("--date", required=True)
     args = parser.parse_args(argv)
 
     conn = db.connect()
+    if args.command == "anchor":
+        try:
+            failures = anchor_day(conn, args.date)
+        except LedgerConflict as e:
+            print(e, file=sys.stderr)
+            return 1
+        for failure in failures:
+            print(failure, file=sys.stderr)
+        status, at = anchor_status(conn, args.date)
+        print(status if at is None else f"{status} {at}")
+        return 1 if failures else 0
     if args.command == "verify":
         problems = verify_day(conn, args.date)
         for problem in problems:

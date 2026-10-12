@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import sqlite3
 from pathlib import Path
 
@@ -242,3 +243,137 @@ def test_cli_verify_and_export(conn, capsys):
     assert "no committed day" in capsys.readouterr().out
     assert ledger.main(["export", "--date", "2026-10-01"]) == 0
     assert (settings.rw_home() / "receipts" / "2026-10-01.json").exists()
+
+
+DATA = Path(__file__).parent / "data"
+# Recorded on 2026-10-12 by anchoring the test vector's day; see engine/tests/data/README.md.
+TSR = (DATA / "freetsa_2026-10-01.tsr").read_bytes()
+OTS = (DATA / "ots_2026-10-01.bin").read_bytes()
+
+
+@pytest.fixture
+def vector_day(conn, monkeypatch):
+    """Commit the test vector's day with its own salts, so its record_hash is the recorded one."""
+    vector = json.loads(VECTOR.read_text())
+    salts = iter(item["salt"] for item in vector["entries"])
+    monkeypatch.setattr(ledger.secrets, "token_hex", lambda n: next(salts))
+    day = vector["day"]
+    out = ledger.commit_day(
+        conn, day["date"], [item["entry"] for item in vector["entries"]], day["protocol_hash"]
+    )
+    assert out["record_hash"] == vector["record_hash"]
+    return day["date"]
+
+
+def replay(monkeypatch, tsa: bytes | Exception = TSR, ots: bytes | Exception = OTS):
+    sent = []
+
+    def post(url, body, headers):
+        sent.append((url, body))
+        reply = tsa if url == settings.TSA_URL else ots
+        if isinstance(reply, Exception):
+            raise reply
+        return reply
+
+    monkeypatch.setattr(ledger, "_post", post)
+    return sent
+
+
+def test_rfc3161_request_is_the_der_for_a_sha256_imprint():
+    digest = bytes(range(32))
+    assert ledger.rfc3161_request(digest).hex() == (
+        "30390201013031300d060960864801650304020105000420" + digest.hex() + "0101ff"
+    )
+
+
+def test_recorded_token_vouches_for_the_vector_record_hash():
+    digest, at = ledger.rfc3161_imprint(TSR)
+    assert digest.hex() == json.loads(VECTOR.read_text())["record_hash"]
+    assert at == "2026-10-12T17:19:19Z"
+
+
+@pytest.mark.parametrize("reply", [b"", b"\x30\x03\x02\x01\x02", TSR[:200], b"<html>"])
+def test_rfc3161_imprint_refuses_a_refused_or_malformed_reply(reply):
+    with pytest.raises(ValueError):
+        ledger.rfc3161_imprint(reply)
+
+
+def test_anchor_stores_both_proofs_once_and_marks_the_day_anchored(conn, vector_day, monkeypatch):
+    assert ledger.anchor_status(conn, vector_day) == ("not_anchored", None)
+    sent = replay(monkeypatch)
+    assert ledger.anchor_day(conn, vector_day) == []
+    digest = bytes.fromhex(json.loads(VECTOR.read_text())["record_hash"])
+    assert sent == [
+        (settings.TSA_URL, ledger.rfc3161_request(digest)),
+        (settings.OTS_CALENDAR_URL + "/digest", digest),
+    ]
+    assert ledger.anchor_status(conn, vector_day) == ("anchored", "2026-10-12T17:19:19Z")
+    assert ledger.verify_day(conn, vector_day) == []
+    assert ledger.anchor_day(conn, vector_day) == [] and len(sent) == 2
+
+
+def test_anchors_are_append_only(conn, vector_day, monkeypatch):
+    replay(monkeypatch)
+    ledger.anchor_day(conn, vector_day)
+    for sql in (
+        "UPDATE ledger_anchors SET proof = x'00'",
+        "DELETE FROM ledger_anchors",
+        "REPLACE INTO ledger_anchors SELECT date, kind, service, requested_at, x'00'"
+        " FROM ledger_anchors",
+    ):
+        with pytest.raises((sqlite3.IntegrityError, sqlite3.OperationalError)):
+            conn.execute(sql)
+    assert ledger.anchor_status(conn, vector_day)[0] == "anchored"
+
+
+def test_a_token_for_another_digest_is_not_stored(conn, monkeypatch):
+    ledger.commit_day(conn, "2026-10-01", three_entries("2026-10-01"), PROTOCOL)
+    replay(monkeypatch, ots=b"not a proof")
+    failures = ledger.anchor_day(conn, "2026-10-01")
+    assert len(failures) == 2 and "different digest" in failures[0]
+    assert ledger.anchors(conn, "2026-10-01") == []
+    assert ledger.anchor_status(conn, "2026-10-01") == ("not_anchored", None)
+
+
+def test_tsa_down_leaves_the_day_pending_on_the_calendar_proof(conn, vector_day, monkeypatch):
+    replay(monkeypatch, tsa=OSError("connection refused"))
+    failures = ledger.anchor_day(conn, vector_day)
+    assert len(failures) == 1 and "rfc3161" in failures[0]
+    assert ledger.anchor_status(conn, vector_day) == ("pending", None)
+    sent = replay(monkeypatch)
+    assert ledger.anchor_day(conn, vector_day) == [] and [u for u, _ in sent] == [settings.TSA_URL]
+    assert ledger.anchor_status(conn, vector_day)[0] == "anchored"
+
+
+def test_anchor_refuses_a_day_that_fails_verify(conn, monkeypatch):
+    sent = replay(monkeypatch)
+    ledger.commit_day(conn, "2026-10-01", three_entries("2026-10-01"), PROTOCOL)
+    tamper(conn, "UPDATE ledger_days SET root = ?", ("0" * 64,))
+    with pytest.raises(ledger.LedgerConflict):
+        ledger.anchor_day(conn, "2026-10-01")
+    assert sent == []
+
+
+def test_verify_fails_on_a_stored_token_for_another_digest(conn):
+    ledger.commit_day(conn, "2026-10-01", three_entries("2026-10-01"), PROTOCOL)
+    with conn:
+        conn.execute(
+            "INSERT INTO ledger_anchors VALUES ('2026-10-01', 'rfc3161', 'x', 'x', ?)", (TSR,)
+        )
+    assert "the RFC 3161 token vouches for" in ledger.verify_day(conn, "2026-10-01")[0]
+    assert ledger.anchor_status(conn, "2026-10-01") == ("not_anchored", None)
+
+
+def test_cli_anchor(conn, vector_day, monkeypatch, capsys):
+    replay(monkeypatch, ots=OSError("timed out"))
+    assert ledger.main(["anchor", "--date", vector_day]) == 1
+    out = capsys.readouterr()
+    assert out.out == "anchored 2026-10-12T17:19:19Z\n" and "opentimestamps" in out.err
+    assert ledger.main(["anchor", "--date", "2026-10-02"]) == 1
+
+
+@pytest.mark.skipif(os.environ.get("RW_LIVE_TESTS") != "1", reason="set RW_LIVE_TESTS=1")
+def test_live_anchor_of_the_vector_day(conn, vector_day):
+    assert ledger.anchor_day(conn, vector_day) == []
+    assert ledger.anchor_status(conn, vector_day)[0] == "anchored"
+    assert ledger.verify_day(conn, vector_day) == []

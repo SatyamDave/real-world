@@ -95,15 +95,35 @@ function SkillCard({ name, s }: { name: string; s?: Skill }) {
   );
 }
 
+function AnchorBadge({ d }: { d: ReceiptDay }) {
+  const token = d.anchors.find((a) => a.kind === "rfc3161");
+  if (d.anchor === "anchored" && token) {
+    return (
+      <span className="badge good">
+        anchored {d.anchored_at?.replace("T", " ").replace("Z", " UTC")} by{" "}
+        {new URL(token.service).host} (
+        <a
+          download={`${d.day.date}.tsr`}
+          href={`data:application/timestamp-reply;base64,${token.proof_base64}`}
+        >
+          RFC 3161 token
+        </a>
+        )
+      </span>
+    );
+  }
+  if (d.anchor === "pending") {
+    return (
+      <span className="badge">anchor pending: OpenTimestamps proof awaits a Bitcoin block</span>
+    );
+  }
+  return <span className="badge">not yet anchored</span>;
+}
+
 export function ReceiptsPage({ tiers }: { tiers: string[] }) {
   const sc = useLoad(() => rw.scores());
   const all = useLoad(async () =>
-    Promise.all(
-      (await rw.receipts()).days.map(async (d) => ({
-        ...(await rw.receipt_day(d.date)),
-        anchored: d.anchored,
-      })),
-    ),
+    Promise.all((await rw.receipts()).days.map((d) => rw.receipt_day(d.date))),
   );
   const [result, setResult] = useState<Record<string, string[]> | null>(null);
   const [verifying, setVerifying] = useState(false);
@@ -168,7 +188,7 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
         <section key={d.day.date} className="card day">
           <div className="day-head">
             <h2>{d.day.date}</h2>
-            <span className="badge">{d.anchored ? "anchored" : "not yet anchored"}</span>
+            <AnchorBadge d={d} />
             {result?.[d.day.date] &&
               (result[d.day.date].length ? (
                 <span className="bad small">{result[d.day.date].join("; ")}</span>

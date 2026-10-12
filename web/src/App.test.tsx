@@ -174,11 +174,15 @@ test("the agent panel labels the trace and the simulated account", async () => {
 test("the receipts page verifies the served chain and states the reference and claim", async () => {
   vi.mocked(rw.world).mockResolvedValue(world);
   vi.mocked(rw.receipts).mockResolvedValue({
-    days: [{ ...vector.day, record_hash: vector.record_hash, anchored: false }],
+    days: [
+      { ...vector.day, record_hash: vector.record_hash, anchor: "not_anchored", anchored_at: null },
+    ],
   });
   vi.mocked(rw.receipt_day).mockResolvedValue({
     ...vector,
-    anchored: false,
+    anchor: "not_anchored",
+    anchored_at: null,
+    anchors: [],
     entries: vector.entries.map((e) => ({ ...e, outcome: null, brier: null })),
   });
   const skill = {
@@ -205,4 +209,33 @@ test("the receipts page verifies the served chain and states the reference and c
     expect(el.textContent).toContain("Verified 1 day and 2 receipts back to the first day"),
   );
   expect(el.textContent).toContain(DISCLOSURE);
+});
+
+test.each([
+  ["anchored", "anchored 2026-10-12 17:19:19 UTC by freetsa.org (RFC 3161 token)"],
+  ["pending", "anchor pending: OpenTimestamps proof awaits a Bitcoin block"],
+] as const)("a %s day says so on the receipts page", async (anchor, copy) => {
+  const anchored = anchor === "anchored";
+  const anchored_at = anchored ? "2026-10-12T17:19:19Z" : null;
+  vi.mocked(rw.receipts).mockResolvedValue({
+    days: [{ ...vector.day, record_hash: vector.record_hash, anchor, anchored_at }],
+  });
+  vi.mocked(rw.receipt_day).mockResolvedValue({
+    ...vector,
+    anchor,
+    anchored_at,
+    anchors: [
+      {
+        kind: anchored ? "rfc3161" : "opentimestamps",
+        service: anchored ? "https://freetsa.org/tsr" : "https://a.pool.opentimestamps.org/digest",
+        requested_at: "2026-10-12T17:19:19Z",
+        proof_base64: "AA==",
+      },
+    ],
+    entries: [],
+  });
+  vi.mocked(rw.scores).mockResolvedValue({});
+  const el = await render(<App path="/receipts" />);
+  await until(() => expect(el.querySelector(".day-head .badge")?.textContent).toBe(copy));
+  expect(el.textContent).not.toContain("not yet anchored");
 });

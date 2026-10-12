@@ -25,6 +25,18 @@ class AgentWhy(BaseModel):
     simulated: Literal[True] = Field(True, title="Simulated")
 
 
+class Kind(StrEnum):
+    rfc3161 = "rfc3161"
+    opentimestamps = "opentimestamps"
+
+
+class Anchor(BaseModel):
+    kind: Kind = Field(..., title="Kind")
+    service: str = Field(..., title="Service")
+    requested_at: str = Field(..., title="Requested At")
+    proof_base64: str = Field(..., title="Proof Base64")
+
+
 class Answer(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -101,6 +113,12 @@ class DayRecord(BaseModel):
     engine_version: str = Field(..., title="Engine Version")
 
 
+class Anchor1(StrEnum):
+    not_anchored = "not_anchored"
+    pending = "pending"
+    anchored = "anchored"
+
+
 class DaySummary(BaseModel):
     date: str = Field(..., title="Date")
     prev_root: str = Field(..., title="Prev Root")
@@ -109,7 +127,8 @@ class DaySummary(BaseModel):
     protocol_hash: str = Field(..., title="Protocol Hash")
     engine_version: str = Field(..., title="Engine Version")
     record_hash: str = Field(..., title="Record Hash")
-    anchored: bool = Field(..., title="Anchored")
+    anchor: Anchor1 = Field(..., title="Anchor")
+    anchored_at: str | None = Field(..., title="Anchored At")
 
 
 class Estimate(BaseModel):
@@ -298,7 +317,9 @@ class JobCreated(BaseModel):
 class ReceiptDay(BaseModel):
     day: DayRecord
     record_hash: str = Field(..., title="Record Hash")
-    anchored: bool = Field(..., title="Anchored")
+    anchor: Anchor1 = Field(..., title="Anchor")
+    anchored_at: str | None = Field(..., title="Anchored At")
+    anchors: list[Anchor] = Field(..., title="Anchors")
     entries: list[ReceiptEntry] = Field(..., title="Entries")
 
 

@@ -5,6 +5,7 @@ product/daily-question.md, product/receipts.md and product/benchmark.md.
 """
 
 import asyncio
+import base64
 import hashlib
 import json
 import secrets
@@ -165,7 +166,15 @@ class DayRecord(BaseModel):
 
 class DaySummary(DayRecord):
     record_hash: str
-    anchored: bool
+    anchor: ledger.AnchorStatus
+    anchored_at: str | None
+
+
+class Anchor(BaseModel):
+    kind: Literal["rfc3161", "opentimestamps"]
+    service: str
+    requested_at: str
+    proof_base64: str
 
 
 class Receipts(BaseModel):
@@ -183,7 +192,9 @@ class ReceiptEntry(BaseModel):
 class ReceiptDay(BaseModel):
     day: DayRecord
     record_hash: str
-    anchored: bool
+    anchor: ledger.AnchorStatus
+    anchored_at: str | None
+    anchors: list[Anchor]
     entries: list[ReceiptEntry]
 
 
@@ -725,13 +736,17 @@ def answer_daily(a: Answer) -> Daily:
     "/v1/receipts", summary="Every committed day's root and record hash", response_model=Receipts
 )
 def receipts() -> Receipts:
-    rows = connect().execute("SELECT * FROM ledger_days ORDER BY date DESC").fetchall()
-    return Receipts(
-        days=[
-            DaySummary(**ledger._day_record(r), record_hash=r["record_hash"], anchored=False)
-            for r in rows
-        ]
-    )
+    conn = connect()
+    rows = conn.execute("SELECT * FROM ledger_days ORDER BY date DESC").fetchall()
+    days = []
+    for r in rows:
+        anchor, at = ledger.anchor_status(conn, r["date"])
+        days.append(
+            DaySummary(
+                **ledger._day_record(r), record_hash=r["record_hash"], anchor=anchor, anchored_at=at
+            )
+        )
+    return Receipts(days=days)
 
 
 @app.get(
@@ -757,10 +772,21 @@ def receipt_day(day: str) -> ReceiptDay:
         e = item["entry"]
         key = (e.get("question_id"), e.get("forecaster"))
         entries.append(ReceiptEntry(**item, outcome=outcomes.get(key[0]), brier=briers.get(key)))
+    anchor, at = ledger.anchor_status(conn, day)
     return ReceiptDay(
         day=DayRecord(**receipt["day"]),
         record_hash=receipt["record_hash"],
-        anchored=False,
+        anchor=anchor,
+        anchored_at=at,
+        anchors=[
+            Anchor(
+                kind=a["kind"],
+                service=a["service"],
+                requested_at=a["requested_at"],
+                proof_base64=base64.b64encode(a["proof"]).decode(),
+            )
+            for a in ledger.anchors(conn, day)
+        ],
         entries=entries,
     )
 

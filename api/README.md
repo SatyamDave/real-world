@@ -24,7 +24,7 @@ Open http://localhost:8000/docs. Every endpoint works with `ANTHROPIC_API_KEY` u
 | `GET /v1/agents/{id}/why` | A model-written account from that trace, labelled "Simulated account, not the cause". Cached by prompt. |
 | `GET /v1/daily` | Today's question; with `?player_id=` after answering, the reveal: you, crowd, committed `sim` and `market`, outcome, Brier, streak. |
 | `POST /v1/daily/answers` | One answer per player per question (`409` on a repeat); returns the reveal. |
-| `GET /v1/receipts`, `GET /v1/receipts/{date}` | Day records newest first; one day with every entry, salt and leaf hash, plus outcome and Brier once known. |
+| `GET /v1/receipts`, `GET /v1/receipts/{date}` | Day records newest first with anchor status; one day with every entry, salt and leaf hash, outcome and Brier once known, and its stored RFC 3161 and OpenTimestamps proofs. |
 | `GET /v1/scores` | `score.summarize` over committed forecasts whose questions resolved. |
 | `GET /healthz` | `{"ok": true}` |
 
