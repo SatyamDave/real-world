@@ -18,6 +18,7 @@ from realworld.generated.models import (
     Job,
     JobCreated,
     LeafReceipt,
+    Population,
     ReceiptDay,
     Receipts,
     SimulateRequest,
@@ -160,6 +161,11 @@ class Client:
         """Returns today's world: countries, coverage tiers, topic shares and prefilled
         fork events."""
         return World.model_validate(self._send("GET", "/v1/world"))
+
+    def population(self) -> Population:
+        """Returns the simulated population: every country, segment and topic with its
+        calibration and spread."""
+        return Population.model_validate(self._send("GET", "/v1/world/population"))
 
     def agent(self, id: str) -> Agent:
         """Returns one simulated agent: its traits, beliefs and what moved them."""

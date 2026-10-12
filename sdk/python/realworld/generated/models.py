@@ -231,6 +231,35 @@ class PolicyRefused(BaseModel):
     detail: str = Field(..., title="Detail")
 
 
+class PopulationSegment(BaseModel):
+    segment: str = Field(..., title="Segment")
+    age_band: str = Field(..., title="Age Band")
+    education: str = Field(..., title="Education")
+    agent_count: int = Field(..., title="Agent Count")
+
+
+class PopulationSource(BaseModel):
+    source_id: str = Field(..., title="Source Id")
+    kind: str = Field(..., title="Kind")
+    commercial_use: str = Field(..., title="Commercial Use")
+    checked_on: str = Field(..., title="Checked On")
+
+
+class PopulationTopic(BaseModel):
+    topic: str = Field(..., title="Topic")
+    label: str = Field(..., title="Label")
+    source_id: str = Field(..., title="Source Id")
+    calibrated_share: float = Field(..., title="Calibrated Share")
+    survey_sd_logit: float = Field(..., title="Survey Sd Logit")
+    share: float = Field(..., title="Share")
+    p10: float = Field(..., title="P10")
+    p50: float = Field(..., title="P50")
+    p90: float = Field(..., title="P90")
+    sim_sd_logit: float | None = Field(..., title="Sim Sd Logit")
+    ratio: float | None = Field(..., title="Ratio")
+    in_band: bool | None = Field(..., title="In Band")
+
+
 class PrefilledEvent(BaseModel):
     id: str = Field(..., title="Id")
     text: str = Field(..., title="Text")
@@ -309,6 +338,15 @@ class ReplayRow(BaseModel):
     matches: bool = Field(..., title="Matches")
 
 
+class Rubric(BaseModel):
+    population: int = Field(..., title="Population")
+    attitudes: int = Field(..., title="Attitudes")
+    markets: int = Field(..., title="Markets")
+    news: int = Field(..., title="News")
+    ground_truth: int = Field(..., title="Ground Truth")
+    score: int = Field(..., title="Score")
+
+
 class SegmentShift(BaseModel):
     segment: str = Field(..., title="Segment")
     topic: str = Field(..., title="Topic")
@@ -317,19 +355,6 @@ class SegmentShift(BaseModel):
     shift_p90: float = Field(..., title="Shift P90")
     n_agents: int = Field(..., title="N Agents")
     tier: str = Field(..., title="Tier")
-
-
-class SettingsUsed(BaseModel):
-    assimilation: str = Field(..., title="Assimilation")
-    kalman_walk_sd_logit: float = Field(..., title="Kalman Walk Sd Logit")
-    kalman_prior_sd_logit: float = Field(..., title="Kalman Prior Sd Logit")
-    poll_error_factor: float = Field(..., title="Poll Error Factor")
-    step_cap_logit: float = Field(..., title="Step Cap Logit")
-    anchor_pull: float = Field(..., title="Anchor Pull")
-    spread_band: list[float] = Field(..., title="Spread Band")
-    daily_forecast_members: int = Field(..., title="Daily Forecast Members")
-    plain_llm_samples: int = Field(..., title="Plain Llm Samples")
-    headlines_per_question: int = Field(..., title="Headlines Per Question")
 
 
 class SimulateRequest(BaseModel):
@@ -462,6 +487,19 @@ class RwSimulateStep(BaseModel):
     cause: Cause = Field(..., title="Cause")
 
 
+class RwApiRoutesCycleSettingsUsed(BaseModel):
+    assimilation: str = Field(..., title="Assimilation")
+    kalman_walk_sd_logit: float = Field(..., title="Kalman Walk Sd Logit")
+    kalman_prior_sd_logit: float = Field(..., title="Kalman Prior Sd Logit")
+    poll_error_factor: float = Field(..., title="Poll Error Factor")
+    step_cap_logit: float = Field(..., title="Step Cap Logit")
+    anchor_pull: float = Field(..., title="Anchor Pull")
+    spread_band: list[float] = Field(..., title="Spread Band")
+    daily_forecast_members: int = Field(..., title="Daily Forecast Members")
+    plain_llm_samples: int = Field(..., title="Plain Llm Samples")
+    headlines_per_question: int = Field(..., title="Headlines Per Question")
+
+
 class Status2(StrEnum):
     ok = "ok"
     failed = "failed"
@@ -481,6 +519,15 @@ class RwApiRoutesCycleStep(BaseModel):
     out_tokens: int = Field(..., title="Out Tokens")
     cost_usd: float = Field(..., title="Cost Usd")
     by_purpose: dict[str, int] = Field(..., title="By Purpose")
+
+
+class RwApiRoutesWorldSettingsUsed(BaseModel):
+    world_agents: int = Field(..., title="World Agents")
+    world_seed: int = Field(..., title="World Seed")
+    spread_band: list[float] = Field(..., title="Spread Band")
+    country_floor_share: float = Field(..., title="Country Floor Share")
+    stubbornness_beta: list[float] = Field(..., title="Stubbornness Beta")
+    offset_sd_logit: float = Field(..., title="Offset Sd Logit")
 
 
 class Agent(BaseModel):
@@ -557,6 +604,19 @@ class Paper(BaseModel):
     pdf: PaperPdf
 
 
+class PopulationCountry(BaseModel):
+    iso3: str = Field(..., title="Iso3")
+    name: str = Field(..., title="Name")
+    region: str = Field(..., title="Region")
+    population_millions: float = Field(..., title="Population Millions")
+    tier: str = Field(..., title="Tier")
+    experimental: bool = Field(..., title="Experimental")
+    rubric: Rubric
+    agent_count: int = Field(..., title="Agent Count")
+    segments: list[PopulationSegment] = Field(..., title="Segments")
+    topics: list[PopulationTopic] = Field(..., title="Topics")
+
+
 class ReceiptEntry(BaseModel):
     entry: dict[str, Any] = Field(..., title="Entry")
     salt: str = Field(..., title="Salt")
@@ -612,7 +672,7 @@ class Cycle(BaseModel):
     experimental: list[str] = Field(..., title="Experimental")
     ledger: CycleLedger | None
     budget: Budget
-    settings_used: SettingsUsed
+    settings_used: RwApiRoutesCycleSettingsUsed
 
 
 class Daily(BaseModel):
@@ -635,6 +695,16 @@ class Experiment(BaseModel):
     primary_metric: str = Field(..., title="Primary Metric")
     kill_criterion: str = Field(..., title="Kill Criterion")
     results: list[ExperimentResult] = Field(..., title="Results")
+
+
+class Population(BaseModel):
+    date: str = Field(..., title="Date")
+    agents: int = Field(..., title="Agents")
+    segments: int = Field(..., title="Segments")
+    tier_floors: dict[str, int] = Field(..., title="Tier Floors")
+    settings_used: RwApiRoutesWorldSettingsUsed
+    countries: list[PopulationCountry] = Field(..., title="Countries")
+    sources: list[PopulationSource] = Field(..., title="Sources")
 
 
 class ReceiptDay(BaseModel):

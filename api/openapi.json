@@ -710,6 +710,27 @@
         }
       }
     },
+    "/v1/world/population": {
+      "get": {
+        "summary": "The simulated population: every country, segment and topic with its calibration and spread",
+        "operationId": "world_population_v1_world_population_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Population"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such world snapshot"
+          }
+        }
+      }
+    },
     "/v1/research": {
       "get": {
         "summary": "The experiment registry with its pre-registration hashes and results, and the papers",
@@ -1503,7 +1524,7 @@
             "$ref": "#/components/schemas/Budget"
           },
           "settings_used": {
-            "$ref": "#/components/schemas/SettingsUsed"
+            "$ref": "#/components/schemas/rw_api__routes_cycle__SettingsUsed"
           }
         },
         "type": "object",
@@ -2239,6 +2260,255 @@
         "required": ["code", "detail"],
         "title": "PolicyRefused"
       },
+      "Population": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "agents": {
+            "type": "integer",
+            "title": "Agents"
+          },
+          "segments": {
+            "type": "integer",
+            "title": "Segments"
+          },
+          "tier_floors": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Tier Floors"
+          },
+          "settings_used": {
+            "$ref": "#/components/schemas/rw_api__routes_world__SettingsUsed"
+          },
+          "countries": {
+            "items": {
+              "$ref": "#/components/schemas/PopulationCountry"
+            },
+            "type": "array",
+            "title": "Countries"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/PopulationSource"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "agents",
+          "segments",
+          "tier_floors",
+          "settings_used",
+          "countries",
+          "sources"
+        ],
+        "title": "Population"
+      },
+      "PopulationCountry": {
+        "properties": {
+          "iso3": {
+            "type": "string",
+            "title": "Iso3"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "region": {
+            "type": "string",
+            "title": "Region"
+          },
+          "population_millions": {
+            "type": "number",
+            "title": "Population Millions"
+          },
+          "tier": {
+            "type": "string",
+            "title": "Tier"
+          },
+          "experimental": {
+            "type": "boolean",
+            "title": "Experimental"
+          },
+          "rubric": {
+            "$ref": "#/components/schemas/Rubric"
+          },
+          "agent_count": {
+            "type": "integer",
+            "title": "Agent Count"
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/PopulationSegment"
+            },
+            "type": "array",
+            "title": "Segments"
+          },
+          "topics": {
+            "items": {
+              "$ref": "#/components/schemas/PopulationTopic"
+            },
+            "type": "array",
+            "title": "Topics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "iso3",
+          "name",
+          "region",
+          "population_millions",
+          "tier",
+          "experimental",
+          "rubric",
+          "agent_count",
+          "segments",
+          "topics"
+        ],
+        "title": "PopulationCountry"
+      },
+      "PopulationSegment": {
+        "properties": {
+          "segment": {
+            "type": "string",
+            "title": "Segment"
+          },
+          "age_band": {
+            "type": "string",
+            "title": "Age Band"
+          },
+          "education": {
+            "type": "string",
+            "title": "Education"
+          },
+          "agent_count": {
+            "type": "integer",
+            "title": "Agent Count"
+          }
+        },
+        "type": "object",
+        "required": ["segment", "age_band", "education", "agent_count"],
+        "title": "PopulationSegment"
+      },
+      "PopulationSource": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "commercial_use": {
+            "type": "string",
+            "title": "Commercial Use"
+          },
+          "checked_on": {
+            "type": "string",
+            "title": "Checked On"
+          }
+        },
+        "type": "object",
+        "required": ["source_id", "kind", "commercial_use", "checked_on"],
+        "title": "PopulationSource"
+      },
+      "PopulationTopic": {
+        "properties": {
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "calibrated_share": {
+            "type": "number",
+            "title": "Calibrated Share"
+          },
+          "survey_sd_logit": {
+            "type": "number",
+            "title": "Survey Sd Logit"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          },
+          "p10": {
+            "type": "number",
+            "title": "P10"
+          },
+          "p50": {
+            "type": "number",
+            "title": "P50"
+          },
+          "p90": {
+            "type": "number",
+            "title": "P90"
+          },
+          "sim_sd_logit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sim Sd Logit"
+          },
+          "ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ratio"
+          },
+          "in_band": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "In Band"
+          }
+        },
+        "type": "object",
+        "required": [
+          "topic",
+          "label",
+          "source_id",
+          "calibrated_share",
+          "survey_sd_logit",
+          "share",
+          "p10",
+          "p50",
+          "p90",
+          "sim_sd_logit",
+          "ratio",
+          "in_band"
+        ],
+        "title": "PopulationTopic"
+      },
       "PrefilledEvent": {
         "properties": {
           "id": {
@@ -2713,6 +2983,37 @@
         "required": ["you", "crowd", "sim", "market", "outcome", "brier", "streak", "week"],
         "title": "Reveal"
       },
+      "Rubric": {
+        "properties": {
+          "population": {
+            "type": "integer",
+            "title": "Population"
+          },
+          "attitudes": {
+            "type": "integer",
+            "title": "Attitudes"
+          },
+          "markets": {
+            "type": "integer",
+            "title": "Markets"
+          },
+          "news": {
+            "type": "integer",
+            "title": "News"
+          },
+          "ground_truth": {
+            "type": "integer",
+            "title": "Ground Truth"
+          },
+          "score": {
+            "type": "integer",
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": ["population", "attitudes", "markets", "news", "ground_truth", "score"],
+        "title": "Rubric"
+      },
       "SegmentShift": {
         "properties": {
           "segment": {
@@ -2747,67 +3048,6 @@
         "type": "object",
         "required": ["segment", "topic", "shift_p10", "shift_p50", "shift_p90", "n_agents", "tier"],
         "title": "SegmentShift"
-      },
-      "SettingsUsed": {
-        "properties": {
-          "assimilation": {
-            "type": "string",
-            "title": "Assimilation"
-          },
-          "kalman_walk_sd_logit": {
-            "type": "number",
-            "title": "Kalman Walk Sd Logit"
-          },
-          "kalman_prior_sd_logit": {
-            "type": "number",
-            "title": "Kalman Prior Sd Logit"
-          },
-          "poll_error_factor": {
-            "type": "number",
-            "title": "Poll Error Factor"
-          },
-          "step_cap_logit": {
-            "type": "number",
-            "title": "Step Cap Logit"
-          },
-          "anchor_pull": {
-            "type": "number",
-            "title": "Anchor Pull"
-          },
-          "spread_band": {
-            "items": {
-              "type": "number"
-            },
-            "type": "array",
-            "title": "Spread Band"
-          },
-          "daily_forecast_members": {
-            "type": "integer",
-            "title": "Daily Forecast Members"
-          },
-          "plain_llm_samples": {
-            "type": "integer",
-            "title": "Plain Llm Samples"
-          },
-          "headlines_per_question": {
-            "type": "integer",
-            "title": "Headlines Per Question"
-          }
-        },
-        "type": "object",
-        "required": [
-          "assimilation",
-          "kalman_walk_sd_logit",
-          "kalman_prior_sd_logit",
-          "poll_error_factor",
-          "step_cap_logit",
-          "anchor_pull",
-          "spread_band",
-          "daily_forecast_members",
-          "plain_llm_samples",
-          "headlines_per_question"
-        ],
-        "title": "SettingsUsed"
       },
       "SimulateRequest": {
         "properties": {
@@ -3408,6 +3648,67 @@
         "required": ["day", "topic", "delta", "cause"],
         "title": "Step"
       },
+      "rw_api__routes_cycle__SettingsUsed": {
+        "properties": {
+          "assimilation": {
+            "type": "string",
+            "title": "Assimilation"
+          },
+          "kalman_walk_sd_logit": {
+            "type": "number",
+            "title": "Kalman Walk Sd Logit"
+          },
+          "kalman_prior_sd_logit": {
+            "type": "number",
+            "title": "Kalman Prior Sd Logit"
+          },
+          "poll_error_factor": {
+            "type": "number",
+            "title": "Poll Error Factor"
+          },
+          "step_cap_logit": {
+            "type": "number",
+            "title": "Step Cap Logit"
+          },
+          "anchor_pull": {
+            "type": "number",
+            "title": "Anchor Pull"
+          },
+          "spread_band": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Spread Band"
+          },
+          "daily_forecast_members": {
+            "type": "integer",
+            "title": "Daily Forecast Members"
+          },
+          "plain_llm_samples": {
+            "type": "integer",
+            "title": "Plain Llm Samples"
+          },
+          "headlines_per_question": {
+            "type": "integer",
+            "title": "Headlines Per Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "assimilation",
+          "kalman_walk_sd_logit",
+          "kalman_prior_sd_logit",
+          "poll_error_factor",
+          "step_cap_logit",
+          "anchor_pull",
+          "spread_band",
+          "daily_forecast_members",
+          "plain_llm_samples",
+          "headlines_per_question"
+        ],
+        "title": "SettingsUsed"
+      },
       "rw_api__routes_cycle__Step": {
         "properties": {
           "step": {
@@ -3503,6 +3804,50 @@
           "by_purpose"
         ],
         "title": "Step"
+      },
+      "rw_api__routes_world__SettingsUsed": {
+        "properties": {
+          "world_agents": {
+            "type": "integer",
+            "title": "World Agents"
+          },
+          "world_seed": {
+            "type": "integer",
+            "title": "World Seed"
+          },
+          "spread_band": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Spread Band"
+          },
+          "country_floor_share": {
+            "type": "number",
+            "title": "Country Floor Share"
+          },
+          "stubbornness_beta": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Stubbornness Beta"
+          },
+          "offset_sd_logit": {
+            "type": "number",
+            "title": "Offset Sd Logit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "world_agents",
+          "world_seed",
+          "spread_band",
+          "country_floor_share",
+          "stubbornness_beta",
+          "offset_sd_logit"
+        ],
+        "title": "SettingsUsed"
       }
     }
   }

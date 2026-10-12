@@ -245,6 +245,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v1/world/population": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The simulated population: every country, segment and topic with its calibration and spread */
+    get: operations["world_population_v1_world_population_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/v1/research": {
     parameters: {
       query?: never;
@@ -579,7 +596,7 @@ export interface components {
       experimental: string[];
       ledger: components["schemas"]["CycleLedger"] | null;
       budget: components["schemas"]["Budget"];
-      settings_used: components["schemas"]["SettingsUsed"];
+      settings_used: components["schemas"]["rw_api__routes_cycle__SettingsUsed"];
     };
     /** CycleLedger */
     CycleLedger: {
@@ -855,6 +872,95 @@ export interface components {
       /** Detail */
       detail: string;
     };
+    /** Population */
+    Population: {
+      /** Date */
+      date: string;
+      /** Agents */
+      agents: number;
+      /** Segments */
+      segments: number;
+      /** Tier Floors */
+      tier_floors: {
+        [key: string]: number;
+      };
+      settings_used: components["schemas"]["rw_api__routes_world__SettingsUsed"];
+      /** Countries */
+      countries: components["schemas"]["PopulationCountry"][];
+      /** Sources */
+      sources: components["schemas"]["PopulationSource"][];
+    };
+    /** PopulationCountry */
+    PopulationCountry: {
+      /** Iso3 */
+      iso3: string;
+      /** Name */
+      name: string;
+      /** Region */
+      region: string;
+      /** Population Millions */
+      population_millions: number;
+      /** Tier */
+      tier: string;
+      /** Experimental */
+      experimental: boolean;
+      rubric: components["schemas"]["Rubric"];
+      /** Agent Count */
+      agent_count: number;
+      /** Segments */
+      segments: components["schemas"]["PopulationSegment"][];
+      /** Topics */
+      topics: components["schemas"]["PopulationTopic"][];
+    };
+    /** PopulationSegment */
+    PopulationSegment: {
+      /** Segment */
+      segment: string;
+      /** Age Band */
+      age_band: string;
+      /** Education */
+      education: string;
+      /** Agent Count */
+      agent_count: number;
+    };
+    /** PopulationSource */
+    PopulationSource: {
+      /** Source Id */
+      source_id: string;
+      /** Kind */
+      kind: string;
+      /** Commercial Use */
+      commercial_use: string;
+      /** Checked On */
+      checked_on: string;
+    };
+    /** PopulationTopic */
+    PopulationTopic: {
+      /** Topic */
+      topic: string;
+      /** Label */
+      label: string;
+      /** Source Id */
+      source_id: string;
+      /** Calibrated Share */
+      calibrated_share: number;
+      /** Survey Sd Logit */
+      survey_sd_logit: number;
+      /** Share */
+      share: number;
+      /** P10 */
+      p10: number;
+      /** P50 */
+      p50: number;
+      /** P90 */
+      p90: number;
+      /** Sim Sd Logit */
+      sim_sd_logit: number | null;
+      /** Ratio */
+      ratio: number | null;
+      /** In Band */
+      in_band: boolean | null;
+    };
     /** PrefilledEvent */
     PrefilledEvent: {
       /** Id */
@@ -1034,6 +1140,21 @@ export interface components {
        */
       week: components["schemas"]["WeekDay"][];
     };
+    /** Rubric */
+    Rubric: {
+      /** Population */
+      population: number;
+      /** Attitudes */
+      attitudes: number;
+      /** Markets */
+      markets: number;
+      /** News */
+      news: number;
+      /** Ground Truth */
+      ground_truth: number;
+      /** Score */
+      score: number;
+    };
     /** SegmentShift */
     SegmentShift: {
       /** Segment */
@@ -1050,29 +1171,6 @@ export interface components {
       n_agents: number;
       /** Tier */
       tier: string;
-    };
-    /** SettingsUsed */
-    SettingsUsed: {
-      /** Assimilation */
-      assimilation: string;
-      /** Kalman Walk Sd Logit */
-      kalman_walk_sd_logit: number;
-      /** Kalman Prior Sd Logit */
-      kalman_prior_sd_logit: number;
-      /** Poll Error Factor */
-      poll_error_factor: number;
-      /** Step Cap Logit */
-      step_cap_logit: number;
-      /** Anchor Pull */
-      anchor_pull: number;
-      /** Spread Band */
-      spread_band: number[];
-      /** Daily Forecast Members */
-      daily_forecast_members: number;
-      /** Plain Llm Samples */
-      plain_llm_samples: number;
-      /** Headlines Per Question */
-      headlines_per_question: number;
     };
     /** SimulateRequest */
     SimulateRequest: {
@@ -1333,6 +1431,29 @@ export interface components {
        */
       cause: "event" | "anchor_pull";
     };
+    /** SettingsUsed */
+    rw_api__routes_cycle__SettingsUsed: {
+      /** Assimilation */
+      assimilation: string;
+      /** Kalman Walk Sd Logit */
+      kalman_walk_sd_logit: number;
+      /** Kalman Prior Sd Logit */
+      kalman_prior_sd_logit: number;
+      /** Poll Error Factor */
+      poll_error_factor: number;
+      /** Step Cap Logit */
+      step_cap_logit: number;
+      /** Anchor Pull */
+      anchor_pull: number;
+      /** Spread Band */
+      spread_band: number[];
+      /** Daily Forecast Members */
+      daily_forecast_members: number;
+      /** Plain Llm Samples */
+      plain_llm_samples: number;
+      /** Headlines Per Question */
+      headlines_per_question: number;
+    };
     /** Step */
     rw_api__routes_cycle__Step: {
       /** Step */
@@ -1364,6 +1485,21 @@ export interface components {
       by_purpose: {
         [key: string]: number;
       };
+    };
+    /** SettingsUsed */
+    rw_api__routes_world__SettingsUsed: {
+      /** World Agents */
+      world_agents: number;
+      /** World Seed */
+      world_seed: number;
+      /** Spread Band */
+      spread_band: number[];
+      /** Country Floor Share */
+      country_floor_share: number;
+      /** Stubbornness Beta */
+      stubbornness_beta: number[];
+      /** Offset Sd Logit */
+      offset_sd_logit: number;
     };
   };
   responses: never;
@@ -1923,6 +2059,33 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["SystemStatus"];
         };
+      };
+    };
+  };
+  world_population_v1_world_population_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Population"];
+        };
+      };
+      /** @description No such world snapshot */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
