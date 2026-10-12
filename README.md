@@ -1,6 +1,21 @@
 # Real World
 
-A daily simulation of the populations of the countries we cover, with a coverage tier on every result. Every morning it takes in real news, polls and markets, corrects its simulated agents against what was observed, and publishes hashed forecasts that are scored in public. Anyone can fork today's world, drop in an event, and watch how simulated agents react.
+**Simulations with receipts.**
+
+AI simulates how the world reacts to the news. Every forecast is sealed before the outcome and scored in public.
+
+Every morning Real World simulates how the populations of the countries we cover react to the day's news, polls and markets, corrects its simulated agents against what was observed, and publishes hashed forecasts that are scored in public against the prediction markets, misses included. A coverage tier is shown on every country and result, and every output is labelled AI-simulated. Category: a forecast and simulation API with a public score.
+
+## Four ways people use it
+
+| Who | Starts at | What they get |
+| --- | --- | --- |
+| Daily-question visitor | `/` | Today's question, how simulated agents and the market answered, and a fork card to reuse. |
+| Receipts and forecasting skeptic | `/receipts` | Every forecast hash, an in-browser check of each, then the public score (`/scores`) and the papers (`/research`). |
+| Analyst forking events | The fork box on `/` | A fork with its top segment shifts, spread across ensemble members, cost and trace. |
+| Developer on the API with a capped key | `/docs` | A key with a dollar cap, one-sentence refusals, and the same data from the Python or TypeScript SDK. |
+
+Surfaces, by route: `/` today's question and the fork box; `/world` the latest world snapshot by country and coverage tier; `/cycle` the daily cycle's run log; `/questions/{id}` one question with how it was answered; `/scores` skill against the market and the plain-LLM baseline, with n and an interval; `/receipts` every committed forecast and its check; `/research` papers and registered experiments; `/docs` the API reference. Specs: [product/README.md](product/README.md).
 
 ## Run it
 

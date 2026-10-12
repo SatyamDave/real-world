@@ -4,7 +4,7 @@ Read this file before any change. Then read the `CLAUDE.md` in every folder you 
 
 ## Mission
 
-Real World is a live simulation of the world's population that takes in each morning's news, polls and markets, corrects itself, and publishes hashed forecasts that are scored in public, misses included. Our job is to make that record honest and hard to beat, and to make every change here leave it better than we found it.
+Real World is "Simulations with receipts.": AI simulates how the world reacts to the news, and every forecast is sealed before the outcome and scored in public, misses included. Each morning it takes in news, polls and markets, corrects its simulated agents, and publishes hashed forecasts; it is a forecast and simulation API with a public score, with a coverage tier on every result and every output labelled AI-simulated. It serves four people: the daily-question visitor, the receipts skeptic, the analyst forking events, and the developer on the API with a capped key ([gtm/messaging.md](gtm/messaging.md)). Our job is to make that record honest and hard to beat, and to make every change here leave it better than we found it.
 
 ## Folder map
 
