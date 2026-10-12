@@ -177,7 +177,7 @@ def test_crash_after_forecast_resumes_at_publish(monkeypatch):
     before = counts(conn)
 
     s = daily.run(day, world_agents=AGENTS)
-    assert s["ran"] == ["publish", "anchor", "score", "learn"] and s["model_calls"] == 0
+    assert s["ran"] == ["publish", "anchor", "score", "learn", "improve"] and s["model_calls"] == 0
     assert counts(conn)["llm_calls"] == before["llm_calls"]
     assert counts(conn)["forecasts"] == before["forecasts"]
     assert ledger.verify_day(conn, day) == []

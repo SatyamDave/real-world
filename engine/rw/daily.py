@@ -1,4 +1,4 @@
-"""The daily cycle: seven re-runnable steps, each recorded in stage_runs and skipped once ok.
+"""The daily cycle: eight re-runnable steps, each recorded in stage_runs and skipped once ok.
 
 The only module that composes the others for a day (decision 0001, product/world.md).
 """
@@ -18,9 +18,21 @@ from urllib.parse import urlparse
 
 import numpy as np
 
-from rw import beliefs, db, forecast, ledger, llm, news, population, score, settings, sources
+from rw import (
+    beliefs,
+    db,
+    forecast,
+    improve,
+    ledger,
+    llm,
+    news,
+    population,
+    score,
+    settings,
+    sources,
+)
 
-STEPS = ("ingest", "assimilate", "forecast", "publish", "anchor", "score", "learn")
+STEPS = ("ingest", "assimilate", "forecast", "publish", "anchor", "score", "learn", "improve")
 FIXTURE_DAYS = sorted(p.stem for p in (forecast.FIXTURES / "news").glob("*.csv"))
 BIGGEST_MISSES = 5
 
@@ -41,8 +53,10 @@ def _seed(text: str) -> int:
     return int.from_bytes(hashlib.sha256(text.encode()).digest()[:8], "big")
 
 
-def config_hash() -> str:
+def config_hash(version: str = "") -> str:
     values = {k: str(v) for k, v in vars(settings).items() if k.isupper()}
+    if version:
+        values["ENGINE_CONFIG_VERSION"] = version
     return ledger.sha256_hex(ledger.canonical_json(values))
 
 
@@ -192,9 +206,11 @@ def day_entries(conn: sqlite3.Connection, date: str, questions: str = "fixtures"
                 }
             )
 
+    entries.extend(improve.unrecorded(conn, date))
+    current = improve.active(conn, date)
     common = {
         "engine_version": settings.ENGINE_VERSION,
-        "config_hash": config_hash(),
+        "config_hash": config_hash(current["version"]),
         "snapshot_sha256": snapshot_sha256(date),
         "supersedes": "",
     }
@@ -203,6 +219,9 @@ def day_entries(conn: sqlite3.Connection, date: str, questions: str = "fixtures"
     )
     for r in rows:
         q = by_id[r["question_id"]]
+        p = r["probability"]
+        if r["forecaster"] == "sim" and current["version"]:
+            p = improve.apply_map(current["params"], p)
         entries.append(
             {
                 "kind": "forecast",
@@ -210,7 +229,7 @@ def day_entries(conn: sqlite3.Connection, date: str, questions: str = "fixtures"
                 "question_id": q["id"],
                 "question_hash": forecast.question_hash(q),
                 "forecaster": r["forecaster"],
-                "probability": ledger.prob_str(r["probability"]),
+                "probability": ledger.prob_str(p),
                 "market_price_at_commit": ledger.prob_str(r["market_price_at_commit"]),
                 "market_source": q["market_source"],
                 "committed_at": r["created_at"].replace("+00:00", "Z"),
@@ -321,6 +340,30 @@ def learn(conn: sqlite3.Connection, date: str, budget: llm.Budget, world_agents:
     }
 
 
+def improve_step(
+    conn: sqlite3.Connection, date: str, budget: llm.Budget, world_agents: int
+) -> Detail:
+    """Fit, test and maybe promote a recalibration map; any failure keeps the incumbent."""
+    scored = conn.execute(
+        "SELECT 1 FROM stage_runs WHERE date = ? AND step = 'score' AND status = 'ok'", (date,)
+    ).fetchone()
+    if scored is None:
+        raise RuntimeError(f"{date} is not scored, so the incumbent engine version stays")
+    rows = conn.execute(
+        "SELECT f.date, f.question_id, f.probability AS raw, r.outcome, r.resolved_on"
+        " FROM forecasts f JOIN resolutions r USING (question_id)"
+        " WHERE f.forecaster = 'sim' AND r.resolved_on <= ? AND f.date <= r.resolved_on",
+        (date,),
+    ).fetchall()
+    incumbent = improve.active(conn, improve.next_day(date))
+    decision = improve.evaluate([dict(r) for r in rows], incumbent)
+    detail = {k: v for k, v in decision.items() if k != "candidate"}
+    detail["incumbent"] = incumbent["version"] or "identity"
+    if decision["promote"]:
+        detail["promoted"] = improve.promote(conn, date, decision)
+    return detail
+
+
 STEP_FUNCS: dict[str, Callable[..., Detail]] = {
     "ingest": ingest,
     "assimilate": assimilate,
@@ -329,6 +372,7 @@ STEP_FUNCS: dict[str, Callable[..., Detail]] = {
     "anchor": anchor,
     "score": score_step,
     "learn": learn,
+    "improve": improve_step,
 }
 
 
@@ -368,7 +412,8 @@ def run(
     """Run the named steps (default all) for date, skipping any already ok; return a summary.
 
     Any failure, including BudgetExceeded, marks the step failed and stops the run, except in
-    anchor: it records what already happened, so score and learn still run; a rerun retries it."""
+    anchor: it records what already happened, so score and learn still run; a rerun retries it.
+    A failed improve keeps the incumbent engine version and the run goes on."""
     conn = db.connect()
     drop_old_step_check(conn)
     calls_before = conn.execute("SELECT count(*) FROM llm_calls").fetchone()[0]
@@ -402,7 +447,7 @@ def run(
             detail = funcs[step](conn, date, budget, world_agents)
         except BaseException as e:
             _finish(conn, date, step, "failed", {"error": f"{type(e).__name__}: {e}"})
-            if step == "anchor" and isinstance(e, Exception):
+            if step in ("anchor", "improve") and isinstance(e, Exception):
                 continue
             raise
         _finish(conn, date, step, "ok", detail)
