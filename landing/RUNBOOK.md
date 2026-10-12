@@ -114,7 +114,7 @@ Rules and caps are in [gtm/prelaunch-ads.md](../gtm/prelaunch-ads.md): $50 a day
 6. Section 8: a test signup shows in Neon and in Amplitude; test rows deleted.
 7. Sections 2 and 9: app URL and pixel ids set, or deliberately left empty.
 8. Lighthouse and `check:bundle` pass on the production URL.
-9. The question list on the page is the one the founders want public (the Brazilian runoff card is an open decision, [decisions-needed item 2](../company/decisions-needed.md)).
+9. The question list on the page is the one the founders want public. It holds three central-bank decisions (US Fed, ECB, Bank of Japan); the election question was removed ([decisions-needed item 2](../company/decisions-needed.md) stays open).
 10. Ads submitted with the first flight's caps.
 
 ## 11. Retire on Oct 27

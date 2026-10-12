@@ -18,14 +18,6 @@
       "marker": { "lat": 50.11, "lng": 8.68 }
     },
     {
-      "id": "brazil-runoff-2026-10-25",
-      "question": "Who wins the Brazilian presidential runoff on October 25, 2026?",
-      "source": "official electoral authority",
-      "resolvesOn": "2026-10-25",
-      "status": "Awaiting hash",
-      "marker": { "lat": -15.79, "lng": -47.88 }
-    },
-    {
       "id": "boj-2026-10-30",
       "question": "Will the Bank of Japan change its policy rate at its meeting ending October 30, 2026?",
       "source": "boj.or.jp",

@@ -47,7 +47,7 @@ test.describe("page", () => {
   }) => {
     await page.goto("/");
     const cards = page.locator(".receipt");
-    await expect(cards).toHaveCount(4);
+    await expect(cards).toHaveCount(3);
     for (const card of await cards.all()) {
       await expect(card).toContainText("Pending");
       await expect(card).toContainText("AI-simulated");

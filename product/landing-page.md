@@ -58,7 +58,7 @@ All copy below is the whole of what the page says. `{BRAND}` is the display name
 
 - Section heading: "The first receipts."
 - Section note: "These are the events {BRAND} will forecast first. No hashes or probabilities are shown here yet. The record starts when the first forecast is hashed."
-- Four forecast cards in a row from 820px; on a phone they scroll sideways and snap, with the next card peeking. Each card has a torn bottom edge and shows: "Receipt" and a "Pending" stamp, the question, a "Committed" column ("Hash publishes Oct 14" or "Awaiting hash") and a "Resolves" column (the date and the resolution source). No hash, probability or score appears. Cards read from `landing/src/data/receipts.json`.
+- Three forecast cards in a row from 820px; on a phone they scroll sideways and snap, with the next card peeking. Each card has a torn bottom edge and shows: "Receipt" and a "Pending" stamp, the question, a "Committed" column ("Hash publishes Oct 14" or "Awaiting hash") and a "Resolves" column (the date and the resolution source). No hash, probability or score appears. Cards read from `landing/src/data/receipts.json`.
 - Disclosure on every card: "AI-simulated. Not a poll."
 - Motion: the only motion that runs on its own is each event's marker pulsing once on the globe, in turn, and the two chips fading in as their pulse lands. With `prefers-reduced-motion` or without WebGL the globe is the still poster and the chips are simply shown.
 
