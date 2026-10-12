@@ -22,10 +22,7 @@ TIER_NOISE_SD = {"A": 0.05, "B": 0.10, "C": 0.15, "D": 0.20}
 PROMPT_OVERHEAD_CHARS = 2000
 TOP_SHIFTS = 3
 
-DISCLOSURE = (
-    "AI-simulated. A fork of a synthetic population under an event you described: not a poll,"
-    " not a forecast of real people, and not scored."
-)
+DISCLOSURE = "AI-simulated. Not a poll or a prediction of a real person"
 NOTE = "Counterfactual: not scored"
 
 AGE_WORDS = {"18-34": "aged 18 to 34", "35-54": "aged 35 to 54", "55+": "aged 55 and over"}
@@ -65,13 +62,16 @@ class SimulateRequest(BaseModel):
         default=settings.FORK_MEMBERS_DEFAULT,
         ge=1,
         le=settings.FORK_MEMBERS_MAX,
-        description="Ensemble size: independent runs whose spread gives the p10-p90 band.",
+        description=(
+            "Ensemble members: independent runs of the fork, each with its own agent subsample"
+            " and noise. Their p10-p90 range is the spread."
+        ),
     )
     agents: int = Field(
         default=settings.FORK_AGENTS_DEFAULT,
         ge=FORK_AGENTS_MIN,
         le=settings.FORK_AGENTS_MAX,
-        description="Agents sampled from the world, in proportion to country population.",
+        description="Agents sampled from the world snapshot, in proportion to country population.",
     )
     topics: list[str] | None = Field(
         default=None, description="Topics to report; null means every topic the world tracks."
@@ -80,9 +80,19 @@ class SimulateRequest(BaseModel):
         default=settings.FORK_MAX_COST_USD_DEFAULT,
         gt=0,
         le=settings.FORK_MAX_COST_USD_LIMIT,
-        description="Refuse with 402 if the estimate exceeds this. One model call per segment.",
+        description=(
+            "Cost cap in dollars. A fork whose estimate is above it is refused with 402. The"
+            " estimate counts one model call per segment."
+        ),
     )
-    seed: int = Field(default=0, ge=0, description="Random seed; the same request is replayed.")
+    seed: int = Field(
+        default=0,
+        ge=0,
+        description=(
+            "Fixes the agent subsample and each member's noise. The model's answers can still"
+            " differ between runs."
+        ),
+    )
 
     @field_validator("topics")
     @classmethod
@@ -154,7 +164,7 @@ class Trace(BaseModel):
 
 class Cost(BaseModel):
     estimated_usd: float = Field(
-        description="An estimate made before the run, at the configured model's (Haiku) prices."
+        description="An estimate made before the run, at the configured model's prices."
     )
     actual_usd: float = Field(description="Dollars the provider charged; 0 with the fake model.")
 

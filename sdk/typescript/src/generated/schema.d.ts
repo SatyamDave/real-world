@@ -13,7 +13,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Start a fork of today's world with one event; returns a job id */
+    /** Start a fork: add one event to today's world and run it forward. Returns an id. */
     post: operations["create_simulation_v1_simulate_post"];
     delete?: never;
     options?: never;
@@ -45,7 +45,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** A fork job's status, and its result when done */
+    /** A fork's status, and its result when done */
     get: operations["get_simulation_v1_simulations__job_id__get"];
     put?: never;
     post?: never;
@@ -62,7 +62,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Stream a fork job's progress as server-sent events; resumes from Last-Event-ID */
+    /** Stream a fork's progress as server-sent events; resumes from Last-Event-ID */
     get: operations["simulation_events_v1_simulations__job_id__events_get"];
     put?: never;
     post?: never;
@@ -113,7 +113,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** A short model-written account of one agent's trace, labelled simulated */
+    /** A short model-written account of what moved one agent, labelled simulated */
     get: operations["agent_why_v1_agents__agent_id__why_get"];
     put?: never;
     post?: never;
@@ -130,7 +130,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Today's question, and the reveal once this player answered */
+    /** Today's question, and the reveal once this visitor answered */
     get: operations["daily_v1_daily_get"];
     put?: never;
     post?: never;
@@ -164,7 +164,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Every committed day's root and record hash */
+    /** Every day record, newest first, with its root, record hash and anchor status */
     get: operations["receipts_v1_receipts_get"];
     put?: never;
     post?: never;
@@ -181,7 +181,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** One day's receipt: every entry with its salt and leaf hash */
+    /** One day record with every receipt in it: entry, salt and leaf hash */
     get: operations["receipt_day_v1_receipts__day__get"];
     put?: never;
     post?: never;
@@ -199,10 +199,8 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Brier skill of the simulation against each baseline
-     * @description score.summarize over every committed forecast whose question has resolved. A question
-     *     across several countries takes its lowest-coverage tier, and "multiple" as its region when
-     *     they differ.
+     * How our simulation's forecasts score against each baseline
+     * @description Mean Brier difference of the sim forecaster against the plain LLM and the market over resolved questions, with n, an interval and whether the sample is large enough to report, overall and by coverage tier and region.
      */
     get: operations["scores_v1_scores_get"];
     put?: never;
@@ -351,18 +349,11 @@ export interface components {
         [key: string]: components["schemas"]["Skill"];
       };
     };
-    /** Conflict */
-    Conflict: {
-      /** Detail */
-      detail: string;
-      /** Id */
-      id: string;
-    };
     /** Cost */
     Cost: {
       /**
        * Estimated Usd
-       * @description An estimate made before the run, at the configured model's (Haiku) prices.
+       * @description An estimate made before the run, at the configured model's prices.
        */
       estimated_usd: number;
       /**
@@ -401,14 +392,17 @@ export interface components {
       /** Tier */
       tier: string;
     };
-    /**
-     * Crowd
-     * @description Other visitors' answers; the caller's own answer is never in it.
-     */
+    /** Crowd */
     Crowd: {
-      /** Mean */
+      /**
+       * Mean
+       * @description Mean of other visitors' answers; null if there are none.
+       */
       mean: number | null;
-      /** Count */
+      /**
+       * Count
+       * @description Other visitors' answers; the caller's own is never counted.
+       */
       count: number;
     };
     /** Daily */
@@ -499,11 +493,6 @@ export interface components {
       /** Countries */
       countries?: string[] | null;
     };
-    /** HTTPValidationError */
-    HTTPValidationError: {
-      /** Detail */
-      detail?: components["schemas"]["ValidationError"][];
-    };
     /** Job */
     Job: {
       /** Id */
@@ -539,6 +528,11 @@ export interface components {
       self: string;
       /** Events */
       events: string;
+    };
+    /** NotFound */
+    NotFound: {
+      /** Detail */
+      detail: string;
     };
     /** PolicyRefused */
     PolicyRefused: {
@@ -620,13 +614,27 @@ export interface components {
         | "client_unknown"
         | "spend_unreadable"
         | "invalid_api_key"
-        | "key_cap_spent";
+        | "key_cap_spent"
+        | "idempotency_key_running"
+        | "invalid_request"
+        | "unsupported_version"
+        | "acceptable_use_unreadable"
+        | "idempotency_key_reused"
+        | "why_over_cap"
+        | "wrong_question"
+        | "answers_closed"
+        | "already_answered";
       /**
        * Detail
        * @description One sentence saying what was refused and why, for display.
        */
       detail: string;
       estimate?: components["schemas"]["Estimate"] | null;
+      /**
+       * Id
+       * @description The fork already running under this Idempotency-Key.
+       */
+      id?: string | null;
     };
     /** Reveal */
     Reveal: {
@@ -684,13 +692,13 @@ export interface components {
       days?: number;
       /**
        * Members
-       * @description Ensemble size: independent runs whose spread gives the p10-p90 band.
+       * @description Ensemble members: independent runs of the fork, each with its own agent subsample and noise. Their p10-p90 range is the spread.
        * @default 5
        */
       members?: number;
       /**
        * Agents
-       * @description Agents sampled from the world, in proportion to country population.
+       * @description Agents sampled from the world snapshot, in proportion to country population.
        * @default 200
        */
       agents?: number;
@@ -701,13 +709,13 @@ export interface components {
       topics?: string[] | null;
       /**
        * Max Cost Usd
-       * @description Refuse with 402 if the estimate exceeds this. One model call per segment.
+       * @description Cost cap in dollars. A fork whose estimate is above it is refused with 402. The estimate counts one model call per segment.
        * @default 0.5
        */
       max_cost_usd?: number;
       /**
        * Seed
-       * @description Random seed; the same request is replayed.
+       * @description Fixes the agent subsample and each member's noise. The model's answers can still differ between runs.
        * @default 0
        */
       seed?: number;
@@ -722,7 +730,7 @@ export interface components {
       simulated?: true;
       /**
        * Disclosure
-       * @default AI-simulated. A fork of a synthetic population under an event you described: not a poll, not a forecast of real people, and not scored.
+       * @default AI-simulated. Not a poll or a prediction of a real person
        */
       disclosure?: string;
       /** World Snapshot Id */
@@ -843,26 +851,13 @@ export interface components {
       /** Steps */
       steps: components["schemas"]["Step"][];
     };
-    /** ValidationError */
-    ValidationError: {
-      /** Location */
-      loc: (string | number)[];
-      /** Message */
-      msg: string;
-      /** Error Type */
-      type: string;
-      /** Input */
-      input?: unknown;
-      /** Context */
-      ctx?: Record<string, never>;
-    };
     /** WeekDay */
     WeekDay: {
       /** Date */
       date: string;
       /**
        * Probability
-       * @description The player's answer that day; null if none.
+       * @description The visitor's answer that day; null if none.
        */
       probability: number | null;
       /**
@@ -898,7 +893,7 @@ export interface operations {
         "Idempotency-Key": string;
         "Real-World-Version"?: string | null;
         /** @description Bearer rw_... API key. Without one the caller is anonymous and max_cost_usd is clamped. */
-        authorization?: string | null;
+        Authorization?: string | null;
       };
       path?: never;
       cookie?: never;
@@ -918,13 +913,6 @@ export interface operations {
           "application/json": components["schemas"]["JobCreated"];
         };
       };
-      /** @description Real-World-Version is not the current version */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
       /** @description The API key is unknown or revoked */
       401: {
         headers: {
@@ -943,16 +931,16 @@ export interface operations {
           "application/json": components["schemas"]["Refused"];
         };
       };
-      /** @description A job with this Idempotency-Key is running */
+      /** @description This Idempotency-Key is running a fork, or was used with another body */
       409: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["Conflict"];
+          "application/json": components["schemas"]["Refused"];
         };
       };
-      /** @description The event breaks the acceptable-use policy (or the body is invalid) */
+      /** @description The request is invalid, Real-World-Version is not the current version, or the event breaks the acceptable-use policy */
       422: {
         headers: {
           [name: string]: unknown;
@@ -975,7 +963,9 @@ export interface operations {
         headers: {
           [name: string]: unknown;
         };
-        content?: never;
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
       };
     };
   };
@@ -984,7 +974,7 @@ export interface operations {
       query?: never;
       header?: {
         /** @description Bearer rw_... API key. Without one the caller is anonymous and max_cost_usd is clamped. */
-        authorization?: string | null;
+        Authorization?: string | null;
       };
       path?: never;
       cookie?: never;
@@ -1013,13 +1003,22 @@ export interface operations {
           "application/json": components["schemas"]["Refused"];
         };
       };
-      /** @description Validation Error */
+      /** @description The request is invalid */
       422: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description The API key could not be checked */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
         };
       };
     };
@@ -1044,13 +1043,22 @@ export interface operations {
           "application/json": components["schemas"]["Job"];
         };
       };
-      /** @description Validation Error */
+      /** @description No such fork */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description The request is invalid */
       422: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": components["schemas"]["Refused"];
         };
       };
     };
@@ -1077,13 +1085,22 @@ export interface operations {
           "text/event-stream": unknown;
         };
       };
-      /** @description Validation Error */
+      /** @description No such fork */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description The request is invalid */
       422: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": components["schemas"]["Refused"];
         };
       };
     };
@@ -1104,6 +1121,15 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["World"];
+        };
+      };
+      /** @description No such world snapshot */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
         };
       };
     };
@@ -1128,13 +1154,22 @@ export interface operations {
           "application/json": components["schemas"]["Agent"];
         };
       };
-      /** @description Validation Error */
+      /** @description No such agent */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description The request is invalid */
       422: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": components["schemas"]["Refused"];
         };
       };
     };
@@ -1164,15 +1199,26 @@ export interface operations {
         headers: {
           [name: string]: unknown;
         };
-        content?: never;
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
       };
-      /** @description Validation Error */
+      /** @description No such agent */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description The request is invalid */
       422: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": components["schemas"]["Refused"];
         };
       };
     };
@@ -1197,13 +1243,22 @@ export interface operations {
           "application/json": components["schemas"]["Daily"];
         };
       };
-      /** @description Validation Error */
+      /** @description No such daily question */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description The request is invalid */
       422: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": components["schemas"]["Refused"];
         };
       };
     };
@@ -1230,20 +1285,31 @@ export interface operations {
           "application/json": components["schemas"]["Daily"];
         };
       };
-      /** @description This player already answered, or answers closed */
+      /** @description No such daily question */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description This visitor already answered, or answers closed */
       409: {
         headers: {
           [name: string]: unknown;
         };
-        content?: never;
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
       };
-      /** @description Validation Error */
+      /** @description The request is invalid or not today's question */
       422: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": components["schemas"]["Refused"];
         };
       };
     };
@@ -1288,13 +1354,22 @@ export interface operations {
           "application/json": components["schemas"]["ReceiptDay"];
         };
       };
-      /** @description Validation Error */
+      /** @description No such day record */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description The request is invalid */
       422: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": components["schemas"]["Refused"];
         };
       };
     };

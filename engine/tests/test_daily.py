@@ -41,7 +41,8 @@ def test_fixture_days_run_verify_and_chain():
         # Keyless: the summary names the fake model and prints dollars as an estimate (#33, #34).
         assert s["model"] == "fake" and s["usd"] > 0
         line = daily.format_summary(s)
-        assert "fake model, nothing spent (estimated $" in line and ", $" not in line
+        assert f"\n  Cost: fake model, nothing spent (estimated ${s['usd']:.4f} at " in line
+        assert f"{settings.MODEL} prices)\n" in line and ", $" not in line
     statuses = conn.execute("SELECT DISTINCT status FROM stage_runs").fetchall()
     assert [r[0] for r in statuses] == ["ok"]
 
@@ -235,7 +236,7 @@ def test_fixture_run_sends_nothing_to_timestamp_servers_and_exports_each_day(mon
     for s in summaries:
         assert s["ran"].index("anchor") == s["ran"].index("publish") + 1
         assert stage(conn, s["date"], "anchor") == ("ok", {"skipped": daily.FIXTURE_ANCHOR})
-        assert daily.format_summary(s).splitlines()[-1] == f"  not anchored: {daily.FIXTURE_ANCHOR}"
+        assert daily.format_summary(s).splitlines()[-1] == f"  Not anchored: {daily.FIXTURE_ANCHOR}"
         path = settings.rw_home() / "receipts" / f"{s['date']}.json"
         assert stage(conn, s["date"], "publish")[1]["receipt"] == str(path)
         receipt = json.loads(path.read_text())
@@ -259,13 +260,13 @@ def test_a_live_day_anchors_under_default_flags_and_a_failure_never_stops_score_
     assert s["ran"] == ["score", "learn"] and len(sent) == 2
     status, detail = stage(conn, day, "anchor")
     assert status == "failed" and "timed out" in detail["error"]
-    assert s["anchor"].startswith("not anchored: NotAnchored: ") and "timed out" in s["anchor"]
+    assert s["anchor"].startswith("Not anchored: NotAnchored: ") and "timed out" in s["anchor"]
     assert ledger.anchor_status(conn, day) == ("not_anchored", None)
 
     sent = fake_post(monkeypatch, tsa=TimeoutError("timed out"))
     s = daily.run(day, ["anchor"], world_agents=AGENTS)
     assert s["ran"] == [] and len(sent) == 2
-    assert s["anchor"] == "pending (OpenTimestamps)"
+    assert s["anchor"] == "Anchor pending: OpenTimestamps proof awaits a Bitcoin block"
     assert stage(conn, day, "anchor")[0] == "failed"
     assert ledger.anchor_status(conn, day) == ("pending", None)
 
@@ -284,7 +285,7 @@ def test_anchor_step_marks_the_day_anchored_and_an_anchored_day_sends_nothing(mo
     sent = fake_post(monkeypatch)
     s = daily.run(day, ["anchor"])
     assert s["ran"] == ["anchor"] and len(sent) == 2
-    assert s["anchor"] == "anchored by freetsa.org at 2026-10-12T17:19:19Z"
+    assert s["anchor"] == "Anchored 2026-10-12 17:19:19 UTC by freetsa.org"
     assert stage(conn, day, "anchor")[0] == "ok"
 
     with conn:
@@ -311,3 +312,18 @@ def test_a_stage_table_from_before_the_anchor_step_is_rebuilt_and_every_step_run
     assert stage(conn, "2026-09-30", "learn") == ("ok", {})
     sql = conn.execute("SELECT sql FROM sqlite_master WHERE name = 'stage_runs'").fetchone()[0]
     assert "CHECK (step" not in sql
+
+
+def test_a_rerun_reads_steps_run_none_and_every_line_is_sentence_case():
+    run_fixtures()
+    again = daily.format_summary(daily.run(DAYS[0]))
+    first, *rest = again.splitlines()
+    assert first == f"{DAYS[0]}  Steps run: none"
+    assert all(line.lstrip()[0].isupper() for line in rest), again
+
+
+@pytest.mark.parametrize("text", ["2026-13-01", "20261001", "tomorrow", "2026-1-1"])
+def test_an_invalid_date_prints_one_sentence_and_exits_2(capsys, text):
+    assert daily.main(["--date", text]) == 2
+    err = capsys.readouterr().err
+    assert err == f"{text} is not a date; use YYYY-MM-DD\n"

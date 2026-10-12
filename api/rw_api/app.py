@@ -1,4 +1,4 @@
-"""HTTP over the rw engine: fork jobs, the world, agents, the daily question, receipts and scores.
+"""HTTP over the rw engine: forks, the world, agents, the daily question, receipts and scores.
 
 The only package that speaks HTTP (decision 0001). Contracts: product/simulate-api.md,
 product/daily-question.md, product/receipts.md and product/benchmark.md.
@@ -8,6 +8,7 @@ import asyncio
 import base64
 import hashlib
 import json
+import logging
 import os
 import re
 import secrets
@@ -27,6 +28,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from rw import db, forecast, ledger, llm, policy, population, score, settings, simulate
 
+log = logging.getLogger("rw_api")
 SCHEMA = Path(__file__).parent / "schema.sql"
 IDEMPOTENCY_TTL = timedelta(hours=24)
 HEARTBEAT_SECONDS = 15.0
@@ -73,6 +75,15 @@ RefusedCode = Literal[
     "spend_unreadable",
     "invalid_api_key",
     "key_cap_spent",
+    "idempotency_key_running",
+    "invalid_request",
+    "unsupported_version",
+    "acceptable_use_unreadable",
+    "idempotency_key_reused",
+    "why_over_cap",
+    "wrong_question",
+    "answers_closed",
+    "already_answered",
 ]
 
 
@@ -80,11 +91,13 @@ class Refused(BaseModel):
     code: RefusedCode
     detail: str = Field(description="One sentence saying what was refused and why, for display.")
     estimate: simulate.Estimate | None = None
+    id: str | None = Field(
+        default=None, description="The fork already running under this Idempotency-Key."
+    )
 
 
-class Conflict(BaseModel):
+class NotFound(BaseModel):
     detail: str
-    id: str
 
 
 class Country(BaseModel):
@@ -146,15 +159,15 @@ class DailyQuestion(BaseModel):
 
 
 class Crowd(BaseModel):
-    """Other visitors' answers; the caller's own answer is never in it."""
-
-    mean: float | None
-    count: int
+    mean: float | None = Field(
+        description="Mean of other visitors' answers; null if there are none."
+    )
+    count: int = Field(description="Other visitors' answers; the caller's own is never counted.")
 
 
 class WeekDay(BaseModel):
     date: str
-    probability: float | None = Field(description="The player's answer that day; null if none.")
+    probability: float | None = Field(description="The visitor's answer that day; null if none.")
     brier: float | None = Field(description="Its Brier score once the question resolved.")
 
 
@@ -248,6 +261,13 @@ class BaselineSkill(Skill):
     by_region: dict[str, Skill]
 
 
+INVALID: dict[str, Any] = {"model": Refused, "description": "The request is invalid"}
+
+
+def not_found(what: str) -> dict[str, Any]:
+    return {"model": NotFound, "description": f"No such {what}"}
+
+
 def connect() -> sqlite3.Connection:
     conn = db.connect()
     db.apply(conn, SCHEMA)
@@ -302,7 +322,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     conn = connect()
     stale = conn.execute("SELECT id FROM jobs WHERE status IN ('queued', 'running')").fetchall()
     for (job_id,) in stale:
-        _finish(conn, job_id, error="interrupted")
+        _finish(conn, job_id, error="the server restarted before the fork finished")
     conn.close()
     yield
 
@@ -312,7 +332,7 @@ app = FastAPI(
     version=settings.API_VERSION,
     description=(
         "Fork today's simulated world, read its agents, answer the daily question and check"
-        " the hashed receipts. Every simulation result is labelled simulated."
+        " the hashed receipts. Every fork result is labelled simulated."
     ),
     lifespan=lifespan,
 )
@@ -320,9 +340,8 @@ app = FastAPI(
 
 @app.exception_handler(RequestValidationError)
 async def validation_error(_: Request, e: RequestValidationError) -> JSONResponse:
-    """One error shape on every route: a sentence under `detail`, not FastAPI's list."""
     parts = [f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}" for err in e.errors()]
-    return JSONResponse({"detail": "invalid request: " + "; ".join(parts)}, status_code=422)
+    return _refuse(422, "invalid_request", "invalid request: " + "; ".join(parts))
 
 
 def env_list(name: str) -> list[str]:
@@ -371,7 +390,13 @@ def run_job(job_id: str, req: simulate.SimulateRequest) -> None:
     try:
         result = simulate.run(conn, req, progress, budget)
     except Exception as e:
-        _finish(conn, job_id, error=f"{type(e).__name__}: {e}", spent_usd=budget.spent_usd)
+        log.exception("fork %s failed", job_id)
+        error = (
+            "the fork passed its cost cap and was stopped"
+            if isinstance(e, llm.BudgetExceeded)
+            else "the fork stopped on an error and produced no result"
+        )
+        _finish(conn, job_id, error=error, spent_usd=budget.spent_usd)
     else:
         _finish(conn, job_id, result=result, spent_usd=budget.spent_usd)
     finally:
@@ -393,18 +418,29 @@ def _replay(conn: sqlite3.Connection, key: str, body_sha: str) -> JobCreated | J
     if row is None:
         return None
     if row["body_sha256"] != body_sha:
-        raise HTTPException(422, "this Idempotency-Key was used with a different body")
+        return _refuse(
+            409, "idempotency_key_reused", "this Idempotency-Key was used with a different body"
+        )
     if row["status"] not in TERMINAL:
-        body = Conflict(detail="a job with this Idempotency-Key is still running", id=row["id"])
-        return JSONResponse(body.model_dump(), status_code=409)
+        return _refuse(
+            409,
+            "idempotency_key_running",
+            "a fork with this Idempotency-Key is still running",
+            id=row["id"],
+        )
     return _created(row["id"], row["status"])
 
 
-def _estimate(req: simulate.SimulateRequest) -> simulate.Estimate:
+def _estimate(req: simulate.SimulateRequest) -> simulate.Estimate | JSONResponse:
     try:
         return simulate.estimate(req)
-    except ValueError as e:
-        raise HTTPException(422, str(e)) from e
+    except ValueError:
+        log.warning("fork estimate refused", exc_info=True)
+        return _refuse(
+            422,
+            "invalid_request",
+            "no agents can be sampled for this world and event; check world and countries",
+        )
 
 
 def _capped(req: simulate.SimulateRequest, key: int | None) -> simulate.SimulateRequest:
@@ -416,10 +452,14 @@ def _capped(req: simulate.SimulateRequest, key: int | None) -> simulate.Simulate
 
 
 def _refuse(
-    status: int, code: RefusedCode, detail: str, est: simulate.Estimate | None = None
+    status: int,
+    code: RefusedCode,
+    detail: str,
+    est: simulate.Estimate | None = None,
+    id: str | None = None,
 ) -> JSONResponse:
-    body = Refused(code=code, detail=detail, estimate=est)
-    return JSONResponse(body.model_dump(), status_code=status)
+    body = Refused(code=code, detail=detail, estimate=est, id=id)
+    return JSONResponse(body.model_dump(exclude=None if id else {"id"}), status_code=status)
 
 
 def _key(conn: sqlite3.Connection, authorization: str | None) -> int | JSONResponse | None:
@@ -432,8 +472,9 @@ def _key(conn: sqlite3.Connection, authorization: str | None) -> int | JSONRespo
             "SELECT id FROM api_keys WHERE key_sha256 = ? AND revoked_at IS NULL",
             (hashlib.sha256(token.strip().encode()).hexdigest(),),
         ).fetchone()
-    except Exception as e:
-        return _refuse(503, "spend_unreadable", f"the API key could not be checked: {e}")
+    except Exception:
+        log.exception("api key lookup failed")
+        return _refuse(503, "spend_unreadable", "the API key could not be checked")
     if scheme.lower() != "bearer" or row is None:
         return _refuse(401, "invalid_api_key", "this API key is unknown or revoked")
     return row[0]
@@ -484,8 +525,9 @@ def _limits(
                 "SELECT cap_usd FROM api_keys WHERE id = ? AND revoked_at IS NULL", (key,)
             ).fetchone()
             cap, spent = row and row[0], key_spent(conn, key)
-    except Exception as e:
-        return _refuse(503, "spend_unreadable", f"today's fork spend could not be read: {e}")
+    except Exception:
+        log.exception("fork spend read failed")
+        return _refuse(503, "spend_unreadable", "today's fork spend could not be read")
     if key is not None:
         if cap is None:
             return _refuse(401, "invalid_api_key", "this API key is unknown or revoked")
@@ -513,26 +555,30 @@ def _limits(
 
 @app.post(
     "/v1/simulate",
-    summary="Start a fork of today's world with one event; returns a job id",
+    summary="Start a fork: add one event to today's world and run it forward. Returns an id.",
     status_code=202,
     response_model=JobCreated,
     responses={
-        400: {"description": "Real-World-Version is not the current version"},
         401: {"model": Refused, "description": "The API key is unknown or revoked"},
         402: {
             "model": Refused,
             "description": "The estimate exceeds max_cost_usd, the key's cap or today's fork"
             " budget is spent",
         },
-        409: {"model": Conflict, "description": "A job with this Idempotency-Key is running"},
+        409: {
+            "model": Refused,
+            "description": "This Idempotency-Key is running a fork, or was used with another body",
+        },
         422: {
             "model": policy.PolicyRefused,
-            "description": "The event breaks the acceptable-use policy (or the body is invalid)",
+            "description": "The request is invalid, Real-World-Version is not the current"
+            " version, or the event breaks the acceptable-use policy",
         },
         429: {"model": Refused, "description": "This address has used today's anonymous forks"},
         503: {
+            "model": Refused,
             "description": "A spend, address or acceptable-use check could not run; nothing was"
-            " started"
+            " started",
         },
     },
 )
@@ -542,10 +588,14 @@ def create_simulation(
     background: BackgroundTasks,
     idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=1, max_length=255)],
     real_world_version: Annotated[str | None, Header(alias="Real-World-Version")] = None,
-    authorization: Annotated[str | None, Header(description=KEY_HEADER)] = None,
+    authorization: Annotated[
+        str | None, Header(alias="Authorization", description=KEY_HEADER)
+    ] = None,
 ) -> JobCreated | JSONResponse:
     if real_world_version is not None and real_world_version != settings.API_VERSION:
-        raise HTTPException(400, f"Real-World-Version must be {settings.API_VERSION}")
+        return _refuse(
+            422, "unsupported_version", f"Real-World-Version must be {settings.API_VERSION}"
+        )
     conn = connect()
     key = _key(conn, authorization)
     if isinstance(key, JSONResponse):
@@ -567,6 +617,8 @@ def create_simulation(
     if refusal is not None:
         return refusal
     est = _estimate(req)
+    if isinstance(est, JSONResponse):
+        return est
     if not est.within_cap:
         return _refuse(
             402,
@@ -579,8 +631,13 @@ def create_simulation(
     screen_budget = llm.Budget(settings.SCREEN_MAX_COST_USD)
     try:
         refusal = policy.screen(req.event.text, conn, budget=screen_budget)
-    except Exception as e:
-        raise HTTPException(503, f"the acceptable-use check could not run: {e}") from e
+    except Exception:
+        log.exception("acceptable-use screen failed")
+        return _refuse(
+            503,
+            "acceptable_use_unreadable",
+            "the acceptable-use check could not run; nothing was started",
+        )
     finally:
         if key is not None and screen_budget.spent_usd > 0:
             with conn:
@@ -638,11 +695,17 @@ def create_simulation(
     "/v1/simulate/estimate",
     summary="Estimate a fork's cost and model calls without running it",
     response_model=simulate.Estimate,
-    responses={401: {"model": Refused, "description": "The API key is unknown or revoked"}},
+    responses={
+        401: {"model": Refused, "description": "The API key is unknown or revoked"},
+        422: INVALID,
+        503: {"model": Refused, "description": "The API key could not be checked"},
+    },
 )
 def estimate(
     req: simulate.SimulateRequest,
-    authorization: Annotated[str | None, Header(description=KEY_HEADER)] = None,
+    authorization: Annotated[
+        str | None, Header(alias="Authorization", description=KEY_HEADER)
+    ] = None,
 ) -> simulate.Estimate | JSONResponse:
     key = None if authorization is None else _key(connect(), authorization)
     if isinstance(key, JSONResponse):
@@ -652,13 +715,14 @@ def estimate(
 
 @app.get(
     "/v1/simulations/{job_id}",
-    summary="A fork job's status, and its result when done",
+    summary="A fork's status, and its result when done",
     response_model=Job,
+    responses={404: not_found("fork"), 422: INVALID},
 )
 def get_simulation(job_id: str) -> Job:
     row = connect().execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
     if row is None:
-        raise HTTPException(404, f"no simulation {job_id}")
+        raise HTTPException(404, f"no fork {job_id}")
     return Job(
         id=row["id"],
         status=row["status"],
@@ -701,17 +765,22 @@ async def _stream(conn: sqlite3.Connection, job_id: str, after: int) -> AsyncIte
 
 @app.get(
     "/v1/simulations/{job_id}/events",
-    summary="Stream a fork job's progress as server-sent events; resumes from Last-Event-ID",
+    summary="Stream a fork's progress as server-sent events; resumes from Last-Event-ID",
     response_class=StreamingResponse,
-    responses={200: {"content": {"text/event-stream": {}}, "description": "Server-sent events"}},
+    responses={
+        200: {"content": {"text/event-stream": {}}, "description": "Server-sent events"},
+        404: not_found("fork"),
+        422: INVALID,
+    },
 )
 async def simulation_events(
-    job_id: str, last_event_id: Annotated[str | None, Header(alias="Last-Event-ID")] = None
+    job_id: str,
+    last_event_id: Annotated[str | None, Header(alias="Last-Event-ID")] = None,
 ) -> StreamingResponse:
     conn = connect()
     if conn.execute("SELECT 1 FROM jobs WHERE id = ?", (job_id,)).fetchone() is None:
         conn.close()
-        raise HTTPException(404, f"no simulation {job_id}")
+        raise HTTPException(404, f"no fork {job_id}")
     after = int(last_event_id) if last_event_id and last_event_id.isdigit() else 0
     return StreamingResponse(
         _stream(conn, job_id, after),
@@ -728,7 +797,7 @@ def _snapshot_dates() -> list[str]:
 def _today(conn: sqlite3.Connection) -> str:
     row = conn.execute("SELECT max(date) FROM ledger_days").fetchone()
     if row[0] is None:
-        raise HTTPException(404, "no committed day yet; run make daily-fixtures")
+        raise HTTPException(404, "no day committed yet")
     return row[0]
 
 
@@ -761,11 +830,12 @@ def _daily_question(conn: sqlite3.Connection) -> tuple[str, dict[str, Any]]:
     "/v1/world",
     summary="Today's world: countries, tiers, topic shares and prefilled fork events",
     response_model=World,
+    responses={404: not_found("world snapshot")},
 )
 def world() -> World:
     dates = _snapshot_dates()
     if not dates:
-        raise HTTPException(404, "no world snapshot yet; run make daily-fixtures")
+        raise HTTPException(404, "no world snapshot committed yet")
     day = dates[-1]
     agents = population.read_snapshot(day)
     conn = connect()
@@ -850,7 +920,7 @@ def _agent(conn: sqlite3.Connection, agent_id: str) -> Agent:
         prev = b
         offset = {t: float(found.get(f"c_{t}", 0.0)) for t in tps}
     if found is None or prev is None:
-        raise HTTPException(404, f"no agent {agent_id} in the latest snapshot")
+        raise HTTPException(404, f"no agent {agent_id} in the latest world snapshot")
     return Agent(
         agent_id=agent_id,
         iso3=str(found["country"]),
@@ -866,6 +936,7 @@ def _agent(conn: sqlite3.Connection, agent_id: str) -> Agent:
     "/v1/agents/{agent_id}",
     summary="One simulated agent: traits, beliefs and what moved them",
     response_model=Agent,
+    responses={404: not_found("agent"), 422: INVALID},
 )
 def agent(agent_id: str) -> Agent:
     return _agent(connect(), agent_id)
@@ -881,11 +952,15 @@ WHY_SCHEMA: llm.Schema = {
 
 @app.get(
     "/v1/agents/{agent_id}/why",
-    summary="A short model-written account of one agent's trace, labelled simulated",
+    summary="A short model-written account of what moved one agent, labelled simulated",
     response_model=AgentWhy,
-    responses={402: {"description": "The model call would exceed its cost cap"}},
+    responses={
+        402: {"model": Refused, "description": "The model call would exceed its cost cap"},
+        404: not_found("agent"),
+        422: INVALID,
+    },
 )
-def agent_why(agent_id: str) -> AgentWhy:
+def agent_why(agent_id: str) -> AgentWhy | JSONResponse:
     conn = connect()
     a = _agent(conn, agent_id)
     changes = "\n".join(f"- {s.date} {s.topic}: {s.delta:+.3f} ({s.cause})" for s in a.moved)
@@ -899,8 +974,11 @@ def agent_why(agent_id: str) -> AgentWhy:
     )
     try:
         out = llm.complete_json("why", prompt, WHY_SCHEMA, llm.Budget(WHY_MAX_COST_USD), conn=conn)
-    except llm.BudgetExceeded as e:
-        raise HTTPException(402, str(e)) from e
+    except llm.BudgetExceeded:
+        log.warning("agent account refused over its cost cap", exc_info=True)
+        return _refuse(
+            402, "why_over_cap", "the account would pass its cost cap, so it was not written"
+        )
     return AgentWhy(agent_id=agent_id, text=out["text"], provider=llm.provider().name)
 
 
@@ -986,8 +1064,9 @@ def _daily(conn: sqlite3.Connection, player_id: str | None) -> Daily:
 
 @app.get(
     "/v1/daily",
-    summary="Today's question, and the reveal once this player answered",
+    summary="Today's question, and the reveal once this visitor answered",
     response_model=Daily,
+    responses={404: not_found("daily question"), 422: INVALID},
 )
 def daily(player_id: Annotated[str | None, Query(max_length=64)] = None) -> Daily:
     return _daily(connect(), player_id)
@@ -998,15 +1077,19 @@ def daily(player_id: Annotated[str | None, Query(max_length=64)] = None) -> Dail
     summary="Answer today's question once; returns the reveal",
     status_code=201,
     response_model=Daily,
-    responses={409: {"description": "This player already answered, or answers closed"}},
+    responses={
+        404: not_found("daily question"),
+        409: {"model": Refused, "description": "This visitor already answered, or answers closed"},
+        422: {"model": Refused, "description": "The request is invalid or not today's question"},
+    },
 )
-def answer_daily(a: Answer) -> Daily:
+def answer_daily(a: Answer) -> Daily | JSONResponse:
     conn = connect()
     day, q = _daily_question(conn)
     if a.question_id != q["id"]:
-        raise HTTPException(422, f"only today's question {q['id']} takes answers")
+        return _refuse(422, "wrong_question", f"only today's question {q['id']} takes answers")
     if _closed(q):
-        raise HTTPException(409, f"answers for {q['id']} closed at {q['closes']}")
+        return _refuse(409, "answers_closed", f"answers for {q['id']} closed at {q['closes']}")
     try:
         with conn:
             conn.execute(
@@ -1014,13 +1097,15 @@ def answer_daily(a: Answer) -> Daily:
                 " VALUES (?, ?, ?, ?, ?)",
                 (a.question_id, a.player_id, day, a.probability, _now()),
             )
-    except sqlite3.IntegrityError as e:
-        raise HTTPException(409, f"player already answered {a.question_id}") from e
+    except sqlite3.IntegrityError:
+        return _refuse(409, "already_answered", f"this visitor already answered {a.question_id}")
     return _daily(conn, a.player_id)
 
 
 @app.get(
-    "/v1/receipts", summary="Every committed day's root and record hash", response_model=Receipts
+    "/v1/receipts",
+    summary="Every day record, newest first, with its root, record hash and anchor status",
+    response_model=Receipts,
 )
 def receipts() -> Receipts:
     conn = connect()
@@ -1038,14 +1123,15 @@ def receipts() -> Receipts:
 
 @app.get(
     "/v1/receipts/{day}",
-    summary="One day's receipt: every entry with its salt and leaf hash",
+    summary="One day record with every receipt in it: entry, salt and leaf hash",
     response_model=ReceiptDay,
+    responses={404: not_found("day record"), 422: INVALID},
 )
 def receipt_day(day: str) -> ReceiptDay:
     conn = connect()
     row = ledger._day_row(conn, day)
     if row is None:
-        raise HTTPException(404, f"no committed day {day}")
+        raise HTTPException(404, f"no day record for {day}")
     outcomes = dict(conn.execute("SELECT question_id, outcome FROM resolutions"))
     briers = {
         (r[0], r[1]): r[2]
@@ -1089,13 +1175,17 @@ def receipt_day(day: str) -> ReceiptDay:
 
 @app.get(
     "/v1/scores",
-    summary="Brier skill of the simulation against each baseline",
+    summary="How our simulation's forecasts score against each baseline",
+    description=(
+        "Mean Brier difference of the sim forecaster against the plain LLM and the market over"
+        " resolved questions, with n, an interval and whether the sample is large enough to"
+        " report, overall and by coverage tier and region."
+    ),
     response_model=dict[str, BaselineSkill],
 )
 def scores() -> dict[str, Any]:
-    """score.summarize over every committed forecast whose question has resolved. A question
-    across several countries takes its lowest-coverage tier, and "multiple" as its region when
-    they differ."""
+    # A question across several countries takes its lowest-coverage tier, and "multiple" as its
+    # region when they differ.
     conn = connect()
     resolved = dict(conn.execute("SELECT question_id, outcome FROM resolutions"))
     questions = {q["id"]: q for q in forecast.load_questions()}

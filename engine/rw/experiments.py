@@ -49,7 +49,7 @@ NAIVE_PROBABILITY = 0.5
 BOOTSTRAP_SEED = 7
 
 FAKE_NOTE = (
-    "Provider fake: these numbers come from the deterministic fake model. Fake-model results test"
+    "Provider fake: these numbers come from the fake model. Fake-model results test"
     " the pipeline, not the science, and support no claim."
 )
 
@@ -559,12 +559,8 @@ def run(exp_id: str, fixtures: bool = False, root: Path = EXPERIMENTS, command: 
         f"- Command: `{meta['command']}`",
         f"- Commit: `{commit}`",
         f"- PREREG.md sha256: `{prereg}` (matches REGISTRY.md)",
-        f"- Engine {settings.ENGINE_VERSION}, provider {provider}, model {model},"
-        + (
-            f" nothing spent (estimated ${out['cost_usd']:.6f} at {settings.MODEL} prices)"
-            if provider == "fake"
-            else f" cost ${out['cost_usd']:.6f}"
-        ),
+        f"- Engine {settings.ENGINE_VERSION}, provider {provider}, model {model}",
+        f"- Cost: {llm.cost_text(out['cost_usd'], provider)}",
         f"- n = {out['n']}; raw rows in `rows.csv`, every number in `results.json`",
         "",
         "## Pre-registered metrics",
@@ -595,7 +591,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 check_registration(exp_id)
                 hashed = "hash ok"
             except NotRegistered:
-                hashed = "hash MISMATCH"
+                hashed = "hash mismatch"
             runs = (
                 "runs"
                 if exp_id in PROTOCOLS
@@ -609,7 +605,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         command = "python -m rw.experiments " + " ".join(sys.argv[1:] if argv is None else argv)
         path = run(args.id, args.fixtures, command=command)
     except (NotRegistered, MissingInput, FileExistsError, llm.BudgetExceeded) as e:
-        print(f"refused: {e}", file=sys.stderr)
+        print(f"experiment refused, nothing written: {e}", file=sys.stderr)
         return 1
     print(f"wrote {path}")
     return 0

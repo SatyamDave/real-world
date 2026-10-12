@@ -2,13 +2,13 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Real World API",
-    "description": "Fork today's simulated world, read its agents, answer the daily question and check the hashed receipts. Every simulation result is labelled simulated.",
+    "description": "Fork today's simulated world, read its agents, answer the daily question and check the hashed receipts. Every fork result is labelled simulated.",
     "version": "2026-10-27"
   },
   "paths": {
     "/v1/simulate": {
       "post": {
-        "summary": "Start a fork of today's world with one event; returns a job id",
+        "summary": "Start a fork: add one event to today's world and run it forward. Returns an id.",
         "operationId": "create_simulation_v1_simulate_post",
         "parameters": [
           {
@@ -39,7 +39,7 @@
             }
           },
           {
-            "name": "authorization",
+            "name": "Authorization",
             "in": "header",
             "required": false,
             "schema": {
@@ -78,9 +78,6 @@
               }
             }
           },
-          "400": {
-            "description": "Real-World-Version is not the current version"
-          },
           "401": {
             "description": "The API key is unknown or revoked",
             "content": {
@@ -102,17 +99,17 @@
             }
           },
           "409": {
-            "description": "A job with this Idempotency-Key is running",
+            "description": "This Idempotency-Key is running a fork, or was used with another body",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Conflict"
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
           },
           "422": {
-            "description": "The event breaks the acceptable-use policy (or the body is invalid)",
+            "description": "The request is invalid, Real-World-Version is not the current version, or the event breaks the acceptable-use policy",
             "content": {
               "application/json": {
                 "schema": {
@@ -132,7 +129,14 @@
             }
           },
           "503": {
-            "description": "A spend, address or acceptable-use check could not run; nothing was started"
+            "description": "A spend, address or acceptable-use check could not run; nothing was started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
           }
         }
       }
@@ -143,7 +147,7 @@
         "operationId": "estimate_v1_simulate_estimate_post",
         "parameters": [
           {
-            "name": "authorization",
+            "name": "Authorization",
             "in": "header",
             "required": false,
             "schema": {
@@ -193,11 +197,21 @@
             }
           },
           "422": {
-            "description": "Validation Error",
+            "description": "The request is invalid",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The API key could not be checked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -207,7 +221,7 @@
     },
     "/v1/simulations/{job_id}": {
       "get": {
-        "summary": "A fork job's status, and its result when done",
+        "summary": "A fork's status, and its result when done",
         "operationId": "get_simulation_v1_simulations__job_id__get",
         "parameters": [
           {
@@ -231,12 +245,22 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "No such fork",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -246,7 +270,7 @@
     },
     "/v1/simulations/{job_id}/events": {
       "get": {
-        "summary": "Stream a fork job's progress as server-sent events; resumes from Last-Event-ID",
+        "summary": "Stream a fork's progress as server-sent events; resumes from Last-Event-ID",
         "operationId": "simulation_events_v1_simulations__job_id__events_get",
         "parameters": [
           {
@@ -282,12 +306,22 @@
               "text/event-stream": {}
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "No such fork",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -306,6 +340,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/World"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such world snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
                 }
               }
             }
@@ -339,12 +383,22 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "No such agent",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -354,7 +408,7 @@
     },
     "/v1/agents/{agent_id}/why": {
       "get": {
-        "summary": "A short model-written account of one agent's trace, labelled simulated",
+        "summary": "A short model-written account of what moved one agent, labelled simulated",
         "operationId": "agent_why_v1_agents__agent_id__why_get",
         "parameters": [
           {
@@ -379,14 +433,31 @@
             }
           },
           "402": {
-            "description": "The model call would exceed its cost cap"
-          },
-          "422": {
-            "description": "Validation Error",
+            "description": "The model call would exceed its cost cap",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such agent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -396,7 +467,7 @@
     },
     "/v1/daily": {
       "get": {
-        "summary": "Today's question, and the reveal once this player answered",
+        "summary": "Today's question, and the reveal once this visitor answered",
         "operationId": "daily_v1_daily_get",
         "parameters": [
           {
@@ -428,12 +499,22 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "No such daily question",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -466,15 +547,32 @@
               }
             }
           },
-          "409": {
-            "description": "This player already answered, or answers closed"
-          },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "No such daily question",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This visitor already answered, or answers closed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid or not today's question",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -484,7 +582,7 @@
     },
     "/v1/receipts": {
       "get": {
-        "summary": "Every committed day's root and record hash",
+        "summary": "Every day record, newest first, with its root, record hash and anchor status",
         "operationId": "receipts_v1_receipts_get",
         "responses": {
           "200": {
@@ -502,7 +600,7 @@
     },
     "/v1/receipts/{day}": {
       "get": {
-        "summary": "One day's receipt: every entry with its salt and leaf hash",
+        "summary": "One day record with every receipt in it: entry, salt and leaf hash",
         "operationId": "receipt_day_v1_receipts__day__get",
         "parameters": [
           {
@@ -526,12 +624,22 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "No such day record",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -541,8 +649,8 @@
     },
     "/v1/scores": {
       "get": {
-        "summary": "Brier skill of the simulation against each baseline",
-        "description": "score.summarize over every committed forecast whose question has resolved. A question\nacross several countries takes its lowest-coverage tier, and \"multiple\" as its region when\nthey differ.",
+        "summary": "How our simulation's forecasts score against each baseline",
+        "description": "Mean Brier difference of the sim forecaster against the plain LLM and the market over resolved questions, with n, an interval and whether the sample is large enough to report, overall and by coverage tier and region.",
         "operationId": "scores_v1_scores_get",
         "responses": {
           "200": {
@@ -821,27 +929,12 @@
         "required": ["n", "n_pairs", "mean_diff", "low", "high", "claim", "by_tier", "by_region"],
         "title": "BaselineSkill"
       },
-      "Conflict": {
-        "properties": {
-          "detail": {
-            "type": "string",
-            "title": "Detail"
-          },
-          "id": {
-            "type": "string",
-            "title": "Id"
-          }
-        },
-        "type": "object",
-        "required": ["detail", "id"],
-        "title": "Conflict"
-      },
       "Cost": {
         "properties": {
           "estimated_usd": {
             "type": "number",
             "title": "Estimated Usd",
-            "description": "An estimate made before the run, at the configured model's (Haiku) prices."
+            "description": "An estimate made before the run, at the configured model's prices."
           },
           "actual_usd": {
             "type": "number",
@@ -935,17 +1028,18 @@
                 "type": "null"
               }
             ],
-            "title": "Mean"
+            "title": "Mean",
+            "description": "Mean of other visitors' answers; null if there are none."
           },
           "count": {
             "type": "integer",
-            "title": "Count"
+            "title": "Count",
+            "description": "Other visitors' answers; the caller's own is never counted."
           }
         },
         "type": "object",
         "required": ["mean", "count"],
-        "title": "Crowd",
-        "description": "Other visitors' answers; the caller's own answer is never in it."
+        "title": "Crowd"
       },
       "Daily": {
         "properties": {
@@ -1164,19 +1258,6 @@
         "required": ["text"],
         "title": "Event"
       },
-      "HTTPValidationError": {
-        "properties": {
-          "detail": {
-            "items": {
-              "$ref": "#/components/schemas/ValidationError"
-            },
-            "type": "array",
-            "title": "Detail"
-          }
-        },
-        "type": "object",
-        "title": "HTTPValidationError"
-      },
       "Job": {
         "properties": {
           "id": {
@@ -1265,6 +1346,17 @@
         "type": "object",
         "required": ["self", "events"],
         "title": "Links"
+      },
+      "NotFound": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": ["detail"],
+        "title": "NotFound"
       },
       "PolicyRefused": {
         "properties": {
@@ -1452,7 +1544,16 @@
               "client_unknown",
               "spend_unreadable",
               "invalid_api_key",
-              "key_cap_spent"
+              "key_cap_spent",
+              "idempotency_key_running",
+              "invalid_request",
+              "unsupported_version",
+              "acceptable_use_unreadable",
+              "idempotency_key_reused",
+              "why_over_cap",
+              "wrong_question",
+              "answers_closed",
+              "already_answered"
             ],
             "title": "Code"
           },
@@ -1470,6 +1571,18 @@
                 "type": "null"
               }
             ]
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "The fork already running under this Idempotency-Key."
           }
         },
         "type": "object",
@@ -1607,7 +1720,7 @@
             "maximum": 20.0,
             "minimum": 1.0,
             "title": "Members",
-            "description": "Ensemble size: independent runs whose spread gives the p10-p90 band.",
+            "description": "Ensemble members: independent runs of the fork, each with its own agent subsample and noise. Their p10-p90 range is the spread.",
             "default": 5
           },
           "agents": {
@@ -1615,7 +1728,7 @@
             "maximum": 5000.0,
             "minimum": 50.0,
             "title": "Agents",
-            "description": "Agents sampled from the world, in proportion to country population.",
+            "description": "Agents sampled from the world snapshot, in proportion to country population.",
             "default": 200
           },
           "topics": {
@@ -1638,14 +1751,14 @@
             "maximum": 5.0,
             "exclusiveMinimum": 0.0,
             "title": "Max Cost Usd",
-            "description": "Refuse with 402 if the estimate exceeds this. One model call per segment.",
+            "description": "Cost cap in dollars. A fork whose estimate is above it is refused with 402. The estimate counts one model call per segment.",
             "default": 0.5
           },
           "seed": {
             "type": "integer",
             "minimum": 0.0,
             "title": "Seed",
-            "description": "Random seed; the same request is replayed.",
+            "description": "Fixes the agent subsample and each member's noise. The model's answers can still differ between runs.",
             "default": 0
           }
         },
@@ -1665,7 +1778,7 @@
           "disclosure": {
             "type": "string",
             "title": "Disclosure",
-            "default": "AI-simulated. A fork of a synthetic population under an event you described: not a poll, not a forecast of real people, and not scored."
+            "default": "AI-simulated. Not a poll or a prediction of a real person"
           },
           "world_snapshot_id": {
             "type": "string",
@@ -1933,42 +2046,6 @@
         "required": ["agent_id", "iso3", "segment", "belief_start", "belief_end", "steps"],
         "title": "TraceAgent"
       },
-      "ValidationError": {
-        "properties": {
-          "loc": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "integer"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Location"
-          },
-          "msg": {
-            "type": "string",
-            "title": "Message"
-          },
-          "type": {
-            "type": "string",
-            "title": "Error Type"
-          },
-          "input": {
-            "title": "Input"
-          },
-          "ctx": {
-            "type": "object",
-            "title": "Context"
-          }
-        },
-        "type": "object",
-        "required": ["loc", "msg", "type"],
-        "title": "ValidationError"
-      },
       "WeekDay": {
         "properties": {
           "date": {
@@ -1985,7 +2062,7 @@
               }
             ],
             "title": "Probability",
-            "description": "The player's answer that day; null if none."
+            "description": "The visitor's answer that day; null if none."
           },
           "brier": {
             "anyOf": [

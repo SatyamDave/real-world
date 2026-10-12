@@ -136,4 +136,17 @@ def test_e001_fixtures_label_fake_results(root):
     report = (path / "RESULTS.md").read_text()
     assert experiments.FAKE_NOTE in report
     # A keyless run prints its would-be dollars only as an estimate, never as spend (#33, #34).
-    assert "model fake, nothing spent (estimated $" in report and " cost $" not in report
+    assert "- Cost: fake model, nothing spent (estimated $" in report
+
+
+def test_list_says_hash_mismatch_in_lower_case_and_a_refusal_names_its_effect(monkeypatch, capsys):
+    def mismatch(*_args):
+        raise experiments.NotRegistered("hash differs")
+
+    monkeypatch.setattr(experiments, "check_registration", mismatch)
+    assert experiments.main(["list"]) == 0
+    out = capsys.readouterr().out
+    assert "hash mismatch" in out and "MISMATCH" not in out
+
+    assert experiments.main(["run", "E002"]) == 1
+    assert capsys.readouterr().err.startswith("experiment refused, nothing written: ")
