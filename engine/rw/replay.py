@@ -8,26 +8,33 @@ The committed values come from the ledger, never from the forecasts table (produ
 import hashlib
 import json
 import sqlite3
+from collections.abc import Callable
 from typing import Any
 
 import numpy as np
 
-from rw import forecast, ledger, population, settings
+from rw import forecast, ledger, llm, population, settings
 from rw.forecast import Question
 
 REPLAYED = ("sim", "plain_llm")
 
 
 def _recorded(
-    conn: sqlite3.Connection, purpose: str, prompt: str, provider: str | None
+    conn: sqlite3.Connection,
+    purpose: str,
+    state: str,
+    questions: llm.Questions,
+    share: Callable[[dict[str, Any]], float],
+    provider: str | None,
 ) -> tuple[int, float] | None:
-    """(call id, yes share) of the earliest stored answer to the prompt, as the memo reads it."""
+    """(call id, yes share) of the earliest stored answer to the request, as the memo reads it."""
+    request = llm.decide_request(state, questions)
     row = conn.execute(
         "SELECT id, output_json FROM llm_calls WHERE purpose = ? AND prompt_sha256 = ?"
         " AND output_json IS NOT NULL AND (? IS NULL OR provider = ?) ORDER BY id LIMIT 1",
-        (purpose, hashlib.sha256(prompt.encode()).hexdigest(), provider, provider),
+        (purpose, hashlib.sha256(request.encode()).hexdigest(), provider, provider),
     ).fetchone()
-    return None if row is None else (row["id"], forecast.yes_share(json.loads(row["output_json"])))
+    return None if row is None else (row["id"], share(json.loads(row["output_json"])))
 
 
 def segment_answers(
@@ -43,7 +50,14 @@ def segment_answers(
     _, asks = forecast.sim_inputs(conn, date, question, agents)
     out = []
     for segment, _, share, prompt in asks:
-        found = _recorded(conn, "forecast_sim", prompt, provider)
+        found = _recorded(
+            conn,
+            "forecast_sim",
+            prompt,
+            forecast.sim_questions(date, question, segment),
+            forecast.sim_share,
+            provider,
+        )
         out.append(
             {
                 "segment": segment,
@@ -68,7 +82,14 @@ def _plain_calls(
 ) -> list[tuple[int, float] | None]:
     titles = forecast.headlines(conn, date, question["countries"])
     return [
-        _recorded(conn, "forecast_plain", forecast.plain_prompt(question, titles, i), provider)
+        _recorded(
+            conn,
+            "forecast_plain",
+            forecast.plain_prompt(question, titles, i),
+            forecast.PLAIN_QUESTIONS,
+            forecast.plain_share,
+            provider,
+        )
         for i in range(settings.PLAIN_LLM_SAMPLES)
     ]
 

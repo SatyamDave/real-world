@@ -1,7 +1,10 @@
 """The only module that talks to a model provider.
 
-complete_json() memoizes on (provider, model, schema, prompt), refuses a call whose estimate would
-cross the budget, and writes one llm_calls row per provider call.
+Two entry points, one per kind of call (decision 0007): decide() asks Jev typed questions and
+returns its raw answers, probabilities and confidence included; complete_json() asks an
+open-weight model behind an OpenAI-compatible API for JSON that matches a schema. Both memoize on
+(provider, model, schema, prompt), refuse a call whose estimate would cross the budget, and write
+one llm_calls row per provider call. Without a key both answer from FakeLLM.
 """
 
 import hashlib
@@ -10,6 +13,7 @@ import math
 import os
 import random
 import sqlite3
+import urllib.request
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Protocol
@@ -32,23 +36,31 @@ class Budget:
     spent_usd: float = 0.0
 
 
-def cost_usd(in_tokens: int, out_tokens: int) -> float:
-    return (
-        in_tokens * settings.PRICE_INPUT_USD_PER_MTOK
-        + out_tokens * settings.PRICE_OUTPUT_USD_PER_MTOK
-    ) / 1e6
+Questions = dict[str, dict[str, Any]]
+Prices = tuple[float, float]
+
+
+def cost_usd(in_tokens: int, out_tokens: int, prices: Prices = settings.TEXT_PRICES) -> float:
+    return (in_tokens * prices[0] + out_tokens * prices[1]) / 1e6
 
 
 def cost_text(usd: float, provider: str) -> str:
     """Dollars as a surface shows them. A fake-model run spends nothing; its dollars are what the
     real model would have cost, so they are labelled as an estimate (#34)."""
     if provider == "fake":
-        return f"fake model, nothing spent (estimated ${usd:.4f} at {settings.MODEL} prices)"
+        return f"fake model, nothing spent (estimated ${usd:.4f} at {FAKE_PRICED_AT} prices)"
     return f"${usd:.4f}"
+
+
+FAKE_PRICED_AT = f"{settings.JEV_MODEL} and {settings.TEXT_MODEL}"
 
 
 def estimate_cost(prompt_chars: int, max_tokens: int) -> float:
     return cost_usd(math.ceil(prompt_chars / 4), max_tokens)
+
+
+def estimate_decide_cost(request_chars: int) -> float:
+    return cost_usd(math.ceil(request_chars / 4), 0, settings.JEV_PRICES)
 
 
 def check_budget(budget: Budget, estimate: float) -> None:
@@ -126,6 +138,54 @@ def _fill(schema: Schema, rng: random.Random) -> Any:
     raise ValueError(f"FakeLLM cannot fill schema type {kind!r}")
 
 
+def _fake_answer(q: dict[str, Any], rng: random.Random) -> dict[str, Any]:
+    if q["type"] == "noul":
+        return {"type": "noul", "noul": rng.random()}
+    n = len(q["criteria"])
+    keys = list(q["criteria"]) if q["type"] == "choice" else [str(i) for i in range(n)]
+    weights = [rng.random() + 1e-9 for _ in keys]
+    probs = {k: w / sum(weights) for k, w in zip(keys, weights, strict=True)}
+    out: dict[str, Any] = {"type": q["type"], "probabilities": probs, "confidence": rng.random()}
+    if q["type"] == "choice":
+        out["choice"] = max(probs, key=probs.__getitem__)
+    else:
+        out["score"] = sum(int(k) * p for k, p in probs.items())
+        out["legend"] = {str(i): d for i, d in enumerate(q["criteria"])}
+    return out
+
+
+def check_answers(answers: Any, questions: Questions) -> None:
+    """Raise ValueError unless every question has an answer of its type with probabilities."""
+    if not isinstance(answers, dict) or set(answers) != set(questions):
+        raise ValueError("answers do not match the question ids")
+    for qid, q in questions.items():
+        a = answers[qid]
+        if not isinstance(a, dict) or a.get("type") != q["type"]:
+            raise ValueError(f"{qid}: expected a {q['type']} answer")
+        if q["type"] == "noul":
+            validate(a.get("noul"), {"type": "number", "minimum": 0, "maximum": 1}, qid)
+            continue
+        probs = a.get("probabilities")
+        validate(a.get("confidence"), {"type": "number", "minimum": 0, "maximum": 1}, qid)
+        n = len(q["criteria"])
+        if not isinstance(probs, dict) or len(probs) != n:
+            raise ValueError(f"{qid}: expected {n} probabilities")
+        for p in probs.values():
+            validate(p, {"type": "number", "minimum": 0, "maximum": 1}, qid)
+        if abs(sum(probs.values()) - 1) > 1e-3:
+            raise ValueError(f"{qid}: probabilities do not sum to 1")
+        if q["type"] == "choice" and set(probs) != set(q["criteria"]):
+            raise ValueError(f"{qid}: probabilities name other options")
+
+
+def level_value(answer: dict[str, Any], low: float, high: float) -> float:
+    """A score answer as the probability-weighted level, levels spread evenly over [low, high].
+    Reads the probabilities, not `score`, so it holds whichever index the levels start at."""
+    keys = sorted(answer["probabilities"], key=int)
+    step = (high - low) / (len(keys) - 1)
+    return sum(answer["probabilities"][k] * (low + i * step) for i, k in enumerate(keys))
+
+
 class Provider(Protocol):
     name: str
 
@@ -134,79 +194,153 @@ class Provider(Protocol):
         ...
 
 
+class Decider(Protocol):
+    name: str
+    model: str
+
+    def decide(self, state: str, questions: Questions) -> tuple[dict[str, Any], int, int]:
+        """Return (response body with model and answers, input tokens, output tokens)."""
+        ...
+
+
 class FakeLLM:
     name = "fake"
+    model = settings.JEV_MODEL
 
     def complete(self, prompt: str, schema: Schema, max_tokens: int) -> tuple[str, int, int]:
         seed = int.from_bytes(hashlib.sha256(prompt.encode()).digest(), "big")
         text = json.dumps(_fill(schema, random.Random(seed)))
         return text, math.ceil(len(prompt) / 4), min(max_tokens, math.ceil(len(text) / 4))
 
+    def decide(self, state: str, questions: Questions) -> tuple[dict[str, Any], int, int]:
+        request = decide_request(state, questions)
+        rng = random.Random(int.from_bytes(hashlib.sha256(request.encode()).digest(), "big"))
+        answers = {qid: _fake_answer(q, rng) for qid, q in questions.items()}
+        return {"model": settings.JEV_MODEL, "answers": answers}, math.ceil(len(request) / 4), 0
 
-class ClaudeLLM:
-    name = "anthropic"
 
-    def __init__(self) -> None:
-        import anthropic
+def _post(url: str, key: str | None, body: dict[str, Any]) -> dict[str, Any]:
+    headers = {"Content-Type": "application/json"}
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
+    req = urllib.request.Request(url, json.dumps(body).encode(), headers, method="POST")
+    # ponytail: no retry on 429/529; the call raises and the step fails closed. Add backoff if
+    # nightly runs start failing on rate limits.
+    with urllib.request.urlopen(req, timeout=settings.LLM_TIMEOUT_S) as resp:
+        return json.loads(resp.read())
 
-        self.client = anthropic.Anthropic()
+
+class JevLLM:
+    """TypeSafe's Jev at POST {base}/v1/systemone, pinned to one version (decision 0007)."""
+
+    name = "jev"
+
+    def __init__(self, base_url: str, key: str, model: str) -> None:
+        self.base_url, self.key, self.model = base_url, key, model
+
+    def decide(self, state: str, questions: Questions) -> tuple[dict[str, Any], int, int]:
+        body = {"model": self.model, "state": state, "questions": questions}
+        out = _post(f"{self.base_url}/v1/systemone", self.key, body)
+        usage = out.get("usage") or {}
+        return out, int(usage.get("input_tokens", 0)), int(usage.get("output_tokens", 0))
+
+
+class OpenAICompatibleLLM:
+    """An open-weight model behind POST {base}/chat/completions with a JSON schema answer."""
+
+    name = "openai_compatible"
+
+    def __init__(self, base_url: str, key: str | None, model: str) -> None:
+        self.base_url, self.key, self.model = base_url, key, model
 
     def complete(self, prompt: str, schema: Schema, max_tokens: int) -> tuple[str, int, int]:
-        # Haiku 5.5 rejects a non-default temperature, so none is sent.
-        response = self.client.messages.create(
-            model=settings.MODEL,
-            max_tokens=max_tokens,
-            messages=[{"role": "user", "content": prompt}],
-            output_config={"format": {"type": "json_schema", "schema": schema}, "effort": "low"},
-        )
-        text = "".join(block.text for block in response.content if block.type == "text")
-        return text, response.usage.input_tokens, response.usage.output_tokens
+        body = {
+            "model": self.model,
+            "max_tokens": max_tokens,
+            "messages": [{"role": "user", "content": prompt}],
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {"name": "answer", "strict": True, "schema": schema},
+            },
+            # OpenRouter routes only to hosts that honour response_format; others ignore it.
+            "provider": {"require_parameters": True},
+        }
+        out = _post(f"{self.base_url}/chat/completions", self.key, body)
+        usage = out.get("usage") or {}
+        text = out["choices"][0]["message"].get("content") or ""
+        return text, int(usage.get("prompt_tokens", 0)), int(usage.get("completion_tokens", 0))
 
 
 def provider() -> Provider:
-    return ClaudeLLM() if os.environ.get("ANTHROPIC_API_KEY") else FakeLLM()
+    """The model that writes JSON: OpenRouter with OPENROUTER_API_KEY, any OpenAI-compatible
+    server (Ollama) at RW_TEXT_BASE_URL, else the fake."""
+    base = os.environ.get("RW_TEXT_BASE_URL")
+    model = os.environ.get("RW_TEXT_MODEL", settings.TEXT_MODEL)
+    if base:
+        return OpenAICompatibleLLM(base.rstrip("/"), os.environ.get("RW_TEXT_API_KEY"), model)
+    if key := os.environ.get("OPENROUTER_API_KEY"):
+        return OpenAICompatibleLLM(settings.OPENROUTER_BASE_URL, key, model)
+    return FakeLLM()
+
+
+def decider() -> Decider:
+    """Jev direct with TYPESAFE_API_KEY, Jev through OpenRouter with OPENROUTER_API_KEY, else
+    the fake."""
+    if key := os.environ.get("TYPESAFE_API_KEY"):
+        return JevLLM(settings.TYPESAFE_BASE_URL, key, settings.JEV_MODEL)
+    if key := os.environ.get("OPENROUTER_API_KEY"):
+        return JevLLM(settings.OPENROUTER_JEV_BASE_URL, key, settings.JEV_OPENROUTER_MODEL)
+    return FakeLLM()
 
 
 def model_name() -> str:
-    """The model that answers this process's calls, as results and the ledger record it."""
-    return "fake" if provider().name == "fake" else settings.MODEL
+    """The model that answers this process's forecasts and signals, as results and the ledger
+    record it."""
+    jev = decider()
+    return "fake" if jev.name == "fake" else jev.model
 
 
 def _sha256(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
 
 
-def complete_json(
-    purpose: str,
+def decide_request(state: str, questions: Questions) -> str:
+    # Not sort_keys: the order of choice options is part of what the model sees.
+    return json.dumps({"state": state, "questions": questions}, separators=(",", ":"))
+
+
+def _recorded(
+    conn: sqlite3.Connection | None,
+    names: tuple[str, str, str],
     prompt: str,
-    schema: Schema,
+    schema_sha: str,
     budget: Budget,
-    max_tokens: int = settings.LLM_MAX_OUTPUT_TOKENS,
-    conn: sqlite3.Connection | None = None,
-) -> dict[str, Any]:
+    estimate: float,
+    call: Any,
+    prices: Prices,
+    parse: Any,
+) -> Any:
+    """Memo, budget check, provider call and llm_calls row shared by decide and complete_json."""
     if conn is None:
         conn = db.connect()
-    llm = provider()
+    provider_name, model, purpose = names
     prompt_sha = _sha256(prompt)
-    schema_sha = _sha256(json.dumps(schema, sort_keys=True, separators=(",", ":")))
-
     stored = conn.execute(
         "SELECT output_json FROM llm_calls WHERE provider = ? AND model = ? AND schema_sha256 = ?"
         " AND prompt_sha256 = ? AND output_json IS NOT NULL ORDER BY id LIMIT 1",
-        (llm.name, settings.MODEL, schema_sha, prompt_sha),
+        (provider_name, model, schema_sha, prompt_sha),
     ).fetchone()
     if stored is not None:
         return json.loads(stored[0])
 
-    check_budget(budget, estimate_cost(len(prompt), max_tokens))
-    text, in_tokens, out_tokens = llm.complete(prompt, schema, max_tokens)
-    cost = cost_usd(in_tokens, out_tokens)
+    check_budget(budget, estimate)
+    raw, in_tokens, out_tokens = call()
+    cost = cost_usd(in_tokens, out_tokens, prices)
     budget.spent_usd += cost
 
     try:
-        output = json.loads(text)
-        validate(output, schema)
-    except ValueError:
+        output = parse(raw)
+    except (ValueError, KeyError, TypeError):
         output = None
 
     with conn:
@@ -216,8 +350,8 @@ def complete_json(
             " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 datetime.now(UTC).isoformat(timespec="milliseconds"),
-                llm.name,
-                settings.MODEL,
+                provider_name,
+                model,
                 purpose,
                 prompt_sha,
                 schema_sha,
@@ -229,8 +363,70 @@ def complete_json(
             ),
         )
     if output is None:
-        raise ValueError(f"{llm.name} returned output that does not match the schema for {purpose}")
+        raise ValueError(
+            f"{provider_name} returned output that does not match the schema for {purpose}"
+        )
     return output
+
+
+def decide(
+    purpose: str,
+    state: str,
+    questions: Questions,
+    budget: Budget,
+    conn: sqlite3.Connection | None = None,
+) -> dict[str, dict[str, Any]]:
+    """Jev's answers by question id, as Jev returns them: a noul's probability, a choice's or
+    score's probabilities and confidence. A response from another model version is refused."""
+    jev = decider()
+    request = decide_request(state, questions)
+
+    def parse(body: dict[str, Any]) -> dict[str, Any]:
+        if body.get("model") not in (settings.JEV_MODEL, jev.model):
+            raise ValueError(f"answered by {body.get('model')!r}, pinned to {jev.model!r}")
+        check_answers(body["answers"], questions)
+        return body["answers"]
+
+    return _recorded(
+        conn,
+        (jev.name, jev.model, purpose),
+        request,
+        _sha256(json.dumps(questions, separators=(",", ":"))),
+        budget,
+        estimate_decide_cost(len(request)),
+        lambda: jev.decide(state, questions),
+        settings.JEV_PRICES,
+        parse,
+    )
+
+
+def complete_json(
+    purpose: str,
+    prompt: str,
+    schema: Schema,
+    budget: Budget,
+    max_tokens: int = settings.LLM_MAX_OUTPUT_TOKENS,
+    conn: sqlite3.Connection | None = None,
+) -> dict[str, Any]:
+    llm = provider()
+    model = llm.model if isinstance(llm, OpenAICompatibleLLM) else settings.TEXT_MODEL
+
+    def parse(text: str) -> dict[str, Any]:
+        output = json.loads(text)
+        validate(output, schema)
+        return output
+
+    return _recorded(
+        conn,
+        (llm.name, model, purpose),
+        prompt,
+        _sha256(json.dumps(schema, sort_keys=True, separators=(",", ":"))),
+        budget,
+        estimate_cost(len(prompt), max_tokens),
+        lambda: llm.complete(prompt, schema, max_tokens),
+        settings.TEXT_PRICES,
+        parse,
+    )
 
 
 def spent_today(conn: sqlite3.Connection | None = None, public: bool = False) -> float:

@@ -12,7 +12,6 @@ INSIDE = date(2026, 11, 3)
 @pytest.fixture(autouse=True)
 def isolated(tmp_path, monkeypatch):
     monkeypatch.setenv("RW_HOME", str(tmp_path / "var"))
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
 
 @pytest.fixture

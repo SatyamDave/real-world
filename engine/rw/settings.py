@@ -4,9 +4,18 @@ import os
 from datetime import date
 from pathlib import Path
 
-MODEL = "claude-haiku-5-5"
-PRICE_INPUT_USD_PER_MTOK = 0.10
-PRICE_OUTPUT_USD_PER_MTOK = 0.50
+# Decision 0007. Prices are (input, output) USD per million tokens. Jev bills input only
+# (docs.typesafe.ai/models). The text price is the dearest OpenRouter host of the model on
+# 2026-10-12, so the budget never undercounts whichever host answers.
+JEV_MODEL = "jev-1.13.0"
+JEV_OPENROUTER_MODEL = "typesafe/jev-1.13"
+JEV_PRICES = (0.042, 0.0)
+TEXT_MODEL = "mistralai/mistral-small-3.2-24b-instruct"
+TEXT_PRICES = (0.10, 0.30)
+TYPESAFE_BASE_URL = "https://api.typesafe.ai"
+OPENROUTER_JEV_BASE_URL = "https://openrouter.ai/api"
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+LLM_TIMEOUT_S = 30
 
 NIGHTLY_BUDGET_USD = 25.0
 FORK_MAX_COST_USD_DEFAULT = 0.50

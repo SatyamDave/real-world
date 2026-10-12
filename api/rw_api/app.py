@@ -146,7 +146,9 @@ class Agent(BaseModel):
 class AgentWhy(BaseModel):
     agent_id: str
     text: str
-    provider: str = Field(description='Who wrote the text: "anthropic", or "fake" (no model ran).')
+    provider: str = Field(
+        description='Who wrote the text: "openai_compatible", or "fake" (no model ran).'
+    )
     label: Literal["Simulated account, not the cause"] = WHY_LABEL
     simulated: Literal[True] = True
 
@@ -536,7 +538,7 @@ def _limits(
         if cap is None:
             return _refuse(401, "invalid_api_key", "this API key is unknown or revoked")
         if not spent + reserve <= cap:
-            so_far = llm.cost_text(spent, llm.provider().name)
+            so_far = llm.cost_text(spent, llm.decider().name)
             return _refuse(
                 402,
                 "key_cap_spent",

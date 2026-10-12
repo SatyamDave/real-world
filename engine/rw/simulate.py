@@ -18,8 +18,9 @@ from rw import beliefs, llm, news, population, settings
 FORK_AGENTS_MIN = 50
 # Signal noise per member, in signal units, by coverage tier: thinner data, wider spread.
 TIER_NOISE_SD = {"A": 0.05, "B": 0.10, "C": 0.15, "D": 0.20}
-# Upper bound on the characters news.extract_signal adds around the event and the audience.
-PROMPT_OVERHEAD_CHARS = 2000
+# Upper bound on the characters news.extract_signal adds around the event and the audience: the
+# Jev request with its questions measured 3,204 on 2026-10-12.
+PROMPT_OVERHEAD_CHARS = 4000
 TOP_SHIFTS = 3
 
 DISCLOSURE = "AI-simulated. Not a poll or a prediction of a real person"
@@ -181,7 +182,7 @@ class SimulateResult(BaseModel):
     engine_version: str
     model: str
     provider: str = Field(
-        description='Who answered the model calls: "anthropic", or "fake" when no model ran.'
+        description='Who answered the model calls: "jev", or "fake" when no model ran.'
     )
     seed: int
     members: int
@@ -243,10 +244,7 @@ def _subsample(req: SimulateRequest, world: Agents) -> Agents:
 def _estimate(req: SimulateRequest, sub: Agents) -> Estimate:
     segments = sorted(set(sub["segment"].tolist()))
     cost = sum(
-        llm.estimate_cost(
-            len(req.event.text) + len(describe(s)) + PROMPT_OVERHEAD_CHARS,
-            settings.LLM_MAX_OUTPUT_TOKENS,
-        )
+        llm.estimate_decide_cost(len(req.event.text) + len(describe(s)) + PROMPT_OVERHEAD_CHARS)
         for s in segments
     )
     return Estimate(
@@ -438,7 +436,7 @@ def run(
     countries = np.unique(sub["country"])
     floor = math.ceil(settings.TOP_SHIFT_MIN_SHARE * n)
     big = [s for s in shifts if s.n_agents >= floor]
-    provider = llm.provider().name
+    provider = llm.decider().name
     result = SimulateResult(
         world_snapshot_id=snapshot_id,
         engine_version=settings.ENGINE_VERSION,

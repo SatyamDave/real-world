@@ -428,7 +428,7 @@ export interface components {
       text: string;
       /**
        * Provider
-       * @description Who wrote the text: "anthropic", or "fake" (no model ran).
+       * @description Who wrote the text: "openai_compatible", or "fake" (no model ran).
        */
       provider: string;
       /**
@@ -1556,7 +1556,7 @@ export interface components {
       model: string;
       /**
        * Provider
-       * @description Who answered the model calls: "anthropic", or "fake" when no model ran.
+       * @description Who answered the model calls: "jev", or "fake" when no model ran.
        */
       provider: string;
       /** Seed */

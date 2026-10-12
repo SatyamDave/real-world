@@ -10,7 +10,6 @@ from rw_api import app as api
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv("RW_HOME", str(tmp_path / "var"))
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     with TestClient(api.app) as c:
         yield c
 

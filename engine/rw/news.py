@@ -62,15 +62,30 @@ def country_names() -> dict[str, str]:
     return {r["iso3"]: r["name"] for r in _read(DATA / "countries.csv")}
 
 
-def signal_schema() -> llm.Schema:
-    props: dict[str, Any] = {t: {"type": "number", "minimum": -1, "maximum": 1} for t in topics()}
-    props["salience"] = {"type": "number", "minimum": 0, "maximum": 1}
-    return {
-        "type": "object",
-        "properties": props,
-        "required": list(props),
-        "additionalProperties": False,
+SIGNAL_LEVELS = [
+    "makes a yes answer much less likely",
+    "makes a yes answer somewhat less likely",
+    "unrelated, or no effect",
+    "makes a yes answer somewhat more likely",
+    "makes a yes answer much more likely",
+]
+
+
+def signal_questions() -> llm.Questions:
+    """One Jev score per topic, its levels spread over [-1, 1], and a noul for salience."""
+    qs: llm.Questions = {
+        t: {
+            "type": "score",
+            "instructions": f"How does this news move these people on the question: {q}",
+            "criteria": SIGNAL_LEVELS,
+        }
+        for t, q in topics().items()
     }
+    qs["salience"] = {
+        "type": "noul",
+        "instructions": "Would an ordinary person among these people notice this news?",
+    }
+    return qs
 
 
 def extract_signal(
@@ -81,21 +96,11 @@ def extract_signal(
     purpose: str = "signal",
 ) -> dict[str, float]:
     """Return {topic: push in [-1, 1], ..., "salience": [0, 1]} for one piece of news."""
-    questions = "\n".join(f"- {t}: {q}" for t, q in topics().items())
     who = audience or "the general public of the country the news is from"
-    prompt = (
-        "Rate how this news moves the people described below on each topic.\n"
-        "For each topic give a number from -1 to 1: positive if the news makes a yes answer to"
-        " the question more likely, negative if less likely, 0 if unrelated.\n"
-        "Also give salience from 0 to 1: how likely an ordinary person is to notice this news.\n"
-        f"People: {who}\n"
-        f"Topics:\n{questions}\n"
-        f"News:\n{text}"
-    )
-    out = llm.complete_json(purpose, prompt, signal_schema(), budget, conn=conn)
-    # A provider schema check can loosen numeric bounds, so the range is enforced here too.
-    signal = {t: float(np.clip(out[t], -1, 1)) for t in topics()}
-    signal["salience"] = float(np.clip(out["salience"], 0, 1))
+    state = f"People: {who}\nNews:\n{text}"
+    out = llm.decide(purpose, state, signal_questions(), budget, conn=conn)
+    signal = {t: llm.level_value(out[t], -1, 1) for t in topics()}
+    signal["salience"] = float(out["salience"]["noul"])
     return signal
 
 

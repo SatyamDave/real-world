@@ -11,7 +11,7 @@ make dev        # seeds the fixture days into var/ if it is empty, then serves :
 make openapi    # rewrites api/openapi.json after a contract change
 ```
 
-Open http://localhost:8000/docs, or http://localhost:8000/llms.txt for the same operations in plain text. Every endpoint works with `ANTHROPIC_API_KEY` unset; the engine's fake model answers.
+Open http://localhost:8000/docs, or http://localhost:8000/llms.txt for the same operations in plain text. Every endpoint works with no model key set; the engine's fake model answers.
 
 ## Endpoints
 

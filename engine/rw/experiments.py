@@ -561,8 +561,8 @@ def run(exp_id: str, fixtures: bool = False, root: Path = EXPERIMENTS, command: 
     commit = git_commit()
     started = datetime.now(UTC)
     out = protocol()
-    provider = llm.provider().name if out["uses_llm"] else "none"
-    model = {"none": "none", "fake": "fake"}.get(provider, settings.MODEL)
+    provider = llm.decider().name if out["uses_llm"] else "none"
+    model = "none" if provider == "none" else llm.model_name()
     path = root / exp_id / "results" / f"{started.date().isoformat()}-{provider}"
     if path.exists():
         raise FileExistsError(f"{path} exists; results are never overwritten")

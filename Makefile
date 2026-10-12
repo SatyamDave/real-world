@@ -66,7 +66,7 @@ sdk: ## regenerate the SDK types in sdk/*/generated from api/openapi.json
 	pnpm exec biome format --write sdk/typescript/src/generated
 
 e2e: ## seed fixtures into a temp RW_HOME, serve the API on a free port, run both README quickstarts
-	@set -e; unset ANTHROPIC_API_KEY; export RW_HOME=$$(mktemp -d); \
+	@set -e; unset TYPESAFE_API_KEY OPENROUTER_API_KEY RW_TEXT_BASE_URL; export RW_HOME=$$(mktemp -d); \
 	port=$$(uv run python -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])'); \
 	uv run python -m rw.daily --fixtures > /dev/null; \
 	uv run uvicorn rw_api.app:app --host 127.0.0.1 --port $$port --log-level warning & pid=$$!; \
