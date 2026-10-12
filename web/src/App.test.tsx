@@ -49,6 +49,13 @@ afterEach(() => {
 
 const flush = () => act(() => new Promise((r) => setTimeout(r, 0)));
 
+// WebCrypto digests and chained promises can need more than one tick on a slow runner.
+const until = (check: () => void) =>
+  vi.waitFor(async () => {
+    await flush();
+    check();
+  });
+
 async function render(node: ReactNode) {
   await act(async () => createRoot(container).render(node));
   await flush();
@@ -73,7 +80,7 @@ test("the reveal shows you, visitors, the simulated world and the market after s
   expect(el.textContent).not.toContain("Simulated world");
 
   await act(async () => button("Submit 50%").click());
-  await flush();
+  await until(() => expect(el.textContent).toContain("Simulated world"));
 
   expect(api.answerDaily).toHaveBeenCalledWith(daily.question.id, expect.any(String), 0.5);
   const text = el.textContent ?? "";
@@ -93,8 +100,7 @@ test("a repeat answer (409) still shows the reveal", async () => {
 
   const el = await render(<DailyQuestion tiers={[]} />);
   await act(async () => button("Submit").click());
-  await flush();
-  expect(el.textContent).toContain("Simulated world");
+  await until(() => expect(el.textContent).toContain("Simulated world"));
 });
 
 test("the fork card renders a fixture SimulateResult", async () => {
@@ -155,7 +161,8 @@ test("the receipts page verifies the served chain and states the reference and c
   expect(text).toContain("n = 2 questions");
 
   await act(async () => button("Verify").click());
-  await flush();
-  expect(el.textContent).toContain("Verified 1 day and 2 receipts back to the first day");
+  await until(() =>
+    expect(el.textContent).toContain("Verified 1 day and 2 receipts back to the first day"),
+  );
   expect(el.textContent).toContain(DISCLOSURE);
 });
