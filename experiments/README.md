@@ -23,6 +23,16 @@ Every claim about how well Real World works comes from an experiment registered 
 5. **Cite.** Papers and `gtm/` cite only committed results, by path and commit.
 6. **Publish misses.** A null result, a miss or a triggered kill criterion is committed and reported like a win, the same week it is known.
 
+## How to run
+
+```sh
+make experiment ID=E003                                   # python -m rw.experiments run E003
+uv run python -m rw.experiments list                      # each experiment, its hash check, and whether it can run
+uv run python -m rw.experiments run E001 --fixtures       # the E001 pipeline on the fixture questions
+```
+
+`run` refuses to start when the `PREREG.md` hash does not match `REGISTRY.md`, and exits non-zero naming the missing input and its `PREREG.md` section when the pre-registered data does not exist yet. A run writes `experiments/<id>/results/<UTC date>-<provider>/` with `results.json` (metrics, n, seeds, engine version, model, provider, commit, `PREREG.md` hash, cost), `RESULTS.md` (every pre-registered metric, including misses and metrics it could not compute) and `rows.csv` (the raw per-item rows). Provider `fake` means the deterministic fake model: those results test the pipeline, not the science. Provider `none` means the experiment made no model calls. Commit a results folder only from a run on a clean, merged commit.
+
 ## Verifying a registration
 
 Anyone can check that a plan was not changed after registration:

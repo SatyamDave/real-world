@@ -29,7 +29,6 @@ check: lint typecheck test ## lint, typecheck and test, as CI runs it
 
 experiment: ## run one experiment: make experiment ID=E001
 	@test -n "$(ID)" || { echo "usage: make experiment ID=E001"; exit 2; }
-	@test -f engine/rw/experiments.py || { echo "rw.experiments does not exist yet; a later slice adds engine/rw/experiments.py"; exit 1; }
 	uv run python -m rw.experiments run $(ID)
 
 daily: ## run the daily cycle for one day: make daily DATE=2026-10-01
