@@ -95,3 +95,100 @@ def test_glossary_reports_a_banned_word(tmp_path, rel, text, expected):
 def test_glossary_ignores_a_word_inside_another(tmp_path):
     write(tmp_path, {**GLOSSARY_CLEAN, "product/fork.md": "personality, scenariography\n"})
     assert run(tmp_path, "check_glossary.py")[0] == 0
+
+
+PY_CLIENT = """class Client:
+    def __init__(self, base_url: str = "x") -> None:
+        pass
+
+    def _send(self, path: str) -> None:
+        pass
+
+    def wait(self, id: str, timeout: float = 120, interval: float = 0.5) -> None:
+        pass
+
+    def daily(self, player_id: str | None = None) -> None:
+        pass
+"""
+TS_CLIENT = """export class Client {
+  private http;
+
+  constructor(
+    private baseUrl = "x",
+    private fetcher: typeof fetch = (...args) => fetch(...args),
+  ) {}
+
+  private send(path: string) {}
+
+  async wait(id: string, timeout = 120, interval = 0.5): Promise<void> {
+    if (id) return;
+  }
+
+  daily(player_id?: string): Promise<Record<string, number>> {
+    return ok(this.http.GET("/v1/daily", { params: { query: { player_id } } }));
+  }
+}
+"""
+
+
+def sdk_tree(root: Path, py: str = PY_CLIENT, ts: str = TS_CLIENT) -> None:
+    write(root, {"sdk/python/realworld/client.py": py, "sdk/typescript/src/index.ts": ts})
+
+
+def test_sdk_parity_passes_matching_clients(tmp_path):
+    sdk_tree(tmp_path)
+    code, out = run(tmp_path, "check_sdk_parity.py")
+    assert code == 0 and "2 methods match" in out, out
+
+
+@pytest.mark.parametrize(
+    "py, ts, expected",
+    [
+        (
+            PY_CLIENT + "\n    def world(self) -> None:\n        pass\n",
+            TS_CLIENT,
+            "client.py:14: method world is in Python only; add it to TypeScript",
+        ),
+        (
+            PY_CLIENT,
+            TS_CLIENT.replace("  daily(", "  world(): void {}\n\n  daily("),
+            "index.ts:15: method world is in TypeScript only; add it to Python",
+        ),
+        (
+            PY_CLIENT,
+            TS_CLIENT.replace("interval = 0.5)", "interval = 0.5, signal?: AbortSignal)"),
+            "wait() parameter signal is in TypeScript only",
+        ),
+        (
+            PY_CLIENT.replace("player_id: str | None = None", "player_id: str"),
+            TS_CLIENT,
+            "daily(player_id) defaults to (required) in Python and None in TypeScript",
+        ),
+        (
+            PY_CLIENT,
+            TS_CLIENT.replace("timeout = 120", "timeout = 60"),
+            "wait(timeout) defaults to 120 in Python and 60 in TypeScript",
+        ),
+        (
+            PY_CLIENT,
+            TS_CLIENT.replace("daily(player_id?", "daily(playerId?"),
+            "daily() parameter player_id is playerId in TypeScript; use one spelling",
+        ),
+        (
+            PY_CLIENT,
+            TS_CLIENT.replace("async wait(", "async waitFor(").replace("  daily(", "  dailyQ("),
+            "method daily is in Python only",
+        ),
+    ],
+)
+def test_sdk_parity_reports_each_difference(tmp_path, py, ts, expected):
+    sdk_tree(tmp_path, py, ts)
+    code, out = run(tmp_path, "check_sdk_parity.py")
+    assert code == 1 and expected in out, out
+
+
+def test_sdk_parity_reports_a_camel_case_method(tmp_path):
+    py = PY_CLIENT.replace("def daily(", "def answer_daily(")
+    sdk_tree(tmp_path, py, TS_CLIENT.replace("  daily(", "  answerDaily("))
+    code, out = run(tmp_path, "check_sdk_parity.py")
+    assert code == 1 and "method answer_daily is answerDaily in TypeScript" in out, out
