@@ -19,7 +19,7 @@ from typing import Annotated, Any, Literal
 import numpy as np
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from rw import db, forecast, ledger, llm, policy, population, score, settings, simulate
@@ -188,10 +188,19 @@ class Receipts(BaseModel):
     days: list[DaySummary]
 
 
+class ReceiptQuestion(BaseModel):
+    text: str
+    resolution_source: str
+    resolves_by: str
+
+
 class ReceiptEntry(BaseModel):
     entry: dict[str, Any]
     salt: str
     leaf_hash: str
+    question: ReceiptQuestion | None = Field(
+        description="The forecast's question from its committed question set; null on other leaves."
+    )
     outcome: int | None
     brier: float | None
 
@@ -225,8 +234,20 @@ def connect() -> sqlite3.Connection:
     return conn
 
 
+def _clock() -> datetime:
+    return datetime.now(UTC)
+
+
 def _now() -> str:
-    return datetime.now(UTC).isoformat(timespec="seconds")
+    return _clock().isoformat(timespec="seconds")
+
+
+def _closed(q: dict[str, Any]) -> bool:
+    """A date-only `closes` means the start of that UTC day, as the web app reads it."""
+    closes = datetime.fromisoformat(q["closes"])
+    if closes.tzinfo is None:
+        closes = closes.replace(tzinfo=UTC)
+    return _clock() >= closes
 
 
 def _share(logits: np.ndarray) -> float:
@@ -344,7 +365,10 @@ def _estimate(req: simulate.SimulateRequest) -> simulate.Estimate:
     response_model=JobCreated,
     responses={
         400: {"description": "Real-World-Version is not the current version"},
-        402: {"model": Refused, "description": "The estimate exceeds max_cost_usd"},
+        402: {
+            "model": Refused,
+            "description": "The estimate exceeds max_cost_usd or the day's budget",
+        },
         409: {"model": Conflict, "description": "A job with this Idempotency-Key is running"},
         422: {
             "model": policy.PolicyRefused,
@@ -370,6 +394,13 @@ def create_simulation(
     est = _estimate(req)
     if not est.within_cap:
         body = Refused(detail="the estimate exceeds max_cost_usd", estimate=est)
+        return JSONResponse(body.model_dump(), status_code=402)
+    try:
+        left = settings.NIGHTLY_BUDGET_USD - llm.spent_today(conn)
+    except Exception as e:
+        raise HTTPException(503, f"the day's spend could not be read: {e}") from e
+    if not est.estimated_cost_usd <= left:
+        body = Refused(detail="the day's budget is spent; try again tomorrow", estimate=est)
         return JSONResponse(body.model_dump(), status_code=402)
 
     try:
@@ -745,13 +776,15 @@ def daily(player_id: Annotated[str | None, Query(max_length=64)] = None) -> Dail
     summary="Answer today's question once; returns the reveal",
     status_code=201,
     response_model=Daily,
-    responses={409: {"description": "This player already answered this question"}},
+    responses={409: {"description": "This player already answered, or answers closed"}},
 )
 def answer_daily(a: Answer) -> Daily:
     conn = connect()
     day, q = _daily_question(conn)
     if a.question_id != q["id"]:
         raise HTTPException(422, f"only today's question {q['id']} takes answers")
+    if _closed(q):
+        raise HTTPException(409, f"answers for {q['id']} closed at {q['closes']}")
     try:
         with conn:
             conn.execute(
@@ -799,11 +832,20 @@ def receipt_day(day: str) -> ReceiptDay:
         )
     }
     receipt = ledger._receipt(conn, row)
+    questions = {q["id"]: q for q in forecast.load_questions()}
     entries = []
     for item in receipt["entries"]:
         e = item["entry"]
         key = (e.get("question_id"), e.get("forecaster"))
-        entries.append(ReceiptEntry(**item, outcome=outcomes.get(key[0]), brier=briers.get(key)))
+        q = questions.get(key[0]) if key[0] else None
+        entries.append(
+            ReceiptEntry(
+                **item,
+                question=None if q is None else ReceiptQuestion(**q),
+                outcome=outcomes.get(key[0]),
+                brier=briers.get(key),
+            )
+        )
     anchor, at = ledger.anchor_status(conn, day)
     return ReceiptDay(
         day=DayRecord(**receipt["day"]),
@@ -861,6 +903,20 @@ def scores() -> dict[str, Any]:
 @app.get("/", include_in_schema=False)
 def root() -> RedirectResponse:
     return RedirectResponse("/docs")
+
+
+@app.get("/llms.txt", include_in_schema=False)
+def llms_txt() -> PlainTextResponse:
+    """The API in plain text for a model to read: the same summaries as /docs, one per line."""
+    spec = app.openapi()
+    lines = [f"# {spec['info']['title']}", "", spec["info"]["description"].strip(), ""]
+    lines += [
+        f"- {method.upper()} {path}: {op['summary']}"
+        for path, methods in spec["paths"].items()
+        for method, op in methods.items()
+    ]
+    lines += ["", "Full schema: /openapi.json. Interactive docs: /docs."]
+    return PlainTextResponse("\n".join(lines) + "\n")
 
 
 @app.get("/healthz", summary="Liveness check")

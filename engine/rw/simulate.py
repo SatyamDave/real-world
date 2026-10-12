@@ -3,13 +3,14 @@ result. The Pydantic models here are the contract the API, SDKs and web app use.
 
 import hashlib
 import json
+import math
 import sqlite3
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Literal
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from rw import beliefs, llm, news, population, settings
 
@@ -48,18 +49,40 @@ class Event(BaseModel):
 
 class SimulateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    world: str = Field(default="today", pattern=r"^(today|\d{4}-\d{2}-\d{2})$")
-    event: Event
-    days: int = Field(default=settings.FORK_DAYS_DEFAULT, ge=1, le=settings.FORK_DAYS_MAX)
-    members: int = Field(default=settings.FORK_MEMBERS_DEFAULT, ge=1, le=settings.FORK_MEMBERS_MAX)
+    world: str = Field(
+        default="today",
+        pattern=r"^(today|\d{4}-\d{2}-\d{2})$",
+        description="The snapshot to fork: today's world, or a committed day as YYYY-MM-DD.",
+    )
+    event: Event = Field(description="The one event to add, in plain words.")
+    days: int = Field(
+        default=settings.FORK_DAYS_DEFAULT,
+        ge=1,
+        le=settings.FORK_DAYS_MAX,
+        description="Simulated days to run after the event.",
+    )
+    members: int = Field(
+        default=settings.FORK_MEMBERS_DEFAULT,
+        ge=1,
+        le=settings.FORK_MEMBERS_MAX,
+        description="Ensemble size: independent runs whose spread gives the p10-p90 band.",
+    )
     agents: int = Field(
-        default=settings.FORK_AGENTS_DEFAULT, ge=FORK_AGENTS_MIN, le=settings.FORK_AGENTS_MAX
+        default=settings.FORK_AGENTS_DEFAULT,
+        ge=FORK_AGENTS_MIN,
+        le=settings.FORK_AGENTS_MAX,
+        description="Agents sampled from the world, in proportion to country population.",
     )
-    topics: list[str] | None = None
+    topics: list[str] | None = Field(
+        default=None, description="Topics to report; null means every topic the world tracks."
+    )
     max_cost_usd: float = Field(
-        default=settings.FORK_MAX_COST_USD_DEFAULT, gt=0, le=settings.FORK_MAX_COST_USD_LIMIT
+        default=settings.FORK_MAX_COST_USD_DEFAULT,
+        gt=0,
+        le=settings.FORK_MAX_COST_USD_LIMIT,
+        description="Refuse with 402 if the estimate exceeds this. One model call per segment.",
     )
-    seed: int = Field(default=0, ge=0)
+    seed: int = Field(default=0, ge=0, description="Random seed; the same request is replayed.")
 
     @field_validator("topics")
     @classmethod
@@ -153,7 +176,10 @@ class SimulateResult(BaseModel):
     coverage: list[Coverage]
     outputs: dict[str, TopicOutput]
     segments: list[SegmentShift]
-    top_shifts: list[SegmentShift]
+    top_shifts: list[SegmentShift] = Field(
+        description="The largest median shifts among segments of at least top_shift_min_agents."
+    )
+    top_shift_min_agents: int
     trace: Trace
     note: Literal["Counterfactual: not scored"] = NOTE
     content_hash: str = ""
@@ -276,7 +302,11 @@ def run(
         "SELECT result_json FROM simulations WHERE input_hash = ?", (key,)
     ).fetchone()
     if row is not None:
-        return SimulateResult.model_validate_json(row[0])
+        # A row stored under an older result shape is a miss: run again and replace it.
+        try:
+            return SimulateResult.model_validate_json(row[0])
+        except ValidationError:
+            pass
 
     topics = req.topics or list(news.topics())
     budget = llm.Budget(req.max_cost_usd)
@@ -385,6 +415,8 @@ def run(
             )
 
     countries = np.unique(sub["country"])
+    floor = math.ceil(settings.TOP_SHIFT_MIN_SHARE * n)
+    big = [s for s in shifts if s.n_agents >= floor]
     result = SimulateResult(
         world_snapshot_id=snapshot_id,
         engine_version=settings.ENGINE_VERSION,
@@ -399,7 +431,8 @@ def run(
         ],
         outputs=outputs,
         segments=shifts,
-        top_shifts=sorted(shifts, key=lambda x: -abs(x.shift_p50))[:TOP_SHIFTS],
+        top_shifts=sorted(big, key=lambda x: -abs(x.shift_p50))[:TOP_SHIFTS],
+        top_shift_min_agents=floor,
         trace=Trace(
             segment_signals={
                 str(name): {t: _r(seg_signal[j, k]) for k, t in enumerate(topics)}
@@ -411,7 +444,7 @@ def run(
     result = result.model_copy(update={"content_hash": content_hash(result)})
     with conn:
         conn.execute(
-            "INSERT OR IGNORE INTO simulations (input_hash, created_at, result_json)"
+            "INSERT OR REPLACE INTO simulations (input_hash, created_at, result_json)"
             " VALUES (?, ?, ?)",
             (key, datetime.now(UTC).isoformat(timespec="seconds"), result.model_dump_json()),
         )

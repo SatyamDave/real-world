@@ -64,7 +64,7 @@
             "description": "Real-World-Version is not the current version"
           },
           "402": {
-            "description": "The estimate exceeds max_cost_usd",
+            "description": "The estimate exceeds max_cost_usd or the day's budget",
             "content": {
               "application/json": {
                 "schema": {
@@ -399,7 +399,7 @@
             }
           },
           "409": {
-            "description": "This player already answered this question"
+            "description": "This player already answered, or answers closed"
           },
           "422": {
             "description": "Validation Error",
@@ -1295,6 +1295,17 @@
             "type": "string",
             "title": "Leaf Hash"
           },
+          "question": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReceiptQuestion"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The forecast's question from its committed question set; null on other leaves."
+          },
           "outcome": {
             "anyOf": [
               {
@@ -1319,8 +1330,27 @@
           }
         },
         "type": "object",
-        "required": ["entry", "salt", "leaf_hash", "outcome", "brier"],
+        "required": ["entry", "salt", "leaf_hash", "question", "outcome", "brier"],
         "title": "ReceiptEntry"
+      },
+      "ReceiptQuestion": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "resolution_source": {
+            "type": "string",
+            "title": "Resolution Source"
+          },
+          "resolves_by": {
+            "type": "string",
+            "title": "Resolves By"
+          }
+        },
+        "type": "object",
+        "required": ["text", "resolution_source", "resolves_by"],
+        "title": "ReceiptQuestion"
       },
       "Receipts": {
         "properties": {
@@ -1461,16 +1491,19 @@
             "type": "string",
             "pattern": "^(today|\\d{4}-\\d{2}-\\d{2})$",
             "title": "World",
+            "description": "The snapshot to fork: today's world, or a committed day as YYYY-MM-DD.",
             "default": "today"
           },
           "event": {
-            "$ref": "#/components/schemas/Event"
+            "$ref": "#/components/schemas/Event",
+            "description": "The one event to add, in plain words."
           },
           "days": {
             "type": "integer",
             "maximum": 14.0,
             "minimum": 1.0,
             "title": "Days",
+            "description": "Simulated days to run after the event.",
             "default": 7
           },
           "members": {
@@ -1478,6 +1511,7 @@
             "maximum": 20.0,
             "minimum": 1.0,
             "title": "Members",
+            "description": "Ensemble size: independent runs whose spread gives the p10-p90 band.",
             "default": 5
           },
           "agents": {
@@ -1485,6 +1519,7 @@
             "maximum": 5000.0,
             "minimum": 50.0,
             "title": "Agents",
+            "description": "Agents sampled from the world, in proportion to country population.",
             "default": 200
           },
           "topics": {
@@ -1499,19 +1534,22 @@
                 "type": "null"
               }
             ],
-            "title": "Topics"
+            "title": "Topics",
+            "description": "Topics to report; null means every topic the world tracks."
           },
           "max_cost_usd": {
             "type": "number",
             "maximum": 5.0,
             "exclusiveMinimum": 0.0,
             "title": "Max Cost Usd",
+            "description": "Refuse with 402 if the estimate exceeds this. One model call per segment.",
             "default": 0.5
           },
           "seed": {
             "type": "integer",
             "minimum": 0.0,
             "title": "Seed",
+            "description": "Random seed; the same request is replayed.",
             "default": 0
           }
         },
@@ -1590,7 +1628,12 @@
               "$ref": "#/components/schemas/SegmentShift"
             },
             "type": "array",
-            "title": "Top Shifts"
+            "title": "Top Shifts",
+            "description": "The largest median shifts among segments of at least top_shift_min_agents."
+          },
+          "top_shift_min_agents": {
+            "type": "integer",
+            "title": "Top Shift Min Agents"
           },
           "trace": {
             "$ref": "#/components/schemas/Trace"
@@ -1621,6 +1664,7 @@
           "outputs",
           "segments",
           "top_shifts",
+          "top_shift_min_agents",
           "trace"
         ],
         "title": "SimulateResult"

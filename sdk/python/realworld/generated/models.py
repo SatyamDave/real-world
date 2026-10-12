@@ -175,12 +175,10 @@ class PrefilledEvent(BaseModel):
     countries: list[str] | None = Field(..., title="Countries")
 
 
-class ReceiptEntry(BaseModel):
-    entry: dict[str, Any] = Field(..., title="Entry")
-    salt: str = Field(..., title="Salt")
-    leaf_hash: str = Field(..., title="Leaf Hash")
-    outcome: int | None = Field(..., title="Outcome")
-    brier: float | None = Field(..., title="Brier")
+class ReceiptQuestion(BaseModel):
+    text: str = Field(..., title="Text")
+    resolution_source: str = Field(..., title="Resolution Source")
+    resolves_by: str = Field(..., title="Resolves By")
 
 
 class Receipts(BaseModel):
@@ -206,14 +204,45 @@ class SimulateRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    world: str = Field("today", pattern="^(today|\\d{4}-\\d{2}-\\d{2})$", title="World")
-    event: Event
-    days: int = Field(7, ge=1, le=14, title="Days")
-    members: int = Field(5, ge=1, le=20, title="Members")
-    agents: int = Field(200, ge=50, le=5000, title="Agents")
-    topics: list[str] | None = Field(None, title="Topics")
-    max_cost_usd: float = Field(0.5, gt=0.0, le=5.0, title="Max Cost Usd")
-    seed: int = Field(0, ge=0, title="Seed")
+    world: str = Field(
+        "today",
+        description="The snapshot to fork: today's world, or a committed day as YYYY-MM-DD.",
+        pattern="^(today|\\d{4}-\\d{2}-\\d{2})$",
+        title="World",
+    )
+    event: Event = Field(..., description="The one event to add, in plain words.")
+    days: int = Field(
+        7, description="Simulated days to run after the event.", ge=1, le=14, title="Days"
+    )
+    members: int = Field(
+        5,
+        description="Ensemble size: independent runs whose spread gives the p10-p90 band.",
+        ge=1,
+        le=20,
+        title="Members",
+    )
+    agents: int = Field(
+        200,
+        description="Agents sampled from the world, in proportion to country population.",
+        ge=50,
+        le=5000,
+        title="Agents",
+    )
+    topics: list[str] | None = Field(
+        None,
+        description="Topics to report; null means every topic the world tracks.",
+        title="Topics",
+    )
+    max_cost_usd: float = Field(
+        0.5,
+        description="Refuse with 402 if the estimate exceeds this. One model call per segment.",
+        gt=0.0,
+        le=5.0,
+        title="Max Cost Usd",
+    )
+    seed: int = Field(
+        0, description="Random seed; the same request is replayed.", ge=0, title="Seed"
+    )
 
 
 class Skill(BaseModel):
@@ -308,13 +337,16 @@ class JobCreated(BaseModel):
     links: Links
 
 
-class ReceiptDay(BaseModel):
-    day: DayRecord
-    record_hash: str = Field(..., title="Record Hash")
-    anchor: Anchor1 = Field(..., title="Anchor")
-    anchored_at: str | None = Field(..., title="Anchored At")
-    anchors: list[Anchor] = Field(..., title="Anchors")
-    entries: list[ReceiptEntry] = Field(..., title="Entries")
+class ReceiptEntry(BaseModel):
+    entry: dict[str, Any] = Field(..., title="Entry")
+    salt: str = Field(..., title="Salt")
+    leaf_hash: str = Field(..., title="Leaf Hash")
+    question: ReceiptQuestion | None = Field(
+        ...,
+        description="The forecast's question from its committed question set; null on other leaves.",
+    )
+    outcome: int | None = Field(..., title="Outcome")
+    brier: float | None = Field(..., title="Brier")
 
 
 class Reveal(BaseModel):
@@ -341,6 +373,15 @@ class Daily(BaseModel):
     reveal: Reveal | None
 
 
+class ReceiptDay(BaseModel):
+    day: DayRecord
+    record_hash: str = Field(..., title="Record Hash")
+    anchor: Anchor1 = Field(..., title="Anchor")
+    anchored_at: str | None = Field(..., title="Anchored At")
+    anchors: list[Anchor] = Field(..., title="Anchors")
+    entries: list[ReceiptEntry] = Field(..., title="Entries")
+
+
 class SimulateResult(BaseModel):
     simulated: Literal[True] = Field(True, title="Simulated")
     disclosure: str = Field(
@@ -358,7 +399,12 @@ class SimulateResult(BaseModel):
     coverage: list[Coverage] = Field(..., title="Coverage")
     outputs: dict[str, TopicOutput] = Field(..., title="Outputs")
     segments: list[SegmentShift] = Field(..., title="Segments")
-    top_shifts: list[SegmentShift] = Field(..., title="Top Shifts")
+    top_shifts: list[SegmentShift] = Field(
+        ...,
+        description="The largest median shifts among segments of at least top_shift_min_agents.",
+        title="Top Shifts",
+    )
+    top_shift_min_agents: int = Field(..., title="Top Shift Min Agents")
     trace: Trace
     note: Literal["Counterfactual: not scored"] = Field("Counterfactual: not scored", title="Note")
     content_hash: str = Field("", title="Content Hash")

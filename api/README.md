@@ -9,13 +9,13 @@ make dev        # seeds the fixture days into var/ if it is empty, then serves :
 make openapi    # rewrites api/openapi.json after a contract change
 ```
 
-Open http://localhost:8000/docs. Every endpoint works with `ANTHROPIC_API_KEY` unset; the engine's fake model answers.
+Open http://localhost:8000/docs, or http://localhost:8000/llms.txt for the same operations in plain text. Every endpoint works with `ANTHROPIC_API_KEY` unset; the engine's fake model answers.
 
 ## Endpoints
 
 | Method and path | What it returns |
 | --- | --- |
-| `POST /v1/simulate` | `202 {id, status, links}` and runs `simulate.run` in the background. Needs `Idempotency-Key` (at most 255 characters); `Real-World-Version`, if sent, must be `2026-10-27`. `402` with the estimate when it exceeds `max_cost_usd`; `422 {code, detail}` when `policy.screen` refuses the event ([acceptable use](../product/acceptable-use.md)); `503` when the screen could not run. |
+| `POST /v1/simulate` | `202 {id, status, links}` and runs `simulate.run` in the background. Needs `Idempotency-Key` (at most 255 characters); `Real-World-Version`, if sent, must be `2026-10-27`. `402` with the estimate when it exceeds `max_cost_usd` or the day's remaining budget (`503` when today's spend cannot be read); `422 {code, detail}` when `policy.screen` refuses the event ([acceptable use](../product/acceptable-use.md)); `503` when the screen could not run. |
 | `POST /v1/simulate/estimate` | Estimated cost, model calls and whether it fits the cap. No job. |
 | `GET /v1/simulations/{id}` | Job status and, once done, the result (`simulated: true`) or the error. |
 | `GET /v1/simulations/{id}/events` | Server-sent events, one `id:` each; `Last-Event-ID` resumes; a `: heartbeat` comment every 15 s; closes after `succeeded` or `failed`. |
@@ -23,8 +23,8 @@ Open http://localhost:8000/docs. Every endpoint works with `ANTHROPIC_API_KEY` u
 | `GET /v1/agents/{id}` | Traits, shares, tier, and per day per topic the logit change split into the news step (with the signal title), the poll nudge and the anchor pull toward `b0` plus the assimilated offset. |
 | `GET /v1/agents/{id}/why` | A model-written account from that trace, labelled "Simulated account, not the cause". Cached by prompt. |
 | `GET /v1/daily` | Today's question; with `?player_id=` after answering, the reveal: you, crowd, committed `sim` and `market`, outcome, Brier, streak and `week` (the seven days ending today, each with your answer and its Brier once resolved). |
-| `POST /v1/daily/answers` | One answer per player per question (`409` on a repeat); returns the reveal. |
-| `GET /v1/receipts`, `GET /v1/receipts/{date}` | Day records newest first with anchor status; one day with every entry, salt and leaf hash, outcome and Brier once known, and its stored RFC 3161 and OpenTimestamps proofs. |
+| `POST /v1/daily/answers` | One answer per player per question (`409` on a repeat or after `closes_at`); returns the reveal. |
+| `GET /v1/receipts`, `GET /v1/receipts/{date}` | Day records newest first with anchor status; one day with every entry, salt and leaf hash, its question (text, resolution source, resolves by), outcome and Brier once known, and its stored RFC 3161 and OpenTimestamps proofs. |
 | `GET /v1/scores` | `score.summarize` over committed forecasts whose questions resolved. |
 | `GET /healthz` | `{"ok": true}` |
 

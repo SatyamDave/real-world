@@ -21,6 +21,9 @@ FORK_DAYS_DEFAULT = 7
 FORK_DAYS_MAX = 14
 FORK_MEMBERS_DEFAULT = 5
 FORK_MEMBERS_MAX = 20
+# A segment is reported as a top shift only when it holds at least this share of the sample:
+# the segment-size floor from research/product/082-icp-political.md.
+TOP_SHIFT_MIN_SHARE = 0.05
 
 DAILY_FORECAST_MEMBERS = 5
 PLAIN_LLM_SAMPLES = 5
