@@ -152,7 +152,7 @@ def test_no_assimilation_or_sim_prompt_holds_a_market_price():
 def test_crash_after_forecast_resumes_at_publish(monkeypatch):
     day = DAYS[0]
 
-    def killed(*args):
+    def killed(*args, **kwargs):
         raise KeyboardInterrupt
 
     with monkeypatch.context() as m:

@@ -137,14 +137,18 @@ def assimilate(
 
 
 def forecast_step(
-    conn: sqlite3.Connection, date: str, budget: llm.Budget, world_agents: int
+    conn: sqlite3.Connection,
+    date: str,
+    budget: llm.Budget,
+    world_agents: int,
+    questions: str = "fixtures",
 ) -> Detail:
-    forecast.forecast_day(conn, date, population.read_snapshot(date), budget)
+    forecast.forecast_day(conn, date, population.read_snapshot(date), budget, questions)
     n = conn.execute("SELECT count(*) FROM forecasts WHERE date = ?", (date,)).fetchone()[0]
     return {"forecasts": n}
 
 
-def day_entries(conn: sqlite3.Connection, date: str) -> list[Detail]:
+def day_entries(conn: sqlite3.Connection, date: str, questions: str = "fixtures") -> list[Detail]:
     """The 0002 entries for a day, built only from stored rows so a rerun gives the same bytes."""
     entries: list[Detail] = []
     protocol = score.protocol_hash()
@@ -161,23 +165,24 @@ def day_entries(conn: sqlite3.Connection, date: str) -> list[Detail]:
             }
         )
 
-    questions = {q["id"]: q for q in forecast.load_questions()}
-    set_hash = ledger.sha256_hex((forecast.FIXTURES / "questions.json").read_bytes())
-    seen = conn.execute(
-        "SELECT 1 FROM ledger_leaves WHERE date < ? AND json_extract(entry_json, '$.kind') ="
-        " 'question_set' AND json_extract(entry_json, '$.question_set_hash') = ?",
-        (date, set_hash),
-    ).fetchone()
-    if seen is None:
-        entries.append(
-            {
-                "kind": "question_set",
-                "date": date,
-                "question_set_hash": set_hash,
-                "question_ids": sorted(questions),
-                "engine_version": settings.ENGINE_VERSION,
-            }
-        )
+    sets = forecast.question_sets(questions)
+    by_id = {q["id"]: q for _, qs in sets for q in qs}
+    for set_hash, qs in sets:
+        seen = conn.execute(
+            "SELECT 1 FROM ledger_leaves WHERE date < ? AND json_extract(entry_json, '$.kind') ="
+            " 'question_set' AND json_extract(entry_json, '$.question_set_hash') = ?",
+            (date, set_hash),
+        ).fetchone()
+        if seen is None:
+            entries.append(
+                {
+                    "kind": "question_set",
+                    "date": date,
+                    "question_set_hash": set_hash,
+                    "question_ids": sorted(q["id"] for q in qs),
+                    "engine_version": settings.ENGINE_VERSION,
+                }
+            )
 
     common = {
         "engine_version": settings.ENGINE_VERSION,
@@ -189,7 +194,7 @@ def day_entries(conn: sqlite3.Connection, date: str) -> list[Detail]:
         "SELECT * FROM forecasts WHERE date = ? ORDER BY question_id, forecaster", (date,)
     )
     for r in rows:
-        q = questions[r["question_id"]]
+        q = by_id[r["question_id"]]
         entries.append(
             {
                 "kind": "forecast",
@@ -208,8 +213,14 @@ def day_entries(conn: sqlite3.Connection, date: str) -> list[Detail]:
     return entries
 
 
-def publish(conn: sqlite3.Connection, date: str, budget: llm.Budget, world_agents: int) -> Detail:
-    out = ledger.commit_day(conn, date, day_entries(conn, date), score.protocol_hash())
+def publish(
+    conn: sqlite3.Connection,
+    date: str,
+    budget: llm.Budget,
+    world_agents: int,
+    questions: str = "fixtures",
+) -> Detail:
+    out = ledger.commit_day(conn, date, day_entries(conn, date, questions), score.protocol_hash())
     return {"leaves": int(out["day"]["leaf_count"]), "root": out["day"]["root"]}
 
 
@@ -286,7 +297,7 @@ def learn(conn: sqlite3.Connection, date: str, budget: llm.Budget, world_agents:
     }
 
 
-STEP_FUNCS: dict[str, Callable[[sqlite3.Connection, str, llm.Budget, int], Detail]] = {
+STEP_FUNCS: dict[str, Callable[..., Detail]] = {
     "ingest": ingest,
     "assimilate": assimilate,
     "forecast": forecast_step,
@@ -310,6 +321,7 @@ def run(
     steps: Sequence[str] | None = None,
     world_agents: int = settings.WORLD_AGENTS,
     live_news: bool = False,
+    questions: str = "fixtures",
 ) -> Detail:
     """Run the named steps (default all) for date, skipping any already ok; return a summary.
 
@@ -324,7 +336,12 @@ def run(
             "SELECT step FROM stage_runs WHERE date = ? AND status = 'ok'", (date,)
         )
     }
-    funcs = {**STEP_FUNCS, "ingest": partial(ingest, live=live_news)}
+    funcs = {
+        **STEP_FUNCS,
+        "ingest": partial(ingest, live=live_news),
+        "forecast": partial(STEP_FUNCS["forecast"], questions=questions),
+        "publish": partial(STEP_FUNCS["publish"], questions=questions),
+    }
     ran = []
     for step in steps or STEPS:
         if step in done:
@@ -391,15 +408,29 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--news", choices=("fixtures", "live"), default="fixtures", help="live reads GDELT"
     )
+    parser.add_argument(
+        "--questions",
+        choices=("fixtures", "live"),
+        default="fixtures",
+        help="live reads the approved lists in data/questions",
+    )
     args = parser.parse_args(argv)
     if args.fixtures and args.news == "live":
         parser.error("--news live needs --date")
+    if args.fixtures and args.questions == "live":
+        parser.error("--questions live needs --date")
+    try:
+        forecast.load_questions(args.questions)
+    except forecast.ListNotApproved as e:
+        print(f"question list refused, nothing ran: {e}", file=sys.stderr)
+        return 1
 
     dates = FIXTURE_DAYS if args.fixtures else [args.date]
     steps = [args.step] if args.step else None
     try:
         for date in dates:
-            print(format_summary(run(date, steps, live_news=args.news == "live")))
+            out = run(date, steps, live_news=args.news == "live", questions=args.questions)
+            print(format_summary(out))
     except llm.BudgetExceeded as e:
         print(f"budget exceeded, run stopped: {e}", file=sys.stderr)
         return 1

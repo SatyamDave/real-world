@@ -18,6 +18,7 @@ from rw import ledger, llm, news, settings, sources
 from rw.population import Agents
 
 FIXTURES = sources.SOURCES_CSV.parent / "fixtures"
+QUESTION_LISTS = sources.SOURCES_CSV.parent / "questions"
 MARKETS_SOURCE = "fixture_markets"
 
 Question = dict[str, Any]
@@ -33,16 +34,39 @@ ANSWER_SCHEMA: llm.Schema = {
 }
 
 
-def load_questions() -> list[Question]:
-    return json.loads((FIXTURES / "questions.json").read_text())
+class ListNotApproved(ValueError):
+    """A live question list that the founder has not approved (data/questions/README.md)."""
+
+
+def question_sets(which: str = "fixtures") -> list[tuple[str, list[Question]]]:
+    """(sha256 of the file bytes, its questions) for each list. Live lists must be approved."""
+    if which == "fixtures":
+        raw = (FIXTURES / "questions.json").read_bytes()
+        return [(ledger.sha256_hex(raw), json.loads(raw))]
+    paths = sorted(QUESTION_LISTS.glob("*.json"))
+    if not paths:
+        raise ListNotApproved(f"no question list in {QUESTION_LISTS}")
+    sets = []
+    for path in paths:
+        raw = path.read_bytes()
+        data = json.loads(raw)
+        status = data.get("status") if isinstance(data, dict) else None
+        if status != "approved":
+            raise ListNotApproved(f"{path.name} has status {status!r}; only an approved list runs")
+        sets.append((ledger.sha256_hex(raw), data["questions"]))
+    return sets
+
+
+def load_questions(which: str = "fixtures") -> list[Question]:
+    return [q for _, qs in question_sets(which) for q in qs]
 
 
 def question_hash(q: Question) -> str:
     return ledger.sha256_hex(ledger.canonical_json(q))
 
 
-def open_questions(date: str) -> list[Question]:
-    return [q for q in load_questions() if q["opens"] <= date <= q["closes"]]
+def open_questions(date: str, which: str = "fixtures") -> list[Question]:
+    return [q for q in load_questions(which) if q["opens"] <= date <= q["closes"]]
 
 
 def market_price(question_id: str, date: str) -> float:
@@ -153,14 +177,20 @@ def plain_llm_forecast(
     return sum(kept) / len(kept)
 
 
-def forecast_day(conn: sqlite3.Connection, date: str, agents: Agents, budget: llm.Budget) -> None:
+def forecast_day(
+    conn: sqlite3.Connection,
+    date: str,
+    agents: Agents,
+    budget: llm.Budget,
+    which: str = "fixtures",
+) -> None:
     """Write sim, plain_llm and market rows for every question open on date; skip done ones."""
     done = {
         r[0]
         for r in conn.execute("SELECT DISTINCT question_id FROM forecasts WHERE date = ?", (date,))
     }
     model = llm.model_name()
-    for q in open_questions(date):
+    for q in open_questions(date, which):
         if q["id"] in done:
             continue
         p, p10, p90 = sim_forecast(conn, date, q, agents, budget)

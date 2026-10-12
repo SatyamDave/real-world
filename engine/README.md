@@ -72,6 +72,17 @@ RW_LIVE_TESTS=1 uv run pytest engine/tests/test_news_live.py -k live  # fetch ye
 - A missing slot, an HTTP or network error, or a day with no kept rows raises `news.NewsUnavailable`: the `ingest` step fails, nothing forecasts, and the CLI exits 1.
 - A run for 2026-10-11 on 2026-10-12 took 21 s and kept 672 rows across all 16 countries (36 to 45 rows each), 48 clusters.
 
+### Live questions
+
+```
+uv run python -m rw.daily --date 2026-10-14 --questions live  # the approved lists in data/questions
+```
+
+- `forecast.question_sets("live")` reads every `data/questions/*.json` and raises `forecast.ListNotApproved` unless each file is an object with `"status": "approved"`; an empty folder is refused too. The CLI checks this before any step runs and exits 1 (lifecycle in [data/questions/README.md](../data/questions/README.md)).
+- `publish` commits one `question_set` entry per list, hashed over the file's bytes, the first day that hash appears.
+- Fixtures stay the default, and `--fixtures` refuses `--questions live`.
+- The live lists carry no market price (`market_source` is empty), so `forecast` stops at the market lookup until a forecast path without one is decided ([decisions-needed](../company/decisions-needed.md) item 4).
+
 Each day prints the steps that ran, model calls, dollars, forecasts committed, the day's root hash, questions scored and countries marked experimental.
 
 - The nightly budget is `NIGHTLY_BUDGET_USD` minus `llm.spent_today()`. `BudgetExceeded`, or any other error, marks the step `failed` and stops the run; the CLI exits 1. Rerun the same command once the cause is fixed.
