@@ -156,6 +156,11 @@ def provider() -> Provider:
     return ClaudeLLM() if os.environ.get("ANTHROPIC_API_KEY") else FakeLLM()
 
 
+def model_name() -> str:
+    """The model that answers this process's calls, as results and the ledger record it."""
+    return "fake" if provider().name == "fake" else settings.MODEL
+
+
 def _sha256(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
 

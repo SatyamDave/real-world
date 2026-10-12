@@ -159,7 +159,7 @@ def forecast_day(conn: sqlite3.Connection, date: str, agents: Agents, budget: ll
         r[0]
         for r in conn.execute("SELECT DISTINCT question_id FROM forecasts WHERE date = ?", (date,))
     }
-    model = "fake" if llm.provider().name == "fake" else settings.MODEL
+    model = llm.model_name()
     for q in open_questions(date):
         if q["id"] in done:
             continue
