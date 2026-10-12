@@ -62,7 +62,9 @@ Never commit a secret. Local values live in `landing/.dev.vars` (git-ignored); `
 | `APP_URL` | variable | Pages variable; mirror in `VITE_APP_URL`. |
 | `VITE_AMPLITUDE_API_KEY`, `VITE_AMPLITUDE_REPLAY_SAMPLE_RATE`, `VITE_TURNSTILE_SITE_KEY`, `VITE_TYPEFORM_FORM_ID`, `VITE_PUBLIC_BASE_URL`, `VITE_APP_URL`, `VITE_REDDIT_PIXEL_ID`, `VITE_X_PIXEL_ID`, `VITE_X_LEAD_EVENT_ID` | build-time | Set in the shell that runs `pnpm --filter landing build`. They end up in the public bundle, so none may be a secret. |
 
-Set a Pages secret with `pnpm exec wrangler pages secret put <NAME> --project-name real-world-landing` (add `--env preview` for the preview environment; confirm the flag with `--help` on your Wrangler version).
+Set a **production** secret with `pnpm exec wrangler pages secret put <NAME> --project-name real-world-landing`. Wrangler 4.149 has no flag for the preview environment, and a preview deployment does not see production secrets (tested on 2026-10-12 with a dummy secret, since removed). Preview values are set in the dashboard (Workers & Pages, `real-world-landing`, Settings, Variables and Secrets, Preview) or with the Pages API (`PATCH /accounts/<id>/pages/projects/real-world-landing` with `deployment_configs.preview.env_vars`, each secret as `{"type": "secret_text", "value": ...}`).
+
+The preview environment as set up on 2026-10-12 deliberately differs from production: `DATABASE_URL` is the Neon **`dev`** branch (so test signups never touch the real waitlist), and `TURNSTILE_SECRET_KEY` is Cloudflare's always-pass test secret, paired with the test site key `1x00000000000000000000AA` at build time (so automated checks can sign up). The real Turnstile keys are therefore not yet tested on a `*.pages.dev` or `tryrealworld.com` host: add the host to the widget's allowed hostnames and check one real signup before go-live. The production environment has no variables set.
 
 ## 5. Deploy and roll back
 

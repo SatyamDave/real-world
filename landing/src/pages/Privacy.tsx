@@ -29,9 +29,11 @@ export function Privacy() {
           address), the page that referred you, and the headline you were shown.
         </li>
         <li>
-          <strong>Your country</strong>, taken from the request. We do not store your IP address. To
-          limit abuse we keep a salted hash of it for a few minutes at a time and delete those rows
-          after a day.
+          <strong>Your country</strong>, taken from the request. We do not store your IP address,
+          and we set Amplitude not to collect it. To limit abuse we keep a salted hash of it for a
+          few minutes at a time and delete those rows after a day. Cloudflare, which serves the
+          page, and Typeform, which runs the form, see your IP address in the course of their
+          service.
         </li>
         <li>
           <strong>Your answers</strong> to the forecast question and the role question in the form
