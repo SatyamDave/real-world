@@ -1,0 +1,6 @@
+question_id,outcome,resolved_on,source_url
+fx-fra-strike,1,2026-10-01,https://example.com/fixture/resolution/fx-fra-strike
+fx-usa-cpi-rise,0,2026-10-03,https://example.com/fixture/resolution/fx-usa-cpi-rise
+fx-gbr-rate-hold,1,2026-10-04,https://example.com/fixture/resolution/fx-gbr-rate-hold
+fx-deu-climate-bill,0,2026-10-05,https://example.com/fixture/resolution/fx-deu-climate-bill
+fx-jpn-ai-guidelines,1,2026-10-05,https://example.com/fixture/resolution/fx-jpn-ai-guidelines
