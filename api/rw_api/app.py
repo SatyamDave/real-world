@@ -252,12 +252,14 @@ def _now() -> str:
     return _clock().isoformat(timespec="seconds")
 
 
-def _closed(q: dict[str, Any]) -> bool:
+def _closes(q: dict[str, Any]) -> datetime:
     """A date-only `closes` means the start of that UTC day, as the web app reads it."""
     closes = datetime.fromisoformat(q["closes"])
-    if closes.tzinfo is None:
-        closes = closes.replace(tzinfo=UTC)
-    return _clock() >= closes
+    return closes if closes.tzinfo else closes.replace(tzinfo=UTC)
+
+
+def _closed(q: dict[str, Any]) -> bool:
+    return _clock() >= _closes(q)
 
 
 def _share(logits: np.ndarray) -> float:
@@ -629,11 +631,23 @@ def _today(conn: sqlite3.Connection) -> str:
 
 
 def _daily_question(conn: sqlite3.Connection) -> tuple[str, dict[str, Any]]:
+    """The day's own question while it is open, then the open question that day forecast with the
+    soonest close, so the reveal's `sim` is always a committed forecast. When all have closed it
+    stays the day's own question, which refuses answers."""
     day = _today(conn)
-    for q in forecast.load_questions():
-        if q.get("daily_on") == day:
-            return day, q
-    raise HTTPException(404, f"no daily question for {day}")
+    questions = forecast.load_questions()
+    own = next((q for q in questions if q.get("daily_on") == day), None)
+    if own is None:
+        raise HTTPException(404, f"no daily question for {day}")
+    if not _closed(own):
+        return day, own
+    committed = {
+        e["entry"]["question_id"]
+        for e in ledger.entries(conn, day)
+        if e["entry"]["kind"] == "forecast"
+    }
+    still_open = [q for q in questions if q["id"] in committed and not _closed(q)]
+    return day, min(still_open, key=_closes, default=own)
 
 
 @app.get(
