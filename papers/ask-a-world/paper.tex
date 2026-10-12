@@ -13,14 +13,14 @@
 \newcommand{\RW}{\textsc{Real World}}
 
 \title{Don't Ask a Model, Ask a World:\\ A Data-Assimilated Population Simulation\\ with Public Forecast Receipts}
-\author{Real World Research\\ \small Draft of 2026-10-11, revised after internal review.\\ \small No empirical results yet; every experiment is a pre-registered protocol.}
+\author{Real World Research\\ \small Draft of 2026-10-12, updated to the repository through PR \#38.\\ \small No forecast results yet; every hypothesis is a pre-registered protocol.}
 \date{}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-A common way to use large language models (LLMs) for social questions is to \emph{ask a model}: prompt one LLM, perhaps with a persona, for what a population thinks or what will happen next. Published evaluations find that LLM respondents reproduce group means but collapse within-group variance and tilt toward Western and US opinion. We add two concerns of our own: such answers carry no state that is corrected when the world changes, and they are usually not committed anywhere a reader can audit. We argue for \emph{asking a world} instead, and describe \RW{}, a system designed to test that idea. \RW{} keeps a persistent population of roughly $10^5$ numeric agent records calibrated to published demographic and attitude marginals. Each agent's belief on a topic is its segment's latent position plus a fixed individual offset, and an explicit response model maps beliefs to survey answers. A daily filter assimilates polls into the segment positions through that response model, with pollster house effects estimated as state. News and search trends act only as bounded forcing, and prediction-market prices are never assimilated. Forecasts are committed each night as salted Merkle leaves and timestamped; the question list and leaf count are published in clear, and every leaf is revealed at resolution. The contribution is the architecture, the interface rules that separate what is assimilated from what is scored, and a pre-registered protocol. Its primary hypothesis is falsifiable and may fail: that a market-blind world beats an LLM given the \emph{same} observation bundle, the same model mixture and the same number of calls. The protocol also defines an equivalence test for the opposite conclusion, that the world adds nothing. No results are reported; each is marked pending with the artifact that will produce it.
+A common way to use large language models (LLMs) for social questions is to \emph{ask a model}: prompt one LLM, perhaps with a persona, for what a population thinks or what will happen next. Published evaluations find that LLM respondents reproduce group means but collapse within-group variance and tilt toward Western and US opinion. We add two concerns of our own: such answers carry no state that is corrected when the world changes, and they are usually not committed anywhere a reader can audit. We argue for \emph{asking a world} instead, and describe \RW{}, a system designed to test that idea. \RW{} keeps a persistent population of roughly $10^5$ numeric agent records calibrated to published demographic and attitude marginals. Each agent's belief on a topic is its segment's latent position plus a fixed individual offset, and an explicit response model maps beliefs to survey answers. A daily filter assimilates polls into the segment positions through that response model, with pollster house effects estimated as state. News and search trends act only as bounded forcing, and prediction-market prices are never assimilated. Forecasts are committed each night as salted Merkle leaves and timestamped; the question list and leaf count are published in clear, and every leaf is revealed at resolution. The contribution is the architecture, the interface rules that separate what is assimilated from what is scored, and a pre-registered protocol. Its primary hypothesis is falsifiable and may fail: that a market-blind world beats an LLM given the \emph{same} observation bundle, the same model mixture and the same number of calls. The protocol also defines an equivalence test for the opposite conclusion, that the world adds nothing. No forecast results are reported; each is marked pending with the artifact that will produce it. A first engine now exists and departs from this design in ways we list (Section~\ref{sec:built}); two synthetic checks of its assimilation operator are reported there and say nothing about forecast skill.
 \end{abstract}
 
 \section{Introduction}
@@ -153,7 +153,7 @@ Here $h$ stacks Eq.~\eqref{eq:obsop} plus the house effects for the day's polls,
 
 Two properties follow from the diagonal $P^f$. First, a segment outside every poll's frame receives no increment; it relaxes toward its anchor and is reported as unassimilated. Second, the update is identifiable only up to what the polls see. A national topline constrains one weighted sum of $z$, so its split across age and education is set by the prior variances in $P^f$ and the frame weights, not by data. We report the segment-level positions as model output, not as measurements.
 
-Cross-segment covariance, localization and inflation~\citep{houtekamer2001sequential,anderson2001ensemble,hunt2007efficient} are an upgrade path, adopted only as a new, separately hashed version (Section~\ref{sec:protocol}). Our research notes recommend starting with capped per-cell nudging and moving to an ensemble transform filter only if that fails out of sample; that upgrade is the two-level filter of \emph{Belief Assimilation}. The filter above is a principled form of per-cell nudging, with the gain set by the variances rather than by hand.
+Cross-segment covariance, localization and inflation~\citep{houtekamer2001sequential,anderson2001ensemble,hunt2007efficient} are an upgrade path, adopted only as a new, separately hashed version (Section~\ref{sec:protocol}). Our research notes recommend starting with capped per-cell nudging and moving to an ensemble transform filter only if that fails out of sample; that upgrade is the two-level filter of \emph{Belief Assimilation}. The filter above is a principled form of per-cell nudging, with the gain set by the variances rather than by hand. The engine built so far started with capped nudging and replaced it with a scalar per-cell Kalman update after a synthetic check (Section~\ref{sec:built}); it is not yet this filter.
 
 \subsection{From state to question probabilities}\label{sec:forecast}
 Every question is assigned, at creation and by a hashed lookup rule (Appendix~\ref{app:qrule}), to a \emph{class} and to a set of mapped topics $\mathcal{T}_q\subseteq\mathcal{T}$, which may be empty.
@@ -313,9 +313,40 @@ H6 & coherence violation rate, W vs B1 & pending & \nolinkurl{eval/ask-a-world/h
 \end{tabular}
 \end{table}
 
+\section{What Is Built, and Synthetic Checks}\label{sec:built}
+
+This section describes the code at commit \texttt{ad95a99} of the \RW{} repository (PR~\#38). It is version~0.1.0 of the engine (\nolinkurl{engine/rw/}), not the frozen W of Section~\ref{sec:protocol}, and no forecast from it has been scored. Table~\ref{tab:built} lists where it differs from the design above.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Engine 0.1.0 against the design of Section~\ref{sec:arch}. Module paths are in the \RW{} repository.}
+\label{tab:built}
+\begin{tabular}{@{}L{2.3cm}L{6.2cm}L{5.6cm}@{}}
+\toprule
+Part & Built (module) & Difference from the design \\
+\midrule
+Population & $10^4$ agents in 16 countries, segments country $\times$ age band $\times$ education, sampled from bundled marginals (\nolinkurl{population.py}) & The marginals in \nolinkurl{data/sample/} are illustrative values written for the repository, not survey or census data; GLOPOP-S and survey aggregates are not loaded until their licence rows clear \\
+Belief update & News clusters from fixtures or GDELT GKG files; one LLM reading per cluster gives a signal in $[-1,1]$ per topic; exposed agents step by the signal times $1-s_i$ (a per-agent stubbornness), capped at 0.5 logit, then are pulled toward their anchor at rate 0.05 (\nolinkurl{news.py}, \nolinkurl{beliefs.py}) & The step is per agent, not a pure segment shift, so within-segment variance is not preserved exactly (R2); no search trends; no fitted $\gamma$, $\delta$, $\lambda$ \\
+Assimilation & Scalar Kalman update per (country, topic) cell with an anchor offset and innovation-based variance inflation, decision 0005 (\nolinkurl{research/decisions/0005-assimilation-v2.md}, \texttt{beliefs.kalman\_update}); the default since E006 & Not the iterated EKF of Eq.~\eqref{eq:kf}: it observes a group mean logit, not $h_F$; no house effects or poll-age penalty; walk SD 0.05 and prior SD 1.0 are not fitted on real polls; only fixture polls are ingested \\
+Forecast & One LLM call per segment present in the question's countries, given the day's headlines and the segment's current share on the mapped topic; agent offsets are added and agents averaged (\nolinkurl{forecast.py}) & No class P/C split: the LLM sets every segment's probability; no ensemble over model families \\
+Same-feed LLM & Same headlines, no population, five calls, trimmed mean (\nolinkurl{forecast.py}) & Not matched to W in number of calls, as B1 requires \\
+Ledger and scoring & Decision 0002 format with one RFC~3161 token and an OpenTimestamps calendar proof (\nolinkurl{ledger.py}); Brier and log score against the market and the same-feed LLM with a day-block bootstrap (\nolinkurl{score.py}) & The pre-genesis format that \emph{Receipts} excludes from its claims; the market price is a fixture stored in the leaf, not B0 at $T^\star$ \\
+Forks & Event read once per segment, members resample agents, 7 days, $p_{10}$/$p_{50}$/$p_{90}$ across members (\nolinkurl{simulate.py}) & No paired with/without arm; no shared analysis-state draws \\
+Questions & 29 proposed questions (\nolinkurl{data/questions/2026-10-proposed.json}) & Not approved or hashed; the daily cycle refuses to forecast them until they are \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Synthetic checks of the assimilation operator.} Two pre-registered experiments ran the operator on a synthetic world with known segment beliefs: a 2,000-agent engine world, the first 5 topics, a truth that walks in logit with SD 0.05 per day and shocks on days 10 and 20, 20\% of segment--topic cells polled each day with logit noise SD 0.2, and a prior biased from the truth. Each is 50 seeds of 30 days, with a 95\% bootstrap interval over seeds; differences are day-30 root-mean-square error of segment beliefs, in logit, paired by seed, and negative favours the first arm. Every pre-registered metric is reported.
+\begin{itemize}
+  \item \emph{E003}, capped nudging, the operator then in use (run at commit \texttt{b6957be}; artifact \nolinkurl{experiments/E003/results/2026-10-12-none/results.json}). Nudging minus no assimilation: $-0.4449$ ($-0.4497$ to $-0.4401$, $n=50$), the pre-registered success. Nudging minus persistence (each cell holds its last poll): $+0.2353$ ($+0.2288$ to $+0.2419$, $n=50$), so nudging lost to persistence. Cells never observed, nudging minus none: $+0.0000$ ($n=32$ seeds with such cells). Zero-evidence variance check: pass. The ETKF arm was not run and the spread--skill ratio not computed (the engine has no ETKF, and the nudging arm has one member). Deviations: 137 segments on seed~0 instead of 200, and no synthetic market aggregate.
+  \item \emph{E006}, the scalar Kalman update, on new seeds 1000--1049 (run at commit \texttt{3163def}; artifact \nolinkurl{experiments/E006/results/2026-10-12-none/RESULTS.md}). Kalman minus persistence: $-0.0182$ ($-0.0190$ to $-0.0174$, $n=50$), the pre-registered success. Minus nudging: $-0.2608$ ($-0.2675$ to $-0.2543$). Minus no assimilation: $-0.7118$ ($-0.7197$ to $-0.7038$). Cells never observed, minus none: $+0.0000$ ($n=33$). With the walk SD halved and doubled, minus persistence: $-0.0174$ ($-0.0182$ to $-0.0165$) and $-0.0190$ ($-0.0197$ to $-0.0183$). Day-30 RMSE over the filter's own predicted SD: mean 1.367 (range 1.198 to 1.612), so the filter understates its error by about a third. Largest change in within-segment SD: $9.13\times10^{-13}$ logit. Zero-evidence check: pass. No deviations from its plan.
+\end{itemize}
+These are checks of one operator on a world built to match its assumptions: the truth's walk SD equals the filter's, poll noise is known, each poll observes one segment directly, news does not move the truth, and the operator was developed on E003's seeds 0--19. The gain over persistence is small. They are retrospective and synthetic, and say nothing about forecast skill or about H1--H6.
+
 \section{Limitations and Failure Modes}\label{sec:limits}
 
-\paragraph{The architecture is unvalidated.} Nothing here has been run. The design choices rest on others' results in narrower settings: US surveys, small pedestrian ABMs, seasonal influenza. Any of them may fail to transfer.
+\paragraph{The architecture is unvalidated.} No forecast has been scored, and the engine that exists differs from this design (Section~\ref{sec:built}). The only results are two synthetic checks of one operator. The design choices rest on others' results in narrower settings: US surveys, small pedestrian ABMs, seasonal influenza. Any of them may fail to transfer.
 
 \paragraph{The world may reduce to a poll average.} For attitude questions, W differs from the poll-only filter P only through the anchors, the response model and news forcing. For class-C events, it differs from B1 only through a state summary. If W ties P and B1, the population adds nothing, and we will say so.
 
@@ -337,7 +368,7 @@ H6 & coherence violation rate, W vs B1 & pending & \nolinkurl{eval/ask-a-world/h
 
 \paragraph{Data licensing.} IPUMS International prohibits commercial use and redistribution~\citep{ipumsi}, so it is excluded from the public build. GLOPOP-S is released under CC BY 4.0, but it is derived from LIS and DHS microdata whose own access terms are restrictive, and we have not obtained written confirmation that commercial use is permitted. Attitude sources, prediction-market data and survey microdata for H4 each carry their own terms. A source whose terms are unknown is blocked, which may leave countries in Tier D.
 
-\paragraph{Cost is unmeasured.} The position is framed as ``worth its cost'', but no cost has been measured. Every arm's cost per forecast is logged and reported with the results.
+\paragraph{Cost is unmeasured.} The position is framed as ``worth its cost'', but no cost has been measured: every run in the repository so far used the offline fake model or no model. Every arm's cost per forecast is logged and reported with the results.
 
 \section{Ethics Statement}
 
