@@ -1337,6 +1337,69 @@ button.link:hover:not(:disabled) {
   min-width: 0;
 }
 
+/* API docs: one receipt per operation, in the order of api/openapi.json */
+
+.docs {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 800px;
+}
+
+.docs code,
+.docs pre {
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.docs pre {
+  margin: 12px 0;
+  padding: 12px;
+  overflow-x: auto;
+  border: 1.5px dashed var(--line);
+  line-height: 1.5;
+}
+
+.first-call {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.op-path {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.op-method {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.fields {
+  margin: 0;
+  font-size: 14px;
+}
+
+.fields div {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.35fr) 1fr;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1.5px dashed var(--line);
+}
+
+.fields dd {
+  margin: 0;
+}
+
+.codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 4px;
+}
+
 /* Footer, as on the landing page; above the fixed globe */
 
 .site-footer {

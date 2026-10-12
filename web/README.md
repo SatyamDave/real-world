@@ -18,7 +18,8 @@ pnpm --filter web exec vite build --mode fixtures   # local smoke build on fixtu
 | File | What it does |
 | --- | --- |
 | `src/api.ts` | The one `@real-world/sdk` client, pointed at `VITE_API_URL`. Every component calls it; nothing else fetches. |
-| `src/App.tsx` | Routes on `location.pathname` (`/`, `/fork/{id}`, `/receipts`, `/acceptable-use`) and the shared bits: disclosure line, tier badge, formatting, footer. |
+| `src/App.tsx` | Routes on `location.pathname` (`/`, `/fork/{id}`, `/receipts`, `/acceptable-use`, `/docs`) and the shared bits: disclosure line, tier badge, formatting, footer. |
+| `src/Docs.tsx` | The `/docs` page: reads `api/openapi.json` and the README quickstart blocks at build time, so it cannot drift from the API or the SDK READMEs. |
 | `src/AcceptableUse.tsx` | The `/acceptable-use` page: [product/acceptable-use.md](../product/acceptable-use.md) word for word. |
 | `src/DailyQuestion.tsx` | Slider, submit, four-way reveal and streak. The player id lives in `localStorage`. |
 | `src/ForkCard.tsx` | Fork box with cost estimate, SSE progress, and the fork card. |

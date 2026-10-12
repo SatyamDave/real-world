@@ -2,7 +2,7 @@ import { ApiError, type Country, type World } from "@real-world/sdk";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { AcceptableUse } from "./AcceptableUse";
 import { AgentPanel } from "./AgentPanel";
-import { API_URL, rw } from "./api";
+import { rw } from "./api";
 import { DailyQuestion } from "./DailyQuestion";
 import { Fork, ForkRun } from "./ForkCard";
 import { ReceiptsPage, ReceiptsStrip } from "./Receipts";
@@ -10,6 +10,8 @@ import { ReceiptsPage, ReceiptsStrip } from "./Receipts";
 // three.js is most of the bundle, so the globe loads once the page is idle, and only on screens
 // wide enough to use it. A still poster holds its place until then, and is all a phone shows.
 const Globe = lazy(() => import("./Globe"));
+// The docs page carries api/openapi.json, so it loads only on /docs.
+const Docs = lazy(() => import("./Docs").then((m) => ({ default: m.Docs })));
 const WIDE = "(min-width: 768px)";
 const FEATURED = ["USA", "BRA", "KEN"];
 
@@ -177,6 +179,9 @@ function Header({ path, date }: { path: string; date?: string }) {
         <a href="/receipts" aria-current={path === "/receipts" ? "page" : undefined}>
           Receipts
         </a>
+        <a href="/docs" aria-current={path === "/docs" ? "page" : undefined}>
+          Docs
+        </a>
       </nav>
     </header>
   );
@@ -319,7 +324,7 @@ function Footer() {
       <nav aria-label="Footer">
         <a href="/receipts">Receipts</a>
         <a href="/acceptable-use">Acceptable use</a>
-        <a href={`${API_URL}/docs`}>API</a>
+        <a href="/docs">API</a>
         <a href="https://github.com/SatyamDave/real-world">Source</a>
       </nav>
       <p>
@@ -335,6 +340,7 @@ const TITLES: Record<string, string> = {
   "/": "Real World: don't ask a model, ask a world",
   "/receipts": "Receipts · Real World",
   "/acceptable-use": "Acceptable use · Real World",
+  "/docs": "API docs · Real World",
 };
 
 export function App({ path = location.pathname }: { path?: string }) {
@@ -355,6 +361,10 @@ export function App({ path = location.pathname }: { path?: string }) {
           <ForkRun id={decodeURIComponent(fork[1])} />
         ) : path === "/receipts" ? (
           <ReceiptsPage tiers={tiers} />
+        ) : path === "/docs" ? (
+          <Suspense fallback={<Loading what="the API docs" />}>
+            <Docs />
+          </Suspense>
         ) : path === "/acceptable-use" ? (
           <AcceptableUse />
         ) : path === "/" ? (
