@@ -24,7 +24,7 @@ Why Cloudflare nameservers: on a Free plan the only zone setup Cloudflare offers
 4. **Attach the domain to the Pages project.** Workers & Pages, `real-world-landing`, Custom domains, Set up a custom domain, enter `tryrealworld.com`, confirm. Cloudflare creates the DNS record and issues the certificate. Repeat for `www.tryrealworld.com`, then add a redirect from `www` to the apex (Rules, Redirect Rules).
 5. **Only now deploy to production.** The production branch is whichever branch Pages settings name (Settings, Builds, Production branch; check it). Build with the production values in section 4, then `pnpm --filter landing build && pnpm exec wrangler pages deploy landing/dist --project-name real-world-landing --branch <production branch>`. Never run this from a session that has not been told to.
 6. **SSL/TLS.** Set encryption mode to Full (strict) and turn on Always Use HTTPS.
-7. **Check.** `https://tryrealworld.com/` loads the page; `/privacy` and `/terms` load; `https://tryrealworld.com/api/signup` answers `405` to a GET (the function only accepts POST).
+7. **Check.** `https://tryrealworld.com/` loads the page; `/privacy` and `/terms` load; a POST of `{}` to `https://tryrealworld.com/api/signup` answers `400` with `{"error":"invalid_email"}` (it is rejected before anything is saved). A GET is not a useful check: the function only handles POST, so a GET falls through and returns the page with a `200`.
 
 After step 4 also update, then redeploy:
 
