@@ -1,5 +1,6 @@
 import { ApiError, type Estimate, type Job, type PrefilledEvent } from "@real-world/sdk";
 import { useEffect, useState } from "react";
+import { ApiCall } from "./ApiCall";
 import {
   Disclosure,
   LoadError,
@@ -13,6 +14,8 @@ import {
   usd,
 } from "./App";
 import { rw } from "./api";
+import { Trajectory } from "./Chart";
+import { Method } from "./Method";
 import { bandText, forkImage, forkSentence, forkShareText, segmentLabel } from "./share";
 
 const EVENT_MAX_CHARS = 500;
@@ -291,6 +294,31 @@ export function ForkCard({ job }: { job: Job }) {
         })}
       </ul>
 
+      {[...topics]
+        .sort(
+          (a, b) =>
+            Math.abs(b[1].final.p50 - b[1].baseline_share) -
+            Math.abs(a[1].final.p50 - a[1].baseline_share),
+        )
+        .slice(0, 3)
+        .map(([topic, o]) => (
+          <Trajectory
+            key={topic}
+            title={`${topicLabel(topic)}: share leaning yes by day`}
+            points={o.by_day.map((d) => ({ x: `Day ${d.day}`, y: d.p50, low: d.p10, high: d.p90 }))}
+            reference={o.baseline_share}
+            format={pct}
+          />
+        ))}
+
+      <Method source="engine/rw/simulate.py">
+        <p>
+          Each of the {r.members} ensemble members applies the event to the sampled agents day by
+          day. The line is the median share across members, the band is p10 to p90 and the dashed
+          line is the share before the event.
+        </p>
+      </Method>
+
       <dl className="facts">
         <div>
           <dt>Coverage</dt>
@@ -348,6 +376,12 @@ export function ForkCard({ job }: { job: Job }) {
           {shared}
         </p>
       )}
+      <ApiCall
+        path={`/v1/simulations/${job.id}`}
+        sdk={`get_simulation("${job.id}")`}
+        data={job}
+        filename={job.id}
+      />
       <Disclosure tiers={r.coverage.map((c) => c.tier)} />
     </article>
   );

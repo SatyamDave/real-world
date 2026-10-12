@@ -51,9 +51,45 @@
         "by_day": [
           {
             "day": 1,
-            "p10": 0.51,
-            "p50": 0.53,
-            "p90": 0.56
+            "p10": 0.536461,
+            "p50": 0.544691,
+            "p90": 0.557037
+          },
+          {
+            "day": 2,
+            "p10": 0.546337,
+            "p50": 0.559506,
+            "p90": 0.579259
+          },
+          {
+            "day": 3,
+            "p10": 0.552263,
+            "p50": 0.568395,
+            "p90": 0.592592
+          },
+          {
+            "day": 4,
+            "p10": 0.555819,
+            "p50": 0.573728,
+            "p90": 0.600592
+          },
+          {
+            "day": 5,
+            "p10": 0.557952,
+            "p50": 0.576928,
+            "p90": 0.605392
+          },
+          {
+            "day": 6,
+            "p10": 0.559232,
+            "p50": 0.578848,
+            "p90": 0.608272
+          },
+          {
+            "day": 7,
+            "p10": 0.56,
+            "p50": 0.58,
+            "p90": 0.61
           }
         ]
       },
@@ -67,9 +103,45 @@
         "by_day": [
           {
             "day": 1,
-            "p10": 0.38,
-            "p50": 0.4,
-            "p90": 0.43
+            "p10": 0.385309,
+            "p50": 0.393539,
+            "p90": 0.405885
+          },
+          {
+            "day": 2,
+            "p10": 0.370494,
+            "p50": 0.383663,
+            "p90": 0.403416
+          },
+          {
+            "day": 3,
+            "p10": 0.361605,
+            "p50": 0.377737,
+            "p90": 0.401934
+          },
+          {
+            "day": 4,
+            "p10": 0.356272,
+            "p50": 0.374181,
+            "p90": 0.401045
+          },
+          {
+            "day": 5,
+            "p10": 0.353072,
+            "p50": 0.372048,
+            "p90": 0.400512
+          },
+          {
+            "day": 6,
+            "p10": 0.351152,
+            "p50": 0.370768,
+            "p90": 0.400192
+          },
+          {
+            "day": 7,
+            "p10": 0.35,
+            "p50": 0.37,
+            "p90": 0.4
           }
         ]
       }
@@ -100,6 +172,42 @@
         "shift_p50": 0.052,
         "shift_p90": 0.072,
         "n_agents": 14,
+        "tier": "B"
+      },
+      {
+        "segment": "BRA|18-34|low",
+        "topic": "inflation_worry",
+        "shift_p10": -0.011284,
+        "shift_p50": 0.022984,
+        "shift_p90": 0.097761,
+        "n_agents": 1,
+        "tier": "B"
+      },
+      {
+        "segment": "BRA|18-34|low",
+        "topic": "spending_intent",
+        "shift_p10": -0.15207,
+        "shift_p50": -0.089108,
+        "shift_p90": -0.063996,
+        "n_agents": 1,
+        "tier": "B"
+      },
+      {
+        "segment": "BRA|18-34|mid",
+        "topic": "inflation_worry",
+        "shift_p10": 0.039811,
+        "shift_p50": 0.069123,
+        "shift_p90": 0.094737,
+        "n_agents": 2,
+        "tier": "B"
+      },
+      {
+        "segment": "BRA|18-34|mid",
+        "topic": "spending_intent",
+        "shift_p10": -0.038437,
+        "shift_p50": -0.029031,
+        "shift_p90": -0.014789,
+        "n_agents": 2,
         "tier": "B"
       }
     ],
@@ -135,8 +243,138 @@
     "content_hash": "9f2c000000000000000000000000000000000000000000000000000000000000",
     "note": "Counterfactual: not scored",
     "trace": {
-      "segment_signals": {},
-      "agents": []
+      "segment_signals": {
+        "IND|18-34|low": {
+          "inflation_worry": -0.177273,
+          "spending_intent": 0.337302
+        },
+        "JPN|35-54|mid": {
+          "inflation_worry": -0.22256,
+          "spending_intent": 0.747124
+        },
+        "USA|18-34|mid": {
+          "inflation_worry": 0.33499,
+          "spending_intent": 0.147212
+        }
+      },
+      "agents": [
+        {
+          "agent_id": "a1310",
+          "iso3": "JPN",
+          "segment": "JPN|35-54|mid",
+          "belief_start": {
+            "inflation_worry": 0.732504,
+            "spending_intent": -1.405104
+          },
+          "belief_end": {
+            "inflation_worry": 0.605947,
+            "spending_intent": -1.447255
+          },
+          "steps": [
+            {
+              "day": 1,
+              "topic": "inflation_worry",
+              "delta": -0.020977,
+              "cause": "anchor_pull"
+            },
+            {
+              "day": 1,
+              "topic": "spending_intent",
+              "delta": -0.006986,
+              "cause": "anchor_pull"
+            },
+            {
+              "day": 2,
+              "topic": "inflation_worry",
+              "delta": -0.019928,
+              "cause": "anchor_pull"
+            },
+            {
+              "day": 2,
+              "topic": "spending_intent",
+              "delta": -0.006637,
+              "cause": "anchor_pull"
+            },
+            {
+              "day": 3,
+              "topic": "inflation_worry",
+              "delta": -0.018931,
+              "cause": "anchor_pull"
+            },
+            {
+              "day": 3,
+              "topic": "spending_intent",
+              "delta": -0.006305,
+              "cause": "anchor_pull"
+            }
+          ]
+        },
+        {
+          "agent_id": "a0444",
+          "iso3": "USA",
+          "segment": "USA|18-34|mid",
+          "belief_start": {
+            "inflation_worry": -0.420618,
+            "spending_intent": -0.099799
+          },
+          "belief_end": {
+            "inflation_worry": -0.093778,
+            "spending_intent": -0.21084
+          },
+          "steps": [
+            {
+              "day": 1,
+              "topic": "inflation_worry",
+              "delta": 0.005087,
+              "cause": "anchor_pull"
+            },
+            {
+              "day": 1,
+              "topic": "spending_intent",
+              "delta": -0.039142,
+              "cause": "anchor_pull"
+            },
+            {
+              "day": 2,
+              "topic": "inflation_worry",
+              "delta": 0.004832,
+              "cause": "anchor_pull"
+            },
+            {
+              "day": 2,
+              "topic": "spending_intent",
+              "delta": -0.037185,
+              "cause": "anchor_pull"
+            },
+            {
+              "day": 3,
+              "topic": "inflation_worry",
+              "delta": 0.004591,
+              "cause": "anchor_pull"
+            },
+            {
+              "day": 3,
+              "topic": "spending_intent",
+              "delta": -0.035325,
+              "cause": "anchor_pull"
+            }
+          ]
+        },
+        {
+          "agent_id": "a4258",
+          "iso3": "IND",
+          "segment": "IND|18-34|low",
+          "belief_start": {
+            "inflation_worry": 1.338856,
+            "spending_intent": -1.150287
+          },
+          "belief_end": {
+            "inflation_worry": 1.338856,
+            "spending_intent": -1.150287
+          },
+          "steps": []
+        }
+      ]
     },
     "top_shift_min_agents": 10
   }
