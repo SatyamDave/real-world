@@ -34,6 +34,12 @@ def entry(date, question_id="fx-q1", forecaster="sim", p=0.625, supersedes=""):
     }
 
 
+@pytest.fixture
+def anchorable(monkeypatch):
+    """The recorded vector and the helper entries use fx- ids, which anchor_day refuses."""
+    monkeypatch.setattr(ledger, "FIXTURE_PREFIX", "never-")
+
+
 def three_entries(date):
     return [entry(date, forecaster=f) for f in ("sim", "plain_llm", "market")]
 
@@ -252,7 +258,7 @@ OTS = (DATA / "ots_2026-10-01.bin").read_bytes()
 
 
 @pytest.fixture
-def vector_day(conn, monkeypatch):
+def vector_day(conn, monkeypatch, anchorable):
     """Commit the test vector's day with its own salts, so its record_hash is the recorded one."""
     vector = json.loads(VECTOR.read_text())
     salts = iter(item["salt"] for item in vector["entries"])
@@ -326,7 +332,7 @@ def test_anchors_are_append_only(conn, vector_day, monkeypatch):
     assert ledger.anchor_status(conn, vector_day)[0] == "anchored"
 
 
-def test_a_token_for_another_digest_is_not_stored(conn, monkeypatch):
+def test_a_token_for_another_digest_is_not_stored(conn, monkeypatch, anchorable):
     ledger.commit_day(conn, "2026-10-01", three_entries("2026-10-01"), PROTOCOL)
     replay(monkeypatch, ots=b"not a proof")
     failures = ledger.anchor_day(conn, "2026-10-01")
@@ -377,3 +383,15 @@ def test_live_anchor_of_the_vector_day(conn, vector_day):
     assert ledger.anchor_day(conn, vector_day) == []
     assert ledger.anchor_status(conn, vector_day)[0] == "anchored"
     assert ledger.verify_day(conn, vector_day) == []
+
+
+def test_a_fixture_day_is_never_sent_to_a_timestamp_server(conn, monkeypatch, capsys):
+    def refuse(*a):
+        raise AssertionError("a fixture day reached the network")
+
+    monkeypatch.setattr(ledger, "_post", refuse)
+    ledger.commit_day(conn, "2026-10-01", [entry("2026-10-01", "fx-q1")], PROTOCOL)
+    with pytest.raises(ledger.LedgerConflict, match="not sent to public timestamp servers"):
+        ledger.anchor_day(conn, "2026-10-01")
+    assert ledger.main(["anchor", "--date", "2026-10-01"]) == 1
+    assert "not sent to public timestamp servers" in capsys.readouterr().err

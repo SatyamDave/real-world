@@ -25,7 +25,7 @@ FIXTURE_DAYS = sorted(p.stem for p in (forecast.FIXTURES / "news").glob("*.csv")
 BIGGEST_MISSES = 5
 
 Detail = dict[str, Any]
-FIXTURE_ANCHOR = "fixture days are not sent to public timestamp servers"
+FIXTURE_ANCHOR = ledger.FIXTURE_ANCHOR
 
 
 class NotAnchored(Exception):

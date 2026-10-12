@@ -28,6 +28,9 @@ TSTINFO_OID = bytes.fromhex("2a864886f70d0109100104")
 OTS_PENDING_TAG = bytes.fromhex("83dfe30d2ef90c8e")
 
 
+FIXTURE_ANCHOR = "fixture days are not sent to public timestamp servers"
+
+
 class LedgerConflict(Exception):
     pass
 
@@ -184,6 +187,8 @@ def anchor_status(conn: sqlite3.Connection, date: str) -> tuple[AnchorStatus, st
 def anchor_day(conn: sqlite3.Connection, date: str) -> list[str]:
     """Send a verified day's record_hash to the TSA and the OpenTimestamps calendar, store each
     proof that checks out, and return what failed. A kind already stored is not requested again."""
+    if is_fixture(entries(conn, date)):
+        raise LedgerConflict(f"{date}: {FIXTURE_ANCHOR}")
     problems = verify_day(conn, date)
     if problems:
         raise LedgerConflict(f"{date} fails verification: " + "; ".join(problems))
