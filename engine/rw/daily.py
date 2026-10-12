@@ -11,6 +11,7 @@ import sqlite3
 import sys
 from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
+from functools import partial
 from typing import Any
 
 import numpy as np
@@ -46,10 +47,12 @@ def previous_snapshot(date: str) -> str | None:
     return max((p.parent.name for p in found if p.parent.name < date), default=None)
 
 
-def ingest(conn: sqlite3.Connection, date: str, budget: llm.Budget, world_agents: int) -> Detail:
-    news.ingest_day(conn, date, budget)
+def ingest(
+    conn: sqlite3.Connection, date: str, budget: llm.Budget, world_agents: int, live: bool = False
+) -> Detail:
+    news.ingest_day(conn, date, budget, live=live)
     n = conn.execute("SELECT count(DISTINCT cluster_id) FROM signals WHERE date = ?", (date,))
-    return {"clusters": n.fetchone()[0]}
+    return {"clusters": n.fetchone()[0], "news": "gdelt" if live else "fixtures"}
 
 
 def assimilate(
@@ -283,7 +286,10 @@ def _finish(conn: sqlite3.Connection, date: str, step: str, status: str, detail:
 
 
 def run(
-    date: str, steps: Sequence[str] | None = None, world_agents: int = settings.WORLD_AGENTS
+    date: str,
+    steps: Sequence[str] | None = None,
+    world_agents: int = settings.WORLD_AGENTS,
+    live_news: bool = False,
 ) -> Detail:
     """Run the named steps (default all) for date, skipping any already ok; return a summary.
 
@@ -298,6 +304,7 @@ def run(
             "SELECT step FROM stage_runs WHERE date = ? AND status = 'ok'", (date,)
         )
     }
+    funcs = {**STEP_FUNCS, "ingest": partial(ingest, live=live_news)}
     ran = []
     for step in steps or STEPS:
         if step in done:
@@ -311,7 +318,7 @@ def run(
                 (date, step, _now()),
             )
         try:
-            detail = STEP_FUNCS[step](conn, date, budget, world_agents)
+            detail = funcs[step](conn, date, budget, world_agents)
         except BaseException as e:
             _finish(conn, date, step, "failed", {"error": f"{type(e).__name__}: {e}"})
             raise
@@ -361,15 +368,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     which.add_argument("--date", help="YYYY-MM-DD")
     which.add_argument("--fixtures", action="store_true", help="run every fixture day in order")
     parser.add_argument("--step", choices=STEPS, help="run only this step")
+    parser.add_argument(
+        "--news", choices=("fixtures", "live"), default="fixtures", help="live reads GDELT"
+    )
     args = parser.parse_args(argv)
+    if args.fixtures and args.news == "live":
+        parser.error("--news live needs --date")
 
     dates = FIXTURE_DAYS if args.fixtures else [args.date]
     steps = [args.step] if args.step else None
     try:
         for date in dates:
-            print(format_summary(run(date, steps)))
+            print(format_summary(run(date, steps, live_news=args.news == "live")))
     except llm.BudgetExceeded as e:
         print(f"budget exceeded, run stopped: {e}", file=sys.stderr)
+        return 1
+    except news.NewsUnavailable as e:
+        print(f"no news, run stopped before forecasting: {e}", file=sys.stderr)
         return 1
     return 0
 

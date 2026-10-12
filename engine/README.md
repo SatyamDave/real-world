@@ -40,7 +40,7 @@ Beliefs are logits in an `(n_agents, n_topics)` array `B`; `B0` is each agent's 
 
 | Step | What it does |
 | --- | --- |
-| `ingest` | `news.ingest_day`: polls become observations, each news cluster becomes one signal call. |
+| `ingest` | `news.ingest_day`: polls become observations, each news cluster becomes one signal call. With `--news live`, the news is the day's GDELT GKG instead of the fixture and no fixture polls are read (see below). |
 | `assimilate` | Loads the previous day's snapshot (or samples a fresh `WORLD_AGENTS` world on the first day), applies the day's signals through `news.exposure` and `beliefs.update_beliefs`, nudges each country toward the day's polls with `beliefs.nudge`, writes `var/snapshots/<date>/agents.parquet` and records each nudge in `nudges`. No market price is read. |
 | `forecast` | `forecast.forecast_day`: sim, plain-LLM and market forecasts for every open question. |
 | `publish` | `ledger.commit_day` with a `protocol` entry when the protocol hash is new, a `question_set` entry when the question file hash is new, and one 0002-format `forecast` entry per forecast row, carrying `snapshot_sha256` and the `config_hash` of `settings.py`. |
@@ -52,6 +52,20 @@ make daily DATE=2026-10-01                               # one day, every step n
 uv run python -m rw.daily --date 2026-10-01 --step learn # one step
 make daily-fixtures                                      # the five fixture days in order
 ```
+
+### Live news
+
+```
+uv run python -m rw.daily --date 2026-10-11 --news live  # a past UTC day's real news
+RW_LIVE_TESTS=1 uv run pytest engine/tests/test_news_live.py -k live  # fetch yesterday once
+```
+
+- `news.fetch_gdelt_day(date)` passes `sources.require("gdelt")`, then downloads the 96 fifteen-minute GKG 2.1 files of that UTC day from `data.gdeltproject.org` with stdlib `urllib` (`GDELT_TIMEOUT_S` per file).
+- It keeps an article when its locations name one of the 16 countries (GKG uses FIPS codes, mapped in `news.FIPS_TO_ISO3`) and its themes include one of `news.GKG_THEMES`. No AI theme appeared in six GKG files sampled from 2026-10-11, so `TECH_AUTOMATION` stands in for the fixture's `TECH_AI`; the fixture's `TAX_FNCACT` is dropped because GKG tags actor roles with it in almost every article.
+- Articles with the same title are one row: `num_sources` counts distinct outlets, `tone` is the mean GKG tone. Each country and theme keeps its `NEWS_TITLES_PER_THEME` most-sourced titles.
+- It writes `var/news/<date>.csv` in the fixture columns, all at once, and ingest reuses that file on a rerun.
+- A missing slot, an HTTP or network error, or a day with no kept rows raises `news.NewsUnavailable`: the `ingest` step fails, nothing forecasts, and the CLI exits 1.
+- A run for 2026-10-11 on 2026-10-12 took 21 s and kept 672 rows across all 16 countries (36 to 45 rows each), 48 clusters.
 
 Each day prints the steps that ran, model calls, dollars, forecasts committed, the day's root hash, questions scored and countries marked experimental.
 
