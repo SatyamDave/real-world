@@ -3,6 +3,7 @@ name = "rw-api"
 version = "0.1.0"
 description = "Real World HTTP API over the rw engine"
 requires-python = ">=3.12"
+license = { text = "Proprietary" }
 dependencies = ["rw", "fastapi", "uvicorn"]
 
 [dependency-groups]

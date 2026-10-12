@@ -192,3 +192,34 @@ def test_sdk_parity_reports_a_camel_case_method(tmp_path):
     sdk_tree(tmp_path, py, TS_CLIENT.replace("  daily(", "  answerDaily("))
     code, out = run(tmp_path, "check_sdk_parity.py")
     assert code == 1 and "method answer_daily is answerDaily in TypeScript" in out, out
+
+
+LICENCE_CLEAN = {
+    "package.json": '{"name": "a", "private": true, "license": "UNLICENSED"}\n',
+    "engine/pyproject.toml": '[project]\nname = "a"\nlicense = { text = "Proprietary" }\n',
+    "pyproject.toml": '[tool.uv.workspace]\nmembers = ["engine"]\n',
+}
+
+
+def licence_run(root: Path, files: dict[str, str]):
+    write(root, files)
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+    return run(root, "check_licence.py")
+
+
+def test_licence_passes_a_clean_tree(tmp_path):
+    code, out = licence_run(tmp_path, LICENCE_CLEAN)
+    assert code == 0, out
+
+
+@pytest.mark.parametrize(
+    "rel, text, expected",
+    [
+        ("web/package.json", '{"name": "w", "private": true}\n', "web/package.json: needs"),
+        ("sdk/package.json", '{"name": "s", "license": "UNLICENSED"}\n', "sdk/package.json: needs"),
+        ("api/pyproject.toml", '[project]\nname = "x"\n', "api/pyproject.toml: needs"),
+    ],
+)
+def test_licence_reports_a_missing_field(tmp_path, rel, text, expected):
+    code, out = licence_run(tmp_path, {**LICENCE_CLEAN, rel: text})
+    assert code == 1 and expected in out, out
