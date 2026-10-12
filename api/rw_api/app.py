@@ -710,8 +710,9 @@ def _today(conn: sqlite3.Connection) -> str:
 
 def _daily_question(conn: sqlite3.Connection) -> tuple[str, dict[str, Any]]:
     """The day's own question while it is open, then the open question that day forecast with the
-    soonest close, so the reveal's `sim` is always a committed forecast. When all have closed it
-    stays the day's own question, which refuses answers."""
+    soonest close, so the reveal's `sim` is always a committed forecast. A later day's own question
+    is never the fallback: once that day runs, an answer to it would be stored under the wrong day.
+    When all have closed it stays the day's own question, which refuses answers."""
     day = _today(conn)
     questions = forecast.load_questions()
     own = next((q for q in questions if q.get("daily_on") == day), None)
@@ -724,7 +725,11 @@ def _daily_question(conn: sqlite3.Connection) -> tuple[str, dict[str, Any]]:
         for e in ledger.entries(conn, day)
         if e["entry"]["kind"] == "forecast"
     }
-    still_open = [q for q in questions if q["id"] in committed and not _closed(q)]
+    still_open = [
+        q
+        for q in questions
+        if q["id"] in committed and q.get("daily_on") in (None, "", day) and not _closed(q)
+    ]
     return day, min(still_open, key=_closes, default=own)
 
 
@@ -886,7 +891,8 @@ def _streak(conn: sqlite3.Connection, player_id: str, day: str) -> int:
     return n
 
 
-def _week(conn: sqlite3.Connection, player_id: str, day: str) -> list[WeekDay]:
+def _week(conn: sqlite3.Connection, player_id: str, day: str, question_id: str) -> list[WeekDay]:
+    """A day with several answers shows the answer to question_id, else the latest one."""
     end = date.fromisoformat(day)
     days = [(end - timedelta(days=i)).isoformat() for i in range(6, -1, -1)]
     rows = {
@@ -894,8 +900,9 @@ def _week(conn: sqlite3.Connection, player_id: str, day: str) -> list[WeekDay]:
         for r in conn.execute(
             "SELECT a.date, a.probability, r.outcome FROM daily_answers a"
             " LEFT JOIN resolutions r USING (question_id)"
-            " WHERE a.player_id = ? AND a.date BETWEEN ? AND ?",
-            (player_id, days[0], day),
+            " WHERE a.player_id = ? AND a.date BETWEEN ? AND ?"
+            " ORDER BY a.question_id = ?, a.created_at, a.rowid",
+            (player_id, days[0], day, question_id),
         )
     }
     week = []
@@ -948,7 +955,7 @@ def _daily(conn: sqlite3.Connection, player_id: str | None) -> Daily:
             outcome=outcome,
             brier=None if outcome is None else score.brier(you, outcome),
             streak=_streak(conn, player_id, day),
-            week=_week(conn, player_id, day),
+            week=_week(conn, player_id, day, q["id"]),
         ),
     )
 
