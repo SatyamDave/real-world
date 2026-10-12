@@ -2,6 +2,7 @@
   "agent_id": "a00000",
   "iso3": "USA",
   "tier": "A",
+  "segment": "USA|25-34|tertiary",
   "traits": {
     "age_band": "25-34",
     "sex": "female",

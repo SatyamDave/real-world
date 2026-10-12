@@ -326,15 +326,18 @@
   "prefilled_events": [
     {
       "id": "chip-shortage",
-      "text": "A chip shortage doubles phone prices worldwide"
+      "text": "A chip shortage doubles phone prices worldwide",
+      "countries": null
     },
     {
       "id": "oil-spike",
-      "text": "Oil jumps 40% after a supply disruption in the Gulf"
+      "text": "Oil jumps 40% after a supply disruption in the Gulf",
+      "countries": null
     },
     {
       "id": "ai-jobs",
-      "text": "A major report says AI will automate a quarter of office jobs within five years"
+      "text": "A major report says AI will automate a quarter of office jobs within five years",
+      "countries": null
     }
   ]
 }

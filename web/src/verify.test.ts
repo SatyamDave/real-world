@@ -1,9 +1,15 @@
 import { expect, test } from "vitest";
 import vector from "../../data/fixtures/receipts_test_vector.json";
-import type { ReceiptDay } from "./api";
-import { GENESIS_ROOT, leafHash, merkleRoot, recordHash, verifyChain } from "./verify";
+import {
+  type ChainDay,
+  GENESIS_ROOT,
+  leafHash,
+  merkleRoot,
+  recordHash,
+  verifyChain,
+} from "./verify";
 
-const day = (): ReceiptDay => structuredClone(vector) as ReceiptDay;
+const day = (): ChainDay => structuredClone(vector);
 
 test("recomputes the shared test vector's leaves, root and record hash", async () => {
   for (const r of vector.entries) expect(await leafHash(r.entry, r.salt)).toBe(r.leaf_hash);

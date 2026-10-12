@@ -1,6 +1,7 @@
+import type { Country, World } from "@real-world/sdk";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { AgentPanel } from "./AgentPanel";
-import { type Country, type Tier, type World, world } from "./api";
+import { rw } from "./api";
 import { DailyQuestion } from "./DailyQuestion";
 import { Fork, ForkRun } from "./ForkCard";
 import { ReceiptsPage, ReceiptsStrip } from "./Receipts";
@@ -36,7 +37,7 @@ export function useLoad<T>(load: () => Promise<T>, key = "") {
   return state;
 }
 
-export function TierBadge({ tier }: { tier: Tier }) {
+export function TierBadge({ tier }: { tier: string }) {
   return (
     <span className={`tier tier-${tier}`} title={`Coverage tier ${tier}`}>
       {tier}
@@ -44,8 +45,8 @@ export function TierBadge({ tier }: { tier: Tier }) {
   );
 }
 
-export function Disclosure({ tiers }: { tiers: Tier[] }) {
-  const counts = (["A", "B", "C", "D"] as Tier[])
+export function Disclosure({ tiers }: { tiers: string[] }) {
+  const counts = ["A", "B", "C", "D"]
     .map((t) => [t, tiers.filter((x) => x === t).length] as const)
     .filter(([, n]) => n > 0);
   return (
@@ -93,7 +94,7 @@ function Header({ path }: { path: string }) {
   );
 }
 
-function Home({ w, tiers }: { w?: World; tiers: Tier[] }) {
+function Home({ w, tiers }: { w?: World; tiers: string[] }) {
   const [selected, setSelected] = useState<Country | null>(null);
   return (
     <>
@@ -113,7 +114,7 @@ function Home({ w, tiers }: { w?: World; tiers: Tier[] }) {
 }
 
 export function App({ path = location.pathname }: { path?: string }) {
-  const { data: w, error } = useLoad(world);
+  const { data: w, error } = useLoad(() => rw.world());
   const tiers = w?.countries.map((c) => c.tier) ?? [];
   const fork = path.match(/^\/fork\/([^/]+)$/);
   return (

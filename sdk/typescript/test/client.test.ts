@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import spec from "../../../api/openapi.json";
-import { API_VERSION, Client } from "../src/index";
+import { API_VERSION, ApiError, Client } from "../src/index";
 
 const EVENT = { event: { text: "A chip shortage doubles phone prices worldwide." } };
 const CREATED = { id: "job_1", status: "queued", links: { self: "/s", events: "/e" } };
@@ -57,7 +57,11 @@ describe("simulate", () => {
 
   it("rejects an error status with the body", async () => {
     const { client } = recording([json(402, { detail: "over cap" })]);
-    await expect(client.simulate(EVENT)).rejects.toThrow(/402.*over cap/);
+    const err = await client.simulate(EVENT).catch((e) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err.status).toBe(402);
+    expect(err.body).toEqual({ detail: "over cap" });
+    expect(err.message).toMatch(/402.*over cap/);
   });
 });
 

@@ -29,7 +29,8 @@ HEARTBEAT_SECONDS = 15.0
 POLL_SECONDS = 0.2
 WHY_MAX_COST_USD = 0.01
 WHY_LABEL = "Simulated account, not the cause"
-CORS_ORIGINS = ["http://localhost:5173"]
+# Vite moves to the next port when 5173 is taken, so any local port is a valid origin.
+CORS_ORIGIN_REGEX = r"^http://(localhost|127\.0\.0\.1):\d+$"
 TERMINAL = ("succeeded", "failed")
 
 Status = Literal["queued", "running", "succeeded", "failed"]
@@ -249,7 +250,7 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origin_regex=CORS_ORIGIN_REGEX,
     allow_methods=["*"],
     allow_headers=["*"],
 )

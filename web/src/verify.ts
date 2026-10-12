@@ -1,10 +1,12 @@
-import type { DayRecord, Entry, ReceiptDay } from "./api";
+import type { DayRecord, ReceiptDay, ReceiptEntry } from "@real-world/sdk";
 
 // The receipt rules of research/decisions/0002-benchmark-and-receipts.md, recomputed with WebCrypto.
 
 export const GENESIS_ROOT = "0".repeat(64);
 
 type Json = string | boolean | null | Json[] | { [key: string]: Json };
+
+export type Entry = ReceiptEntry["entry"];
 
 function canonicalText(value: Json): string {
   if (typeof value === "number") throw new TypeError("canonical JSON takes numbers as strings");
@@ -37,7 +39,7 @@ async function sha256(prefix: number | null, ...parts: Uint8Array[]): Promise<Ui
 }
 
 export async function leafHash(entry: Entry, salt: string): Promise<string> {
-  return hex(await sha256(0x00, canonical({ ...entry, salt })));
+  return hex(await sha256(0x00, canonical({ ...entry, salt } as Json)));
 }
 
 export async function merkleRoot(leafHashes: string[]): Promise<string> {
@@ -62,8 +64,13 @@ export async function recordHash(day: DayRecord): Promise<string> {
   );
 }
 
+/** What the verifier reads: outcomes and anchoring are not part of any hash. */
+export type ChainDay = Pick<ReceiptDay, "day" | "record_hash"> & {
+  entries: Pick<ReceiptEntry, "entry" | "salt" | "leaf_hash">[];
+};
+
 /** Problems per date for days given oldest first, back to genesis; an empty list means verified. */
-export async function verifyChain(days: ReceiptDay[]): Promise<Record<string, string[]>> {
+export async function verifyChain(days: ChainDay[]): Promise<Record<string, string[]>> {
   const out: Record<string, string[]> = {};
   let prev = GENESIS_ROOT;
   for (const { day, entries, record_hash } of days) {

@@ -16,10 +16,11 @@ pnpm --filter web build    # type check and production build
 
 | File | What it does |
 | --- | --- |
-| `src/api.ts` | Every API call. The integration step swaps its bodies for `@real-world/sdk`. |
+| `src/api.ts` | The one `@real-world/sdk` client, pointed at `VITE_API_URL`. Every component calls it; nothing else fetches. |
 | `src/App.tsx` | Routes on `location.pathname` (`/`, `/fork/{id}`, `/receipts`) and the shared bits: disclosure line, tier badge, formatting. |
 | `src/DailyQuestion.tsx` | Slider, submit, four-way reveal and streak. The player id lives in `localStorage`. |
 | `src/ForkCard.tsx` | Fork box with cost estimate, SSE progress, and the fork card. |
 | `src/Globe.tsx` | react-globe.gl over `public/countries-110m.geojson` (Natural Earth 1:110m admin-0, public domain), loaded after first paint. |
 | `src/AgentPanel.tsx` | One sampled agent: "What moved this agent" and "In its own words". |
 | `src/Receipts.tsx`, `src/verify.ts` | Receipts strip and page; the verifier recomputes leaves, roots and the chain with WebCrypto per [0002](../research/decisions/0002-benchmark-and-receipts.md). |
+| `src/fixtures/` | API responses in the generated SDK shapes, for the component tests. |

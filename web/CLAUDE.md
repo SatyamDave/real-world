@@ -10,7 +10,7 @@ The Vite + React + TypeScript web app: daily question, receipts with an in-brows
 
 ## Boundaries
 
-- All data comes through `@real-world/sdk` (`sdk/typescript/`); no hand-written fetch calls. Until the SDK merges, `src/api.ts` is the one module that calls the API, and nothing else does.
+- All data comes through `@real-world/sdk` (`sdk/typescript/`); no hand-written fetch calls. `src/api.ts` holds the one client instance, and components call its methods.
 - Every result view shows "Simulation, not a poll or a prediction of a real person" and the coverage tier.
 - No sign-in, accounts, onboarding popups or server-rendered images in the base build.
 - Lint and format with Biome; type check with `tsc --noEmit`; test with Vitest.

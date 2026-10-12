@@ -30,6 +30,9 @@ importers:
 
   web:
     dependencies:
+      '@real-world/sdk':
+        specifier: workspace:*
+        version: link:../sdk/typescript
       react:
         specifier: ^19.3.0
         version: 19.3.0

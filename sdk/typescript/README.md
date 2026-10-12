@@ -33,6 +33,6 @@ The method names match the Python client.
 | `daily(player_id?)`, `answer_daily(question_id, player_id, probability)` | the daily question and its reveal |
 | `receipts()`, `receipt_day(date)`, `scores()` | the ledger and the scores |
 
-Every request sends `Real-World-Version`. An error status rejects with the status and response body. Pass a `fetch` as the second constructor argument to replace the transport.
+Every request sends `Real-World-Version`. An error status rejects with an `ApiError` carrying `status` and the response `body`. Pass a `fetch` as the second constructor argument to replace the transport.
 
 Types in `src/generated/schema.d.ts` are generated from `api/openapi.json` by `make sdk`; see [sdk/CLAUDE.md](../CLAUDE.md).

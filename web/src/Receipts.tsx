@@ -1,14 +1,7 @@
+import type { ReceiptDay, ReceiptEntry, Skill } from "@real-world/sdk";
 import { useState } from "react";
 import { Disclosure, LoadError, useLoad } from "./App";
-import {
-  type Receipt,
-  type ReceiptDay,
-  receiptDay,
-  receipts,
-  type Skill,
-  scores,
-  type Tier,
-} from "./api";
+import { rw } from "./api";
 import { verifyChain } from "./verify";
 
 const FORECASTER: Record<string, string> = {
@@ -21,7 +14,11 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 const short = (h: string) => `${h.slice(0, 8)}…${h.slice(-4)}`;
 
-function Outcome({ r }: { r: Receipt }) {
+// Entry values are canonical JSON: strings, or a list of question ids on the question_set leaf.
+const str = (v: unknown) => (typeof v === "string" ? v : "");
+const isForecast = (r: ReceiptEntry) => r.entry.kind === "forecast";
+
+function Outcome({ r }: { r: ReceiptEntry }) {
   if (r.outcome === undefined || r.outcome === null) return <span className="muted">open</span>;
   return (
     <span>
@@ -33,11 +30,11 @@ function Outcome({ r }: { r: Receipt }) {
   );
 }
 
-async function latestEntries(n: number): Promise<Receipt[]> {
-  const out: Receipt[] = [];
-  for (const d of (await receipts()).days) {
+async function latestEntries(n: number): Promise<ReceiptEntry[]> {
+  const out: ReceiptEntry[] = [];
+  for (const d of (await rw.receipts()).days) {
     if (out.length >= n) break;
-    out.push(...(await receiptDay(d.date)).entries);
+    out.push(...(await rw.receipt_day(d.date)).entries.filter(isForecast));
   }
   return out.slice(0, n);
 }
@@ -57,10 +54,10 @@ export function ReceiptsStrip() {
       <ul className="strip-rows">
         {data?.map((r) => (
           <li key={r.leaf_hash}>
-            <span className={`who who-${r.entry.forecaster}`}>
-              {FORECASTER[r.entry.forecaster] ?? r.entry.forecaster}
+            <span className={`who who-${str(r.entry.forecaster)}`}>
+              {FORECASTER[str(r.entry.forecaster)] ?? str(r.entry.forecaster)}
             </span>
-            <span className="strip-q">{r.entry.question_id}</span>
+            <span className="strip-q">{str(r.entry.question_id)}</span>
             <span className="num">{Math.round(Number(r.entry.probability) * 100)}%</span>
             <Outcome r={r} />
           </li>
@@ -98,12 +95,12 @@ function SkillCard({ name, s }: { name: string; s?: Skill }) {
   );
 }
 
-export function ReceiptsPage({ tiers }: { tiers: Tier[] }) {
-  const sc = useLoad(scores);
+export function ReceiptsPage({ tiers }: { tiers: string[] }) {
+  const sc = useLoad(() => rw.scores());
   const all = useLoad(async () =>
     Promise.all(
-      (await receipts()).days.map(async (d) => ({
-        ...(await receiptDay(d.date)),
+      (await rw.receipts()).days.map(async (d) => ({
+        ...(await rw.receipt_day(d.date)),
         anchored: d.anchored,
       })),
     ),
@@ -213,11 +210,15 @@ export function ReceiptsPage({ tiers }: { tiers: Tier[] }) {
               <tbody>
                 {d.entries.map((r) => (
                   <tr key={r.leaf_hash}>
-                    <td>{r.entry.question_id}</td>
-                    <td>{FORECASTER[r.entry.forecaster] ?? r.entry.forecaster}</td>
-                    <td className="num">{r.entry.probability}</td>
-                    <td className="num">{r.entry.market_price_at_commit || "—"}</td>
-                    <td>{r.entry.committed_at}</td>
+                    <td>
+                      {isForecast(r)
+                        ? str(r.entry.question_id)
+                        : `Question set, ${(r.entry.question_ids as string[])?.length ?? 0} questions`}
+                    </td>
+                    <td>{FORECASTER[str(r.entry.forecaster)] ?? str(r.entry.forecaster)}</td>
+                    <td className="num">{str(r.entry.probability)}</td>
+                    <td className="num">{str(r.entry.market_price_at_commit) || "—"}</td>
+                    <td>{str(r.entry.committed_at)}</td>
                     <td className="mono" title={r.leaf_hash}>
                       {short(r.leaf_hash)}
                     </td>
