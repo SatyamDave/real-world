@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help setup dev test lint typecheck check experiment daily daily-fixtures openapi sdk e2e web-build-refuses-fixtures
+.PHONY: help setup dev test lint typecheck check experiment daily daily-fixtures mirror openapi sdk e2e web-build-refuses-fixtures
 
 help: ## list every target
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-15s %s\n", $$1, $$2}'
@@ -45,6 +45,9 @@ daily: ## run the daily cycle for one day: make daily DATE=2026-10-01
 
 daily-fixtures: ## run the daily cycle over every fixture day; a rerun does no new work
 	uv run python -m rw.daily --fixtures
+
+mirror: ## push $RW_HOME/receipts/*.json to RECEIPTS_MIRROR_REMOTE; says the mirror is off when unset
+	scripts/mirror_receipts.sh
 
 openapi: ## rewrite api/openapi.json from the running app's schema
 	uv run python -m rw_api.app > api/openapi.json
