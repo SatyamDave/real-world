@@ -19,7 +19,8 @@ Us first: it answers whether the simulation adds anything over one model call. T
 ## What it is not
 
 - No backtests on the page: models have seen the past. Retrospective runs are labelled and kept out of the ledger.
-- No numeric questions, CRPS, calibration map or difficulty adjustment in the base build.
+- No numeric questions, CRPS or difficulty adjustment in the base build.
+- No recalibration of forecasts except as [decision 0008](../research/decisions/0008-self-improving-loop.md) allows, and only after the [E008](../experiments/E008/PREREG.md) gate: the `sim` row may carry a promoted recalibration map, the raw `sim` probability stays recorded, and each receipt names the engine config version that produced it. `plain_llm` and `market` are never recalibrated.
 - No persistence or demographic-lookup baselines yet; they need per-question status quo and attitude mapping.
 - No pooled "accuracy" number.
 
