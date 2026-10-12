@@ -25,6 +25,25 @@ Running unattended from ~02:55 PT on 2026-10-12. One line per decision: time (PT
 - 03:55 — Did NOT add @testing-library/react or axe-core as deps. Why: web/ convention uses raw createRoot/act with `// @vitest-environment jsdom`; the axe pass runs in Playwright e2e (PR5) instead. Reverse: add them if desired.
 - 04:00 — Built and smoke-tested the production bundle in headless Chromium: hero/message-match/globe/receipts all render, 0 console errors; critical JS 74.6KB gz (<120 budget), cobe a separate 5.9KB gz chunk. Reverse: n/a.
 
+## PR3 (data) — in progress, NOT yet a PR
+
+- 04:35 — Neon project created: `real-world-landing`, id `frosty-river-82145431` (aws-us-east-2, pg18). Default branch `main` = `br-solitary-smoke-b49w8m6q`; test branch `dev` = `br-empty-frost-b4ph3qt8`; database `landing`; role `neondb_owner`. Reverse: delete the project in the Neon console (it is the only project we created tonight; never delete anything else).
+- 04:40 — Migration `landing/db/migrations/0001_init.sql` written and applied to BOTH branches (dev first, then main): tables `waitlist_signups` and `typeform_events` confirmed present on main. No IP addresses stored. Reverse: drop the tables.
+- 04:42 — Pooled connection strings written into `landing/.dev.vars` (DATABASE_URL = main, DATABASE_URL_DEV = dev). Values never printed/committed. Verified both keys are SET.
+- 04:45 — Added deps to `landing/package.json` (not yet installed): `@neondatabase/serverless` 1.2.0, `@typeform/embed` 6.1.0, dev `@cloudflare/workers-types` 5.20261012.1.
+
+### What PR3 still needs (next session continues on branch `landing/3-data`)
+- `pnpm install` for the new deps; a `landing/functions/tsconfig.json` (Workers types) and update the `typecheck` script to also check `functions/`.
+- Pages Functions: `functions/api/signup.ts` (Turnstile verify, email validate, insert/duplicate via `ON CONFLICT (email)`, Amplitude server event `waitlist_email_saved` insert_id=signup_id, IP rate limit WITHOUT storing IPs — hash the IP), and `functions/api/typeform.ts` (log raw to `typeform_events` first, constant-time HMAC-SHA256 verify of `Typeform-Signature: sha256=`, update row by signup_id, idempotent, Amplitude `waitlist_completed`).
+- Add a `signup_rate_limit` table (hashed IP + window) in migration 0001 before committing, and re-apply to both branches.
+- Add the Turnstile widget + token and the Amplitude device id to `SignupForm`/`SignupInput`; wire `@typeform/embed` into `TypeformSlot` (URL params signup_id/device_id/variant; fire typeform_opened/submitted).
+- `landing/typeform/form.json` + a create/update script (Create API, TYPEFORM_TOKEN).
+- Tests (gate DB-integration ones on DATABASE_URL_DEV so CI without the secret skips them): signature valid/invalid/missing, duplicate email, webhook replay, Turnstile failure.
+
 ## Blocked
 
-(appended as work proceeds)
+- None yet. (TYPEFORM_TOKEN, TURNSTILE_*, AMPLITUDE_API_KEY are all present in .dev.vars, so nothing is credential-blocked.)
+
+## Session note
+
+- ~04:45 — Session paused: usage limit reached mid-PR3. Done: PR1 (docs, draft PR #19), PR2 (page+globe, draft PR #20), Neon project+schema+.dev.vars (above). Remaining: finish PR3, then PR4 (analytics), PR5 (launch readiness), preview deploy + verification, and MORNING.md. Branch `landing/3-data` holds uncommitted WIP (migration, package.json deps, .dev.vars). Stack bases drifted behind origin/main (now 22b64ea) — rebase the stack before the final deploy. MORNING.md not yet written.

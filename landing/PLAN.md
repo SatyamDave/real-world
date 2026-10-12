@@ -32,9 +32,10 @@ Legend: [ ] todo · [x] done · [~] in progress · [B] blocked (see OVERNIGHT_LO
 - [x] Build: critical JS 74.6KB gz (<120), cobe split 5.9KB gz; smoke-tested in browser, 0 console errors
 - [ ] /ship-pr draft PR (base landing/1-docs)
 
-## PR 3 — data (`landing/3-data`, title `feat(landing): waitlist storage`)
-- [ ] Neon project `real-world-landing`, db `landing`, dev branch; write conn strings to `.dev.vars`
-- [ ] Migrations in `landing/db/migrations/` → dev then main; tables `waitlist_signups`, `typeform_events`; no IPs
+## PR 3 — data (`landing/3-data`, title `feat(landing): waitlist storage`) — IN PROGRESS (not yet a PR; see OVERNIGHT_LOG "PR3")
+- [x] Neon project `real-world-landing` (id frosty-river-82145431), db `landing`, dev branch; conn strings written to `.dev.vars`
+- [x] Migration `db/migrations/0001_init.sql` applied dev→main; tables `waitlist_signups`, `typeform_events`; no IPs
+- [~] deps added to package.json (not installed yet)
 - [ ] `POST /api/signup` (Turnstile verify, validate email, insert/duplicate, Amplitude server event, IP rate limit)
 - [ ] Typeform as code `landing/typeform/form.json` + create/update script; URL params; `@typeform/embed`
 - [ ] `POST /api/typeform` webhook (log raw first, verify signature constant-time, update by signup_id, idempotent)
