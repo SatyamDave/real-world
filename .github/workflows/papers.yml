@@ -1,0 +1,69 @@
+name: Papers
+
+on:
+  pull_request:
+    paths: ['papers/**']
+  pull_request_target:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build PDFs
+        if: hashFiles('papers/*/paper.tex') != ''
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: papers/*/paper.tex
+          work_in_root_file_dir: true
+      - uses: actions/upload-artifact@v4
+        if: hashFiles('papers/*/paper.tex') != ''
+        with:
+          name: papers
+          path: papers/*/paper.pdf
+
+  update:
+    # After a merge, open a follow-up PR that brings the papers up to date with the change.
+    if: >-
+      github.event_name == 'pull_request_target' &&
+      github.event.pull_request.merged == true &&
+      !startsWith(github.event.pull_request.head.ref, 'papers/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Skip when only papers changed
+        id: scope
+        run: |
+          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.merge_commit_sha }} > changed.txt
+          if grep -qv '^papers/' changed.txt; then echo "run=true" >> "$GITHUB_OUTPUT"; fi
+      - uses: anthropics/claude-code-action@v1
+        if: steps.scope.outputs.run == 'true'
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: --max-turns 60
+          prompt: |
+            PR #${{ github.event.pull_request.number }} ("${{ github.event.pull_request.title }}") just merged to main.
+            The changed files are listed in changed.txt; read the diff with
+            `git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.merge_commit_sha }}`.
+
+            Follow papers/README.md exactly. Decide which papers under papers/ this change affects
+            (new method, new committed result, a claim it corrects, or none). If none, stop without changes.
+            Otherwise update those papers and their STATUS.md. Never add a number that is not produced by an
+            artifact committed in this repo, and cite its path. Never add a citation you have not opened.
+
+            Then create a branch named papers/pr-${{ github.event.pull_request.number }}, commit, push, and open a
+            pull request titled "docs(papers): update for #${{ github.event.pull_request.number }}" whose body fills
+            every section of .github/pull_request_template.md.
