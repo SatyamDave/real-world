@@ -11,7 +11,7 @@ First-time visitors from Show HN and X, who need something to do in under a minu
 ## How we know it works
 
 - Contract: `GET /v1/daily` returns today's question (id, text, resolution source, closes at, resolves by) and, once the caller has answered, the reveal. `POST /v1/daily/answers` takes `{question_id, player_id, probability}`; `player_id` is a random id the browser keeps. One answer per player per question; a second answer returns `409`.
-- The reveal returns `you`, `crowd` (mean and count of answers so far), `sim` and `market`, all as 0-1 numbers, plus the resolved outcome and your Brier once known.
+- The reveal returns `you`, `crowd` (mean and count of other visitors' answers so far, never including yours; the mean is null when you are the first), `sim` and `market`, all as 0-1 numbers, plus the resolved outcome and your Brier once known.
 - Streak is computed from answer rows, never stored as a counter; a test covers a gap day.
 - The `sim` number shown is the committed `sim` forecast for that question and date, the same value as its receipt.
 - Measured after launch: share of new visitors who submit within 60 seconds (target 30%+), and day-7 return of day-0 players ([research/lenses/cpo.md](../research/lenses/cpo.md)).

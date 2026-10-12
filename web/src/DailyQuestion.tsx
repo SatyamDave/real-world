@@ -108,7 +108,9 @@ function RevealView({ reveal, tiers }: { reveal: Reveal; tiers: string[] }) {
     [
       "Visitors",
       reveal.crowd.mean,
-      `${reveal.crowd.count.toLocaleString()} self-selected visitors`,
+      reveal.crowd.count === 0
+        ? "you are the first"
+        : `${reveal.crowd.count.toLocaleString()} other self-selected ${reveal.crowd.count === 1 ? "visitor" : "visitors"}`,
     ],
     ["Simulated world", reveal.sim, "committed forecast"],
     ["Market", reveal.market, reveal.market === null ? "no market price" : "price at commit"],

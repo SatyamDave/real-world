@@ -376,7 +376,10 @@ export interface components {
       /** Tier */
       tier: string;
     };
-    /** Crowd */
+    /**
+     * Crowd
+     * @description Other visitors' answers; the caller's own answer is never in it.
+     */
     Crowd: {
       /** Mean */
       mean: number | null;

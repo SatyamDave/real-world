@@ -125,6 +125,8 @@ class DailyQuestion(BaseModel):
 
 
 class Crowd(BaseModel):
+    """Other visitors' answers; the caller's own answer is never in it."""
+
     mean: float | None
     count: int
 
@@ -629,7 +631,9 @@ def _daily(conn: sqlite3.Connection, player_id: str | None) -> Daily:
         if e["entry"]["kind"] == "forecast" and e["entry"]["question_id"] == q["id"]
     }
     mean, count = conn.execute(
-        "SELECT avg(probability), count(*) FROM daily_answers WHERE question_id = ?", (q["id"],)
+        "SELECT avg(probability), count(*) FROM daily_answers"
+        " WHERE question_id = ? AND player_id != ?",
+        (q["id"], player_id),
     ).fetchone()
     resolved = conn.execute(
         "SELECT outcome FROM resolutions WHERE question_id = ?", (q["id"],)

@@ -86,11 +86,27 @@ test("the reveal shows you, visitors, the simulated world and the market after s
 
   expect(rw.answer_daily).toHaveBeenCalledWith(daily.question.id, expect.any(String), 0.5);
   const text = el.textContent ?? "";
-  for (const s of ["You", "62%", "1,204 self-selected visitors", "Simulated world", "56%"])
+  for (const s of ["You", "62%", "1,204 other self-selected visitors", "Simulated world", "56%"])
     expect(text).toContain(s);
   expect(text).toContain("Market61%");
   expect(text).toContain("3 days answered in a row");
   expect(text).toContain(DISCLOSURE);
+});
+
+test("the visitors line names the first answer and does not pluralise one", async () => {
+  const daily = dailyFixture as Daily;
+  for (const [mean, count, line] of [
+    [null, 0, "you are the first"],
+    [0.4, 1, "1 other self-selected visitor"],
+  ] as const) {
+    vi.mocked(rw.daily).mockResolvedValue({
+      ...daily,
+      reveal: { ...dailyFixture.reveal, crowd: { mean, count } },
+    });
+    const el = await render(<DailyQuestion tiers={["A"]} />);
+    await until(() => expect(el.textContent).toContain(line));
+    expect(el.textContent).not.toContain("visitors");
+  }
 });
 
 test("a repeat answer (409) still shows the reveal", async () => {

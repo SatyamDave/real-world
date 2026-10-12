@@ -842,7 +842,8 @@
         },
         "type": "object",
         "required": ["mean", "count"],
-        "title": "Crowd"
+        "title": "Crowd",
+        "description": "Other visitors' answers; the caller's own answer is never in it."
       },
       "Daily": {
         "properties": {

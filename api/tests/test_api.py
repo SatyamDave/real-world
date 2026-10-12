@@ -245,7 +245,7 @@ def test_daily_reveal_matches_the_committed_ledger_and_refuses_a_second_answer(c
         if e["entry"]["kind"] == "forecast" and e["entry"]["question_id"] == q["id"]
     }
     assert reveal["sim"] == committed["sim"] and reveal["market"] == committed["market"]
-    assert reveal["you"] == 0.7 and reveal["crowd"]["count"] >= 1
+    assert reveal["you"] == 0.7
     assert client.get("/v1/daily", params={"player_id": "p-reveal"}).json()["reveal"] == reveal
 
     again = client.post(
@@ -258,6 +258,23 @@ def test_daily_reveal_matches_the_committed_ledger_and_refuses_a_second_answer(c
         json={"question_id": "fx-fra-strike", "player_id": "p-x", "probability": 0.1},
     )
     assert wrong.status_code == 422
+
+
+def test_crowd_is_everyone_but_the_caller(client, conn):
+    q = client.get("/v1/daily").json()["question"]
+    for player, p in (("p-crowd-a", 0.2), ("p-crowd-b", 0.9)):
+        client.post(
+            "/v1/daily/answers",
+            json={"question_id": q["id"], "player_id": player, "probability": p},
+        )
+    rows = conn.execute(
+        "SELECT player_id, probability FROM daily_answers WHERE question_id = ?", (q["id"],)
+    ).fetchall()
+    for player in ("p-crowd-a", "p-crowd-b"):
+        others = [r["probability"] for r in rows if r["player_id"] != player]
+        crowd = client.get("/v1/daily", params={"player_id": player}).json()["reveal"]["crowd"]
+        assert crowd["count"] == len(others)
+        assert crowd["mean"] == pytest.approx(sum(others) / len(others))
 
 
 def test_reveal_scores_a_resolved_question(client, conn):
