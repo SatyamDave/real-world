@@ -25,6 +25,8 @@ beforeEach(() => {
 test("reset skips a widget whose container has left the page (the success state replaces the form)", async () => {
   const container = document.body.appendChild(document.createElement("div"));
   await act(async () => createRoot(container).render(<Probe />));
+  expect(api.render).not.toHaveBeenCalled(); // nothing loads before the visitor touches the form
+  await act(async () => handle.arm());
   await vi.waitFor(() => expect(api.render).toHaveBeenCalledTimes(1));
 
   handle.reset(); // container still mounted: a normal reset
@@ -39,6 +41,8 @@ test("reset skips a widget whose container has left the page (the success state 
 test("dispose removes the widget while its container is in the page, and later calls do nothing", async () => {
   const container = document.body.appendChild(document.createElement("div"));
   await act(async () => createRoot(container).render(<Probe />));
+  expect(api.render).not.toHaveBeenCalled(); // nothing loads before the visitor touches the form
+  await act(async () => handle.arm());
   await vi.waitFor(() => expect(api.render).toHaveBeenCalledTimes(1));
 
   handle.dispose();
@@ -50,4 +54,30 @@ test("dispose removes the widget while its container is in the page, and later c
   handle.dispose();
   expect(api.reset).not.toHaveBeenCalled();
   expect(api.remove).toHaveBeenCalledTimes(1);
+});
+
+test("waitForToken arms the widget and resolves with the token Turnstile provides", async () => {
+  const container = document.body.appendChild(document.createElement("div"));
+  await act(async () => createRoot(container).render(<Probe />));
+  const pending = handle.waitForToken(5000);
+  await vi.waitFor(() => expect(api.render).toHaveBeenCalledTimes(1));
+  const opts = (
+    api.render.mock.calls[0] as unknown as [unknown, { callback: (t: string) => void }]
+  )[1];
+  opts.callback("tok-123");
+  await expect(pending).resolves.toBe("tok-123");
+  await expect(handle.waitForToken()).resolves.toBe("tok-123"); // already have one
+});
+
+test("waitForToken gives up with null after the timeout", async () => {
+  vi.useFakeTimers();
+  try {
+    const container = document.body.appendChild(document.createElement("div"));
+    await act(async () => createRoot(container).render(<Probe />));
+    const pending = handle.waitForToken(1000);
+    await vi.advanceTimersByTimeAsync(1001);
+    await expect(pending).resolves.toBeNull();
+  } finally {
+    vi.useRealTimers();
+  }
 });
