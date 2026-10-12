@@ -35,3 +35,19 @@ test("reset skips a widget whose container has left the page (the success state 
   expect(api.reset).toHaveBeenCalledTimes(1); // no second call on a removed widget
   expect(handle.token()).toBeNull();
 });
+
+test("dispose removes the widget while its container is in the page, and later calls do nothing", async () => {
+  const container = document.body.appendChild(document.createElement("div"));
+  await act(async () => createRoot(container).render(<Probe />));
+  await vi.waitFor(() => expect(api.render).toHaveBeenCalledTimes(1));
+
+  handle.dispose();
+  expect(api.remove).toHaveBeenCalledTimes(1);
+  expect(api.remove).toHaveBeenCalledWith("widget-1");
+  expect(handle.token()).toBeNull();
+
+  handle.reset();
+  handle.dispose();
+  expect(api.reset).not.toHaveBeenCalled();
+  expect(api.remove).toHaveBeenCalledTimes(1);
+});

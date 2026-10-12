@@ -73,5 +73,14 @@ export function useTurnstile(siteKey: string) {
     if (ref.current?.isConnected) window.turnstile?.reset(widgetId.current);
     else widgetId.current = undefined;
   }, []);
-  return { ref, token, reset };
+  // Remove the widget while its container is still in the page. Turnstile finds a
+  // widget by the id of its iframe, so a widget whose container React has already
+  // removed can only log "Cannot find Widget" when its own timers fire.
+  const dispose = useCallback(() => {
+    tokenRef.current = null;
+    if (!widgetId.current) return;
+    if (ref.current?.isConnected) window.turnstile?.remove(widgetId.current);
+    widgetId.current = undefined;
+  }, []);
+  return { ref, token, reset, dispose };
 }

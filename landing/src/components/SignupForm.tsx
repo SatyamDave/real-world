@@ -86,7 +86,7 @@ export function SignupForm({
         headlineVariant: getHeadlineVariant(),
         turnstileToken: turnstile.token(),
       });
-      turnstile.reset();
+      turnstile.dispose(); // the form is about to be replaced; remove the widget first
       setState(result.duplicate ? { kind: "duplicate", result } : { kind: "success", result });
     } catch {
       turnstile.reset();
