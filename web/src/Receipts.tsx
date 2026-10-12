@@ -1,6 +1,6 @@
 import type { ReceiptDay, ReceiptEntry, Skill } from "@real-world/sdk";
 import { useEffect, useState } from "react";
-import { Disclosure, LoadError, Loading, plural, useLoad } from "./App";
+import { Disclosure, LoadError, Loading, pct, plural, useLoad } from "./App";
 import { rw } from "./api";
 import { verifyChain } from "./verify";
 
@@ -17,7 +17,7 @@ const str = (v: unknown) => (typeof v === "string" ? v : "");
 const isForecast = (r: ReceiptEntry) => r.entry.kind === "forecast";
 
 /** "0.4139" as "41%"; an empty value as a dash. */
-const prob = (v: unknown) => (str(v) ? `${Math.round(Number(v) * 100)}%` : "—");
+const prob = (v: unknown) => (str(v) ? pct(Number(v)) : "—");
 
 /** The question's text, with its id on hover; the id alone on a leaf with no question. */
 function Question({ r }: { r: ReceiptEntry }) {
@@ -66,7 +66,7 @@ function Outcome({ r }: { r: ReceiptEntry }) {
     return <span className="pending">Pending</span>;
   return (
     <span>
-      {r.outcome ? "yes" : "no"}
+      Resolved {r.outcome ? "yes" : "no"}
       {r.brier !== undefined && r.brier !== null && (
         <span className="muted"> · Brier {r.brier.toFixed(3)}</span>
       )}
@@ -146,31 +146,39 @@ function SkillCard({ name, s }: { name: string; s?: Skill }) {
   );
 }
 
-function AnchorBadge({ d }: { d: ReceiptDay }) {
+const utc = (iso: string) => `${new Date(iso).toISOString().slice(0, 19).replace("T", " ")} UTC`;
+
+function AnchorStamp({ d }: { d: ReceiptDay }) {
+  return d.anchor === "anchored" ? (
+    <span className="stamp good">Anchored</span>
+  ) : (
+    <span className="stamp">Anchor pending</span>
+  );
+}
+
+function AnchorDetail({ d }: { d: ReceiptDay }) {
   const token = d.anchors.find((a) => a.kind === "rfc3161");
-  if (d.anchor === "anchored" && token) {
+  if (d.anchor === "anchored" && token && d.anchored_at)
     return (
-      <span className="badge stamp good">
-        anchored {d.anchored_at?.replace("T", " ").replace("Z", " UTC")} by{" "}
-        {new URL(token.service).host} (
-        <a
-          download={`${d.day.date}.tsr`}
-          href={`data:application/timestamp-reply;base64,${token.proof_base64}`}
-        >
-          RFC 3161 token
-        </a>
-        )
-      </span>
+      <dd>
+        {utc(d.anchored_at)}
+        <span className="src">
+          by {new URL(token.service).host} (
+          <a
+            download={`${d.day.date}.tsr`}
+            href={`data:application/timestamp-reply;base64,${token.proof_base64}`}
+          >
+            RFC 3161 token
+          </a>
+          )
+        </span>
+      </dd>
     );
-  }
-  if (d.anchor === "pending") {
-    return (
-      <span className="badge stamp">
-        anchor pending: OpenTimestamps proof awaits a Bitcoin block
-      </span>
-    );
-  }
-  return <span className="badge stamp">not yet anchored</span>;
+  return (
+    <dd className="pending">
+      {d.anchor === "pending" ? "OpenTimestamps proof awaits a Bitcoin block" : "Not yet anchored"}
+    </dd>
+  );
 }
 
 export function ReceiptsPage({ tiers }: { tiers: string[] }) {
@@ -199,7 +207,7 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
   }
 
   const problems = result ? Object.values(result).flat() : [];
-  const leaves = all.data?.reduce((n, d) => n + d.entries.length, 0) ?? 0;
+  const forecasts = all.data?.reduce((n, d) => n + d.entries.filter(isForecast).length, 0) ?? 0;
 
   return (
     <div className="receipts">
@@ -222,7 +230,7 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
             <span className={problems.length ? "bad" : "good"} aria-live="polite">
               {problems.length
                 ? `${plural(problems.length, "problem")} found`
-                : `Verified ${plural(Object.keys(result).length, "day")} and ${plural(leaves, "receipt")} back to the first day`}
+                : `Verified ${plural(Object.keys(result).length, "day")} and ${plural(forecasts, "receipt")} back to the first day`}
             </span>
           )}
         </div>
@@ -236,27 +244,33 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
         {sc.error && <LoadError what="scores" error={sc.error} retry={sc.retry} />}
         {!sc.data && !sc.error && <Loading what="scores" />}
         <div className="skills">
-          <SkillCard name="market" s={sc.data?.market} />
-          <SkillCard name="plain LLM" s={sc.data?.plain_llm} />
+          <SkillCard name="Market" s={sc.data?.market} />
+          <SkillCard name="Plain LLM" s={sc.data?.plain_llm} />
         </div>
       </section>
 
+      <h2>Day records</h2>
       {all.error && <LoadError what="receipts" error={all.error} retry={all.retry} />}
       {!all.data && !all.error && <Loading what="receipts" />}
-      {all.data && !all.data.length && <p className="muted">No days committed yet.</p>}
+      {all.data && !all.data.length && <p className="muted">No day records committed yet.</p>}
       {all.data?.map((d) => (
         <section key={d.day.date} id={d.day.date} className="card receipt day">
-          <div className="day-head">
-            <h2>{d.day.date}</h2>
-            <AnchorBadge d={d} />
-            {result?.[d.day.date] &&
-              (result[d.day.date].length ? (
-                <span className="bad small">{result[d.day.date].join("; ")}</span>
-              ) : (
-                <span className="stamp good">Verified</span>
-              ))}
+          <div className="receipt-top">
+            <h3>{d.day.date}</h3>
+            <span>
+              <AnchorStamp d={d} />
+              {result?.[d.day.date] && !result[d.day.date].length && (
+                <>
+                  {" "}
+                  <span className="stamp good">Verified</span>
+                </>
+              )}
+            </span>
           </div>
-          <dl className="hashes">
+          {result?.[d.day.date]?.length ? (
+            <p className="bad small">{result[d.day.date].join("; ")}</p>
+          ) : null}
+          <dl className="receipt-cols">
             <div>
               <dt>Root</dt>
               <dd title={d.day.root}>{short(d.day.root)}</dd>
@@ -270,8 +284,12 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
               <dd title={d.record_hash}>{short(d.record_hash)}</dd>
             </div>
             <div>
-              <dt>Leaves</dt>
-              <dd>{d.day.leaf_count}</dd>
+              <dt>Forecasts</dt>
+              <dd>{d.entries.filter(isForecast).length}</dd>
+            </div>
+            <div>
+              <dt>Anchor</dt>
+              <AnchorDetail d={d} />
             </div>
           </dl>
           <section

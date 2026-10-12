@@ -3,10 +3,7 @@ const SETTINGS = "https://github.com/SatyamDave/real-world/blob/main/engine/rw/s
 
 export function AcceptableUse() {
   return (
-    <article className="card receipt policy" aria-labelledby="aup">
-      <div className="receipt-top">
-        <span>Policy</span>
-      </div>
+    <article className="card policy" aria-labelledby="aup">
       <h1 id="aup">Acceptable use</h1>
       <p>
         Real World simulates groups of synthetic people and publishes scored forecasts. It is not a
@@ -60,11 +57,11 @@ export function AcceptableUse() {
         <tbody>
           <tr>
             <td className="mono">private_person</td>
-            <td>2</td>
+            <td>No real private people</td>
           </tr>
           <tr>
             <td className="mono">election_persuasion</td>
-            <td>1</td>
+            <td>No persuasion testing on elections or candidates</td>
           </tr>
           <tr>
             <td className="mono">election_window</td>

@@ -15,7 +15,6 @@ type Content = Record<string, { schema?: Schema } | undefined>;
 type Response = { description: string; content?: Content };
 type Operation = {
   summary: string;
-  description?: string;
   requestBody?: { content: Content };
   responses: Record<string, Response>;
 };
@@ -65,14 +64,11 @@ function OperationCard({ path, method, op }: (typeof OPERATIONS)[number]) {
     ),
   ];
   return (
-    <section className="card receipt op" aria-label={`${method.toUpperCase()} ${path}`}>
-      <div className="receipt-top">
-        <span className="mono op-path">
-          <span className="op-method">{method.toUpperCase()}</span> {path}
-        </span>
-      </div>
+    <section className="card op" aria-label={`${method.toUpperCase()} ${path}`}>
+      <h3 className="mono op-path">
+        <span className="op-method">{method.toUpperCase()}</span> {path}
+      </h3>
       <p>{op.summary}</p>
-      {op.description && <p className="muted small">{op.description}</p>}
       {body && (
         <>
           <h3>Request body</h3>
@@ -116,13 +112,14 @@ export function Docs() {
         <h2>First call</h2>
         <pre>{atApi(block(readme, "curl"))}</pre>
         <p className="small">
-          It returns <code>202</code> with a job id. Poll <code>GET /v1/simulations/{"{id}"}</code>{" "}
-          until <code>status</code> is <code>succeeded</code>. The same request with the same{" "}
-          <code>Idempotency-Key</code> returns the same job.
+          It returns <code>202</code> with a simulation id. Poll{" "}
+          <code>GET /v1/simulations/{"{id}"}</code> until <code>status</code> is{" "}
+          <code>succeeded</code>. The same request with the same <code>Idempotency-Key</code>{" "}
+          returns the same simulation.
         </p>
         <p className="small">
           Without a key the caller is anonymous. With one, send{" "}
-          <code>Authorization: Bearer rw_...</code>; keys are issued by the founder, and there is no
+          <code>Authorization: Bearer rw_...</code>; keys are issued on request, and there is no
           sign-up.
         </p>
         <p className="small">
