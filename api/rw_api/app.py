@@ -1246,5 +1246,9 @@ app.include_router(routes_status.router)
 
 app.include_router(routes_research.router)
 
+from rw_api import routes_receipts  # noqa: E402
+
+app.include_router(routes_receipts.router)
+
 if __name__ == "__main__":
     print(json.dumps(app.openapi(), indent=2))

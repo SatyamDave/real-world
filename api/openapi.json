@@ -727,6 +727,64 @@
           }
         }
       }
+    },
+    "/v1/receipts/{day}/leaves/{leaf_hash}": {
+      "get": {
+        "summary": "One receipt with its inclusion proof up to the day's root",
+        "operationId": "receipt_leaf_v1_receipts__day__leaves__leaf_hash__get",
+        "parameters": [
+          {
+            "name": "day",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Day"
+            }
+          },
+          {
+            "name": "leaf_hash",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Leaf Hash"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeafReceipt"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such receipt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1498,6 +1556,105 @@
         "required": ["id", "status", "links"],
         "title": "JobCreated"
       },
+      "LeafReceipt": {
+        "properties": {
+          "day": {
+            "$ref": "#/components/schemas/DayRecord"
+          },
+          "record_hash": {
+            "type": "string",
+            "title": "Record Hash"
+          },
+          "entry": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Entry"
+          },
+          "salt": {
+            "type": "string",
+            "title": "Salt"
+          },
+          "leaf_hash": {
+            "type": "string",
+            "title": "Leaf Hash"
+          },
+          "proof": {
+            "items": {
+              "$ref": "#/components/schemas/ProofStep"
+            },
+            "type": "array",
+            "title": "Proof"
+          },
+          "root": {
+            "type": "string",
+            "title": "Root"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReceiptQuestion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier"
+          },
+          "anchor": {
+            "type": "string",
+            "enum": ["not_anchored", "pending", "anchored"],
+            "title": "Anchor"
+          },
+          "anchored_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchored At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "record_hash",
+          "entry",
+          "salt",
+          "leaf_hash",
+          "proof",
+          "root",
+          "question",
+          "outcome",
+          "brier",
+          "anchor",
+          "anchored_at"
+        ],
+        "title": "LeafReceipt"
+      },
       "Links": {
         "properties": {
           "self": {
@@ -1667,6 +1824,21 @@
         "type": "object",
         "required": ["metric", "value", "low", "high", "n"],
         "title": "Primary"
+      },
+      "ProofStep": {
+        "properties": {
+          "position": {
+            "type": "string",
+            "title": "Position"
+          },
+          "hash": {
+            "type": "string",
+            "title": "Hash"
+          }
+        },
+        "type": "object",
+        "required": ["position", "hash"],
+        "title": "ProofStep"
       },
       "ReceiptDay": {
         "properties": {

@@ -262,6 +262,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v1/receipts/{day}/leaves/{leaf_hash}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One receipt with its inclusion proof up to the day's root */
+    get: operations["receipt_leaf_v1_receipts__day__leaves__leaf_hash__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -603,6 +620,36 @@ export interface components {
       status: "queued" | "running" | "succeeded" | "failed";
       links: components["schemas"]["Links"];
     };
+    /** LeafReceipt */
+    LeafReceipt: {
+      day: components["schemas"]["DayRecord"];
+      /** Record Hash */
+      record_hash: string;
+      /** Entry */
+      entry: {
+        [key: string]: unknown;
+      };
+      /** Salt */
+      salt: string;
+      /** Leaf Hash */
+      leaf_hash: string;
+      /** Proof */
+      proof: components["schemas"]["ProofStep"][];
+      /** Root */
+      root: string;
+      question: components["schemas"]["ReceiptQuestion"] | null;
+      /** Outcome */
+      outcome: number | null;
+      /** Brier */
+      brier: number | null;
+      /**
+       * Anchor
+       * @enum {string}
+       */
+      anchor: "not_anchored" | "pending" | "anchored";
+      /** Anchored At */
+      anchored_at: string | null;
+    };
     /** Links */
     Links: {
       /** Self */
@@ -675,6 +722,13 @@ export interface components {
       high: number;
       /** N */
       n: number;
+    };
+    /** ProofStep */
+    ProofStep: {
+      /** Position */
+      position: string;
+      /** Hash */
+      hash: string;
     };
     /** ReceiptDay */
     ReceiptDay: {
@@ -1618,6 +1672,47 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Research"];
+        };
+      };
+    };
+  };
+  receipt_leaf_v1_receipts__day__leaves__leaf_hash__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        day: string;
+        leaf_hash: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LeafReceipt"];
+        };
+      };
+      /** @description No such receipt */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description The request is invalid */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
         };
       };
     };

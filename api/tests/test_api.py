@@ -866,3 +866,21 @@ def test_allowed_origins_add_to_localhost_and_a_malformed_one_fails_startup(monk
     finally:
         monkeypatch.delenv("RW_ALLOWED_ORIGINS")
         importlib.reload(api)
+
+
+def test_a_receipt_leaf_proves_inclusion_up_to_the_days_root(client):
+    day = client.get("/v1/receipts").json()["days"][0]["date"]
+    entries = client.get(f"/v1/receipts/{day}").json()["entries"]
+    leaves = [e["leaf_hash"] for e in entries]
+    for e in entries:
+        r = client.get(f"/v1/receipts/{day}/leaves/{e['leaf_hash']}")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["leaf_hash"] == e["leaf_hash"] and body["salt"] == e["salt"]
+        assert body["entry"] == e["entry"] and body["question"] == e["question"]
+        assert body["root"] == body["day"]["root"]
+        assert body["proof"] == ledger.inclusion_proof(leaves, e["leaf_hash"])
+        assert ledger.verify_inclusion(body["leaf_hash"], body["proof"], body["root"])
+        assert body["anchor"] == "not_anchored" and body["anchored_at"] is None
+    assert client.get(f"/v1/receipts/{day}/leaves/{'0' * 64}").status_code == 404
+    assert client.get(f"/v1/receipts/2020-01-01/leaves/{leaves[0]}").status_code == 404
