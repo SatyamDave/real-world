@@ -4,6 +4,7 @@ import {
   Disclosure,
   LoadError,
   Loading,
+  NotFound,
   pct,
   plural,
   pts,
@@ -162,15 +163,7 @@ export function ForkRun({ id }: { id: string }) {
     };
   }, [id]);
 
-  if (error instanceof ApiError && error.status === 404)
-    return (
-      <section className="card notfound">
-        <h1>Fork not found</h1>
-        <p className="muted">
-          This fork does not exist or has expired. <a href="/">Fork today's world</a>
-        </p>
-      </section>
-    );
+  if (error instanceof ApiError && error.status === 404) return <NotFound />;
   if (error) return <LoadError what="this fork" error={error} />;
   if (job?.status === "failed")
     return (

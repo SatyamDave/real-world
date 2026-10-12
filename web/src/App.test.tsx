@@ -271,7 +271,7 @@ test("a fork with no shift past the floor says so", async () => {
 test("a missing fork reads as missing, not as a response body", async () => {
   vi.mocked(rw.get_simulation).mockRejectedValue(new ApiError(404, { detail: "no simulation" }));
   const el = await render(<ForkRun id="job_doesnotexist" />);
-  expect(el.textContent).toContain("This fork does not exist or has expired.");
+  expect(el.textContent).toContain("No page at this address.");
   expect(el.textContent).not.toContain("detail");
 });
 

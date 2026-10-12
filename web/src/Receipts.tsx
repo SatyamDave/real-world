@@ -1,14 +1,10 @@
 import type { ReceiptDay, ReceiptEntry, Skill } from "@real-world/sdk";
 import { useEffect, useState } from "react";
-import { Disclosure, LoadError, Loading, pct, plural, useLoad } from "./App";
+import { Disclosure, FORECASTER, LoadError, Loading, pct, plural, useLoad } from "./App";
 import { rw } from "./api";
 import { verifyChain } from "./verify";
 
-const FORECASTER: Record<string, string> = {
-  sim: "Simulation",
-  plain_llm: "Plain LLM",
-  market: "Market",
-};
+const forecaster = (f: string) => (FORECASTER as Record<string, string>)[f] ?? f;
 
 const short = (h: string) => `${h.slice(0, 8)}…${h.slice(-4)}`;
 
@@ -100,7 +96,7 @@ export function ReceiptsStrip() {
         {data?.map((r) => (
           <li key={r.leaf_hash}>
             <span className={`who who-${str(r.entry.forecaster)}`}>
-              {FORECASTER[str(r.entry.forecaster)] ?? str(r.entry.forecaster)}
+              {forecaster(str(r.entry.forecaster))}
             </span>
             <span className="strip-q">
               <Question r={r} />
@@ -320,9 +316,7 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
                         `Question set, ${(r.entry.question_ids as string[])?.length ?? 0} questions`
                       )}
                     </td>
-                    <td data-label="Forecaster">
-                      {FORECASTER[str(r.entry.forecaster)] ?? str(r.entry.forecaster)}
-                    </td>
+                    <td data-label="Forecaster">{forecaster(str(r.entry.forecaster))}</td>
                     <td data-label="Probability" className="num" title={str(r.entry.probability)}>
                       {prob(r.entry.probability)}
                     </td>
