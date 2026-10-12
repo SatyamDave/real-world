@@ -49,8 +49,7 @@ function Committed({ r }: { r: ReceiptEntry }) {
         {local}
       </time>
       {days !== null && (
-        <span className="muted small">
-          {" · "}
+        <span className="muted small committed-note">
           {days >= 1
             ? `${plural(days, "day")} before resolution`
             : days === 0
