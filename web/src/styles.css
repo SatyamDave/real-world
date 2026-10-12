@@ -325,6 +325,24 @@ main {
   flex: 1 0 auto;
 }
 
+/* Wide screens: the content column and the globe share a grid row; the globe sticks under the header and scrolls away with main, before the footer. */
+@media (min-width: 961px) {
+  main:has(> .home) {
+    display: grid;
+    grid-template-columns: var(--edge) 600px 1fr var(--edge);
+  }
+
+  main:has(> .home) > .home {
+    grid-area: 1 / 2;
+    padding-inline: 0;
+  }
+
+  main:has(> .home) > .globe {
+    grid-area: 1 / 3;
+    align-self: start;
+  }
+}
+
 /* Header, home column, pages and footer share one left edge: the 1120px column, 24px gutter. */
 .home {
   position: relative;
@@ -823,8 +841,9 @@ main {
 /* Globe: the still poster shows first; the live globe fades in over it once loaded. */
 
 .globe {
-  position: fixed;
-  inset: 64px var(--edge) 0 calc(var(--edge) + 600px);
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
   z-index: 1;
 }
 
