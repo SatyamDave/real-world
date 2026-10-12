@@ -11,3 +11,4 @@ Check every hash with `shasum -a 256 experiments/E*/PREREG.md`.
 | [E003](E003/PREREG.md) | Belief assimilation converges on a synthetic ground-truth world | 2026-10-11 | CTO | `13b0279a0d5f87d5b4f48fb652dd327c3cea4368a86b4476b69cc2794b5d7171` | registered | none |
 | [E004](E004/PREREG.md) | Live hashed forecasts vs the market price (Brier) | 2026-10-11 | CEO | `4d31066a1f4efe34b93b822908cfa8773f250df5edc4bf8cdec724b3150ed3b2` | registered | none |
 | [E005](E005/PREREG.md) | Native-language vs English agents on non-Western polls | 2026-10-11 | CTO | `b5f7cbf8a140a6c1c2affb30f9a2dc1fedf7f8020531d707d8a23c4c8bad3f81` | registered | none |
+| [E006](E006/PREREG.md) | Assimilation v2 vs persistence on the E003 synthetic world | 2026-10-12 | CTO | `ad372cad8f2a3d2a00641b9205cdb97afa87d87e151c88c7e3e47593b8bc450d` | registered | none |
