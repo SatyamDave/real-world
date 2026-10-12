@@ -19,8 +19,22 @@ const isForecast = (r: ReceiptEntry) => r.entry.kind === "forecast";
 /** "0.4139" as "41%"; an empty value as a dash. */
 const prob = (v: unknown) => (str(v) ? `${Math.round(Number(v) * 100)}%` : "—");
 
-/** Local time, with the committed UTC string on hover. */
-function Committed({ at }: { at: string }) {
+/** The question's text, with its id on hover; the id alone on a leaf with no question. */
+function Question({ r }: { r: ReceiptEntry }) {
+  const id = str(r.entry.question_id);
+  return r.question ? <span title={id}>{r.question.text}</span> : <>{id}</>;
+}
+
+const DAY_MS = 86_400_000;
+
+/** Whole days from the commit to the question's resolution date, in UTC. */
+export function daysBeforeResolution(at: string, resolvesBy: string): number {
+  return Math.floor((Date.parse(resolvesBy) - Date.parse(at)) / DAY_MS);
+}
+
+/** Local time, with the committed UTC string on hover, and how long before resolution it was. */
+function Committed({ r }: { r: ReceiptEntry }) {
+  const at = str(r.entry.committed_at);
   if (!at) return <span className="muted">—</span>;
   const local = new Date(at).toLocaleString("en-US", {
     month: "short",
@@ -28,10 +42,22 @@ function Committed({ at }: { at: string }) {
     hour: "numeric",
     minute: "2-digit",
   });
+  const days = r.question ? daysBeforeResolution(at, r.question.resolves_by) : null;
   return (
-    <time dateTime={at} title={at}>
-      {local}
-    </time>
+    <>
+      <time dateTime={at} title={at}>
+        {local}
+      </time>
+      {days !== null && (
+        <span className="muted small committed-note">
+          {days >= 1
+            ? `${plural(days, "day")} before resolution`
+            : days === 0
+              ? "on its resolution date"
+              : "after its resolution date"}
+        </span>
+      )}
+    </>
   );
 }
 
@@ -75,7 +101,9 @@ export function ReceiptsStrip() {
             <span className={`who who-${str(r.entry.forecaster)}`}>
               {FORECASTER[str(r.entry.forecaster)] ?? str(r.entry.forecaster)}
             </span>
-            <span className="strip-q">{str(r.entry.question_id)}</span>
+            <span className="strip-q">
+              <Question r={r} />
+            </span>
             <span className="num">{prob(r.entry.probability)}</span>
             <Outcome r={r} />
           </li>
@@ -261,9 +289,11 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
                 {d.entries.map((r) => (
                   <tr key={r.leaf_hash}>
                     <td>
-                      {isForecast(r)
-                        ? str(r.entry.question_id)
-                        : `Question set, ${(r.entry.question_ids as string[])?.length ?? 0} questions`}
+                      {isForecast(r) ? (
+                        <Question r={r} />
+                      ) : (
+                        `Question set, ${(r.entry.question_ids as string[])?.length ?? 0} questions`
+                      )}
                     </td>
                     <td>{FORECASTER[str(r.entry.forecaster)] ?? str(r.entry.forecaster)}</td>
                     <td className="num" title={str(r.entry.probability)}>
@@ -273,7 +303,7 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
                       {prob(r.entry.market_price_at_commit)}
                     </td>
                     <td>
-                      <Committed at={str(r.entry.committed_at)} />
+                      <Committed r={r} />
                     </td>
                     <td className="mono" title={r.leaf_hash}>
                       {short(r.leaf_hash)}

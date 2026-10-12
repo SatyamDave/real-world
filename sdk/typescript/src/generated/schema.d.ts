@@ -575,10 +575,21 @@ export interface components {
       salt: string;
       /** Leaf Hash */
       leaf_hash: string;
+      /** @description The forecast's question from its committed question set; null on other leaves. */
+      question: components["schemas"]["ReceiptQuestion"] | null;
       /** Outcome */
       outcome: number | null;
       /** Brier */
       brier: number | null;
+    };
+    /** ReceiptQuestion */
+    ReceiptQuestion: {
+      /** Text */
+      text: string;
+      /** Resolution Source */
+      resolution_source: string;
+      /** Resolves By */
+      resolves_by: string;
     };
     /** Receipts */
     Receipts: {
@@ -633,34 +644,44 @@ export interface components {
     SimulateRequest: {
       /**
        * World
+       * @description The snapshot to fork: today's world, or a committed day as YYYY-MM-DD.
        * @default today
        */
       world?: string;
+      /** @description The one event to add, in plain words. */
       event: components["schemas"]["Event"];
       /**
        * Days
+       * @description Simulated days to run after the event.
        * @default 7
        */
       days?: number;
       /**
        * Members
+       * @description Ensemble size: independent runs whose spread gives the p10-p90 band.
        * @default 5
        */
       members?: number;
       /**
        * Agents
+       * @description Agents sampled from the world, in proportion to country population.
        * @default 200
        */
       agents?: number;
-      /** Topics */
+      /**
+       * Topics
+       * @description Topics to report; null means every topic the world tracks.
+       */
       topics?: string[] | null;
       /**
        * Max Cost Usd
+       * @description Refuse with 402 if the estimate exceeds this. One model call per segment.
        * @default 0.5
        */
       max_cost_usd?: number;
       /**
        * Seed
+       * @description Random seed; the same request is replayed.
        * @default 0
        */
       seed?: number;
@@ -701,8 +722,13 @@ export interface components {
       };
       /** Segments */
       segments: components["schemas"]["SegmentShift"][];
-      /** Top Shifts */
+      /**
+       * Top Shifts
+       * @description The largest median shifts among segments of at least top_shift_min_agents.
+       */
       top_shifts: components["schemas"]["SegmentShift"][];
+      /** Top Shift Min Agents */
+      top_shift_min_agents: number;
       trace: components["schemas"]["Trace"];
       /**
        * Note
@@ -866,7 +892,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description The estimate exceeds max_cost_usd */
+      /** @description The estimate exceeds max_cost_usd or the day's budget */
       402: {
         headers: {
           [name: string]: unknown;
@@ -1141,7 +1167,7 @@ export interface operations {
           "application/json": components["schemas"]["Daily"];
         };
       };
-      /** @description This player already answered this question */
+      /** @description This player already answered, or answers closed */
       409: {
         headers: {
           [name: string]: unknown;

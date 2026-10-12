@@ -44,6 +44,12 @@ def conn():
     return api.connect()
 
 
+@pytest.fixture
+def answers_open(monkeypatch):
+    """Every fixture question has closed by now; answer tests run on the question's own day."""
+    monkeypatch.setattr(api, "_clock", lambda: datetime(2026, 10, 5, 12, tzinfo=UTC))
+
+
 def calls(conn):
     return conn.execute("SELECT count(*) FROM llm_calls").fetchone()[0]
 
@@ -138,6 +144,25 @@ def test_over_the_cap_is_refused_with_the_estimate_and_no_model_call(client, con
 
 def jobs(conn):
     return conn.execute("SELECT count(*) FROM jobs").fetchone()[0]
+
+
+def test_the_days_budget_refuses_a_fork_before_any_model_call(client, conn, monkeypatch):
+    before = conn.execute("SELECT count(*) FROM llm_calls").fetchone()[0]
+    monkeypatch.setattr(settings, "NIGHTLY_BUDGET_USD", llm.spent_today(conn))
+    r = client.post("/v1/simulate", json=CHIPS, headers={"Idempotency-Key": "k-day-budget"})
+    assert r.status_code == 402 and "day's budget" in r.json()["detail"]
+    assert conn.execute("SELECT count(*) FROM llm_calls").fetchone()[0] == before
+    assert (
+        conn.execute("SELECT count(*) FROM jobs WHERE id = ?", (r.json().get("id"),)).fetchone()[0]
+        == 0
+    )
+
+    def broken(_conn=None):
+        raise RuntimeError("no spend table")
+
+    monkeypatch.setattr(llm, "spent_today", broken)
+    r = client.post("/v1/simulate", json=CHIPS, headers={"Idempotency-Key": "k-day-budget-2"})
+    assert r.status_code == 503
 
 
 def test_a_rule_refusal_returns_422_with_its_code_and_spends_nothing(client, conn):
@@ -295,7 +320,9 @@ def test_why_is_labelled_simulated_and_cached(client, conn):
     assert calls(conn) == before
 
 
-def test_daily_reveal_matches_the_committed_ledger_and_refuses_a_second_answer(client, conn):
+def test_daily_reveal_matches_the_committed_ledger_and_refuses_a_second_answer(
+    client, conn, answers_open
+):
     d = client.get("/v1/daily").json()
     q = d["question"]
     assert d["reveal"] is None and q["resolution_source"].startswith("https://")
@@ -328,7 +355,19 @@ def test_daily_reveal_matches_the_committed_ledger_and_refuses_a_second_answer(c
     assert wrong.status_code == 422
 
 
-def test_crowd_is_everyone_but_the_caller(client, conn):
+def test_an_answer_after_closes_at_is_refused_and_not_written(client, conn):
+    q = client.get("/v1/daily").json()["question"]
+    assert datetime.now(UTC).date().isoformat() > q["closes_at"]
+    r = client.post(
+        "/v1/daily/answers",
+        json={"question_id": q["id"], "player_id": "p-late", "probability": 0.7},
+    )
+    assert r.status_code == 409 and "closed" in r.json()["detail"]
+    row = conn.execute("SELECT 1 FROM daily_answers WHERE player_id = 'p-late'").fetchone()
+    assert row is None
+
+
+def test_crowd_is_everyone_but_the_caller(client, conn, answers_open):
     q = client.get("/v1/daily").json()["question"]
     for player, p in (("p-crowd-a", 0.2), ("p-crowd-b", 0.9)):
         client.post(
@@ -345,7 +384,7 @@ def test_crowd_is_everyone_but_the_caller(client, conn):
         assert crowd["mean"] == pytest.approx(sum(others) / len(others))
 
 
-def test_reveal_scores_a_resolved_question(client, conn):
+def test_reveal_scores_a_resolved_question(client, conn, answers_open):
     q = client.get("/v1/daily").json()["question"]
     with conn:
         conn.execute(
@@ -360,7 +399,7 @@ def test_reveal_scores_a_resolved_question(client, conn):
     assert reveal["outcome"] == 1 and reveal["brier"] == pytest.approx(0.04)
 
 
-def test_streak_counts_consecutive_days_and_breaks_on_a_gap(client, conn):
+def test_streak_counts_consecutive_days_and_breaks_on_a_gap(client, conn, answers_open):
     q = client.get("/v1/daily").json()["question"]
     with conn:
         conn.executemany(
@@ -375,7 +414,7 @@ def test_streak_counts_consecutive_days_and_breaks_on_a_gap(client, conn):
     assert r.json()["reveal"]["streak"] == 2
 
 
-def test_week_lists_seven_days_with_answers_and_scores(client, conn):
+def test_week_lists_seven_days_with_answers_and_scores(client, conn, answers_open):
     d = client.get("/v1/daily").json()
     today, q = d["date"], d["question"]
     with conn:
@@ -451,6 +490,23 @@ def test_receipts_show_a_day_anchored_only_when_its_token_verifies(tmp_path, mon
     assert body["anchor"] == "anchored"
     proofs = {a["kind"]: base64.b64decode(a["proof_base64"]) for a in body["anchors"]}
     assert proofs == {"rfc3161": tsr, "opentimestamps": ots}
+
+
+def test_receipt_entries_carry_their_question_and_llms_txt_lists_every_route(client):
+    day = client.get("/v1/receipts").json()["days"][0]["date"]
+    entries = client.get(f"/v1/receipts/{day}").json()["entries"]
+    forecasts = [e for e in entries if e["entry"]["kind"] == "forecast"]
+    assert forecasts and all(
+        e["question"]["text"]
+        and e["question"]["resolution_source"]
+        and e["question"]["resolves_by"]
+        for e in forecasts
+    )
+    assert all(e["question"] is None for e in entries if e["entry"]["kind"] != "forecast")
+    text = client.get("/llms.txt").text
+    assert text.startswith("# Real World API") and "- POST /v1/simulate: " in text
+    for path in client.get("/openapi.json").json()["paths"]:
+        assert f" {path}: " in text
 
 
 def test_scores_summarize_resolved_committed_forecasts(client):

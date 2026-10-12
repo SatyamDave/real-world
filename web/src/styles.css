@@ -1105,6 +1105,17 @@ td {
   white-space: nowrap;
 }
 
+/* The question is the one cell that wraps, so the other columns stay on screen. */
+td:first-child {
+  white-space: normal;
+  min-width: 18rem;
+  max-width: 32rem;
+}
+
+.committed-note {
+  display: block;
+}
+
 .receipts > .disclosure {
   border: 0;
 }

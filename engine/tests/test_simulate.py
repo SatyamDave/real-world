@@ -1,11 +1,12 @@
 import json
+import math
 import time
 
 import numpy as np
 import pytest
 from pydantic import ValidationError
 
-from rw import db, llm, population, simulate
+from rw import db, llm, population, settings, simulate
 from rw.simulate import SimulateRequest, SimulateResult
 
 DAY = "2026-10-01"
@@ -56,6 +57,11 @@ def test_each_prefilled_event_yields_a_valid_result(conn):
         assert result.world_snapshot_id == DAY
         assert result.model == "fake"
         assert len(result.top_shifts) == 3
+        assert result.top_shift_min_agents == math.ceil(
+            settings.TOP_SHIFT_MIN_SHARE * result.agents_sampled
+        )
+        assert all(s.n_agents >= result.top_shift_min_agents for s in result.top_shifts)
+        assert any(s.n_agents < result.top_shift_min_agents for s in result.segments)
         assert len(result.trace.agents) == 10
         if e["event"]["countries"]:
             assert [c.iso3 for c in result.coverage] == e["event"]["countries"]
@@ -69,6 +75,25 @@ def test_same_request_twice_is_identical_and_the_second_makes_no_model_call(conn
     second = simulate.run(conn, req(world="today"))
     assert second == first
     assert calls(conn) == made
+
+
+def test_a_stored_result_of_an_older_shape_is_run_again_and_replaced(conn):
+    first = simulate.run(conn, req())
+    stale = first.model_dump(mode="json")
+    del stale["top_shift_min_agents"]
+    key = simulate.input_hash(first.world_snapshot_id, req())
+    with conn:
+        conn.execute(
+            "UPDATE simulations SET result_json = ? WHERE input_hash = ?", (json.dumps(stale), key)
+        )
+    again = simulate.run(conn, req())
+    # Its model calls replay from llm_calls at no cost, so only the cost and the hash over it move.
+    skip = {"cost", "content_hash"}
+    assert again.model_dump(exclude=skip) == first.model_dump(exclude=skip)
+    stored = conn.execute(
+        "SELECT result_json FROM simulations WHERE input_hash = ?", (key,)
+    ).fetchone()[0]
+    assert "top_shift_min_agents" in stored
 
 
 def test_seed_changes_the_result(conn):

@@ -189,7 +189,7 @@ test("a fork with no shift past the floor says so", async () => {
   const r = job.result;
   if (!r) throw new Error("fixture has a result");
   const el = await render(<ForkCard job={{ ...job, result: { ...r, top_shifts: [] } }} />);
-  expect(el.textContent).toContain("No segment moved more than the band.");
+  expect(el.textContent).toContain("No segment of at least 10 agents moved.");
 });
 
 test("a missing fork reads as missing, not as a response body", async () => {
@@ -218,6 +218,12 @@ test("the agent panel labels the trace and the simulated account", async () => {
   expect(el.textContent).toContain(DISCLOSURE);
 });
 
+const QUESTION = {
+  text: "Will the central bank cut its rate on Oct 3?",
+  resolution_source: "https://example.com/fixture/cut",
+  resolves_by: "2026-10-03",
+};
+
 test("the receipts page verifies the served chain and states the reference and claim", async () => {
   vi.mocked(rw.world).mockResolvedValue(world);
   vi.mocked(rw.receipts).mockResolvedValue({
@@ -230,7 +236,12 @@ test("the receipts page verifies the served chain and states the reference and c
     anchor: "not_anchored",
     anchored_at: null,
     anchors: [],
-    entries: vector.entries.map((e) => ({ ...e, outcome: null, brier: null })),
+    entries: vector.entries.map((e, i) => ({
+      ...e,
+      question: i ? null : QUESTION,
+      outcome: null,
+      brier: null,
+    })),
   });
   const skill = {
     n: 2,
@@ -246,6 +257,8 @@ test("the receipts page verifies the served chain and states the reference and c
 
   const el = await render(<App path="/receipts" />);
   const text = el.textContent ?? "";
+  expect(text).toContain(QUESTION.text);
+  expect(text).toContain("1 day before resolution");
   expect(text).toContain("not yet anchored");
   expect(text).toContain("A constant 50% forecast scores 0.25");
   expect(text).toContain("No claim yet");

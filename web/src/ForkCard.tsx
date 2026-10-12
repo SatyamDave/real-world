@@ -228,7 +228,9 @@ export function ForkCard({ job }: { job: Job }) {
           ))}
         </ol>
       ) : (
-        <p className="muted small">No segment moved more than the band.</p>
+        <p className="muted small">
+          No segment of at least {plural(r.top_shift_min_agents, "agent")} moved.
+        </p>
       )}
 
       <h3>Share leaning yes, before and after</h3>

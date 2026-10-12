@@ -136,6 +136,7 @@
     "trace": {
       "segment_signals": {},
       "agents": []
-    }
+    },
+    "top_shift_min_agents": 10
   }
 }
