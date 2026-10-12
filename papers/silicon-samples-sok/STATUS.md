@@ -82,3 +82,7 @@ Number corrections (SimBench, Bisbee, Meister, Toubia, Ozkan, Kim & Cho, Pew, Wa
 - Model training cutoffs for Pew's models are unreported, so Pew counts as "likely" out-of-training.
 - The preamble uses geometry, array and longtable (standard LaTeX, also used by the sibling papers) beyond the four packages the README names; confirm they are acceptable.
 - Remaining underfull boxes are in two paragraphs with long file paths and in the bibliography.
+
+## Update for PRs #6-#38 (2026-10-12)
+
+- Competing-interest paragraph corrected: it said the product's population "is built from" GLOPOP-S and survey aggregates. Engine 0.1.0 (`engine/rw/population.py`, `engine/rw/forecast.py`) samples from illustrative marginals in `data/sample/` and asks the model once per segment for a yes share; the paragraph now says so and marks GLOPOP-S and daily poll correction as the design. No survey result or count changed; `python3 data/counts.py --check` exits 0.

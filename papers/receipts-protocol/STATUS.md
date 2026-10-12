@@ -8,7 +8,7 @@
 
 ## Pending results
 
-No product code exists yet, so every result is a pre-registered hypothesis (paper Section 7, Table 2).
+No component of Receipts v1 has run, so every result is a pre-registered hypothesis (paper Section 7, Table 2). The engine that exists (0.1.0) implements only the pre-genesis decision 0002 ledger, which the paper excludes from every Receipts claim.
 
 | Hypothesis | What it measures | Produced by (future artifact) |
 | --- | --- | --- |
@@ -60,3 +60,9 @@ Three reviews (methods/statistics, citation audit, reviewer #2). Fixed:
 Not done: machine-checked protocol model (noted as future work); Halawi NeurIPS DOI (not verified); market-rank-of-24 detail from Prophet Arena (not verified).
 
 Compiles with tectonic: no errors, no undefined citations or references, no overfull boxes; underfull hbox warnings in the bibliography only.
+
+## Update for PRs #6-#38 (2026-10-12)
+
+- The pre-genesis ledger is now code (`engine/rw/ledger.py`, PR #10; anchoring PR #29; scoring `engine/rw/score.py`, PR #9). The "Pre-genesis records" paragraph now describes what it does: hash-sorted leaves, no empty-day records, market price in the leaf, a fixed question list instead of beacon selection, no signature or transparency-log entry, one RFC 3161 token from freetsa.org (imprint and genTime read; CMS signature and certificate chain not checked), an OpenTimestamps calendar proof pending until Bitcoin, and a day-block bootstrap. The earlier text said it had no anchors.
+- H1: `engine/tests/test_ledger.py` exists but tests only the pre-genesis format; the v1 mutation catalogue and strategy simulations still have to be added.
+- Still open before genesis: positional leaves, empty-day records, signed records, three TSAs with certificate checks, Rekor entries, beacon selection, the snapshot record at T*, and the wild cluster bootstrap-t in `score.py`.

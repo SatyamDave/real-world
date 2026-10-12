@@ -7,7 +7,7 @@
 
 ## Pending results
 
-No implementation exists, so every experiment is a specified protocol (Section 6). The paths below do not exist yet. Primary hypotheses: H1, H2, H8, H10, H12 (each at alpha = 0.01; graph-based FWER 0.05 over the whole paper).
+No implementation of A1 exists, so every experiment is a specified protocol (Section 6). The paths below do not exist yet. The only committed results in the paper are E003 and E006 on the engine's simpler operator (Section 6.3), which are not E1. Primary hypotheses: H1, H2, H8, H10, H12 (each at alpha = 0.01; graph-based FWER 0.05 over the whole paper).
 
 | Hypotheses | What it tests | Produced by |
 | --- | --- | --- |
@@ -72,3 +72,9 @@ Not done (nice-to-have, deferred): Ruiz-Pulido-Miyoshi parameter-estimation revi
 ## Portfolio edit (2026-10-11)
 
 Cross-paper consistency pass (see `../INDEX.md`): Allocation and segments tied to *Unequally Known* and the v1 lattice of *Don't Ask a Model* (S=500, n_s≈200 kept as the running example and E1 configuration); v1 stated as the special case with no social graph; "market-free" renamed market-blind, M0 mapped to the `rw-blind` slot; E3 market price uses the *Receipts* definition; data-coverage tier renamed population tier; fork requirements defer to *Governing*; `rw_unequally` bib title corrected. Compiles with tectonic: no errors, no undefined references, no overfull boxes.
+
+## Update for PRs #6-#38 (2026-10-12)
+
+- The system's filter is no longer the iterated EKF the paper called v1: engine 0.1.0 runs a scalar Kalman update per (country, topic) with an anchor offset and innovation-based inflation (decision 0005, `engine/rw/beliefs.py`), adopted after E006. Scope paragraph, abstract, conclusion and B7 updated: B7 is whichever filter is public when the protocol file is frozen.
+- New Section 6.3 reports E003 (`experiments/E003/results/2026-10-12-none/results.json`, run at b6957be) and E006 (`experiments/E006/results/2026-10-12-none/RESULTS.md`, run at 3163def) with every pre-registered metric, n and 95% interval, including E003's loss to persistence, its dropped ETKF arm and E006's overconfidence (RMSE/filter SD 1.367), and states why they are not E1 (one segment per poll, matched walk, no news, no lift).
+- E1-E3 remain pending; what produces them is unchanged.

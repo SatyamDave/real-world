@@ -217,7 +217,7 @@ As designed in \emph{Don't Ask a Model, Ask a World}, the organizer's system hol
   \item An event that the population decides (a vote share or a poll threshold) gets the share of $E$ ensemble members whose computed share falls on the YES side.
   \item Every other event, and every poll question outside the topic list, gets one backbone call per ensemble member, given the item, the observation bundle and a summary of the state; the prediction is the mean over the $E$ members.
 \end{itemize}
-The model is never called per agent. ``Population'' in the hypotheses below therefore means the state and its agent records together, not a set of simulated respondents.
+The model is never called per agent. ``Population'' in the hypotheses below therefore means the state and its agent records together, not a set of simulated respondents. The engine built so far (version 0.1.0) is simpler than this design: $10^4$ agents sampled from illustrative marginals written for its repository, a scalar Kalman update of each country's mean belief per topic, and one backbone call per segment for every item, with no response-model path. The system card at $O_1$ describes whichever version is entered.
 
 \paragraph{Naive last result.}
 \begin{itemize}
@@ -320,7 +320,7 @@ The label H5 is kept for the market bar below, now an estimation target, so that
 
 \paragraph{Ablations (exploratory, unranked).} \emph{No assimilation}: the segment positions are initialized from source data at $O_r$ and never corrected against polls. \emph{No within-segment spread}: every agent offset is set to zero, so predictions use segment positions alone and the agent records contribute nothing. H7 and these ablations are the benchmark counterparts of the matched comparison in \emph{Don't Ask a Model, Ask a World}.
 
-\paragraph{Hypothesis blindness.} As of this draft the organizer's simulator does not exist, and no predictor, baseline or otherwise, has been scored by us on any Track~A or~B item, including the Pew spring 2026 development set. While writing the item and void rules we read published Pew spring 2026 reports and the Ipsos May 2026 report; they shaped those rules, not the direction of any hypothesis. H3 and H4a take their direction from published prior work. The organizer plans to start a hashed daily forecast record in mid-October 2026; its results will exist before round~1 opens and may inform the system's design, which is why this text is to be frozen before that record's first resolved question (Section~\ref{sec:rounds}).
+\paragraph{Hypothesis blindness.} As of this draft a first version of the organizer's simulator exists in code but has forecast no live question, and no predictor, baseline or otherwise, has been scored by us on any Track~A or~B item, including the Pew spring 2026 development set. Its only results are two synthetic checks of its assimilation operator, which use no poll, survey or market data. While writing the item and void rules we read published Pew spring 2026 reports and the Ipsos May 2026 report; they shaped those rules, not the direction of any hypothesis. H3 and H4a take their direction from published prior work. The organizer plans to start a hashed daily forecast record in mid-October 2026; its results will exist before round~1 opens and may inform the system's design, which is why this text is to be frozen before that record's first resolved question (Section~\ref{sec:rounds}).
 
 \paragraph{Track C disclosure.} An earlier draft contained a confirmatory Track~C hypothesis. It was written after an internal prototype had been scored on the retrospective pilot set, and its form followed that internal result, so it was not formed blind. It has been removed; round~1 reports Track~C only as estimates.
 
@@ -389,7 +389,7 @@ Each track is released with a datasheet \citep{gebru2021datasheets} and Croissan
 
 \paragraph{Licensing.} Redistribution terms for market data, Pew data, Ipsos data and other sources are not settled. Where they are unclear we release links and hashes, which makes independent replication harder.
 
-\paragraph{Not yet a dataset.} This draft releases no items, no baseline scores and no code. We will submit to a datasets and benchmarks track only after releasing, as committed artifacts, the retrospective Track~A development set (Pew spring 2026) with baseline scores and the two feasibility artifacts of Table~\ref{tab:pending}. If they are not ready, we will submit this protocol as a Stage-1 registered report instead.
+\paragraph{Not yet a dataset.} This draft releases no items, no baseline scores and no benchmark code; the organizer's engine repository has a same-feed LLM baseline for its own daily record, but not the benchmark's baselines, item generator or scorer. We will submit to a datasets and benchmarks track only after releasing, as committed artifacts, the retrospective Track~A development set (Pew spring 2026) with baseline scores and the two feasibility artifacts of Table~\ref{tab:pending}. If they are not ready, we will submit this protocol as a Stage-1 registered report instead.
 
 \section{Ethics statement}
 
