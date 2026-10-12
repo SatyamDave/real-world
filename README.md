@@ -49,11 +49,13 @@ Local state (the SQLite file, snapshots, receipts) goes to `var/`, or to `$RW_HO
 | [`experiments/`](experiments/README.md) | Pre-registered experiments, hashed into a registry before they run, and their committed results, misses included. Papers cite only these. | n/a |
 | [`gtm/`](gtm/README.md) | Who we sell to, pricing, the launch plan, the builders program, and the claims we may and may not make. | n/a |
 | [`company/`](company/README.md) | The north-star metric, the plan to Nov 2 with its gates, the risk register, the operating cadence, and decisions only the founder can make. | n/a |
-| [`engine/`](engine/README.md) | The Python package `rw`: settings, the model gateway, the licence gate, and later the population, beliefs, forecasts, ledger and scoring. | [world](product/world.md), [benchmark](product/benchmark.md), [receipts](product/receipts.md) |
+| [`engine/`](engine/README.md) | The Python package `rw`: settings, the model gateway, the licence gate, the population, beliefs, news, forecasts, the ledger, scoring, forks and the daily cycle. | [world](product/world.md), [benchmark](product/benchmark.md), [receipts](product/receipts.md) |
+| [`api/`](api/README.md) | The FastAPI app `rw_api`: every `/v1` endpoint, fork jobs, idempotency, server-sent events and the committed `openapi.json`. | [simulate API](product/simulate-api.md), [daily question](product/daily-question.md) |
+| [`sdk/`](sdk/CLAUDE.md) | The [Python](sdk/python/README.md) and [TypeScript](sdk/typescript/README.md) clients, generated from `api/openapi.json`, each README opening with its quickstart. | [SDKs](product/sdks.md) |
 | [`data/`](data/README.md) | The licence table, the country and topic vocabularies, bundled sample data and fixtures. | [world](product/world.md) |
 | [`web/`](web/README.md) | The Vite + React web app. | [web app](product/web-app.md) |
 
-The layout and module boundaries come from [decision 0001](research/decisions/0001-architecture.md). The API and SDK folders arrive in later slices of the [build plan](research/decisions/BUILD_PLAN.md).
+The layout and module boundaries come from [decision 0001](research/decisions/0001-architecture.md).
 
 ## How we work
 
