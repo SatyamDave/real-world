@@ -1172,6 +1172,11 @@ export interface components {
       best: components["schemas"]["SegmentReaction"][];
       /** Worst */
       worst: components["schemas"]["SegmentReaction"][];
+      /**
+       * Audiences
+       * @description Every segment asked, most likely first.
+       */
+      audiences: components["schemas"]["SegmentReaction"][];
       /** Voices */
       voices: components["schemas"]["Voice"][];
       /** Rewrite */

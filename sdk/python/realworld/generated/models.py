@@ -913,6 +913,9 @@ class PostTestResult(BaseModel):
     mix: Mix
     best: list[SegmentReaction] = Field(..., title="Best")
     worst: list[SegmentReaction] = Field(..., title="Worst")
+    audiences: list[SegmentReaction] = Field(
+        ..., description="Every segment asked, most likely first.", title="Audiences"
+    )
     voices: list[Voice] = Field(..., title="Voices")
     rewrite: str = Field(..., title="Rewrite")
     segments: int = Field(..., title="Segments")

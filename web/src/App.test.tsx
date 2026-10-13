@@ -12,6 +12,7 @@ import { DailyQuestion } from "./DailyQuestion";
 import dailyFixture from "./fixtures/daily.json";
 import statusFixture from "./fixtures/status.json";
 import worldFixture from "./fixtures/world.json";
+import { USE_CASES } from "./usecases";
 
 const world = worldFixture as World;
 let container: HTMLDivElement;
@@ -367,6 +368,7 @@ const tested = {
     mix: { scroll_past: 0.4, read: 0.18, like: 0.3, share: 0.12 },
     best: [segment("young urban", 0.6)],
     worst: [segment("older rural", 0.2, "C")],
+    audiences: [segment("young urban", 0.6), segment("older rural", 0.2, "C")],
     voices: [
       { label: "young urban", text: "I would share this.", simulated: "Simulated account" },
       { label: "older rural", text: "Not for me.", simulated: "Simulated account" },
@@ -391,12 +393,13 @@ const typeInto = (el: HTMLTextAreaElement | HTMLInputElement, value: string) => 
 test("a post test shows the landing chance, both sides, the accounts and a sign-in line", async () => {
   vi.mocked(rw.world).mockResolvedValue(world);
   const calls = serve({ "/v1/me": [401, { detail: "signed out" }], "/v1/tests": [200, tested] });
-  const el = await render(<App path="/" />);
-  expect(el.querySelector("h1")?.textContent).toBe("Will this land?");
-  expect(button("Test it").disabled).toBe(true);
-  await act(async () => typeInto(el.querySelector("textarea") as HTMLTextAreaElement, "Half off"));
-  await act(async () => (el.querySelector("input[type=radio]") as HTMLInputElement).click());
-  await act(async () => button("Test it").click());
+  const el = await render(<App path="/playground" />);
+  await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
+  expect(el.textContent).toContain("Learn to simulate");
+  expect(button("Run").disabled).toBe(true);
+  await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "Half off"));
+  await act(async () => (el.querySelector("input[name=gut]") as HTMLInputElement).click());
+  await act(async () => button("Run").click());
   await until(() => expect(el.querySelector(".land-result")).not.toBeNull());
   const sent = calls.find((c) => c.path === "/v1/tests")?.body;
   expect(sent).toEqual({ text: "Half off", gut: "lands", countries: null, age_bands: null });
@@ -422,9 +425,10 @@ test("a refused post test shows the API's sentence", async () => {
     "/v1/me": [401, {}],
     "/v1/tests": [429, { code: "test_daily_limit", detail: "this address has run 20 tests today" }],
   });
-  const el = await render(<App path="/" />);
-  await act(async () => typeInto(el.querySelector("textarea") as HTMLTextAreaElement, "x"));
-  await act(async () => button("Test it").click());
+  const el = await render(<App path="/playground" />);
+  await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
+  await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "x"));
+  await act(async () => button("Run").click());
   await until(() => expect(el.textContent).toContain("this address has run 20 tests today."));
 });
 
@@ -444,10 +448,10 @@ test("a signed-in test shows its seal and the retrospective check is labelled", 
       },
     ],
   });
-  const el = await render(<App path="/" />);
+  const el = await render(<App path="/playground" />);
   await until(() => expect(el.textContent).toContain("ada@example.org"));
-  await act(async () => typeInto(el.querySelector("#post") as HTMLTextAreaElement, "Half off"));
-  await act(async () => button("Test it").click());
+  await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "Half off"));
+  await act(async () => button("Run").click());
   await until(() => expect(el.querySelector(".seal")?.textContent).toContain("abababababab"));
   expect(el.querySelector(".land-result .stamp")?.textContent).toBe("Sealed");
 
@@ -537,17 +541,109 @@ test("sign-in sends the email, then takes the code", async () => {
   });
 });
 
-test("the nav lists the two jobs, the record and the proof, and marks the active one", async () => {
+test("the sidebar lists the pages and the proof, marks the active one, and offers sign-in", async () => {
   serve({ "/v1/me": [401, {}] });
   const el = await render(<App path="/call" />);
-  await until(() => expect(el.querySelector(".nav-account")).not.toBeNull());
-  expect([...el.querySelectorAll("header nav a")].map((a) => a.textContent)).toEqual([
-    "Will this land?",
+  await until(() => expect(el.querySelector(".side-account")).not.toBeNull());
+  expect([...el.querySelectorAll(".sidebar nav a")].map((a) => a.textContent)).toEqual([
+    "Home",
+    "Playground",
     "Call it",
     "Your record",
     "Scores",
     "Receipts",
-    "Sign in",
   ]);
-  expect(el.querySelector("header nav [aria-current]")?.textContent).toBe("Call it");
+  expect(el.querySelector(".sidebar nav [aria-current]")?.textContent).toBe("Call it");
+  expect(el.querySelector(".side-account")?.textContent).toBe("Sign in");
+});
+
+test("the home teaches the three primitives and links every use case", async () => {
+  serve({ "/v1/me": [401, {}] });
+  const el = await render(<App path="/" />);
+  expect(el.querySelector("h1")?.textContent).toBe("Learn to simulate");
+  expect([...el.querySelectorAll(".primitive-name")].map((n) => n.textContent)).toEqual([
+    "REACTION",
+    "EVENT",
+    "CALL",
+  ]);
+  const links = [...el.querySelectorAll(".usecases a")].map((a) => a.getAttribute("href"));
+  expect(links).toEqual(USE_CASES.map((u) => `/playground?use=${u.id}`));
+});
+
+test("a use case opens the playground filled in", async () => {
+  serve({ "/v1/me": [401, {}] });
+  const u = USE_CASES.find((x) => x.primitive === "event") as (typeof USE_CASES)[number];
+  history.replaceState(null, "", `/playground?use=${u.id}`);
+  const el = await render(<App path="/playground" />);
+  await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
+  expect((el.querySelector("#pg-text") as HTMLTextAreaElement).value).toBe(u.text);
+  expect(
+    (el.querySelector("input[name=primitive]:checked") as HTMLInputElement).parentElement
+      ?.textContent,
+  ).toBe("Event");
+  history.replaceState(null, "", "/");
+});
+
+test("an event run draws every topic and says it is not scored", async () => {
+  serve({ "/v1/me": [401, {}] });
+  const band = (p50: number) => ({ p10: p50 - 0.02, p50, p90: p50 + 0.02 });
+  vi.spyOn(rw, "simulate").mockResolvedValue({ id: "job_1", status: "queued" } as never);
+  vi.spyOn(rw, "wait").mockResolvedValue({
+    simulated: true,
+    disclosure: DISCLOSURE,
+    world_snapshot_id: "2026-10-05",
+    engine_version: "0.1.0",
+    model: "jev-1.13.0",
+    provider: "fake",
+    seed: 1,
+    members: 5,
+    agents_sampled: 200,
+    days: 7,
+    cost: { estimated_usd: 0.01, actual_usd: 0 },
+    coverage: [{ iso3: "USA", tier: "A" }],
+    outputs: {
+      inflation_worry: {
+        baseline_share: 0.4,
+        final: band(0.55),
+        by_day: [{ day: 1, ...band(0.45) }],
+      },
+      tech_optimism: { baseline_share: 0.5, final: band(0.49), by_day: [{ day: 1, ...band(0.5) }] },
+    },
+    segments: [],
+    top_shifts: [
+      {
+        segment: "USA|18-34|high",
+        topic: "inflation_worry",
+        shift_p10: 0.1,
+        shift_p50: 0.15,
+        shift_p90: 0.2,
+        n_agents: 40,
+        tier: "A",
+      },
+    ],
+    top_shift_min_agents: 20,
+    trace: { segment_signals: {}, agents: [] },
+    note: "Counterfactual: not scored",
+    content_hash: "",
+  } as never);
+  const el = await render(<App path="/playground" />);
+  await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
+  await act(async () =>
+    (el.querySelectorAll("input[name=primitive]")[1] as HTMLInputElement).click(),
+  );
+  await act(async () =>
+    typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "Rates fall"),
+  );
+  await act(async () => button("Run").click());
+  await until(() => expect(el.querySelector(".event-result")).not.toBeNull());
+  const text = el.querySelector(".event-result")?.textContent ?? "";
+  for (const s of [
+    "+15.0 pts",
+    "Inflation worry",
+    "Tech optimism",
+    "Counterfactual: not scored",
+    "n = 40",
+    DISCLOSURE,
+  ])
+    expect(text).toContain(s);
 });

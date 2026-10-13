@@ -3297,6 +3297,14 @@
             "type": "array",
             "title": "Worst"
           },
+          "audiences": {
+            "items": {
+              "$ref": "#/components/schemas/SegmentReaction"
+            },
+            "type": "array",
+            "title": "Audiences",
+            "description": "Every segment asked, most likely first."
+          },
           "voices": {
             "items": {
               "$ref": "#/components/schemas/Voice"
@@ -3342,6 +3350,7 @@
           "mix",
           "best",
           "worst",
+          "audiences",
           "voices",
           "rewrite",
           "segments",

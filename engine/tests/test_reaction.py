@@ -27,6 +27,7 @@ def test_a_post_test_weights_segments_and_reads_as_shares():
     assert 0 <= out.band[0] <= out.band[1] <= 1
     assert out.segments == len(reaction.audience_segments(PostTestRequest(text=POST)))
     assert out.best[0].landing >= out.worst[0].landing
+    assert len(out.audiences) == out.segments and out.audiences[0] == out.best[0]
     assert [v.simulated for v in out.voices] == ["Simulated account"] * 2
     assert out.provider == "fake" and out.rewrite
 
