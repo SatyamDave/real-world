@@ -3,13 +3,14 @@ result. The Pydantic models here are the contract the API, SDKs and web app use.
 
 import hashlib
 import json
+import math
 import sqlite3
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Literal
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from rw import beliefs, llm, news, population, settings
 
@@ -17,14 +18,12 @@ from rw import beliefs, llm, news, population, settings
 FORK_AGENTS_MIN = 50
 # Signal noise per member, in signal units, by coverage tier: thinner data, wider spread.
 TIER_NOISE_SD = {"A": 0.05, "B": 0.10, "C": 0.15, "D": 0.20}
-# Upper bound on the characters news.extract_signal adds around the event and the audience.
-PROMPT_OVERHEAD_CHARS = 2000
+# Upper bound on the characters news.extract_signal adds around the event and the audience: the
+# Jev request with its questions measured 3,204 on 2026-10-12.
+PROMPT_OVERHEAD_CHARS = 4000
 TOP_SHIFTS = 3
 
-DISCLOSURE = (
-    "AI-simulated. A fork of a synthetic population under an event you described: not a poll,"
-    " not a forecast of real people, and not scored."
-)
+DISCLOSURE = "AI-simulated. Not a poll or a prediction of a real person"
 NOTE = "Counterfactual: not scored"
 
 AGE_WORDS = {"18-34": "aged 18 to 34", "35-54": "aged 35 to 54", "55+": "aged 55 and over"}
@@ -48,18 +47,53 @@ class Event(BaseModel):
 
 class SimulateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    world: str = Field(default="today", pattern=r"^(today|\d{4}-\d{2}-\d{2})$")
-    event: Event
-    days: int = Field(default=settings.FORK_DAYS_DEFAULT, ge=1, le=settings.FORK_DAYS_MAX)
-    members: int = Field(default=settings.FORK_MEMBERS_DEFAULT, ge=1, le=settings.FORK_MEMBERS_MAX)
+    world: str = Field(
+        default="today",
+        pattern=r"^(today|\d{4}-\d{2}-\d{2})$",
+        description="The snapshot to fork: today's world, or a committed day as YYYY-MM-DD.",
+    )
+    event: Event = Field(description="The one event to add, in plain words.")
+    days: int = Field(
+        default=settings.FORK_DAYS_DEFAULT,
+        ge=1,
+        le=settings.FORK_DAYS_MAX,
+        description="Simulated days to run after the event.",
+    )
+    members: int = Field(
+        default=settings.FORK_MEMBERS_DEFAULT,
+        ge=1,
+        le=settings.FORK_MEMBERS_MAX,
+        description=(
+            "Ensemble members: independent runs of the fork, each with its own agent subsample"
+            " and noise. Their p10-p90 range is the spread."
+        ),
+    )
     agents: int = Field(
-        default=settings.FORK_AGENTS_DEFAULT, ge=FORK_AGENTS_MIN, le=settings.FORK_AGENTS_MAX
+        default=settings.FORK_AGENTS_DEFAULT,
+        ge=FORK_AGENTS_MIN,
+        le=settings.FORK_AGENTS_MAX,
+        description="Agents sampled from the world snapshot, in proportion to country population.",
     )
-    topics: list[str] | None = None
+    topics: list[str] | None = Field(
+        default=None, description="Topics to report; null means every topic the world tracks."
+    )
     max_cost_usd: float = Field(
-        default=settings.FORK_MAX_COST_USD_DEFAULT, gt=0, le=settings.FORK_MAX_COST_USD_LIMIT
+        default=settings.FORK_MAX_COST_USD_DEFAULT,
+        gt=0,
+        le=settings.FORK_MAX_COST_USD_LIMIT,
+        description=(
+            "Cost cap in dollars. A fork whose estimate is above it is refused with 402. The"
+            " estimate counts one model call per segment."
+        ),
     )
-    seed: int = Field(default=0, ge=0)
+    seed: int = Field(
+        default=0,
+        ge=0,
+        description=(
+            "Fixes the agent subsample and each member's noise. The model's answers can still"
+            " differ between runs."
+        ),
+    )
 
     @field_validator("topics")
     @classmethod
@@ -130,8 +164,10 @@ class Trace(BaseModel):
 
 
 class Cost(BaseModel):
-    estimated_usd: float
-    actual_usd: float
+    estimated_usd: float = Field(
+        description="An estimate made before the run, at the configured model's prices."
+    )
+    actual_usd: float = Field(description="Dollars the provider charged; 0 with the fake model.")
 
 
 class Coverage(BaseModel):
@@ -145,6 +181,9 @@ class SimulateResult(BaseModel):
     world_snapshot_id: str
     engine_version: str
     model: str
+    provider: str = Field(
+        description='Who answered the model calls: "jev", or "fake" when no model ran.'
+    )
     seed: int
     members: int
     agents_sampled: int
@@ -153,7 +192,10 @@ class SimulateResult(BaseModel):
     coverage: list[Coverage]
     outputs: dict[str, TopicOutput]
     segments: list[SegmentShift]
-    top_shifts: list[SegmentShift]
+    top_shifts: list[SegmentShift] = Field(
+        description="The largest median shifts among segments of at least top_shift_min_agents."
+    )
+    top_shift_min_agents: int
     trace: Trace
     note: Literal["Counterfactual: not scored"] = NOTE
     content_hash: str = ""
@@ -202,10 +244,7 @@ def _subsample(req: SimulateRequest, world: Agents) -> Agents:
 def _estimate(req: SimulateRequest, sub: Agents) -> Estimate:
     segments = sorted(set(sub["segment"].tolist()))
     cost = sum(
-        llm.estimate_cost(
-            len(req.event.text) + len(describe(s)) + PROMPT_OVERHEAD_CHARS,
-            settings.LLM_MAX_OUTPUT_TOKENS,
-        )
+        llm.estimate_decide_cost(len(req.event.text) + len(describe(s)) + PROMPT_OVERHEAD_CHARS)
         for s in segments
     )
     return Estimate(
@@ -231,7 +270,7 @@ def input_hash(snapshot_id: str, req: SimulateRequest) -> str:
         "seed": req.seed,
         "topics": req.topics or list(news.topics()),
         "engine_version": settings.ENGINE_VERSION,
-        "model": settings.MODEL,
+        "model": llm.model_name(),
     }
     return hashlib.sha256(json.dumps(key, sort_keys=True).encode()).hexdigest()
 
@@ -262,7 +301,9 @@ def run(
     conn: sqlite3.Connection,
     req: SimulateRequest,
     on_progress: Callable[[int, int], None] | None = None,
+    budget: llm.Budget | None = None,
 ) -> SimulateResult:
+    """Pass budget, limited to req.max_cost_usd, to read what the run spent, even if it raises."""
     snapshot_id = _snapshot_id(req)
     sub = _subsample(req, population.read_snapshot(snapshot_id))
     est = _estimate(req, sub)
@@ -276,19 +317,27 @@ def run(
         "SELECT result_json FROM simulations WHERE input_hash = ?", (key,)
     ).fetchone()
     if row is not None:
-        return SimulateResult.model_validate_json(row[0])
+        # A row stored under an older result shape is a miss: run again and replace it.
+        try:
+            return SimulateResult.model_validate_json(row[0])
+        except ValidationError:
+            pass
 
     topics = req.topics or list(news.topics())
-    budget = llm.Budget(req.max_cost_usd)
+    if budget is None:
+        budget = llm.Budget(req.max_cost_usd)
     segments, seg_of = np.unique(sub["segment"], return_inverse=True)
-    raw = [news.extract_signal(req.event.text, describe(s), budget, conn=conn) for s in segments]
+    raw = [
+        news.extract_signal(req.event.text, describe(s), budget, conn=conn, purpose="fork_signal")
+        for s in segments
+    ]
     seg_signal = np.array([[sig[t] for t in topics] for sig in raw])
     seg_salience = np.array([sig["salience"] for sig in raw])
     seg_tier = np.array([sub["tier"][seg_of == j][0] for j in range(len(segments))])
     seg_noise_sd = np.array([TIER_NOISE_SD[t] for t in seg_tier])
 
     B_all = np.column_stack([sub[f"b_{t}"] for t in topics])
-    B0_all = np.column_stack([sub[f"b0_{t}"] for t in topics])
+    B0_all = np.column_stack([sub[f"b0_{t}"] + sub.get(f"c_{t}", 0.0) for t in topics])
     n, n_topics = B_all.shape
     by_day = np.zeros((req.members, req.days, n_topics))
     seg_shift = np.full((req.members, len(segments), n_topics), np.nan)
@@ -385,21 +434,29 @@ def run(
             )
 
     countries = np.unique(sub["country"])
+    floor = math.ceil(settings.TOP_SHIFT_MIN_SHARE * n)
+    big = [s for s in shifts if s.n_agents >= floor]
+    provider = llm.decider().name
     result = SimulateResult(
         world_snapshot_id=snapshot_id,
         engine_version=settings.ENGINE_VERSION,
-        model=settings.MODEL,
+        model=llm.model_name(),
+        provider=provider,
         seed=req.seed,
         members=req.members,
         agents_sampled=n,
         days=req.days,
-        cost=Cost(estimated_usd=_r(est.estimated_cost_usd), actual_usd=_r(budget.spent_usd)),
+        cost=Cost(
+            estimated_usd=_r(est.estimated_cost_usd),
+            actual_usd=0.0 if provider == "fake" else _r(budget.spent_usd),
+        ),
         coverage=[
             Coverage(iso3=str(c), tier=str(sub["tier"][sub["country"] == c][0])) for c in countries
         ],
         outputs=outputs,
         segments=shifts,
-        top_shifts=sorted(shifts, key=lambda x: -abs(x.shift_p50))[:TOP_SHIFTS],
+        top_shifts=sorted(big, key=lambda x: -abs(x.shift_p50))[:TOP_SHIFTS],
+        top_shift_min_agents=floor,
         trace=Trace(
             segment_signals={
                 str(name): {t: _r(seg_signal[j, k]) for k, t in enumerate(topics)}
@@ -411,7 +468,7 @@ def run(
     result = result.model_copy(update={"content_hash": content_hash(result)})
     with conn:
         conn.execute(
-            "INSERT OR IGNORE INTO simulations (input_hash, created_at, result_json)"
+            "INSERT OR REPLACE INTO simulations (input_hash, created_at, result_json)"
             " VALUES (?, ?, ?)",
             (key, datetime.now(UTC).isoformat(timespec="seconds"), result.model_dump_json()),
         )

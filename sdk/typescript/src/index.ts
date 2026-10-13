@@ -1,4 +1,4 @@
-// Client for the Real World Simulate API. Contract: product/sdks.md and api/openapi.json.
+// Client for the Real World API. Contract: product/sdks.md and api/openapi.json.
 import createClient from "openapi-fetch";
 import type { components, paths } from "./generated/schema";
 
@@ -9,11 +9,16 @@ export type JobCreated = Schemas["JobCreated"];
 export type Job = Schemas["Job"];
 export type Estimate = Schemas["Estimate"];
 export type World = Schemas["World"];
+export type Population = Schemas["Population"];
 export type Agent = Schemas["Agent"];
 export type AgentWhy = Schemas["AgentWhy"];
 export type Daily = Schemas["Daily"];
+export type SystemStatus = Schemas["SystemStatus"];
+export type Scoreboard = Schemas["Scoreboard"];
 export type Receipts = Schemas["Receipts"];
 export type ReceiptDay = Schemas["ReceiptDay"];
+export type LeafReceipt = Schemas["LeafReceipt"];
+export type QuestionPage = Schemas["QuestionPage"];
 export type BaselineSkill = Schemas["BaselineSkill"];
 export type Country = Schemas["Country"];
 export type PrefilledEvent = Schemas["PrefilledEvent"];
@@ -29,11 +34,35 @@ const TERMINAL = ["succeeded", "failed"];
 
 /** An error status from the API, with the parsed response body. */
 export class ApiError extends Error {
-  constructor(
-    readonly status: number,
-    readonly body: unknown,
-  ) {
+  readonly status: number;
+  readonly body: unknown;
+
+  // No parameter properties: Node strips types without compiling them, and rejects those.
+  constructor(status: number, body: unknown) {
     super(`${status}: ${typeof body === "string" ? body : JSON.stringify(body)}`);
+    this.status = status;
+    this.body = body;
+  }
+
+  get detail(): unknown {
+    return isRecord(this.body) ? this.body.detail : undefined;
+  }
+
+  get code(): unknown {
+    return isRecord(this.body) ? this.body.code : undefined;
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+async function errorOf(response: Response): Promise<ApiError> {
+  const text = await response.text();
+  try {
+    return new ApiError(response.status, JSON.parse(text));
+  } catch {
+    return new ApiError(response.status, text);
   }
 }
 
@@ -62,52 +91,67 @@ export function parseSse(buffer: string): { events: [string | null, JobEvent][];
 
 export class Client {
   private http;
+  private baseUrl: string;
+  private fetcher: typeof fetch;
+  private headers: Record<string, string>;
 
+  /** Without an API key the API treats the caller as anonymous. */
   constructor(
-    private baseUrl = "http://localhost:8000",
-    private fetcher: typeof fetch = (...args) => fetch(...args),
+    baseUrl = "http://localhost:8000",
+    options: { apiKey?: string; fetch?: typeof fetch } = {},
   ) {
-    this.http = createClient<paths>({
-      baseUrl,
-      fetch: fetcher,
-      headers: { "Real-World-Version": API_VERSION },
-    });
+    this.baseUrl = baseUrl;
+    this.fetcher = options.fetch ?? ((...args) => fetch(...args));
+    this.headers = { "Real-World-Version": API_VERSION };
+    if (options.apiKey) this.headers.Authorization = `Bearer ${options.apiKey}`;
+    const send = this.fetcher;
+    const retrying: typeof fetch = async (input, init) => {
+      const again = input instanceof Request ? input.clone() : input;
+      try {
+        return await send(input, init);
+      } catch {
+        return send(again, init);
+      }
+    };
+    this.http = createClient<paths>({ baseUrl, fetch: retrying, headers: this.headers });
   }
 
+  /** Starts a fork of today's world with one event and returns its job. */
   simulate(request: SimulateRequest, idempotency_key?: string): Promise<JobCreated> {
     const key = idempotency_key ?? crypto.randomUUID();
     const params = { header: { "Idempotency-Key": key } };
     return ok(this.http.POST("/v1/simulate", { params, body: request }));
   }
 
+  /** Estimates the cost of a fork without running it. */
   estimate(request: SimulateRequest): Promise<Estimate> {
     return ok(this.http.POST("/v1/simulate/estimate", { body: request }));
   }
 
+  /** Returns a fork's job, with its result once it has succeeded. */
   get_simulation(id: string): Promise<Job> {
     return ok(this.http.GET("/v1/simulations/{job_id}", { params: { path: { job_id: id } } }));
   }
 
-  /** Poll until the job finishes; reject if it failed or timeout seconds pass. */
+  /** Polls until the fork finishes and returns its result, or fails if the fork failed or timeout seconds pass. */
   async wait(id: string, timeout = 120, interval = 0.5): Promise<SimulateResult> {
     const deadline = Date.now() + timeout * 1000;
     for (;;) {
       const job = await this.get_simulation(id);
-      if (job.status === "failed") throw new Error(`simulation ${id} failed: ${job.error}`);
+      if (job.status === "failed") throw new Error(`fork ${id} failed: ${job.error}`);
       if (job.result) return job.result;
       if (Date.now() > deadline) {
-        throw new Error(`simulation ${id} still ${job.status} after ${timeout}s`);
+        throw new Error(`fork ${id} still ${job.status} after ${timeout}s`);
       }
       await new Promise((r) => setTimeout(r, interval * 1000));
     }
   }
 
-  /** Progress events until the job finishes, reconnecting once with Last-Event-ID if the
-   * connection drops. */
+  /** Yields the fork's progress events until it finishes, reconnecting once with Last-Event-ID if the connection drops. */
   async *events(id: string, last_event_id?: string): AsyncGenerator<JobEvent> {
     let retried = false;
     for (;;) {
-      const headers: Record<string, string> = { "Real-World-Version": API_VERSION };
+      const headers = { ...this.headers };
       if (last_event_id) headers["Last-Event-ID"] = last_event_id;
       let response: Response;
       try {
@@ -118,7 +162,7 @@ export class Client {
         continue;
       }
       if (!response.ok || !response.body) {
-        throw new ApiError(response.status, await response.text());
+        throw await errorOf(response);
       }
       const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
       let buffer = "";
@@ -142,36 +186,72 @@ export class Client {
     }
   }
 
+  /** Returns today's world: countries, coverage tiers, topic shares and prefilled fork events. */
   world(): Promise<World> {
     return ok(this.http.GET("/v1/world"));
   }
 
+  /** Returns the simulated population: every country, segment and topic with its calibration and spread. */
+  population(): Promise<Population> {
+    return ok(this.http.GET("/v1/world/population"));
+  }
+
+  /** Returns one simulated agent: its traits, beliefs and what moved them. */
   agent(id: string): Promise<Agent> {
     return ok(this.http.GET("/v1/agents/{agent_id}", { params: { path: { agent_id: id } } }));
   }
 
+  /** Returns a short model-written account of what moved one agent, labelled simulated. */
   agent_why(id: string): Promise<AgentWhy> {
     return ok(this.http.GET("/v1/agents/{agent_id}/why", { params: { path: { agent_id: id } } }));
   }
 
+  /** Returns today's question, with the reveal once this player has answered. */
   daily(player_id?: string): Promise<Daily> {
     return ok(this.http.GET("/v1/daily", { params: { query: { player_id } } }));
   }
 
+  /** Answers today's question once and returns the reveal. */
   answer_daily(question_id: string, player_id: string, probability: number): Promise<Daily> {
     const body = { question_id, player_id, probability };
     return ok(this.http.POST("/v1/daily/answers", { body }));
   }
 
+  /** Lists every day record with its root and record hash. */
   receipts(): Promise<Receipts> {
     return ok(this.http.GET("/v1/receipts"));
   }
 
+  /** Returns one day record with each receipt's entry, salt and leaf hash. */
   receipt_day(date: string): Promise<ReceiptDay> {
     return ok(this.http.GET("/v1/receipts/{day}", { params: { path: { day: date } } }));
   }
 
+  /** Returns the live system status: latest cycle, ledger head, anchor, model, spend. */
+  status(): Promise<SystemStatus> {
+    return ok(this.http.GET("/v1/status"));
+  }
+
+  /** Returns one receipt with its inclusion proof up to the day record's root. */
+  receipt_leaf(date: string, leaf_hash: string): Promise<LeafReceipt> {
+    const path = { day: date, leaf_hash };
+    return ok(this.http.GET("/v1/receipts/{day}/leaves/{leaf_hash}", { params: { path } }));
+  }
+
+  /** Returns one question with every committed forecast by day and forecaster. */
+  question(id: string): Promise<QuestionPage> {
+    return ok(
+      this.http.GET("/v1/questions/{question_id}", { params: { path: { question_id: id } } }),
+    );
+  }
+
+  /** Returns the skill of the simulation against each baseline. */
   scores(): Promise<Record<string, BaselineSkill>> {
     return ok(this.http.GET("/v1/scores"));
+  }
+
+  /** Returns the scoreboard: Brier per forecaster, skill, reliability bins and misses. */
+  scoreboard(): Promise<Scoreboard> {
+    return ok(this.http.GET("/v1/scoreboard"));
   }
 }

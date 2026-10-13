@@ -1,5 +1,5 @@
 import csv
-import re
+import json
 import time
 
 import pytest
@@ -13,7 +13,6 @@ DAYS = [f"2026-10-0{d}" for d in range(1, 6)]
 @pytest.fixture(autouse=True)
 def isolated(tmp_path, monkeypatch):
     monkeypatch.setenv("RW_HOME", str(tmp_path / "var"))
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
 
 @pytest.fixture(scope="module")
@@ -128,9 +127,10 @@ def test_one_sim_call_per_present_segment_and_option_order_varies(world):
         if q["text"] in r[0]
     ]
     assert len(prompts) == len(segments)
-    orders = {o for p in prompts for o in re.findall(r"Options, in this order: (.*)\.", p)}
-    assert orders == {"yes, no", "no, yes"}
-    shared_prefix = {p.split("\n\nYou answer")[0] for p in prompts}
+    requests = [json.loads(p) for p in prompts]
+    orders = {tuple(r["questions"]["answer"]["criteria"]) for r in requests}
+    assert orders == {("yes", "no"), ("no", "yes")}
+    shared_prefix = {r["state"].split("\nGroup of people")[0] for r in requests}
     assert len(shared_prefix) == 1
 
 

@@ -1,0 +1,33 @@
+/* Mirrors landing/src/styles/tokens.css on the landing branches; change both together until they share one file. */
+/*
+ * Design tokens — Direction A, "Commit Slip" (the chosen direction).
+ * Scores and rationale: landing/MORNING.md and landing/OVERNIGHT_LOG.md.
+ *
+ * To switch directions, change the single tokens import in src/main.tsx:
+ *   import "./styles/tokens.css";    (A, current)
+ *   import "./styles/tokens-b.css";  (B, Observatory)
+ *   import "./styles/tokens-c.css";  (C, Almanac)
+ * The component CSS only uses the semantic variables below, so the swap is total.
+ * (Directions B and C reuse the loaded IBM Plex fonts; load their display fonts
+ *  in index.html too if you want B's serif or C's grotesque.)
+ */
+:root {
+  --paper: #f2f4f3; /* page background */
+  --paper-2: #e7eae8; /* raised/alt background */
+  --surface: #ffffff; /* cards, inputs */
+  --ink: #15201b; /* primary text */
+  --muted: #5c6660; /* secondary text */
+  --accent: #2f6f4e; /* verify green */
+  --accent-2: #b23a2e; /* pending clay */
+  --line: #cdd3cf; /* borders, dividers */
+  --focus: #2f6f4e; /* focus ring */
+  --on-accent: #f2f4f3; /* text on --ink / solid buttons */
+
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+
+  --radius: 2px;
+  --card-shadow: 6px 6px 0 var(--paper-2);
+  --globe-dot: #2f6f4e; /* live cobe land dots */
+  --globe-glow: 47, 111, 78; /* rgb of accent, for marker glow */
+}

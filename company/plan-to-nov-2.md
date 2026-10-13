@@ -4,6 +4,8 @@
 
 What we launch: a daily question, a receipts page of forecasts hashed before their outcomes, a fork card, and `POST /v1/simulate`. Anything else waits ([CPO lens](../research/lenses/cpo.md), [CEO lens](../research/lenses/ceo.md)).
 
+Amended 2026-10-12 by [decision 0011](../research/decisions/0011-consumer-product-and-api.md) (founder ruling): we also launch free email accounts, a skippable onboarding, a personal home with the daily briefing, saved forks with history and share links, a personal track record, and self-serve API keys with a daily cap per key. Today's question, receipts and the proof surfaces stay open with no sign-in. No paid plan, billing, teams or workspaces. Build order: the slices in 0011's build plan. A product slice not green by Gate 3 ships switched off; the open daily page and proof surfaces never wait on it.
+
 Each gate below lists the checks that must be true on its date and the kill criterion that applies if they are not. A gate is marked passed, failed or slipped in this file, with evidence, on its date.
 
 ## Before the first gate: Oct 11-14
@@ -54,7 +56,7 @@ Kill criteria:
 Must be true:
 - Demo path frozen ([CEO lens](../research/lenses/ceo.md)).
 - Fork card returns in under 30 seconds, and prefilled forks in under 5 ([CPO lens](../research/lenses/cpo.md)).
-- Every spend path fails closed under test: per-call cap, per-user balance, nightly ceiling, global free-tier budget ([CFO lens](../research/lenses/cfo.md)).
+- Every spend path fails closed under test: per-call cap, per-user balance (per-person fork count and per-key daily cap since 0011), nightly ceiling, global free-tier budget ([CFO lens](../research/lenses/cfo.md)).
 - Labelling layer live: `simulated: true`, disclosure string, sources and a visible "AI-simulated" label ([CRO lens](../research/lenses/cro.md), [regulation](../research/business/091-regulation.md)).
 - Top five confusing moments from builders fixed ([builders program](../research/product/086-builders-program.md)).
 
@@ -66,6 +68,7 @@ Must be true:
 - About 25 forecasts hashed, some already resolved in public, starting with the Brazil runoff on Oct 25 ([CEO lens](../research/lenses/ceo.md), [events calendar](../research/data/059-resolvable-events-calendar.md)).
 - The daily page works with no sign-up.
 - All public copy passes [`gtm/messaging.md`](../gtm/messaging.md).
+- A privacy notice is published before the first email address is collected (decisions-needed item 17).
 - Ten buyer calls done ([CEO lens](../research/lenses/ceo.md)).
 
 Kill criterion: if the daily page cannot be used without sign-up, no Show HN; launch to the forecasting community only ([builders program](../research/product/086-builders-program.md)). The launch sequence is in [`gtm/launch-plan.md`](../gtm/launch-plan.md).
