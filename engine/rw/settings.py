@@ -57,6 +57,13 @@ POLL_ERROR_FACTOR = 2.0
 SPREAD_BAND = (0.8, 1.2)
 ATTENTION_HALF_LIFE_DAYS = 1.0
 
+# Decision 0008 and experiments/E008. Judgments, not measurements: E008 tests the false promotion
+# rate they give on a calibrated forecaster.
+IMPROVE_MIN_TRAIN_QUESTIONS = 50
+IMPROVE_HOLDOUT_QUESTIONS = 30
+IMPROVE_MARGIN_BRIER = 0.005
+IMPROVE_L2 = 0.01
+
 GDELT_TIMEOUT_S = 60
 NEWS_TITLES_PER_THEME = 5
 
