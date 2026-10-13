@@ -8,7 +8,6 @@ import { HowItWorks } from "./components/HowItWorks";
 import { ReceiptStrip } from "./components/ReceiptStrip";
 import { Research } from "./components/Research";
 import { Thesis } from "./components/Thesis";
-import { UseCases } from "./components/UseCases";
 import type { Headline } from "./copy/headlines";
 import { Privacy } from "./pages/Privacy";
 import { Terms } from "./pages/Terms";
@@ -71,10 +70,9 @@ function Home({ headline }: { headline: Headline }) {
       <SiteHeader cta />
       <main id="main">
         <Hero headline={headline} onJoin={focusEmail} />
+        <HowItWorks />
         <ReceiptStrip />
         <Thesis />
-        <HowItWorks />
-        <UseCases />
         <Research />
         <Collaborate onJoin={() => focusEmail("collaborate")} />
         <RepeatCta />

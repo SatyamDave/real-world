@@ -406,7 +406,7 @@ test.describe("the first screen", () => {
 });
 
 test.describe("sections below the receipts", () => {
-  test("thesis, use cases, research and collaboration render, with the waitlist still the one action", async ({
+  test("thesis, research and collaboration render, with the waitlist still the one action", async ({
     page,
   }) => {
     await page.goto("/");
@@ -415,7 +415,6 @@ test.describe("sections below the receipts", () => {
         name: "A forecast is only worth something if you can check it.",
       }),
     ).toBeVisible();
-    await expect(page.getByRole("heading", { name: "What you can do with it" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Research and limits" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Work on this with us." })).toBeVisible();
     // No demo and no app link: nothing here depends on APP_URL.

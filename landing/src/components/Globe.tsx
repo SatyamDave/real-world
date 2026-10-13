@@ -27,7 +27,7 @@ import { Receipt, type ReceiptData } from "./Receipt";
  */
 
 // Poster centre (scripts/gen_globe_poster.py): the live globe starts on the same view.
-const HOME = centerOn(25, -35);
+const HOME = centerOn(25, -35, 1.2); // sphere fills the poster's 0.96 of the box
 const BASE_SIZE = 0.05;
 const PULSE_PEAK = 0.065;
 const PULSE_START_MS = 600;
@@ -221,12 +221,12 @@ export function Globe({
           theta: m.theta,
           scale: m.scale,
           // The same quiet picture as the poster: a pale sphere, green land dots, clay markers.
-          dark: dark ? 1 : 0,
-          diffuse: dark ? 1.2 : 1.4,
+          dark: dark ? 0.55 : 0,
+          diffuse: dark ? 1.1 : 1.4,
           mapSamples: 14000,
-          mapBrightness: dark ? 4 : 2.2,
+          mapBrightness: dark ? 14 : 3,
           mapBaseBrightness: 0,
-          baseColor: cssRgb01("--paper-2", [0.9, 0.92, 0.91]),
+          baseColor: dark ? [0.22, 0.34, 0.28] : [0.78, 0.89, 0.82],
           markerColor: cssRgb01("--accent-2", [0.7, 0.23, 0.18]),
           glowColor: cssRgb01("--paper", [0.95, 0.96, 0.95]),
           opacity: 1,
@@ -424,6 +424,13 @@ export function Globe({
     cardOpen.current = true;
     refreshPause();
     setOpen(id);
+    // Turn the globe so the marker sits in the upper part, clear of the card below it.
+    const r = receipts.find((x) => x.id === id);
+    if (live && r) {
+      const at = centerOn(r.marker.lat, r.marker.lng, motion.current.scale);
+      resetTo(motion.current, { ...at, theta: at.theta - 0.6 }, opts(), now());
+      kick.current();
+    }
     track("marker_opened", { receipt_id: id, input });
   }
   function closeCard() {
@@ -560,8 +567,8 @@ export function Globe({
       </div>
       <p className="globe-hint" id={hintId}>
         {live
-          ? "Call the news against an AI that seals its calls first. Drag to turn the globe, pinch or use + and − to zoom, and open a marker to see the question."
-          : "Call the news against an AI that seals its calls first. Open a marker to see the question. All three are listed below."}
+          ? "Drag to turn the globe. Open a marker to see its question."
+          : "Open a marker to see its question. All three are listed below."}
       </p>
       {canAsk ? (
         <button

@@ -41,7 +41,7 @@ try {
   const variants = Object.fromEntries(
     Object.values(HEADLINES).map((h) => [h.id, { h1: h.h1, sub: h.sub }]),
   );
-  const script = `(function(){var r=document.getElementById("root");if(location.pathname!=="/"){r.innerHTML="";return}var k=(new URLSearchParams(location.search).get("utm_content")||"").trim().toLowerCase();var v=${JSON.stringify(variants)};if(k&&Object.prototype.hasOwnProperty.call(v,k)){var h=r.querySelector("h1"),s=r.querySelector(".hero .sub");if(h)h.textContent=v[k].h1;if(s)s.textContent=v[k].sub}})()`;
+  const script = `(function(){var r=document.getElementById("root");if(location.pathname!=="/"){r.innerHTML="";return}var k=(new URLSearchParams(location.search).get("utm_content")||"").trim().toLowerCase();var v=${JSON.stringify(variants)};if(k&&Object.prototype.hasOwnProperty.call(v,k)){var h=r.querySelector("h1"),s=r.querySelector(".hero .lead");if(h)h.textContent=v[k].h1;if(s)s.textContent=v[k].sub}})()`;
 
   const out = html.replace(
     '<div id="root"></div>',

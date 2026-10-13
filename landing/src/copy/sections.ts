@@ -25,25 +25,6 @@ export const THESIS = {
   ] satisfies LedgerRow[],
 };
 
-export const USE_CASES = {
-  title: "What you can do with it",
-  note: "From the launch on Oct 27.",
-  rows: [
-    {
-      term: "Test a post",
-      text: "Test a post on simulated audiences before you post it. Your tests are sealed when you make them.",
-    },
-    {
-      term: "Call it",
-      text: "Call the news against an AI that seals its calls first. We score you both when it resolves.",
-    },
-    {
-      term: "Read the record",
-      text: "Each sealed call's hash and score will be public. Read the receipts instead of taking our word.",
-    },
-  ] satisfies LedgerRow[],
-};
-
 export const RESEARCH = {
   title: "Research and limits",
   note: "What we say, and what we leave out.",

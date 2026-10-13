@@ -3,8 +3,8 @@
 // canvas and calls these. Nothing here touches the DOM.
 import type { View } from "./project";
 
-export const MIN_SCALE = 0.9;
-export const MAX_SCALE = 2.4;
+export const MIN_SCALE = 1;
+export const MAX_SCALE = 2.8;
 const MAX_THETA = 1.2;
 /** Share of the half-canvas that the sphere's radius takes (cobe draws it at 0.8). */
 const SPHERE = 0.8;
