@@ -11,6 +11,12 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { createServer } from "vite";
 
+// RW_NO_PRERENDER=1 skips the step, to measure a build with and without it (see DECISIONS.md B3).
+if (process.env.RW_NO_PRERENDER === "1") {
+  console.log("pre-render skipped (RW_NO_PRERENDER=1)");
+  process.exit(0);
+}
+
 const dist = new URL("../dist/index.html", import.meta.url);
 const html = readFileSync(dist, "utf8");
 if (html.includes('data-prerendered="true"')) {
