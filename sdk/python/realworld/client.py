@@ -18,8 +18,11 @@ from realworld.generated.models import (
     Job,
     JobCreated,
     LeafReceipt,
+    Population,
+    QuestionPage,
     ReceiptDay,
     Receipts,
+    Scoreboard,
     SimulateRequest,
     SimulateResult,
     SystemStatus,
@@ -161,6 +164,11 @@ class Client:
         fork events."""
         return World.model_validate(self._send("GET", "/v1/world"))
 
+    def population(self) -> Population:
+        """Returns the simulated population: every country, segment and topic with its
+        calibration and spread."""
+        return Population.model_validate(self._send("GET", "/v1/world/population"))
+
     def agent(self, id: str) -> Agent:
         """Returns one simulated agent: its traits, beliefs and what moved them."""
         return Agent.model_validate(self._send("GET", f"/v1/agents/{id}"))
@@ -196,6 +204,14 @@ class Client:
         path = f"/v1/receipts/{date}/leaves/{leaf_hash}"
         return LeafReceipt.model_validate(self._send("GET", path))
 
+    def question(self, id: str) -> QuestionPage:
+        """Returns one question with every committed forecast by day and forecaster."""
+        return QuestionPage.model_validate(self._send("GET", f"/v1/questions/{id}"))
+
     def scores(self) -> dict[str, BaselineSkill]:
         """Returns the skill of the simulation against each baseline."""
         return _SCORES.validate_python(self._send("GET", "/v1/scores"))
+
+    def scoreboard(self) -> Scoreboard:
+        """Returns the scoreboard: Brier per forecaster, skill, reliability bins and misses."""
+        return Scoreboard.model_validate(self._send("GET", "/v1/scoreboard"))

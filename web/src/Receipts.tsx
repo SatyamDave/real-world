@@ -15,10 +15,16 @@ const isForecast = (r: ReceiptEntry) => r.entry.kind === "forecast";
 /** "0.4139" as "41%"; an empty value as a dash. */
 const prob = (v: unknown) => (str(v) ? pct(Number(v)) : "—");
 
-/** The question's text, with its id on hover; the id alone on a leaf with no question. */
+/** The question's text linking its page, with its id on hover; the id alone on a leaf with no question. */
 function Question({ r }: { r: ReceiptEntry }) {
   const id = str(r.entry.question_id);
-  return r.question ? <span title={id}>{r.question.text}</span> : <>{id}</>;
+  return r.question ? (
+    <a href={`/questions/${id}`} title={id}>
+      {r.question.text}
+    </a>
+  ) : (
+    id
+  );
 }
 
 const DAY_MS = 86_400_000;
@@ -111,9 +117,9 @@ export function ReceiptsStrip() {
 }
 
 // Below this many resolved questions an interval says nothing, so none is shown.
-const MIN_N_FOR_INTERVAL = 10;
+export const MIN_N_FOR_INTERVAL = 10;
 
-function SkillCard({ name, s }: { name: string; s?: Skill }) {
+export function SkillCard({ name, s }: { name: string; s?: Skill }) {
   if (!s) return <div className="skill" />;
   const diff = s.mean_diff;
   const detail =

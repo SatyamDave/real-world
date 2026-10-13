@@ -27,7 +27,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse,
 from pydantic import BaseModel, ConfigDict, Field
 
 from rw import db, forecast, ledger, llm, policy, population, score, settings, simulate
-from rw_api import routes_research
+from rw_api import routes_cycle, routes_research
 
 log = logging.getLogger("rw_api")
 SCHEMA = Path(__file__).parent / "schema.sql"
@@ -1240,15 +1240,27 @@ def healthz() -> dict[str, bool]:
     return {"ok": True}
 
 
-from rw_api import routes_status  # noqa: E402
+from rw_api import routes_status, routes_world  # noqa: E402
 
 app.include_router(routes_status.router)
+app.include_router(routes_world.router)
 
 app.include_router(routes_research.router)
 
 from rw_api import routes_receipts  # noqa: E402
 
 app.include_router(routes_receipts.router)
+
+app.include_router(routes_cycle.router, responses={404: not_found("cycle"), 422: INVALID})
+
+from rw_api import routes_questions  # noqa: E402  (it imports this module)
+
+app.include_router(routes_questions.router, responses={404: not_found("question"), 422: INVALID})
+
+from rw_api import routes_scores  # noqa: E402
+
+app.include_router(routes_scores.router)
+
 
 if __name__ == "__main__":
     print(json.dumps(app.openapi(), indent=2))

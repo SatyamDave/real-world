@@ -1740,3 +1740,115 @@ main :is(p, li, dd, h3) a {
     padding: 0 8px;
   }
 }
+
+/* ---- World ---- */
+
+.world {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.world-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.world-head h2 {
+  margin: 0;
+}
+
+.world-table td:first-child {
+  min-width: 0;
+}
+
+.world-table .stamp {
+  margin-left: 8px;
+}
+
+.world-table button.link[aria-pressed="true"] {
+  font-weight: 600;
+}
+
+.world-topics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.world-topic h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+
+.world-audit {
+  margin: 8px 0 0;
+  max-width: 70ch;
+}
+
+.world-floor {
+  margin-right: 12px;
+  white-space: nowrap;
+}
+
+.world-next {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ---- Question page ---- */
+
+/* Question and list hashes are 64 hex characters with no break point. */
+.question-page {
+  overflow-wrap: anywhere;
+}
+
+/* ---- Scores ---- */
+
+.scores {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.reliability {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+}
+
+.misses {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.misses .num {
+  display: block;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.scores > .disclosure {
+  border: 0;
+}
+
+.scores code {
+  overflow-wrap: anywhere;
+}
+
+/* Each baseline carries two breakdown tables, too wide to sit side by side. */
+.scores .skills {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}

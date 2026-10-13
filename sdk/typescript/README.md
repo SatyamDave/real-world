@@ -36,12 +36,14 @@ The method names and what they do match the Python client.
 | `wait(id, timeout = 120, interval = 0.5)` | Polls until the fork finishes and returns its result, or fails if the fork failed or `timeout` seconds pass. |
 | `events(id, last_event_id?)` | Yields the fork's progress events until it finishes, reconnecting once with `Last-Event-ID` if the connection drops. |
 | `world()` | Returns today's world: countries, coverage tiers, topic shares and prefilled fork events. |
+| `population()` | Returns the simulated population: every country, segment and topic with its calibration and spread. |
 | `agent(id)` | Returns one simulated agent: its traits, beliefs and what moved them. |
 | `agent_why(id)` | Returns a short model-written account of what moved one agent, labelled simulated. |
 | `daily(player_id?)` | Returns today's question, with the reveal once this player has answered. |
 | `answer_daily(question_id, player_id, probability)` | Answers today's question once and returns the reveal. |
 | `receipts()` | Lists every day record with its root and record hash. |
 | `receipt_day(date)` | Returns one day record with each receipt's entry, salt and leaf hash. |
+| `question(id)` | Returns one question with every committed forecast by day and forecaster. |
 | `scores()` | Returns the skill of the simulation against each baseline. |
 
 ## Errors

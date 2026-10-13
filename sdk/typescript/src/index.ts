@@ -9,13 +9,16 @@ export type JobCreated = Schemas["JobCreated"];
 export type Job = Schemas["Job"];
 export type Estimate = Schemas["Estimate"];
 export type World = Schemas["World"];
+export type Population = Schemas["Population"];
 export type Agent = Schemas["Agent"];
 export type AgentWhy = Schemas["AgentWhy"];
 export type Daily = Schemas["Daily"];
 export type SystemStatus = Schemas["SystemStatus"];
+export type Scoreboard = Schemas["Scoreboard"];
 export type Receipts = Schemas["Receipts"];
 export type ReceiptDay = Schemas["ReceiptDay"];
 export type LeafReceipt = Schemas["LeafReceipt"];
+export type QuestionPage = Schemas["QuestionPage"];
 export type BaselineSkill = Schemas["BaselineSkill"];
 export type Country = Schemas["Country"];
 export type PrefilledEvent = Schemas["PrefilledEvent"];
@@ -188,6 +191,11 @@ export class Client {
     return ok(this.http.GET("/v1/world"));
   }
 
+  /** Returns the simulated population: every country, segment and topic with its calibration and spread. */
+  population(): Promise<Population> {
+    return ok(this.http.GET("/v1/world/population"));
+  }
+
   /** Returns one simulated agent: its traits, beliefs and what moved them. */
   agent(id: string): Promise<Agent> {
     return ok(this.http.GET("/v1/agents/{agent_id}", { params: { path: { agent_id: id } } }));
@@ -230,8 +238,20 @@ export class Client {
     return ok(this.http.GET("/v1/receipts/{day}/leaves/{leaf_hash}", { params: { path } }));
   }
 
+  /** Returns one question with every committed forecast by day and forecaster. */
+  question(id: string): Promise<QuestionPage> {
+    return ok(
+      this.http.GET("/v1/questions/{question_id}", { params: { path: { question_id: id } } }),
+    );
+  }
+
   /** Returns the skill of the simulation against each baseline. */
   scores(): Promise<Record<string, BaselineSkill>> {
     return ok(this.http.GET("/v1/scores"));
+  }
+
+  /** Returns the scoreboard: Brier per forecaster, skill, reliability bins and misses. */
+  scoreboard(): Promise<Scoreboard> {
+    return ok(this.http.GET("/v1/scoreboard"));
   }
 }

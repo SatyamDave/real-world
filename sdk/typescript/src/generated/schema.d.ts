@@ -245,6 +245,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v1/world/population": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The simulated population: every country, segment and topic with its calibration and spread */
+    get: operations["world_population_v1_world_population_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/v1/research": {
     parameters: {
       query?: never;
@@ -271,6 +288,91 @@ export interface paths {
     };
     /** One receipt with its inclusion proof up to the day's root */
     get: operations["receipt_leaf_v1_receipts__day__leaves__leaf_hash__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/cycle": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One daily cycle as a run log: steps, model calls, news, assimilation, spread audit */
+    get: operations["latest_cycle_v1_cycle_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/cycle/{date}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One daily cycle as a run log: steps, model calls, news, assimilation, spread audit */
+    get: operations["cycle_v1_cycle__date__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/cycle/{date}/replay": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Replay the day's forecasts from the recorded model outputs and diff them against the committed values */
+    get: operations["cycle_replay_v1_cycle__date__replay_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/questions/{question_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** One question: every committed forecast by day and forecaster, its spread, its receipt and its score */
+    get: operations["question_v1_questions__question_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/scoreboard": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The scoreboard: Brier per forecaster, skill against each baseline, reliability bins and every resolved question */
+    get: operations["scoreboard_v1_scoreboard_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -365,6 +467,46 @@ export interface components {
       /** Probability */
       probability: number;
     };
+    /** Assimilation */
+    Assimilation: {
+      /** Iso3 */
+      iso3: string;
+      /** Topic */
+      topic: string;
+      /** Before */
+      before: number | null;
+      /** After News */
+      after_news: number;
+      /** Observed */
+      observed: number | null;
+      /** Observed N */
+      observed_n: number | null;
+      /** Observed Source */
+      observed_source: string | null;
+      /** Innovation */
+      innovation: number | null;
+      /** Applied */
+      applied: number | null;
+      /** Gain */
+      gain: number | null;
+      /** After */
+      after: number;
+    };
+    /** Audit */
+    Audit: {
+      /** Iso3 */
+      iso3: string;
+      /** Topic */
+      topic: string;
+      /** Sim Sd */
+      sim_sd: number;
+      /** Survey Sd */
+      survey_sd: number;
+      /** Ratio */
+      ratio: number;
+      /** In Band */
+      in_band: boolean;
+    };
     /** Band */
     Band: {
       /** P10 */
@@ -399,6 +541,24 @@ export interface components {
       by_region: {
         [key: string]: components["schemas"]["Skill"];
       };
+    };
+    /** Bootstrap */
+    Bootstrap: {
+      /** Block */
+      block: string;
+      /** Resamples */
+      resamples: number;
+      /** Seed */
+      seed: number;
+      /** Interval */
+      interval: number;
+    };
+    /** Budget */
+    Budget: {
+      /** Nightly Budget Usd */
+      nightly_budget_usd: number;
+      /** Spent Usd */
+      spent_usd: number;
     };
     /** Cost */
     Cost: {
@@ -455,6 +615,49 @@ export interface components {
        * @description Other visitors' answers; the caller's own is never counted.
        */
       count: number;
+    };
+    /** Cycle */
+    Cycle: {
+      /** Date */
+      date: string;
+      /** Dates */
+      dates: string[];
+      /** Model */
+      model: string;
+      /** Provider */
+      provider: string;
+      /** Engine Version */
+      engine_version: string;
+      /** Config Hash */
+      config_hash: string;
+      /** Steps */
+      steps: components["schemas"]["rw_api__routes_cycle__Step"][];
+      news: components["schemas"]["News"];
+      /** Assimilation */
+      assimilation: components["schemas"]["Assimilation"][];
+      /** Audit */
+      audit: components["schemas"]["Audit"][];
+      /** Experimental */
+      experimental: string[];
+      ledger: components["schemas"]["CycleLedger"] | null;
+      budget: components["schemas"]["Budget"];
+      settings_used: components["schemas"]["rw_api__routes_cycle__SettingsUsed"];
+    };
+    /** CycleLedger */
+    CycleLedger: {
+      /** Root */
+      root: string;
+      /** Leaf Count */
+      leaf_count: number;
+      /** Record Hash */
+      record_hash: string;
+      /**
+       * Anchor
+       * @enum {string}
+       */
+      anchor: "not_anchored" | "pending" | "anchored";
+      /** Anchored At */
+      anchored_at: string | null;
     };
     /** Daily */
     Daily: {
@@ -591,6 +794,23 @@ export interface components {
       /** Outcome */
       outcome: string;
     };
+    /** ForecasterScore */
+    ForecasterScore: {
+      /** Forecaster */
+      forecaster: string;
+      /** N Questions */
+      n_questions: number;
+      /** N Forecasts */
+      n_forecasts: number;
+      /** Mean Brier */
+      mean_brier: number;
+      /** Mean Log Score */
+      mean_log_score: number;
+      /** Brier Low */
+      brier_low: number | null;
+      /** Brier High */
+      brier_high: number | null;
+    };
     /** Job */
     Job: {
       /** Id */
@@ -657,6 +877,36 @@ export interface components {
       /** Events */
       events: string;
     };
+    /** Miss */
+    Miss: {
+      /** Question Id */
+      question_id: string;
+      /** Text */
+      text: string;
+      /** Date */
+      date: string;
+      /** Forecaster */
+      forecaster: string;
+      /** Probability */
+      probability: number;
+      /** Outcome */
+      outcome: number;
+      /** Brier */
+      brier: number;
+    };
+    /** News */
+    News: {
+      /** Source */
+      source: ("fixtures" | "gdelt") | null;
+      /** Articles */
+      articles: number | null;
+      /** Clusters */
+      clusters: number;
+      /** Countries */
+      countries: number;
+      /** By Topic */
+      by_topic: components["schemas"]["TopicNews"][];
+    };
     /** NotFound */
     NotFound: {
       /** Detail */
@@ -701,6 +951,95 @@ export interface components {
       /** Detail */
       detail: string;
     };
+    /** Population */
+    Population: {
+      /** Date */
+      date: string;
+      /** Agents */
+      agents: number;
+      /** Segments */
+      segments: number;
+      /** Tier Floors */
+      tier_floors: {
+        [key: string]: number;
+      };
+      settings_used: components["schemas"]["rw_api__routes_world__SettingsUsed"];
+      /** Countries */
+      countries: components["schemas"]["PopulationCountry"][];
+      /** Sources */
+      sources: components["schemas"]["PopulationSource"][];
+    };
+    /** PopulationCountry */
+    PopulationCountry: {
+      /** Iso3 */
+      iso3: string;
+      /** Name */
+      name: string;
+      /** Region */
+      region: string;
+      /** Population Millions */
+      population_millions: number;
+      /** Tier */
+      tier: string;
+      /** Experimental */
+      experimental: boolean;
+      rubric: components["schemas"]["Rubric"];
+      /** Agent Count */
+      agent_count: number;
+      /** Segments */
+      segments: components["schemas"]["PopulationSegment"][];
+      /** Topics */
+      topics: components["schemas"]["PopulationTopic"][];
+    };
+    /** PopulationSegment */
+    PopulationSegment: {
+      /** Segment */
+      segment: string;
+      /** Age Band */
+      age_band: string;
+      /** Education */
+      education: string;
+      /** Agent Count */
+      agent_count: number;
+    };
+    /** PopulationSource */
+    PopulationSource: {
+      /** Source Id */
+      source_id: string;
+      /** Kind */
+      kind: string;
+      /** Commercial Use */
+      commercial_use: string;
+      /** Checked On */
+      checked_on: string;
+    };
+    /** PopulationTopic */
+    PopulationTopic: {
+      /** Topic */
+      topic: string;
+      /** Label */
+      label: string;
+      /** Source Id */
+      source_id: string;
+      /** Calibrated Share */
+      calibrated_share: number;
+      /** Survey Sd Logit */
+      survey_sd_logit: number;
+      /** Share */
+      share: number;
+      /** P10 */
+      p10: number;
+      /** P50 */
+      p50: number;
+      /** P90 */
+      p90: number;
+      /** Sim Sd Logit */
+      sim_sd_logit: number | null;
+      /** Ratio */
+      ratio: number | null;
+      /** In Band */
+      in_band: boolean | null;
+    };
     /** PrefilledEvent */
     PrefilledEvent: {
       /** Id */
@@ -729,6 +1068,165 @@ export interface components {
       position: string;
       /** Hash */
       hash: string;
+    };
+    /** Protocol */
+    Protocol: {
+      /** Version */
+      version: string;
+      /** Hash */
+      hash: string;
+      /** Headline */
+      headline: string;
+      /** Log Clip */
+      log_clip: number[];
+      /** Coin Reference */
+      coin_reference: number;
+      /** Min Resolved For Claims */
+      min_resolved_for_claims: number;
+      bootstrap: components["schemas"]["Bootstrap"];
+    };
+    /** QuestionCountry */
+    QuestionCountry: {
+      /** Iso3 */
+      iso3: string;
+      /** Name */
+      name: string;
+      /** Tier */
+      tier: string;
+    };
+    /** QuestionDay */
+    QuestionDay: {
+      /** Date */
+      date: string;
+      /** Snapshot Sha256 */
+      snapshot_sha256: string;
+      /**
+       * Forecasts
+       * @description By forecaster.
+       */
+      forecasts: {
+        [key: string]: components["schemas"]["QuestionForecast"];
+      };
+      /**
+       * Segments
+       * @description The model's answer per segment behind the sim forecast; empty if not recorded.
+       */
+      segments: components["schemas"]["SegmentAnswer"][];
+      /**
+       * Plain Samples
+       * @description Each plain LLM sample's yes share.
+       */
+      plain_samples: number[];
+      /** Headlines */
+      headlines: string[];
+    };
+    /** QuestionForecast */
+    QuestionForecast: {
+      /** Probability */
+      probability: number;
+      /**
+       * P10
+       * @description Only the sim forecaster has a spread.
+       */
+      p10: number | null;
+      /** P90 */
+      p90: number | null;
+      /**
+       * Brier
+       * @description Null until the question resolves.
+       */
+      brier: number | null;
+      /** Log Score */
+      log_score: number | null;
+      /** Leaf Hash */
+      leaf_hash: string;
+      /** Salt */
+      salt: string;
+      /** Committed At */
+      committed_at: string;
+      /** Model */
+      model: string;
+      /** Market Price At Commit */
+      market_price_at_commit: number;
+    };
+    /** QuestionInfo */
+    QuestionInfo: {
+      /** Id */
+      id: string;
+      /** Text */
+      text: string;
+      /** Topic */
+      topic: string;
+      /** Topic Label */
+      topic_label: string;
+      /** Countries */
+      countries: components["schemas"]["QuestionCountry"][];
+      /** Opens */
+      opens: string;
+      /** Closes */
+      closes: string;
+      /** Resolves By */
+      resolves_by: string;
+      /** Resolution Source */
+      resolution_source: string;
+      /** Tie Break */
+      tie_break: string;
+      /** Market Source */
+      market_source: string;
+      /**
+       * Question Hash
+       * @description sha256 of the question as committed in each forecast.
+       */
+      question_hash: string;
+      /**
+       * Question Set Hash
+       * @description sha256 of the question list this question is in.
+       */
+      question_set_hash: string;
+      /** Daily On */
+      daily_on: string | null;
+    };
+    /** QuestionOutcome */
+    QuestionOutcome: {
+      /** Outcome */
+      outcome: number;
+      /** Resolved On */
+      resolved_on: string;
+      /** Source Url */
+      source_url: string;
+      /** Read On */
+      read_on: string;
+    };
+    /** QuestionPage */
+    QuestionPage: {
+      question: components["schemas"]["QuestionInfo"];
+      outcome: components["schemas"]["QuestionOutcome"] | null;
+      /**
+       * Members
+       * @description Bootstrap resamples behind each sim spread.
+       */
+      members: number;
+      /** Plain Llm Samples */
+      plain_llm_samples: number;
+      /**
+       * Log Clip
+       * @description Low and high clip on p before the log score.
+       */
+      log_clip: number[];
+      /**
+       * Min Resolved
+       * @description Resolved questions before a skill claim is reported.
+       */
+      min_resolved: number;
+      /** Model */
+      model: string | null;
+      /** Provider */
+      provider: string | null;
+      /**
+       * Days
+       * @description Oldest first.
+       */
+      days: components["schemas"]["QuestionDay"][];
     };
     /** ReceiptDay */
     ReceiptDay: {
@@ -813,6 +1311,54 @@ export interface components {
        */
       id?: string | null;
     };
+    /** ReliabilityBin */
+    ReliabilityBin: {
+      /** Bin Low */
+      bin_low: number;
+      /** Bin High */
+      bin_high: number;
+      /** N */
+      n: number;
+      /** Mean Probability */
+      mean_probability: number;
+      /** Observed Rate */
+      observed_rate: number;
+    };
+    /** Replay */
+    Replay: {
+      /** Date */
+      date: string;
+      /** Forecasts */
+      forecasts: components["schemas"]["ReplayRow"][];
+      /** Calls Used */
+      calls_used: number;
+      /** Missing */
+      missing: string[];
+    };
+    /** ReplayRow */
+    ReplayRow: {
+      /** Question Id */
+      question_id: string;
+      /** Question */
+      question: string | null;
+      /**
+       * Forecaster
+       * @enum {string}
+       */
+      forecaster: "sim" | "plain_llm";
+      /** Committed */
+      committed: number;
+      /** Replayed */
+      replayed: number | null;
+      /** Low */
+      low: number | null;
+      /** High */
+      high: number | null;
+      /** Diff */
+      diff: number | null;
+      /** Matches */
+      matches: boolean;
+    };
     /** Research */
     Research: {
       /** Experiments */
@@ -823,6 +1369,27 @@ export interface components {
       repo: string;
       /** Commit */
       commit: string;
+    };
+    /** ResolvedQuestion */
+    ResolvedQuestion: {
+      /** Question Id */
+      question_id: string;
+      /** Text */
+      text: string;
+      /** Date */
+      date: string;
+      /** Outcome */
+      outcome: number;
+      /** Resolved On */
+      resolved_on: string;
+      /** Tiers */
+      tiers: string[];
+      /** Region */
+      region: string;
+      /** Forecasts */
+      forecasts: {
+        [key: string]: components["schemas"]["Scored"];
+      };
     };
     /** Reveal */
     Reveal: {
@@ -844,6 +1411,66 @@ export interface components {
        * @description The seven days ending today, oldest first.
        */
       week: components["schemas"]["WeekDay"][];
+    };
+    /** Rubric */
+    Rubric: {
+      /** Population */
+      population: number;
+      /** Attitudes */
+      attitudes: number;
+      /** Markets */
+      markets: number;
+      /** News */
+      news: number;
+      /** Ground Truth */
+      ground_truth: number;
+      /** Score */
+      score: number;
+    };
+    /** Scoreboard */
+    Scoreboard: {
+      protocol: components["schemas"]["Protocol"];
+      /** Resolved Questions */
+      resolved_questions: number;
+      /** Open Questions */
+      open_questions: number;
+      /** First Commit */
+      first_commit: string | null;
+      /** Forecasters */
+      forecasters: components["schemas"]["ForecasterScore"][];
+      /** Skill */
+      skill: {
+        [key: string]: components["schemas"]["BaselineSkill"];
+      };
+      /** Reliability */
+      reliability: {
+        [key: string]: components["schemas"]["ReliabilityBin"][];
+      };
+      /** Resolved */
+      resolved: components["schemas"]["ResolvedQuestion"][];
+      /** Misses */
+      misses: components["schemas"]["Miss"][];
+    };
+    /** Scored */
+    Scored: {
+      /** Probability */
+      probability: number;
+      /** Brier */
+      brier: number;
+    };
+    /** SegmentAnswer */
+    SegmentAnswer: {
+      /** Segment */
+      segment: string;
+      /** Description */
+      description: string;
+      /**
+       * Prior Share
+       * @description The segment's share saying yes before the model call.
+       */
+      prior_share: number;
+      /** Yes Share */
+      yes_share: number;
     };
     /** SegmentShift */
     SegmentShift: {
@@ -987,20 +1614,6 @@ export interface components {
        */
       claim: "reportable" | "insufficient_n";
     };
-    /** Step */
-    Step: {
-      /** Day */
-      day: number;
-      /** Topic */
-      topic: string;
-      /** Delta */
-      delta: number;
-      /**
-       * Cause
-       * @enum {string}
-       */
-      cause: "event" | "anchor_pull";
-    };
     /** SystemStatus */
     SystemStatus: {
       /** Date */
@@ -1030,6 +1643,32 @@ export interface components {
       nightly_budget_usd: number;
       /** Engine Version */
       engine_version: string;
+    };
+    /** TopItem */
+    TopItem: {
+      /** Title */
+      title: string;
+      /** Iso3 */
+      iso3: string;
+      /** Tier */
+      tier: string;
+      /** Salience */
+      salience: number;
+      /** Value */
+      value: number;
+    };
+    /** TopicNews */
+    TopicNews: {
+      /** Topic */
+      topic: string;
+      /** Label */
+      label: string;
+      /** Signals */
+      signals: number;
+      /** Mean Value */
+      mean_value: number | null;
+      /** Top */
+      top: components["schemas"]["TopItem"][];
     };
     /** TopicOutput */
     TopicOutput: {
@@ -1067,7 +1706,7 @@ export interface components {
         [key: string]: number;
       };
       /** Steps */
-      steps: components["schemas"]["Step"][];
+      steps: components["schemas"]["rw__simulate__Step"][];
     };
     /** WeekDay */
     WeekDay: {
@@ -1094,6 +1733,90 @@ export interface components {
       daily_question_id: string | null;
       /** Prefilled Events */
       prefilled_events: components["schemas"]["PrefilledEvent"][];
+    };
+    /** Step */
+    rw__simulate__Step: {
+      /** Day */
+      day: number;
+      /** Topic */
+      topic: string;
+      /** Delta */
+      delta: number;
+      /**
+       * Cause
+       * @enum {string}
+       */
+      cause: "event" | "anchor_pull";
+    };
+    /** SettingsUsed */
+    rw_api__routes_cycle__SettingsUsed: {
+      /** Assimilation */
+      assimilation: string;
+      /** Kalman Walk Sd Logit */
+      kalman_walk_sd_logit: number;
+      /** Kalman Prior Sd Logit */
+      kalman_prior_sd_logit: number;
+      /** Poll Error Factor */
+      poll_error_factor: number;
+      /** Step Cap Logit */
+      step_cap_logit: number;
+      /** Anchor Pull */
+      anchor_pull: number;
+      /** Spread Band */
+      spread_band: number[];
+      /** Daily Forecast Members */
+      daily_forecast_members: number;
+      /** Plain Llm Samples */
+      plain_llm_samples: number;
+      /** Headlines Per Question */
+      headlines_per_question: number;
+    };
+    /** Step */
+    rw_api__routes_cycle__Step: {
+      /** Step */
+      step: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "ok" | "failed" | "running" | "not_run";
+      /** Started At */
+      started_at: string | null;
+      /** Finished At */
+      finished_at: string | null;
+      /** Seconds */
+      seconds: number | null;
+      /** Detail */
+      detail: {
+        [key: string]: unknown;
+      } | null;
+      /** Model Calls */
+      model_calls: number;
+      /** In Tokens */
+      in_tokens: number;
+      /** Out Tokens */
+      out_tokens: number;
+      /** Cost Usd */
+      cost_usd: number;
+      /** By Purpose */
+      by_purpose: {
+        [key: string]: number;
+      };
+    };
+    /** SettingsUsed */
+    rw_api__routes_world__SettingsUsed: {
+      /** World Agents */
+      world_agents: number;
+      /** World Seed */
+      world_seed: number;
+      /** Spread Band */
+      spread_band: number[];
+      /** Country Floor Share */
+      country_floor_share: number;
+      /** Stubbornness Beta */
+      stubbornness_beta: number[];
+      /** Offset Sd Logit */
+      offset_sd_logit: number;
     };
   };
   responses: never;
@@ -1656,6 +2379,33 @@ export interface operations {
       };
     };
   };
+  world_population_v1_world_population_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Population"];
+        };
+      };
+      /** @description No such world snapshot */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   research_v1_research_get: {
     parameters: {
       query?: never;
@@ -1713,6 +2463,184 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  latest_cycle_v1_cycle_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Cycle"];
+        };
+      };
+      /** @description No such cycle */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description The request is invalid */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  cycle_v1_cycle__date__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        date: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Cycle"];
+        };
+      };
+      /** @description No such cycle */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description The request is invalid */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  cycle_replay_v1_cycle__date__replay_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        date: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Replay"];
+        };
+      };
+      /** @description No such cycle */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description The request is invalid */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  question_v1_questions__question_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        question_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuestionPage"];
+        };
+      };
+      /** @description No such question */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description The request is invalid */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  scoreboard_v1_scoreboard_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Scoreboard"];
         };
       };
     };
