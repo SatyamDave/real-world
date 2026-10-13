@@ -442,7 +442,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Test a post on a simulated audience; sealed when signed in */
+    /** Test a message on simulated ideal customers; sealed when signed in */
     post: operations["test_post_v1_tests_post"];
     delete?: never;
     options?: never;
@@ -450,7 +450,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/v1/tests/retrospective": {
+  "/v1/tests/backtest": {
     parameters: {
       query?: never;
       header?: never;
@@ -459,8 +459,8 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Score the engine on posts already published; stores nothing */
-    post: operations["retrospective_v1_tests_retrospective_post"];
+    /** Score the engine and the baseline on messages already shipped; stores nothing */
+    post: operations["backtest_v1_tests_backtest_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -474,7 +474,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The signed-in person's sealed post tests and how they scored */
+    /** The signed-in person's sealed message tests and how engine, baseline and gut scored */
     get: operations["my_tests_v1_me_tests_get"];
     put?: never;
     post?: never;
@@ -493,7 +493,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Mark a sealed post test landed or flopped, once */
+    /** Mark a sealed message test landed or flopped, with an optional real metric, once */
     post: operations["mark_v1_me_tests__test_id__outcome_post"];
     delete?: never;
     options?: never;
@@ -627,6 +627,81 @@ export interface components {
       /** In Band */
       in_band: boolean;
     };
+    /** BacktestMessage */
+    BacktestMessage: {
+      /** Text */
+      text: string;
+      /** Outcome */
+      outcome: ("landed" | "flopped") | null;
+      metric: components["schemas"]["Metric"] | null;
+      /** Intent */
+      intent: number;
+      /** Baseline Intent */
+      baseline_intent: number;
+      /**
+       * Hit
+       * @description Null without an outcome.
+       */
+      hit: boolean | null;
+      /** Baseline Hit */
+      baseline_hit: boolean | null;
+    };
+    /** BacktestRequest */
+    BacktestRequest: {
+      /** Idea */
+      idea: string;
+      /** Icp */
+      icp: string;
+      /** Messages */
+      messages: components["schemas"]["PastMessage"][];
+    };
+    /** BacktestResult */
+    BacktestResult: {
+      /** Messages */
+      messages: components["schemas"]["BacktestMessage"][];
+      /**
+       * Marked
+       * @description Messages with Landed or Flopped, which hits and Brier use.
+       */
+      marked: number;
+      /** Hits */
+      hits: number;
+      /** Baseline Hits */
+      baseline_hits: number;
+      /** Brier */
+      brier: number | null;
+      /** Baseline Brier */
+      baseline_brier: number | null;
+      /** Calibration */
+      calibration: components["schemas"]["CalibrationRow"][];
+      /**
+       * Rank
+       * @description Per metric name given on 3 or more messages.
+       */
+      rank: components["schemas"]["RankAgreement"][];
+      /**
+       * Agents
+       * @description Simulated consumers asked per message.
+       */
+      agents: number;
+      /** Model Calls */
+      model_calls: number;
+      /** Cost Usd */
+      cost_usd: number;
+      /** Provider */
+      provider: string;
+      /**
+       * Label
+       * @default Backtest: not on your record
+       * @constant
+       */
+      label?: "Backtest: not on your record";
+      /**
+       * Disclosure
+       * @default AI-simulated. Simulated from your description, not real customers.
+       */
+      disclosure?: string;
+    };
     /** Band */
     Band: {
       /** P10 */
@@ -673,12 +748,47 @@ export interface components {
       /** Interval */
       interval: number;
     };
+    /** BrierScore */
+    BrierScore: {
+      /**
+       * Brier
+       * @description Mean Brier; null with no marked test.
+       */
+      brier: number | null;
+      /** N */
+      n: number;
+    };
     /** Budget */
     Budget: {
       /** Nightly Budget Usd */
       nightly_budget_usd: number;
       /** Spent Usd */
       spent_usd: number;
+    };
+    /** CalibrationRow */
+    CalibrationRow: {
+      /**
+       * Forecaster
+       * @enum {string}
+       */
+      forecaster: "engine" | "baseline";
+      /**
+       * Bucket
+       * @description Predicted intent range, e.g. "20-40%".
+       */
+      bucket: string;
+      /** N */
+      n: number;
+      /**
+       * Predicted
+       * @description Mean predicted intent in the bucket.
+       */
+      predicted: number;
+      /**
+       * Landed
+       * @description Share of the bucket's messages that landed.
+       */
+      landed: number;
     };
     /** Cost */
     Cost: {
@@ -851,6 +961,13 @@ export interface components {
       /** Anchored At */
       anchored_at: string | null;
     };
+    /** Dimension */
+    Dimension: {
+      /** Name */
+      name: string;
+      /** Levels */
+      levels: string[];
+    };
     /** EmailRequest */
     EmailRequest: {
       /** Email */
@@ -964,6 +1081,24 @@ export interface components {
        * @enum {string}
        */
       outcome: "landed" | "flopped";
+      metric?: components["schemas"]["Metric"] | null;
+      /** Note */
+      note?: string | null;
+    };
+    /** Metric */
+    Metric: {
+      /**
+       * Name
+       * @description e.g. "signup rate"
+       */
+      name: string;
+      /** Value */
+      value: number;
+      /**
+       * Unit
+       * @description e.g. "%" or "replies"
+       */
+      unit: string;
     };
     /** Miss */
     Miss: {
@@ -984,8 +1119,8 @@ export interface components {
     };
     /** Mix */
     Mix: {
-      /** Scroll Past */
-      scroll_past: number;
+      /** Ignore */
+      ignore: number;
       /** Read */
       read: number;
       /** Like */
@@ -1011,15 +1146,20 @@ export interface components {
       /** Detail */
       detail: string;
     };
-    /** PastPost */
-    PastPost: {
+    /** ObjectionShare */
+    ObjectionShare: {
+      /** Objection */
+      objection: string;
+      /** Share */
+      share: number;
+    };
+    /** PastMessage */
+    PastMessage: {
       /** Text */
       text: string;
-      /**
-       * Outcome
-       * @enum {string}
-       */
-      outcome: "landed" | "flopped";
+      /** Outcome */
+      outcome?: ("landed" | "flopped") | null;
+      metric?: components["schemas"]["Metric"] | null;
     };
     /** Person */
     Person: {
@@ -1137,18 +1277,18 @@ export interface components {
     };
     /** PostTestRequest */
     PostTestRequest: {
-      /**
-       * Countries
-       * @description ISO3 codes; null means every simulated country.
-       */
-      countries?: string[] | null;
-      /**
-       * Age Bands
-       * @description Null means every age.
-       */
-      age_bands?: ("18-34" | "35-54" | "55+")[] | null;
       /** Text */
       text: string;
+      /**
+       * Idea
+       * @description What you are building, one line.
+       */
+      idea: string;
+      /**
+       * Icp
+       * @description The ideal customer, in your words.
+       */
+      icp: string;
       /**
        * Gut
        * @description The person's own call before the result.
@@ -1158,31 +1298,59 @@ export interface components {
     /** PostTestResult */
     PostTestResult: {
       /**
-       * Landing Chance
-       * @description Audience share who would like or share it.
+       * Intent
+       * @description Mean over segments of the chance a customer signs up, tries or buys; the number a seal and the Brier score use.
        */
-      landing_chance: number;
+      intent: number;
+      /**
+       * Intent Band
+       * @description p10 and p90 of intent across segments.
+       */
+      intent_band: number[];
+      /**
+       * Interest
+       * @description Mean over segments of the share who like or share it.
+       */
+      interest: number;
       /**
        * Band
-       * @description p10 and p90 of landing across segments.
+       * @description p10 and p90 of interest across segments.
        */
       band: number[];
-      mix: components["schemas"]["Mix"];
-      /** Best */
-      best: components["schemas"]["SegmentReaction"][];
-      /** Worst */
-      worst: components["schemas"]["SegmentReaction"][];
       /**
-       * Audiences
-       * @description Every segment asked, most likely first.
+       * Baseline Intent
+       * @description One call with no segments: the plain baseline.
        */
-      audiences: components["schemas"]["SegmentReaction"][];
+      baseline_intent: number;
+      mix: components["schemas"]["Mix"];
+      /**
+       * Objections
+       * @description Mean shares, largest first; sum to 1.
+       */
+      objections: components["schemas"]["ObjectionShare"][];
+      /**
+       * Dimensions
+       * @description The three dimensions of the grid.
+       */
+      dimensions: components["schemas"]["Dimension"][];
+      /**
+       * Segments
+       * @description All 27, in grid order.
+       */
+      segments: components["schemas"]["SegmentResult"][];
+      /** Best */
+      best: components["schemas"]["SegmentResult"][];
+      /** Worst */
+      worst: components["schemas"]["SegmentResult"][];
       /** Voices */
       voices: components["schemas"]["Voice"][];
       /** Rewrite */
       rewrite: string;
-      /** Segments */
-      segments: number;
+      /**
+       * Agents
+       * @description Simulated consumers asked, over all segments.
+       */
+      agents: number;
       /** Model Calls */
       model_calls: number;
       /** Cost Usd */
@@ -1191,12 +1359,12 @@ export interface components {
       provider: string;
       /**
        * Calibration
-       * @default Uncalibrated until 100 marked tests
+       * @default Uncalibrated: simulated from your description, not real customers
        */
       calibration?: string;
       /**
        * Disclosure
-       * @default AI-simulated. Not a poll or a prediction of a real person
+       * @default AI-simulated. Simulated from your description, not real customers.
        */
       disclosure?: string;
     };
@@ -1375,6 +1543,20 @@ export interface components {
        */
       days: components["schemas"]["QuestionDay"][];
     };
+    /** RankAgreement */
+    RankAgreement: {
+      /** Metric */
+      metric: string;
+      /** N */
+      n: number;
+      /**
+       * Engine
+       * @description Spearman correlation; null if undefined.
+       */
+      engine: number | null;
+      /** Baseline */
+      baseline: number | null;
+    };
     /** ReceiptDay */
     ReceiptDay: {
       day: components["schemas"]["DayRecord"];
@@ -1535,55 +1717,6 @@ export interface components {
         [key: string]: components["schemas"]["Scored"];
       };
     };
-    /** RetroPost */
-    RetroPost: {
-      /** Text */
-      text: string;
-      /**
-       * Outcome
-       * @enum {string}
-       */
-      outcome: "landed" | "flopped";
-      /** Landing Chance */
-      landing_chance: number;
-      /** Hit */
-      hit: boolean;
-    };
-    /** RetroRequest */
-    RetroRequest: {
-      /**
-       * Countries
-       * @description ISO3 codes; null means every simulated country.
-       */
-      countries?: string[] | null;
-      /**
-       * Age Bands
-       * @description Null means every age.
-       */
-      age_bands?: ("18-34" | "35-54" | "55+")[] | null;
-      /** Posts */
-      posts: components["schemas"]["PastPost"][];
-    };
-    /** RetroResult */
-    RetroResult: {
-      /** Posts */
-      posts: components["schemas"]["RetroPost"][];
-      /** Hits */
-      hits: number;
-      /** Brier */
-      brier: number;
-      /**
-       * Label
-       * @default Retrospective: not on your record
-       * @constant
-       */
-      label?: "Retrospective: not on your record";
-      /**
-       * Disclosure
-       * @default AI-simulated. Not a poll or a prediction of a real person
-       */
-      disclosure?: string;
-    };
     /** Reveal */
     Reveal: {
       /** You */
@@ -1687,12 +1820,22 @@ export interface components {
       body: string;
       /** Text */
       text: string;
+      /** Idea */
+      idea: string;
+      /** Icp */
+      icp: string;
       /** Gut */
       gut: ("lands" | "flops") | null;
-      /** Landing Chance */
-      landing_chance: number;
+      /** Intent */
+      intent: number;
+      /** Baseline Intent */
+      baseline_intent: number;
       /** Outcome */
       outcome: ("landed" | "flopped") | null;
+      /** @description The real number given with the mark. */
+      metric: components["schemas"]["Metric"] | null;
+      /** Note */
+      note: string | null;
       /** Marked At */
       marked_at: string | null;
       /**
@@ -1700,6 +1843,11 @@ export interface components {
        * @description The engine's Brier once marked.
        */
       brier: number | null;
+      /**
+       * Baseline Brier
+       * @description The baseline's Brier once marked.
+       */
+      baseline_brier: number | null;
       /**
        * Gut Brier
        * @description The gut's Brier once marked, if a gut was given.
@@ -1720,29 +1868,43 @@ export interface components {
       /** Yes Share */
       yes_share: number;
     };
-    /** SegmentReaction */
-    SegmentReaction: {
-      /** Segment */
+    /** SegmentResult */
+    SegmentResult: {
+      /**
+       * Segment
+       * @description Stable id: the level numbers, e.g. "012".
+       */
       segment: string;
+      /**
+       * Cell
+       * @description Level number on each of the three dimensions.
+       */
+      cell: number[];
       /**
        * Label
        * @description The segment in words.
        */
       label: string;
-      /** Country */
-      country: string;
-      /** Coverage Tier */
-      coverage_tier: string;
       /**
-       * Weight
-       * @description Share of the audience's agents in this segment.
+       * Interest
+       * @description Chance this kind of customer likes or shares it.
        */
-      weight: number;
+      interest: number;
       /**
-       * Landing
-       * @description Share who would like or share it.
+       * Intent
+       * @description Chance this kind of customer signs up, tries or buys.
        */
-      landing: number;
+      intent: number;
+      /**
+       * Agents
+       * @description Simulated consumers asked in this segment.
+       */
+      agents: number;
+      /**
+       * Objection
+       * @description What most likely stops them.
+       */
+      objection: string;
     };
     /** SegmentShift */
     SegmentShift: {
@@ -1937,15 +2099,19 @@ export interface components {
        * @description Marked tests where the engine's side of 50% matched.
        */
       hits: number;
-      /** Brier */
-      brier: number | null;
+      scores: components["schemas"]["TestScores"];
+    };
+    /** TestScores */
+    TestScores: {
+      engine: components["schemas"]["BrierScore"];
+      baseline: components["schemas"]["BrierScore"];
+      /** @description Over marked tests that had a gut call. */
+      gut: components["schemas"]["BrierScore"];
       /**
-       * Gut Brier
-       * @description Over marked tests that had a gut call.
+       * Engine Beats Baseline
+       * @description Whether the engine's Brier is below the baseline's; null with none marked.
        */
-      gut_brier: number | null;
-      /** Gut Marked */
-      gut_marked: number;
+      engine_beats_baseline: boolean | null;
     };
     /** TopItem */
     TopItem: {
@@ -2031,10 +2197,10 @@ export interface components {
       text: string;
       /**
        * Simulated
-       * @default Simulated account
+       * @default Simulated customer
        * @constant
        */
-      simulated?: "Simulated account";
+      simulated?: "Simulated customer";
     };
     /** VsAi */
     VsAi: {
@@ -3331,7 +3497,7 @@ export interface operations {
       };
     };
   };
-  retrospective_v1_tests_retrospective_post: {
+  backtest_v1_tests_backtest_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -3340,7 +3506,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["RetroRequest"];
+        "application/json": components["schemas"]["BacktestRequest"];
       };
     };
     responses: {
@@ -3350,7 +3516,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["RetroResult"];
+          "application/json": components["schemas"]["BacktestResult"];
         };
       };
       /** @description No live session */

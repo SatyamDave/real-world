@@ -14,6 +14,7 @@ import os
 import random
 import sqlite3
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Protocol
@@ -23,7 +24,15 @@ from rw import db, settings
 Schema = dict[str, Any]
 # What the public API spends on: settings.FORK_DAILY_BUDGET_USD caps these, and the nightly run's
 # budget leaves them out.
-PUBLIC_PURPOSES = ("fork_signal", "screen", "why", "post_test", "post_voice", "post_rewrite")
+PUBLIC_PURPOSES = (
+    "fork_signal",
+    "screen",
+    "why",
+    "post_test",
+    "post_baseline",
+    "post_voice",
+    "post_rewrite",
+)
 
 
 class BudgetExceeded(Exception):
@@ -314,6 +323,51 @@ def decide_request(state: str, questions: Questions) -> str:
     return json.dumps({"state": state, "questions": questions}, separators=(",", ":"))
 
 
+def _memo(conn: sqlite3.Connection, names: tuple[str, str, str], prompt_sha: str, schema_sha: str):
+    provider_name, model, _ = names
+    stored = conn.execute(
+        "SELECT output_json FROM llm_calls WHERE provider = ? AND model = ? AND schema_sha256 = ?"
+        " AND prompt_sha256 = ? AND output_json IS NOT NULL ORDER BY id LIMIT 1",
+        (provider_name, model, schema_sha, prompt_sha),
+    ).fetchone()
+    return None if stored is None else json.loads(stored[0])
+
+
+def _insert(
+    conn: sqlite3.Connection,
+    names: tuple[str, str, str],
+    prompt: str,
+    schema_sha: str,
+    output: Any,
+    in_tokens: int,
+    out_tokens: int,
+    cost: float,
+) -> None:
+    provider_name, model, purpose = names
+    conn.execute(
+        "INSERT INTO llm_calls (at, provider, model, purpose, prompt_sha256, schema_sha256,"
+        " prompt, output_json, in_tokens, out_tokens, cost_usd)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            datetime.now(UTC).isoformat(timespec="milliseconds"),
+            provider_name,
+            model,
+            purpose,
+            _sha256(prompt),
+            schema_sha,
+            prompt,
+            None if output is None else json.dumps(output),
+            in_tokens,
+            out_tokens,
+            cost,
+        ),
+    )
+
+
+def _schema_error(names: tuple[str, str, str]) -> ValueError:
+    return ValueError(f"{names[0]} returned output that does not match the schema for {names[2]}")
+
+
 def _recorded(
     conn: sqlite3.Connection | None,
     names: tuple[str, str, str],
@@ -325,18 +379,12 @@ def _recorded(
     prices: Prices,
     parse: Any,
 ) -> Any:
-    """Memo, budget check, provider call and llm_calls row shared by decide and complete_json."""
+    """Memo, budget check, provider call and llm_calls row for one complete_json call."""
     if conn is None:
         conn = db.connect()
-    provider_name, model, purpose = names
-    prompt_sha = _sha256(prompt)
-    stored = conn.execute(
-        "SELECT output_json FROM llm_calls WHERE provider = ? AND model = ? AND schema_sha256 = ?"
-        " AND prompt_sha256 = ? AND output_json IS NOT NULL ORDER BY id LIMIT 1",
-        (provider_name, model, schema_sha, prompt_sha),
-    ).fetchone()
+    stored = _memo(conn, names, _sha256(prompt), schema_sha)
     if stored is not None:
-        return json.loads(stored[0])
+        return stored
 
     check_budget(budget, estimate)
     raw, in_tokens, out_tokens = call()
@@ -349,28 +397,9 @@ def _recorded(
         output = None
 
     with conn:
-        conn.execute(
-            "INSERT INTO llm_calls (at, provider, model, purpose, prompt_sha256, schema_sha256,"
-            " prompt, output_json, in_tokens, out_tokens, cost_usd)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                datetime.now(UTC).isoformat(timespec="milliseconds"),
-                provider_name,
-                model,
-                purpose,
-                prompt_sha,
-                schema_sha,
-                prompt,
-                None if output is None else json.dumps(output),
-                in_tokens,
-                out_tokens,
-                cost,
-            ),
-        )
+        _insert(conn, names, prompt, schema_sha, output, in_tokens, out_tokens, cost)
     if output is None:
-        raise ValueError(
-            f"{provider_name} returned output that does not match the schema for {purpose}"
-        )
+        raise _schema_error(names)
     return output
 
 
@@ -383,26 +412,65 @@ def decide(
 ) -> dict[str, dict[str, Any]]:
     """Jev's answers by question id, as Jev returns them: a noul's probability, a choice's or
     score's probabilities and confidence. A response from another model version is refused."""
+    return decide_many(purpose, [(state, questions)], budget, conn)[0]
+
+
+def decide_many(
+    purpose: str,
+    asks: list[tuple[str, Questions]],
+    budget: Budget,
+    conn: sqlite3.Connection | None = None,
+    workers: int = 1,
+) -> list[dict[str, dict[str, Any]]]:
+    """decide for many (state, questions) pairs: memo hits are reused, the rest are checked
+    against the budget together before any call, run on at most `workers` threads, and recorded
+    in one transaction."""
+    if conn is None:
+        conn = db.connect()
     jev = decider()
-    request = decide_request(state, questions)
+    names = (jev.name, jev.model, purpose)
+    requests = [decide_request(state, q) for state, q in asks]
+    schemas = [_sha256(json.dumps(q, separators=(",", ":"))) for _, q in asks]
+    out: list[Any] = [
+        _memo(conn, names, _sha256(r), sha) for r, sha in zip(requests, schemas, strict=True)
+    ]
+    todo = [i for i, o in enumerate(out) if o is None]
+    check_budget(budget, sum(estimate_decide_cost(len(requests[i])) for i in todo))
 
-    def parse(body: dict[str, Any]) -> dict[str, Any]:
-        if body.get("model") not in (settings.JEV_MODEL, jev.model):
-            raise ValueError(f"answered by {body.get('model')!r}, pinned to {jev.model!r}")
-        check_answers(body["answers"], questions)
-        return body["answers"]
+    def parse(i: int, body: dict[str, Any]) -> Any:
+        try:
+            if body.get("model") not in (settings.JEV_MODEL, jev.model):
+                raise ValueError(f"answered by {body.get('model')!r}, pinned to {jev.model!r}")
+            check_answers(body["answers"], asks[i][1])
+            return body["answers"]
+        except (ValueError, KeyError, TypeError):
+            return None
 
-    return _recorded(
-        conn,
-        (jev.name, jev.model, purpose),
-        request,
-        _sha256(json.dumps(questions, separators=(",", ":"))),
-        budget,
-        estimate_decide_cost(len(request)),
-        lambda: jev.decide(state, questions),
-        settings.JEV_PRICES,
-        parse,
-    )
+    def call(i: int) -> Any:
+        try:
+            return jev.decide(*asks[i])
+        except Exception as e:  # recorded below: calls that did answer were still paid for
+            return e
+
+    with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+        raw = list(pool.map(call, todo))
+    failed = next((r for r in raw if isinstance(r, Exception)), None)
+    bad = False
+    with conn:
+        for i, r in zip(todo, raw, strict=True):
+            if isinstance(r, Exception):
+                continue
+            body, in_tokens, out_tokens = r
+            cost = cost_usd(in_tokens, out_tokens, settings.JEV_PRICES)
+            budget.spent_usd += cost
+            out[i] = parse(i, body)
+            bad = bad or out[i] is None
+            _insert(conn, names, requests[i], schemas[i], out[i], in_tokens, out_tokens, cost)
+    if failed is not None:
+        raise failed
+    if bad:
+        raise _schema_error(names)
+    return out
 
 
 def complete_json(

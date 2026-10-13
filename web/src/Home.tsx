@@ -35,7 +35,7 @@ function ExampleResult() {
         <span className="big">41%</span>
         <span>of these simulated consumers would like or share it</span>
       </p>
-      <MixBar mix={{ scroll_past: 0.32, read: 0.27, like: 0.25, share: 0.16 }} />
+      <MixBar mix={{ ignore: 0.32, read: 0.27, like: 0.25, share: 0.16 }} />
       <p className="muted small">
         Example numbers, not a real test. Every real result is AI-simulated and shows its coverage
         tier.

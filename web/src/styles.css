@@ -1297,7 +1297,7 @@ main :is(p, li, dd, h3) a {
   border: 1px solid var(--line);
 }
 
-.mixbar-scroll_past {
+.mixbar-ignore {
   background: var(--paper-2);
 }
 
@@ -1659,94 +1659,6 @@ main :is(p, li, dd, h3) a {
   background: var(--paper-2);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
-
-.field {
-  display: grid;
-  grid-template-columns: repeat(10, 12px);
-  gap: 4px;
-  margin: 8px 0;
-}
-
-@media (min-width: 720px) {
-  .field {
-    grid-template-columns: repeat(20, 12px);
-  }
-}
-
-.field span {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--muted) 50%, var(--surface));
-}
-
-.field span.on {
-  background: var(--accent);
-  box-shadow: none;
-}
-
-/* Positioned so the sr-only cells scroll with the table instead of widening the page. */
-.matrix-wrap {
-  position: relative;
-  overflow-x: auto;
-  margin: 16px 0;
-}
-
-.matrix {
-  width: auto;
-  border-collapse: separate;
-  border-spacing: 2px;
-}
-
-.matrix caption {
-  caption-side: top;
-  text-align: left;
-  padding-bottom: 8px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.matrix th,
-.matrix td {
-  padding: 4px 8px;
-  border: 0;
-  text-align: center;
-}
-
-.matrix tbody th {
-  position: sticky;
-  left: 0;
-  background: var(--surface);
-  text-align: left;
-  color: var(--ink);
-}
-
-.matrix td {
-  min-width: 48px;
-  font-size: 12px;
-}
-
-.matrix .m0 {
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--paper-2);
-}
-
-.matrix .m1 {
-  background: var(--paper-2);
-}
-
-.matrix .m2 {
-  background: var(--line);
-}
-
-.matrix .m3 {
-  background: color-mix(in srgb, var(--accent) 35%, var(--surface));
-}
-
-.matrix .m4 {
-  background: color-mix(in srgb, var(--accent) 70%, var(--surface));
-  color: var(--on-accent);
 }
 
 .shifts {

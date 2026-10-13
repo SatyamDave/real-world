@@ -59,6 +59,7 @@ MISSING = {
     "E002": ("WVS wave 7 aggregates and Pew Spring 2026 post-cutoff test items", "Data"),
     "E004": ("resolved questions in the live hashed forecast ledger", "Data"),
     "E005": ("post-cutoff human-translated survey instruments with published marginals", "Data"),
+    "E010": ("100 eligible marked message tests with a baseline and a gut call", "Data"),
 }
 
 Row = dict[str, Any]

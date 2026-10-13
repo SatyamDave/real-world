@@ -348,6 +348,8 @@ def _finish(
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     auth.require_email_transport(allowed_origins())
+    settings.test_agents()  # a bad agent setting stops startup
+    settings.test_agent_workers()
     conn = connect()
     stale = conn.execute("SELECT id FROM jobs WHERE status IN ('queued', 'running')").fetchall()
     for (job_id,) in stale:

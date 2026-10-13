@@ -1296,7 +1296,7 @@
     "/v1/tests": {
       "post": {
         "tags": ["account"],
-        "summary": "Test a post on a simulated audience; sealed when signed in",
+        "summary": "Test a message on simulated ideal customers; sealed when signed in",
         "operationId": "test_post_v1_tests_post",
         "requestBody": {
           "content": {
@@ -1382,16 +1382,16 @@
         }
       }
     },
-    "/v1/tests/retrospective": {
+    "/v1/tests/backtest": {
       "post": {
         "tags": ["account"],
-        "summary": "Score the engine on posts already published; stores nothing",
-        "operationId": "retrospective_v1_tests_retrospective_post",
+        "summary": "Score the engine and the baseline on messages already shipped; stores nothing",
+        "operationId": "backtest_v1_tests_backtest_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RetroRequest"
+                "$ref": "#/components/schemas/BacktestRequest"
               }
             }
           },
@@ -1403,7 +1403,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RetroResult"
+                  "$ref": "#/components/schemas/BacktestResult"
                 }
               }
             }
@@ -1474,7 +1474,7 @@
     "/v1/me/tests": {
       "get": {
         "tags": ["account"],
-        "summary": "The signed-in person's sealed post tests and how they scored",
+        "summary": "The signed-in person's sealed message tests and how engine, baseline and gut scored",
         "operationId": "my_tests_v1_me_tests_get",
         "responses": {
           "200": {
@@ -1513,7 +1513,7 @@
     "/v1/me/tests/{test_id}/outcome": {
       "post": {
         "tags": ["account"],
-        "summary": "Mark a sealed post test landed or flopped, once",
+        "summary": "Mark a sealed message test landed or flopped, with an optional real metric, once",
         "operationId": "mark_v1_me_tests__test_id__outcome_post",
         "parameters": [
           {
@@ -1894,6 +1894,212 @@
         "required": ["iso3", "topic", "sim_sd", "survey_sd", "ratio", "in_band"],
         "title": "Audit"
       },
+      "BacktestMessage": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["landed", "flopped"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Metric"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "intent": {
+            "type": "number",
+            "title": "Intent"
+          },
+          "baseline_intent": {
+            "type": "number",
+            "title": "Baseline Intent"
+          },
+          "hit": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hit",
+            "description": "Null without an outcome."
+          },
+          "baseline_hit": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Hit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "outcome",
+          "metric",
+          "intent",
+          "baseline_intent",
+          "hit",
+          "baseline_hit"
+        ],
+        "title": "BacktestMessage"
+      },
+      "BacktestRequest": {
+        "properties": {
+          "idea": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 3,
+            "title": "Idea"
+          },
+          "icp": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 3,
+            "title": "Icp"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/PastMessage"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Messages"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["idea", "icp", "messages"],
+        "title": "BacktestRequest"
+      },
+      "BacktestResult": {
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/BacktestMessage"
+            },
+            "type": "array",
+            "title": "Messages"
+          },
+          "marked": {
+            "type": "integer",
+            "title": "Marked",
+            "description": "Messages with Landed or Flopped, which hits and Brier use."
+          },
+          "hits": {
+            "type": "integer",
+            "title": "Hits"
+          },
+          "baseline_hits": {
+            "type": "integer",
+            "title": "Baseline Hits"
+          },
+          "brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier"
+          },
+          "baseline_brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Brier"
+          },
+          "calibration": {
+            "items": {
+              "$ref": "#/components/schemas/CalibrationRow"
+            },
+            "type": "array",
+            "title": "Calibration"
+          },
+          "rank": {
+            "items": {
+              "$ref": "#/components/schemas/RankAgreement"
+            },
+            "type": "array",
+            "title": "Rank",
+            "description": "Per metric name given on 3 or more messages."
+          },
+          "agents": {
+            "type": "integer",
+            "title": "Agents",
+            "description": "Simulated consumers asked per message."
+          },
+          "model_calls": {
+            "type": "integer",
+            "title": "Model Calls"
+          },
+          "cost_usd": {
+            "type": "number",
+            "title": "Cost Usd"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "label": {
+            "type": "string",
+            "const": "Backtest: not on your record",
+            "title": "Label",
+            "default": "Backtest: not on your record"
+          },
+          "disclosure": {
+            "type": "string",
+            "title": "Disclosure",
+            "default": "AI-simulated. Simulated from your description, not real customers."
+          }
+        },
+        "type": "object",
+        "required": [
+          "messages",
+          "marked",
+          "hits",
+          "baseline_hits",
+          "brier",
+          "baseline_brier",
+          "calibration",
+          "rank",
+          "agents",
+          "model_calls",
+          "cost_usd",
+          "provider"
+        ],
+        "title": "BacktestResult"
+      },
       "Band": {
         "properties": {
           "p10": {
@@ -2003,6 +2209,29 @@
         "required": ["block", "resamples", "seed", "interval"],
         "title": "Bootstrap"
       },
+      "BrierScore": {
+        "properties": {
+          "brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier",
+            "description": "Mean Brier; null with no marked test."
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          }
+        },
+        "type": "object",
+        "required": ["brier", "n"],
+        "title": "BrierScore"
+      },
       "Budget": {
         "properties": {
           "nightly_budget_usd": {
@@ -2017,6 +2246,37 @@
         "type": "object",
         "required": ["nightly_budget_usd", "spent_usd"],
         "title": "Budget"
+      },
+      "CalibrationRow": {
+        "properties": {
+          "forecaster": {
+            "type": "string",
+            "enum": ["engine", "baseline"],
+            "title": "Forecaster"
+          },
+          "bucket": {
+            "type": "string",
+            "title": "Bucket",
+            "description": "Predicted intent range, e.g. \"20-40%\"."
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "predicted": {
+            "type": "number",
+            "title": "Predicted",
+            "description": "Mean predicted intent in the bucket."
+          },
+          "landed": {
+            "type": "number",
+            "title": "Landed",
+            "description": "Share of the bucket's messages that landed."
+          }
+        },
+        "type": "object",
+        "required": ["forecaster", "bucket", "n", "predicted", "landed"],
+        "title": "CalibrationRow"
       },
       "Cost": {
         "properties": {
@@ -2438,6 +2698,24 @@
         ],
         "title": "DaySummary"
       },
+      "Dimension": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "levels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Levels"
+          }
+        },
+        "type": "object",
+        "required": ["name", "levels"],
+        "title": "Dimension"
+      },
       "EmailRequest": {
         "properties": {
           "email": {
@@ -2754,12 +3032,61 @@
             "type": "string",
             "enum": ["landed", "flopped"],
             "title": "Outcome"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Metric"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 280,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": ["outcome"],
         "title": "Mark"
+      },
+      "Metric": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Name",
+            "description": "e.g. \"signup rate\""
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Unit",
+            "description": "e.g. \"%\" or \"replies\""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["name", "value", "unit"],
+        "title": "Metric"
       },
       "Miss": {
         "properties": {
@@ -2806,9 +3133,9 @@
       },
       "Mix": {
         "properties": {
-          "scroll_past": {
+          "ignore": {
             "type": "number",
-            "title": "Scroll Past"
+            "title": "Ignore"
           },
           "read": {
             "type": "number",
@@ -2824,7 +3151,7 @@
           }
         },
         "type": "object",
-        "required": ["scroll_past", "read", "like", "share"],
+        "required": ["ignore", "read", "like", "share"],
         "title": "Mix"
       },
       "News": {
@@ -2883,7 +3210,22 @@
         "required": ["detail"],
         "title": "NotFound"
       },
-      "PastPost": {
+      "ObjectionShare": {
+        "properties": {
+          "objection": {
+            "type": "string",
+            "title": "Objection"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          }
+        },
+        "type": "object",
+        "required": ["objection", "share"],
+        "title": "ObjectionShare"
+      },
+      "PastMessage": {
         "properties": {
           "text": {
             "type": "string",
@@ -2892,15 +3234,32 @@
             "title": "Text"
           },
           "outcome": {
-            "type": "string",
-            "enum": ["landed", "flopped"],
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["landed", "flopped"]
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Outcome"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Metric"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["text", "outcome"],
-        "title": "PastPost"
+        "required": ["text"],
+        "title": "PastMessage"
       },
       "Person": {
         "properties": {
@@ -3209,42 +3568,25 @@
       },
       "PostTestRequest": {
         "properties": {
-          "countries": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Countries",
-            "description": "ISO3 codes; null means every simulated country."
-          },
-          "age_bands": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string",
-                  "enum": ["18-34", "35-54", "55+"]
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Age Bands",
-            "description": "Null means every age."
-          },
           "text": {
             "type": "string",
             "maxLength": 500,
             "minLength": 1,
             "title": "Text"
+          },
+          "idea": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 3,
+            "title": "Idea",
+            "description": "What you are building, one line."
+          },
+          "icp": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 3,
+            "title": "Icp",
+            "description": "The ideal customer, in your words."
           },
           "gut": {
             "anyOf": [
@@ -3262,15 +3604,28 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["text"],
+        "required": ["text", "idea", "icp"],
         "title": "PostTestRequest"
       },
       "PostTestResult": {
         "properties": {
-          "landing_chance": {
+          "intent": {
             "type": "number",
-            "title": "Landing Chance",
-            "description": "Audience share who would like or share it."
+            "title": "Intent",
+            "description": "Mean over segments of the chance a customer signs up, tries or buys; the number a seal and the Brier score use."
+          },
+          "intent_band": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Intent Band",
+            "description": "p10 and p90 of intent across segments."
+          },
+          "interest": {
+            "type": "number",
+            "title": "Interest",
+            "description": "Mean over segments of the share who like or share it."
           },
           "band": {
             "items": {
@@ -3278,32 +3633,53 @@
             },
             "type": "array",
             "title": "Band",
-            "description": "p10 and p90 of landing across segments."
+            "description": "p10 and p90 of interest across segments."
+          },
+          "baseline_intent": {
+            "type": "number",
+            "title": "Baseline Intent",
+            "description": "One call with no segments: the plain baseline."
           },
           "mix": {
             "$ref": "#/components/schemas/Mix"
           },
+          "objections": {
+            "items": {
+              "$ref": "#/components/schemas/ObjectionShare"
+            },
+            "type": "array",
+            "title": "Objections",
+            "description": "Mean shares, largest first; sum to 1."
+          },
+          "dimensions": {
+            "items": {
+              "$ref": "#/components/schemas/Dimension"
+            },
+            "type": "array",
+            "title": "Dimensions",
+            "description": "The three dimensions of the grid."
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/SegmentResult"
+            },
+            "type": "array",
+            "title": "Segments",
+            "description": "All 27, in grid order."
+          },
           "best": {
             "items": {
-              "$ref": "#/components/schemas/SegmentReaction"
+              "$ref": "#/components/schemas/SegmentResult"
             },
             "type": "array",
             "title": "Best"
           },
           "worst": {
             "items": {
-              "$ref": "#/components/schemas/SegmentReaction"
+              "$ref": "#/components/schemas/SegmentResult"
             },
             "type": "array",
             "title": "Worst"
-          },
-          "audiences": {
-            "items": {
-              "$ref": "#/components/schemas/SegmentReaction"
-            },
-            "type": "array",
-            "title": "Audiences",
-            "description": "Every segment asked, most likely first."
           },
           "voices": {
             "items": {
@@ -3316,9 +3692,10 @@
             "type": "string",
             "title": "Rewrite"
           },
-          "segments": {
+          "agents": {
             "type": "integer",
-            "title": "Segments"
+            "title": "Agents",
+            "description": "Simulated consumers asked, over all segments."
           },
           "model_calls": {
             "type": "integer",
@@ -3335,25 +3712,30 @@
           "calibration": {
             "type": "string",
             "title": "Calibration",
-            "default": "Uncalibrated until 100 marked tests"
+            "default": "Uncalibrated: simulated from your description, not real customers"
           },
           "disclosure": {
             "type": "string",
             "title": "Disclosure",
-            "default": "AI-simulated. Not a poll or a prediction of a real person"
+            "default": "AI-simulated. Simulated from your description, not real customers."
           }
         },
         "type": "object",
         "required": [
-          "landing_chance",
+          "intent",
+          "intent_band",
+          "interest",
           "band",
+          "baseline_intent",
           "mix",
+          "objections",
+          "dimensions",
+          "segments",
           "best",
           "worst",
-          "audiences",
           "voices",
           "rewrite",
-          "segments",
+          "agents",
           "model_calls",
           "cost_usd",
           "provider"
@@ -3804,6 +4186,44 @@
         ],
         "title": "QuestionPage"
       },
+      "RankAgreement": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "engine": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Engine",
+            "description": "Spearman correlation; null if undefined."
+          },
+          "baseline": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline"
+          }
+        },
+        "type": "object",
+        "required": ["metric", "n", "engine", "baseline"],
+        "title": "RankAgreement"
+      },
       "ReceiptDay": {
         "properties": {
           "day": {
@@ -4197,111 +4617,6 @@
         ],
         "title": "ResolvedQuestion"
       },
-      "RetroPost": {
-        "properties": {
-          "text": {
-            "type": "string",
-            "title": "Text"
-          },
-          "outcome": {
-            "type": "string",
-            "enum": ["landed", "flopped"],
-            "title": "Outcome"
-          },
-          "landing_chance": {
-            "type": "number",
-            "title": "Landing Chance"
-          },
-          "hit": {
-            "type": "boolean",
-            "title": "Hit"
-          }
-        },
-        "type": "object",
-        "required": ["text", "outcome", "landing_chance", "hit"],
-        "title": "RetroPost"
-      },
-      "RetroRequest": {
-        "properties": {
-          "countries": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Countries",
-            "description": "ISO3 codes; null means every simulated country."
-          },
-          "age_bands": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string",
-                  "enum": ["18-34", "35-54", "55+"]
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Age Bands",
-            "description": "Null means every age."
-          },
-          "posts": {
-            "items": {
-              "$ref": "#/components/schemas/PastPost"
-            },
-            "type": "array",
-            "maxItems": 5,
-            "minItems": 1,
-            "title": "Posts"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": ["posts"],
-        "title": "RetroRequest"
-      },
-      "RetroResult": {
-        "properties": {
-          "posts": {
-            "items": {
-              "$ref": "#/components/schemas/RetroPost"
-            },
-            "type": "array",
-            "title": "Posts"
-          },
-          "hits": {
-            "type": "integer",
-            "title": "Hits"
-          },
-          "brier": {
-            "type": "number",
-            "title": "Brier"
-          },
-          "label": {
-            "type": "string",
-            "const": "Retrospective: not on your record",
-            "title": "Label",
-            "default": "Retrospective: not on your record"
-          },
-          "disclosure": {
-            "type": "string",
-            "title": "Disclosure",
-            "default": "AI-simulated. Not a poll or a prediction of a real person"
-          }
-        },
-        "type": "object",
-        "required": ["posts", "hits", "brier"],
-        "title": "RetroResult"
-      },
       "Reveal": {
         "properties": {
           "you": {
@@ -4559,6 +4874,14 @@
             "type": "string",
             "title": "Text"
           },
+          "idea": {
+            "type": "string",
+            "title": "Idea"
+          },
+          "icp": {
+            "type": "string",
+            "title": "Icp"
+          },
           "gut": {
             "anyOf": [
               {
@@ -4571,9 +4894,13 @@
             ],
             "title": "Gut"
           },
-          "landing_chance": {
+          "intent": {
             "type": "number",
-            "title": "Landing Chance"
+            "title": "Intent"
+          },
+          "baseline_intent": {
+            "type": "number",
+            "title": "Baseline Intent"
           },
           "outcome": {
             "anyOf": [
@@ -4586,6 +4913,28 @@
               }
             ],
             "title": "Outcome"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Metric"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The real number given with the mark."
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
           },
           "marked_at": {
             "anyOf": [
@@ -4610,6 +4959,18 @@
             "title": "Brier",
             "description": "The engine's Brier once marked."
           },
+          "baseline_brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Brier",
+            "description": "The baseline's Brier once marked."
+          },
           "gut_brier": {
             "anyOf": [
               {
@@ -4628,11 +4989,17 @@
           "seal",
           "body",
           "text",
+          "idea",
+          "icp",
           "gut",
-          "landing_chance",
+          "intent",
+          "baseline_intent",
           "outcome",
+          "metric",
+          "note",
           "marked_at",
           "brier",
+          "baseline_brier",
           "gut_brier"
         ],
         "title": "SealedTest"
@@ -4661,39 +5028,50 @@
         "required": ["segment", "description", "prior_share", "yes_share"],
         "title": "SegmentAnswer"
       },
-      "SegmentReaction": {
+      "SegmentResult": {
         "properties": {
           "segment": {
             "type": "string",
-            "title": "Segment"
+            "title": "Segment",
+            "description": "Stable id: the level numbers, e.g. \"012\"."
+          },
+          "cell": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Cell",
+            "description": "Level number on each of the three dimensions."
           },
           "label": {
             "type": "string",
             "title": "Label",
             "description": "The segment in words."
           },
-          "country": {
-            "type": "string",
-            "title": "Country"
-          },
-          "coverage_tier": {
-            "type": "string",
-            "title": "Coverage Tier"
-          },
-          "weight": {
+          "interest": {
             "type": "number",
-            "title": "Weight",
-            "description": "Share of the audience's agents in this segment."
+            "title": "Interest",
+            "description": "Chance this kind of customer likes or shares it."
           },
-          "landing": {
+          "intent": {
             "type": "number",
-            "title": "Landing",
-            "description": "Share who would like or share it."
+            "title": "Intent",
+            "description": "Chance this kind of customer signs up, tries or buys."
+          },
+          "agents": {
+            "type": "integer",
+            "title": "Agents",
+            "description": "Simulated consumers asked in this segment."
+          },
+          "objection": {
+            "type": "string",
+            "title": "Objection",
+            "description": "What most likely stops them."
           }
         },
         "type": "object",
-        "required": ["segment", "label", "country", "coverage_tier", "weight", "landing"],
-        "title": "SegmentReaction"
+        "required": ["segment", "cell", "label", "interest", "intent", "agents", "objection"],
+        "title": "SegmentResult"
       },
       "SegmentShift": {
         "properties": {
@@ -5119,37 +5497,42 @@
             "title": "Hits",
             "description": "Marked tests where the engine's side of 50% matched."
           },
-          "brier": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Brier"
-          },
-          "gut_brier": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Gut Brier",
-            "description": "Over marked tests that had a gut call."
-          },
-          "gut_marked": {
-            "type": "integer",
-            "title": "Gut Marked"
+          "scores": {
+            "$ref": "#/components/schemas/TestScores"
           }
         },
         "type": "object",
-        "required": ["tests", "marked", "hits", "brier", "gut_brier", "gut_marked"],
+        "required": ["tests", "marked", "hits", "scores"],
         "title": "TestRecord"
+      },
+      "TestScores": {
+        "properties": {
+          "engine": {
+            "$ref": "#/components/schemas/BrierScore"
+          },
+          "baseline": {
+            "$ref": "#/components/schemas/BrierScore"
+          },
+          "gut": {
+            "$ref": "#/components/schemas/BrierScore",
+            "description": "Over marked tests that had a gut call."
+          },
+          "engine_beats_baseline": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Engine Beats Baseline",
+            "description": "Whether the engine's Brier is below the baseline's; null with none marked."
+          }
+        },
+        "type": "object",
+        "required": ["engine", "baseline", "gut", "engine_beats_baseline"],
+        "title": "TestScores"
       },
       "TopItem": {
         "properties": {
@@ -5357,9 +5740,9 @@
           },
           "simulated": {
             "type": "string",
-            "const": "Simulated account",
+            "const": "Simulated customer",
             "title": "Simulated",
-            "default": "Simulated account"
+            "default": "Simulated customer"
           }
         },
         "type": "object",

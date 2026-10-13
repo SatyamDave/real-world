@@ -78,11 +78,44 @@ NEWS_TITLES_PER_THEME = 5
 
 EVENT_TEXT_MAX_CHARS = 500
 
-# Post tests (product/will-it-land.md). Provisional caps until decisions-needed item 7.
-TEST_SEGMENTS = 24
-TEST_MAX_COST_USD = 0.05
+# Message tests (product/will-it-land.md). Provisional caps until decisions-needed item 7.
+# TEST_MAX_COST_USD holds one test at TEST_AGENTS_MAX, or a backtest of TEST_BACKTEST_MAX
+# messages at TEST_AGENTS_DEFAULT, with every text at its longest, on Jev prices (under $0.00002
+# a call); anything dearer is refused before any call.
+TEST_MAX_COST_USD = 0.25
+TEST_SEGMENTS = 27
+TEST_AGENTS_DEFAULT = 1080
+TEST_AGENTS_MAX = 10_800
+TEST_AGENT_WORKERS_DEFAULT = 32
+
+
+def test_agents() -> int:
+    """Simulated consumers per test, from RW_AGENTS: a multiple of TEST_SEGMENTS up to
+    TEST_AGENTS_MAX, split evenly over the segments. Anything else raises, so a bad setting stops
+    the API at startup instead of running a different panel."""
+    raw = os.environ.get("RW_AGENTS", str(TEST_AGENTS_DEFAULT))
+    n = int(raw) if raw.strip().isdigit() else -1
+    if not (TEST_SEGMENTS <= n <= TEST_AGENTS_MAX and n % TEST_SEGMENTS == 0):
+        raise ValueError(
+            f"RW_AGENTS={raw!r}: use a multiple of {TEST_SEGMENTS} from {TEST_SEGMENTS}"
+            f" to {TEST_AGENTS_MAX:,}"
+        )
+    return n
+
+
+def test_agent_workers() -> int:
+    """Jev calls in flight at once, from RW_AGENT_WORKERS (1 to 256)."""
+    raw = os.environ.get("RW_AGENT_WORKERS", str(TEST_AGENT_WORKERS_DEFAULT))
+    n = int(raw) if raw.strip().isdigit() else -1
+    if not 1 <= n <= 256:
+        raise ValueError(f"RW_AGENT_WORKERS={raw!r}: use 1 to 256")
+    return n
+
+
 TEST_ANON_PER_DAY = 20
-TEST_RETRO_POSTS_MAX = 5
+TEST_BACKTEST_MAX = 10
+TEST_BACKTEST_BUCKETS = 5
+TEST_BACKTEST_RANK_MIN = 3
 TEST_VOICE_MAX_OUTPUT_TOKENS = 80
 TEST_REWRITE_MAX_OUTPUT_TOKENS = 120
 LLM_MAX_OUTPUT_TOKENS = 300

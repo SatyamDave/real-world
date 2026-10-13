@@ -4,7 +4,7 @@
 
 `/record` shows a signed-in person their sealed calls and how they scored.
 
-**Post tests.** A strip "The engine vs your gut" with both Brier scores in mono, "<n> marked tests · hits <k> of <n>" (hits count tests where the engine's side of 50% matched the outcome) and "Brier: 0 is perfect, 0.25 is a coin flip." Then "Waiting to be marked": each sealed test without an outcome as a row with its small seal grid, the post quoted on one line, "Sealed <date> · <hash prefix> · landing <n>%", their gut, and "Landed" and "Flopped". Then "Marked": the same rows with the outcome stamp ("Landed" green, "Flopped" clay) and both Briers.
+**Message tests.** A strip with three Brier scores in mono, each with its n: the engine, the plain baseline and your gut (decision [0016](../research/decisions/0016-icp-audiences.md)); when the engine's Brier is not below the baseline's, "The engine does not beat the plain baseline on your marked tests."; then "<n> marked tests · hits <k> of <n>" (hits count tests where the engine's side of 50% matched the outcome) and "Brier: 0 is perfect, 0.25 is a coin flip." Then "Waiting to be marked": each sealed test without an outcome as a row with its small seal grid, the post quoted on one line, "Sealed <date> · <hash prefix> · would act <n>%", their gut, and "Landed" and "Flopped", with an optional real metric (name, value, unit) and an optional note. Then "Marked": the same rows with the outcome stamp ("Landed" green, "Flopped" clay) and both Briers.
 
 **Call it.** Their daily calls against the AI on resolved questions: "You <brier> · AI <brier> on <n> questions", and "You beat the AI on <k>".
 
@@ -23,8 +23,8 @@ A person who has tested posts or called questions and wants to know whether the 
 
 ## How we know it works
 
-- `GET /v1/me/tests` returns the person's sealed tests and the summary; `POST /v1/me/tests/{id}/outcome` takes `{outcome: "landed" | "flopped"}` once, and a second mark returns `409 already_marked`. `GET /v1/daily` returns the Call it record in its reveal. Fields in `api/openapi.json`.
-- Briers come from `engine/rw/score.py`, the function the receipts use. Tests in `api/tests/test_tests.py`: `test_an_outcome_is_marked_once`, `test_the_record_scores_engine_and_gut_on_marked_tests_only`.
+- `GET /v1/me/tests` returns the person's sealed tests and the summary; `POST /v1/me/tests/{id}/outcome` takes `{outcome: "landed" | "flopped", metric?: {name, value, unit}, note?}` once, stored on the test's row; a second mark returns `409 already_marked`, and the database refuses any later change to the mark. `GET /v1/daily` returns the Call it record in its reveal. Fields in `api/openapi.json`.
+- Briers come from `engine/rw/score.py`, the function the receipts use. Tests in `api/tests/test_tests.py`: `test_a_mark_is_stored_once_with_its_metric_and_note`, `test_the_database_refuses_any_change_to_a_mark`, `test_the_record_scores_engine_baseline_and_gut_on_marked_tests_only`.
 - Measured after launch: day-7 return of people with a marked test ([0012](../research/decisions/0012-will-it-land-and-call-it.md)).
 
 ## What it is not

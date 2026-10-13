@@ -68,21 +68,30 @@ function Signed({ person }: { person: Person }) {
         <>
           <section className="card record-strip" aria-labelledby="vs">
             <h2 id="vs">The engine vs your gut</h2>
-            {r.data.marked === 0 || r.data.brier === null ? (
+            {r.data.marked === 0 ? (
               <p>Mark a test Landed or Flopped once you know how it did.</p>
             ) : (
               <>
                 <div className="record-cols">
-                  <p>
-                    The engine <span className="mono record-brier">{r.data.brier.toFixed(3)}</span>
-                  </p>
-                  <p>
-                    Your gut{" "}
-                    <span className="mono record-brier">
-                      {r.data.gut_brier === null ? "–" : r.data.gut_brier.toFixed(3)}
-                    </span>
-                  </p>
+                  {(
+                    [
+                      ["The engine", r.data.scores.engine],
+                      ["A plain baseline", r.data.scores.baseline],
+                      ["Your gut", r.data.scores.gut],
+                    ] as const
+                  ).map(([who, s]) => (
+                    <p key={who}>
+                      {who}{" "}
+                      <span className="mono record-brier">
+                        {s.brier === null ? "–" : s.brier.toFixed(3)}
+                      </span>{" "}
+                      <span className="mono small muted">n = {s.n}</span>
+                    </p>
+                  ))}
                 </div>
+                {r.data.scores.engine_beats_baseline === false && (
+                  <p>The engine does not beat the plain baseline on your marked tests.</p>
+                )}
                 <p className="mono small">
                   {plural(r.data.marked, "marked test")} · hits {r.data.hits} of {r.data.marked}
                 </p>
@@ -143,8 +152,8 @@ function TestRow({ test, onMarked }: { test: SealedTest; onMarked: () => void })
       <div className="record-row-body">
         <p className="record-post">"{test.text}"</p>
         <p className="mono small muted">
-          Sealed {shortDate(test.seal.sealed_at)} · {test.seal.sha256.slice(0, 12)} · landing{" "}
-          {pct(test.landing_chance)}
+          Sealed {shortDate(test.seal.sealed_at)} · {test.seal.sha256.slice(0, 12)} · intent{" "}
+          {pct(test.intent)}
           {test.gut && ` · your gut: it ${test.gut}`}
           {test.brier !== null && ` · engine Brier ${test.brier.toFixed(3)}`}
           {test.gut_brier !== null && ` · gut Brier ${test.gut_brier.toFixed(3)}`} ·{" "}

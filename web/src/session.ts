@@ -2,11 +2,12 @@
 // session cookie, so this is the one module besides the SDK that calls fetch.
 import {
   ApiError,
+  type BacktestRequest,
+  type BacktestResult,
+  type Mark,
   type Person,
   type PostTestOut,
   type PostTestRequest,
-  type RetroRequest,
-  type RetroResult,
   type SealedTest,
   type TestRecord,
 } from "@real-world/sdk";
@@ -36,9 +37,9 @@ export const account = {
     call<null>("POST", `/v1/auth/sign-out${everywhere ? "?everywhere=true" : ""}`, {}),
   remove: () => call<null>("DELETE", "/v1/me", {}),
   test: (req: PostTestRequest) => call<PostTestOut>("POST", "/v1/tests", req),
-  retrospective: (req: RetroRequest) => call<RetroResult>("POST", "/v1/tests/retrospective", req),
+  backtest: (req: BacktestRequest) => call<BacktestResult>("POST", "/v1/tests/backtest", req),
   tests: () => call<TestRecord>("GET", "/v1/me/tests"),
-  mark: (id: string, outcome: "landed" | "flopped") =>
+  mark: (id: string, outcome: Mark["outcome"]) =>
     call<SealedTest>("POST", `/v1/me/tests/${encodeURIComponent(id)}/outcome`, { outcome }),
 };
 
