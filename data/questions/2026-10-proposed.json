@@ -1,0 +1,507 @@
+{
+  "status": "proposed",
+  "window": {
+    "from": "2026-10-14",
+    "to": "2026-11-30"
+  },
+  "drafted_on": "2026-10-12",
+  "questions": [
+    {
+      "id": "usa-fomc-2026-10-28-unchanged",
+      "text": "Will the Federal Open Market Committee leave the target range for the federal funds rate unchanged at 3.75 to 4.00 percent in the statement released on 2026-10-28?",
+      "topic": "inflation_worry",
+      "countries": [
+        "USA"
+      ],
+      "event_date": "2026-10-28",
+      "opens": "2026-10-14",
+      "closes": "2026-10-27",
+      "resolves_by": "2026-10-29",
+      "resolution_source": "https://www.federalreserve.gov/monetarypolicy/openmarket.htm",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. Only the decision announced at the meeting on event_date counts; an unscheduled move between meetings does not. If the meeting is moved outside this list's window, the question is void.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: fomccalendars.htm lists the Oct 27-28 meeting; openmarket.htm lists the current range 3.75-4.00 (raised 2026-09-17) and adds a row for each change.",
+      "date_confirmed": true
+    },
+    {
+      "id": "usa-gdp-2026q3-advance-2pct",
+      "text": "Will the BEA advance estimate of US real GDP growth for the third quarter of 2026, released on 2026-10-29, be at or above 2.0 percent at a seasonally adjusted annual rate?",
+      "topic": "economy_optimism",
+      "countries": [
+        "USA"
+      ],
+      "event_date": "2026-10-29",
+      "opens": "2026-10-14",
+      "closes": "2026-10-28",
+      "resolves_by": "2026-10-30",
+      "resolution_source": "https://www.bea.gov/data/gdp/gross-domestic-product",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the page shows Q2 2026 at 2.2 percent (third estimate) and the next release on Oct 29; bea.gov/news/schedule lists the Q3 advance estimate on Oct 29.",
+      "date_confirmed": true
+    },
+    {
+      "id": "usa-payrolls-2026-10-positive",
+      "text": "Will the BLS Employment Situation release on 2026-11-06 report a positive change in total nonfarm payroll employment for October 2026?",
+      "topic": "economy_optimism",
+      "countries": [
+        "USA"
+      ],
+      "event_date": "2026-11-06",
+      "opens": "2026-10-14",
+      "closes": "2026-11-05",
+      "resolves_by": "2026-11-07",
+      "resolution_source": "https://www.bls.gov/news.release/empsit.nr0.htm",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no. A change of zero resolves no.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the BLS November schedule lists the Employment Situation for October on Nov 6; the current release shows +29,000 for September and July revised to -10,000.",
+      "date_confirmed": true
+    },
+    {
+      "id": "usa-cpi-2026-10-above-sep",
+      "text": "Will the 12-month change in the all-items CPI-U for October 2026, published by BLS on 2026-11-10, be higher than the 12-month change for September 2026 published on 2026-10-14?",
+      "topic": "inflation_worry",
+      "countries": [
+        "USA"
+      ],
+      "event_date": "2026-11-10",
+      "opens": "2026-10-14",
+      "closes": "2026-11-09",
+      "resolves_by": "2026-11-11",
+      "resolution_source": "https://www.bls.gov/cpi/",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the BLS November schedule lists CPI for October on Nov 10; bls.gov/cpi shows August at 3.4 percent over 12 months and the September release on Oct 14.",
+      "date_confirmed": true
+    },
+    {
+      "id": "usa-senate-mi-2026-democratic",
+      "text": "Will the Democratic Party's nominee receive the most votes in the 2026 US Senate election in Michigan held on 2026-11-03, according to the results certified by the Michigan Board of State Canvassers?",
+      "topic": "trust_government",
+      "countries": [
+        "USA"
+      ],
+      "event_date": "2026-11-03",
+      "opens": "2026-10-31",
+      "closes": "2026-11-02",
+      "resolves_by": "2026-11-30",
+      "resolution_source": "https://www.michigan.gov/sos/elections",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. An official result published after resolves_by is ignored. A court-ordered rerun or annulment before resolves_by voids the question.",
+      "market_source": "",
+      "checked": "Election date from research/data/059 (Wikipedia snapshot, Michigan rated a tossup). michigan.gov returned 403/404 on 2026-10-12, so the certification date is not confirmed; if certification lands after Nov 30 the question is void.",
+      "date_confirmed": false,
+      "needs_decision": "company/decisions-needed.md item 2 (election questions in launch week)"
+    },
+    {
+      "id": "gbr-boe-2026-11-05-unchanged",
+      "text": "Will the Bank of England's Monetary Policy Committee leave Bank Rate unchanged at 3.75 percent in the decision announced on 2026-11-05?",
+      "topic": "inflation_worry",
+      "countries": [
+        "GBR"
+      ],
+      "event_date": "2026-11-05",
+      "opens": "2026-10-14",
+      "closes": "2026-11-04",
+      "resolves_by": "2026-11-06",
+      "resolution_source": "https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. Only the decision announced at the meeting on event_date counts; an unscheduled move between meetings does not. If the meeting is moved outside this list's window, the question is void.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the Bank Rate page shows 3.75 percent and the next decision on 5 November 2026; upcoming-mpc-dates lists 5 Nov and 17 Dec.",
+      "date_confirmed": true
+    },
+    {
+      "id": "gbr-cpi-2026-09-above-aug",
+      "text": "Will the UK CPI 12-month rate for September 2026, published by the Office for National Statistics on 2026-10-21, be above 3.1 percent?",
+      "topic": "inflation_worry",
+      "countries": [
+        "GBR"
+      ],
+      "event_date": "2026-10-21",
+      "opens": "2026-10-14",
+      "closes": "2026-10-20",
+      "resolves_by": "2026-10-22",
+      "resolution_source": "https://www.ons.gov.uk/economy/inflationandpriceindices",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the ONS inflation page shows August 2026 at 3.1 percent and the next release on 21 October 2026.",
+      "date_confirmed": true
+    },
+    {
+      "id": "eur-ecb-2026-10-29-unchanged",
+      "text": "Will the ECB Governing Council leave the deposit facility rate unchanged at 2.50 percent in the decision announced on 2026-10-29?",
+      "topic": "inflation_worry",
+      "countries": [
+        "DEU",
+        "FRA"
+      ],
+      "event_date": "2026-10-29",
+      "opens": "2026-10-14",
+      "closes": "2026-10-28",
+      "resolves_by": "2026-10-30",
+      "resolution_source": "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. Only the decision announced at the meeting on event_date counts; an unscheduled move between meetings does not. If the meeting is moved outside this list's window, the question is void.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the key rates page shows the deposit facility at 2.50 percent from 16 Sep 2026; the Governing Council calendar lists the monetary policy meeting on 28-29 October.",
+      "date_confirmed": true
+    },
+    {
+      "id": "deu-cpi-2026-10-flash-above-sep",
+      "text": "Will Destatis's first estimate of the German inflation rate (CPI, year on year) for October 2026 be above 3.3 percent?",
+      "topic": "inflation_worry",
+      "countries": [
+        "DEU"
+      ],
+      "event_date": "2026-10-30",
+      "opens": "2026-10-14",
+      "closes": "2026-10-29",
+      "resolves_by": "2026-11-03",
+      "resolution_source": "https://www.destatis.de/EN/Themes/Economy/Prices/Consumer-Price-Index/_node.html",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the CPI page shows September 2026 at +3.3 percent (provisional, released Sep 30). The October flash date is not on a page I could open; Destatis released the August and September flashes on the last working day of the month, so Oct 30 is an inference.",
+      "date_confirmed": false
+    },
+    {
+      "id": "fra-cpi-2026-10-prov-above-sep",
+      "text": "Will INSEE's provisional estimate of the French consumer price index for October 2026, published on 2026-10-30, show a year-on-year rise above 3.0 percent?",
+      "topic": "inflation_worry",
+      "countries": [
+        "FRA"
+      ],
+      "event_date": "2026-10-30",
+      "opens": "2026-10-14",
+      "closes": "2026-10-29",
+      "resolves_by": "2026-10-31",
+      "resolution_source": "https://www.insee.fr/fr/statistiques/9056956",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: INSEE's September provisional release shows +3.0 percent year on year and names the next provisional release (October 2026) for 30 October 2026 at 8:45; the October release is published as a new Informations Rapides page linked from INSEE's CPI releases.",
+      "date_confirmed": true
+    },
+    {
+      "id": "jpn-boj-2026-10-30-unchanged",
+      "text": "Will the Bank of Japan keep its guideline for the uncollateralized overnight call rate at around 1.25 percent at the Monetary Policy Meeting ending 2026-10-30?",
+      "topic": "inflation_worry",
+      "countries": [
+        "JPN"
+      ],
+      "event_date": "2026-10-30",
+      "opens": "2026-10-14",
+      "closes": "2026-10-29",
+      "resolves_by": "2026-10-31",
+      "resolution_source": "https://www.boj.or.jp/en/mopo/mpmdeci/state_2026/index.htm",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. Only the decision announced at the meeting on event_date counts; an unscheduled move between meetings does not. If the meeting is moved outside this list's window, the question is void.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the BOJ schedule lists the meeting on Oct 29-30; the Sep 18 statement (k260918a.pdf) set the call rate at around 1.25 percent from Sep 24; state_2026 lists each statement.",
+      "date_confirmed": true
+    },
+    {
+      "id": "jpn-tokyo-cpi-2026-10-above-sep",
+      "text": "Will the preliminary Ku-area of Tokyo CPI for October 2026, all items less fresh food, published on 2026-10-30, show a higher year-on-year change than the September 2026 figure?",
+      "topic": "inflation_worry",
+      "countries": [
+        "JPN"
+      ],
+      "event_date": "2026-10-30",
+      "opens": "2026-10-14",
+      "closes": "2026-10-29",
+      "resolves_by": "2026-10-31",
+      "resolution_source": "https://www.stat.go.jp/english/data/cpi/1581-z.html",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the Statistics Bureau schedule (1582.html) lists Tokyo ku-area preliminary for October on Oct 30; 1581-z.html holds the latest results.",
+      "date_confirmed": true
+    },
+    {
+      "id": "jpn-cpi-2026-10-above-sep",
+      "text": "Will the Japan national CPI for October 2026, all items less fresh food, published on 2026-11-20, show a higher year-on-year change than the September 2026 figure published on 2026-10-23?",
+      "topic": "inflation_worry",
+      "countries": [
+        "JPN"
+      ],
+      "event_date": "2026-11-20",
+      "opens": "2026-10-22",
+      "closes": "2026-11-19",
+      "resolves_by": "2026-11-21",
+      "resolution_source": "https://www.stat.go.jp/english/data/cpi/1581-z.html",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the Statistics Bureau schedule (1582.html) lists national CPI for September on Oct 23 and for October on Nov 20.",
+      "date_confirmed": true
+    },
+    {
+      "id": "bra-copom-2026-11-04-cut",
+      "text": "Will the Banco Central do Brasil's Copom set the Selic target below 13.75 percent in the decision announced on 2026-11-04?",
+      "topic": "inflation_worry",
+      "countries": [
+        "BRA"
+      ],
+      "event_date": "2026-11-04",
+      "opens": "2026-10-14",
+      "closes": "2026-11-03",
+      "resolves_by": "2026-11-05",
+      "resolution_source": "https://www.bcb.gov.br/en/monetarypolicy/copom",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. Only the decision announced at the meeting on event_date counts; an unscheduled move between meetings does not. If the meeting is moved outside this list's window, the question is void.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the BCB statements feed (bcb.gov.br/api/servico/sitebcb/copom/comunicados) shows meeting 281 on 2026-09-16 cutting Selic to 13.75 percent. The Nov 3-4 date comes from press reports of the BCB's published 2026 calendar; the BCB Copom page (the resolution source) did not render its content.",
+      "date_confirmed": false
+    },
+    {
+      "id": "bra-runoff-2026-10-25-lula",
+      "text": "Will Luiz Inacio Lula da Silva receive the most valid votes in the second round of the 2026 Brazilian presidential election on 2026-10-25, according to the Tribunal Superior Eleitoral?",
+      "topic": "trust_government",
+      "countries": [
+        "BRA"
+      ],
+      "event_date": "2026-10-25",
+      "opens": "2026-10-14",
+      "closes": "2026-10-24",
+      "resolves_by": "2026-10-28",
+      "resolution_source": "https://resultados.tse.jus.br/",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. An official result published after resolves_by is ignored. A court-ordered rerun or annulment before resolves_by voids the question.",
+      "market_source": "",
+      "checked": "Runoff date and candidates from research/data/059 (Wikipedia snapshot). tse.jus.br returned 403 on 2026-10-12; date not confirmed on the official site.",
+      "date_confirmed": false,
+      "needs_decision": "company/decisions-needed.md item 2 (election questions in launch week)"
+    },
+    {
+      "id": "mex-banxico-2026-11-05-unchanged",
+      "text": "Will Banco de Mexico keep its target for the overnight interbank interest rate unchanged at 6.50 percent in the decision announced on 2026-11-05?",
+      "topic": "inflation_worry",
+      "countries": [
+        "MEX"
+      ],
+      "event_date": "2026-11-05",
+      "opens": "2026-10-14",
+      "closes": "2026-11-04",
+      "resolves_by": "2026-11-06",
+      "resolution_source": "https://www.banxico.org.mx/publicaciones-y-prensa/anuncios-de-las-decisiones-de-politica-monetaria/anuncios-politica-monetaria-t.html",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. Only the decision announced at the meeting on event_date counts; an unscheduled move between meetings does not. If the meeting is moved outside this list's window, the question is void.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: Banxico's 2026 calendar PDF lists a decision on 5 November; the announcements page shows 6.50 percent held on 24 September.",
+      "date_confirmed": true
+    },
+    {
+      "id": "idn-bi-2026-10-21-unchanged",
+      "text": "Will Bank Indonesia keep the BI-Rate unchanged at 5.75 percent at the Board of Governors Meeting ending 2026-10-21?",
+      "topic": "inflation_worry",
+      "countries": [
+        "IDN"
+      ],
+      "event_date": "2026-10-21",
+      "opens": "2026-10-14",
+      "closes": "2026-10-20",
+      "resolves_by": "2026-10-22",
+      "resolution_source": "https://www.bi.go.id/en/statistik/indikator/bi-rate.aspx",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. Only the decision announced at the meeting on event_date counts; an unscheduled move between meetings does not. If the meeting is moved outside this list's window, the question is void.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: BI news release sp_2730825 lists the meeting on 20-21 October; the BI-Rate page shows 5.75 percent set on 23 September and adds a row per meeting.",
+      "date_confirmed": true
+    },
+    {
+      "id": "idn-bi-2026-11-18-unchanged",
+      "text": "Will Bank Indonesia keep the BI-Rate at 5.75 percent after the Board of Governors Meeting ending 2026-11-18?",
+      "topic": "inflation_worry",
+      "countries": [
+        "IDN"
+      ],
+      "event_date": "2026-11-18",
+      "opens": "2026-10-20",
+      "closes": "2026-11-17",
+      "resolves_by": "2026-11-19",
+      "resolution_source": "https://www.bi.go.id/en/statistik/indikator/bi-rate.aspx",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. Only the decision announced at the meeting on event_date counts; an unscheduled move between meetings does not. If the meeting is moved outside this list's window, the question is void. A change in October and a reversal in November back to 5.75 resolves yes.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: BI news release sp_2730825 lists the meeting on 17-18 November.",
+      "date_confirmed": true
+    },
+    {
+      "id": "zaf-sarb-2026-11-19-unchanged",
+      "text": "Will the South African Reserve Bank's Monetary Policy Committee leave the repo rate unchanged in the decision announced on 2026-11-19?",
+      "topic": "inflation_worry",
+      "countries": [
+        "ZAF"
+      ],
+      "event_date": "2026-11-19",
+      "opens": "2026-10-21",
+      "closes": "2026-11-18",
+      "resolves_by": "2026-11-20",
+      "resolution_source": "https://www.resbank.co.za/en/home/what-we-do/monetary-policy",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. Only the decision announced at the meeting on event_date counts; an unscheduled move between meetings does not. If the meeting is moved outside this list's window, the question is void.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the SARB monetary policy page lists the next announcement on 19 November 2026. The current repo rate did not render on the SARB pages, so the text does not state a level.",
+      "date_confirmed": true
+    },
+    {
+      "id": "tur-cbrt-2026-10-22-unchanged",
+      "text": "Will the Central Bank of the Republic of Turkiye leave its one-week repo rate unchanged in the Monetary Policy Committee decision announced on 2026-10-22?",
+      "topic": "inflation_worry",
+      "countries": [
+        "TUR"
+      ],
+      "event_date": "2026-10-22",
+      "opens": "2026-10-14",
+      "closes": "2026-10-21",
+      "resolves_by": "2026-10-23",
+      "resolution_source": "https://www.tcmb.gov.tr/wps/wcm/connect/EN/TCMB+EN/Main+Menu/Core+Functions/Monetary+Policy/Central+Bank+Interest+Rates/1+Week+Repo",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. Only the decision announced at the meeting on event_date counts; an unscheduled move between meetings does not. If the meeting is moved outside this list's window, the question is void.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the CBRT calendar lists 22 October 2026 (the page does not label the event; press reports of the 2026 calendar name it the MPC decision); the 1-week repo page lists each rate change with its date.",
+      "date_confirmed": true
+    },
+    {
+      "id": "isr-knesset-2026-10-27-likud-largest",
+      "text": "Will Likud win more seats than any other list in the election to the 26th Knesset held on 2026-10-27, according to the official results of the Central Elections Committee?",
+      "topic": "trust_government",
+      "countries": [
+        "ISR"
+      ],
+      "event_date": "2026-10-27",
+      "opens": "2026-10-14",
+      "closes": "2026-10-26",
+      "resolves_by": "2026-11-06",
+      "resolution_source": "https://bechirot.gov.il/",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. An official result published after resolves_by is ignored. A court-ordered rerun or annulment before resolves_by voids the question. A tie for most seats resolves no.",
+      "market_source": "",
+      "checked": "Election date and the Nov 4 official-results date from research/data/059 (Wikipedia snapshot). bechirot.gov.il loaded on 2026-10-12 but its content did not render; date not confirmed on the official site.",
+      "date_confirmed": false,
+      "needs_decision": "company/decisions-needed.md item 2 (election questions in launch week)"
+    },
+    {
+      "id": "ind-cpi-2026-10-above-sep",
+      "text": "Will the All India CPI year-on-year inflation rate for October 2026, published by MoSPI on 2026-11-12, be higher than the rate for September 2026?",
+      "topic": "inflation_worry",
+      "countries": [
+        "IND"
+      ],
+      "event_date": "2026-11-12",
+      "opens": "2026-10-14",
+      "closes": "2026-11-11",
+      "resolves_by": "2026-11-13",
+      "resolution_source": "https://www.mospi.gov.in/",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: MoSPI's Advance Release Calendar 2026-27 (updated 25.05.2026, PDF) lists All India CPI on 12 Oct and 12 Nov.",
+      "date_confirmed": true
+    },
+    {
+      "id": "ind-gdp-2026q2-above-q1",
+      "text": "Will India's real GDP growth for July-September 2026 (Q2 of 2026-27), published by MoSPI on 2026-11-30, be higher than the growth published for April-June 2026?",
+      "topic": "economy_optimism",
+      "countries": [
+        "IND"
+      ],
+      "event_date": "2026-11-30",
+      "opens": "2026-10-31",
+      "closes": "2026-11-29",
+      "resolves_by": "2026-11-30",
+      "resolution_source": "https://www.mospi.gov.in/",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: MoSPI's Advance Release Calendar 2026-27 lists Quarterly Estimates of GDP on 30 Nov.",
+      "date_confirmed": true
+    },
+    {
+      "id": "chn-gdp-2026q3-above-q2",
+      "text": "Will China's real GDP growth for the third quarter of 2026 (year on year), published by the National Bureau of Statistics on 2026-10-19, be higher than the second-quarter figure?",
+      "topic": "economy_optimism",
+      "countries": [
+        "CHN"
+      ],
+      "event_date": "2026-10-19",
+      "opens": "2026-10-14",
+      "closes": "2026-10-18",
+      "resolves_by": "2026-10-20",
+      "resolution_source": "https://www.stats.gov.cn/english/PressRelease/",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the NBS 2026 release calendar lists the Q3 national economic performance release on Mon 19 Oct, 10:00 (dates marked preliminary).",
+      "date_confirmed": true
+    },
+    {
+      "id": "chn-cpi-2026-10-above-sep",
+      "text": "Will China's CPI for October 2026, published by the National Bureau of Statistics on 2026-11-09, show a higher year-on-year rise than September 2026?",
+      "topic": "inflation_worry",
+      "countries": [
+        "CHN"
+      ],
+      "event_date": "2026-11-09",
+      "opens": "2026-10-14",
+      "closes": "2026-11-08",
+      "resolves_by": "2026-11-10",
+      "resolution_source": "https://www.stats.gov.cn/english/PressRelease/",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the NBS 2026 release calendar lists CPI on 14 Oct and 9 Nov, 9:30.",
+      "date_confirmed": true
+    },
+    {
+      "id": "chn-ip-2026-10-above-sep",
+      "text": "Will China's value added of industry above designated size for October 2026, published by the National Bureau of Statistics on 2026-11-16, show faster year-on-year growth than September 2026?",
+      "topic": "economy_optimism",
+      "countries": [
+        "CHN"
+      ],
+      "event_date": "2026-11-16",
+      "opens": "2026-10-18",
+      "closes": "2026-11-15",
+      "resolves_by": "2026-11-17",
+      "resolution_source": "https://www.stats.gov.cn/english/PressRelease/",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the NBS 2026 release calendar lists industrial production on 19 Oct and 16 Nov, 10:00.",
+      "date_confirmed": true
+    },
+    {
+      "id": "nga-cbn-2026-11-24-unchanged",
+      "text": "Will the Central Bank of Nigeria's Monetary Policy Committee keep the Monetary Policy Rate at 23 percent at the meeting ending 2026-11-24?",
+      "topic": "inflation_worry",
+      "countries": [
+        "NGA"
+      ],
+      "event_date": "2026-11-24",
+      "opens": "2026-10-27",
+      "closes": "2026-11-22",
+      "resolves_by": "2026-11-26",
+      "resolution_source": "https://www.cbn.gov.ng/MonetaryPolicy/decisions.html",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. Only the decision announced at the meeting on event_date counts; an unscheduled move between meetings does not. If the meeting is moved outside this list's window, the question is void.",
+      "market_source": "",
+      "checked": "Opened 2026-10-12: the CBN decisions page shows the 307th meeting (21-22 Sep 2026) set the MPR at 23 percent. The Nov 23-24 date comes from a press report of the CBN's 2026 calendar; the CBN page does not list it.",
+      "date_confirmed": false
+    },
+    {
+      "id": "ken-cpi-2026-10-above-sep",
+      "text": "Will the Kenya National Bureau of Statistics report annual consumer price inflation for October 2026 above 6.8 percent?",
+      "topic": "inflation_worry",
+      "countries": [
+        "KEN"
+      ],
+      "event_date": "2026-10-30",
+      "opens": "2026-10-14",
+      "closes": "2026-10-29",
+      "resolves_by": "2026-11-04",
+      "resolution_source": "https://www.knbs.or.ke/",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no.",
+      "market_source": "",
+      "checked": "September at 6.8 percent, released Sep 30, per press reports of the KNBS release. knbs.or.ke failed TLS verification on 2026-10-12; the end-of-month release date is an inference from past releases.",
+      "date_confirmed": false
+    },
+    {
+      "id": "egy-cpi-2026-10-above-sep",
+      "text": "Will CAPMAS report Egypt's annual urban headline consumer price inflation for October 2026 higher than the September 2026 rate?",
+      "topic": "inflation_worry",
+      "countries": [
+        "EGY"
+      ],
+      "event_date": "2026-11-10",
+      "opens": "2026-10-16",
+      "closes": "2026-11-09",
+      "resolves_by": "2026-11-15",
+      "resolution_source": "https://www.capmas.gov.eg/",
+      "tie_break": "If the source has not published the answer by resolves_by, the question is void. The first published figure decides; later revisions are ignored. Rates are compared at the precision the source publishes, and an equal value resolves no.",
+      "market_source": "",
+      "checked": "capmas.gov.eg loaded on 2026-10-12 but its content did not render; the cbe.org.eg page refused the request. The release day is unknown; CAPMAS has published around the 10th of the month, which is an inference.",
+      "date_confirmed": false
+    }
+  ]
+}
