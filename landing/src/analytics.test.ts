@@ -7,6 +7,7 @@ import {
   type Loaders,
   privacySignal,
   resetAnalyticsForTests,
+  setConsented,
   setHeadlineVariant,
   track,
 } from "./analytics";
@@ -34,7 +35,23 @@ function fakeLoaders() {
   return { sent, start, pixels, loaders };
 }
 
-beforeEach(() => resetAnalyticsForTests());
+beforeEach(() => {
+  resetAnalyticsForTests();
+  setConsented(true);
+});
+
+test("before the cookie notice is accepted nothing is queued, loaded or sent", async () => {
+  const { sent, loaders } = fakeLoaders();
+  setConsented(false);
+  track("landing_viewed", { path: "/" });
+  await initAnalytics({ ...base, redditPixelId: "r" }, loaders, nav());
+  expect(loaders.amplitude).not.toHaveBeenCalled();
+  expect(loaders.pixels).not.toHaveBeenCalled();
+  setConsented(true);
+  await initAnalytics(base, loaders, nav());
+  track("cta_clicked", { location: "hero" });
+  expect(sent.map((e) => e.name)).toEqual(["cta_clicked"]);
+});
 
 test("events fired before the SDK loads are replayed in order, each with headline_variant", async () => {
   const { sent, loaders, start } = fakeLoaders();
