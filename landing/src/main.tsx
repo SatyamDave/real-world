@@ -1,7 +1,8 @@
 import { StrictMode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { App } from "./App";
-import { initAfterPaint, setHeadlineVariant, track } from "./analytics";
+import { initAfterPaint, setConsented, setHeadlineVariant, track } from "./analytics";
+import { CookieNotice, storedConsent } from "./components/CookieNotice";
 import { resolveHeadline } from "./copy/headlines";
 import "./styles/fonts.css";
 import "./styles/tokens.css";
@@ -11,6 +12,7 @@ import "./styles/global.css";
 const params = new URLSearchParams(window.location.search);
 const headline = resolveHeadline(params.get("utm_content"));
 setHeadlineVariant(headline.id);
+setConsented(storedConsent() === "accepted");
 
 const root = document.getElementById("root");
 if (!root) throw new Error("index.html has no #root element");
@@ -24,6 +26,8 @@ const app = (
 // it is there, and render from scratch on the other routes and in dev.
 if (root.hasChildNodes()) hydrateRoot(root, app);
 else createRoot(root).render(app);
+// Its own root, so the pre-rendered home hydrates without it.
+createRoot(document.body.appendChild(document.createElement("div"))).render(<CookieNotice />);
 
 track("landing_viewed", {
   path: window.location.pathname,
