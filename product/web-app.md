@@ -2,11 +2,12 @@
 
 ## What it does
 
-Two jobs and the proof behind them ([decision 0012](../research/decisions/0012-will-it-land-and-call-it.md)). `/` is [Will this land?](will-it-land.md): paste a post, pick an audience, record your gut, test it. `/call` is [Call it](daily-question.md): today's question against the AI, whose call is sealed first. `/record` is [your record](track-record.md): sealed post tests to mark, and your calls against the AI. The header links "Will this land?" `/`, "Call it" `/call` and "Your record" `/record`, with "Sign in" (or the account's email and "Sign out") at its end. A muted "Proof" link opens the public record: Scores `/scores` and Receipts `/receipts`. Every result links the proof it rests on.
+A console ([decision 0013](../research/decisions/0013-console-and-playground.md)): a left sidebar and a main pane, described in [home and playground](playground.md). `/` is the home: three simulation primitives and the use cases. `/playground` runs them; its Reaction primitive is [Will this land?](will-it-land.md): paste a post, pick an audience, record your gut, test it. `/call` is [Call it](daily-question.md): today's question against the AI, whose call is sealed first. `/record` is [your record](track-record.md): sealed post tests to mark, and your calls against the AI. The sidebar links Home, Playground, Call it and Your record, then under "Proof" Scores `/scores` and Receipts `/receipts`, with today's spend and the account at its foot. Every result links the proof it rests on.
 
 | Route | Needs sign-in | Spec |
 | --- | --- | --- |
-| `/` | no; sealing a test needs it | [will it land](will-it-land.md) |
+| `/` | no | [home and playground](playground.md) |
+| `/playground` | no; sealing a test needs it | [home and playground](playground.md), [will it land](will-it-land.md), [simulate API](simulate-api.md) |
 | `/call` | no | [call it](daily-question.md) |
 | `/record` | yes | [track record](track-record.md) |
 | `/sign-in` | no | [accounts](accounts.md) |
@@ -35,7 +36,7 @@ People deciding whether a post will land, people who want to call today's questi
 
 ## What it is not
 
-- No globe, fork card, world, cycle, research or developer pages: the engine's forks and world stay in the API ([0012](../research/decisions/0012-will-it-land-and-call-it.md)).
+- No globe, world, cycle, research or developer pages; the fork appears only as the playground's Event primitive ([0013](../research/decisions/0013-console-and-playground.md)).
 - No popups, tours or sign-up walls; no teams, plans or billing.
 - No mobile app. The page works at phone width.
 

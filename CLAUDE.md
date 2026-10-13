@@ -10,10 +10,10 @@ Real World is "Simulations with receipts." for everyone: know how a post will la
 
 These hold for every surface, including the landing page, ads, share text and READMEs ([decision 0012](research/decisions/0012-will-it-land-and-call-it.md), [research/product/108](research/product/108-consumer-wedge.md)).
 
-- The product is two jobs: "Will this land?" (`/`, post tests) and "Call it" (`/call`, the daily question against the AI), plus the person's record and the public proof (receipts, scores, question pages). A new job needs a decision record first.
+- The product is two jobs, "Will this land?" (post tests) and "Call it" (the daily question against the AI), plus the person's record and the public proof (receipts, scores, question pages). A new job or primitive needs a decision record first.
 - One job per screen, finishable in under a minute, with one next action. No tours, popups or walls.
 - Earn trust with proof, not claims: seal a person's call when it is made, show the seal, and score it when the outcome is known. Compare the engine with the person's own gut, the baseline they actually use. A retrospective check is labelled "Retrospective: not on your record" and never enters any record.
-- The engine (forks, the world, the daily cycle, `POST /v1/simulate`, the SDKs) is infrastructure. It is not shown as a product surface, and no surface pitches it to consumers.
+- The app is a console of three simulation primitives, Reaction, Event and Call, run from the playground and taught through use cases ([decision 0013](research/decisions/0013-console-and-playground.md)). The world, the daily cycle, the SDKs and API keys stay infrastructure; no surface pitches them to consumers.
 - The landing page sells the same two jobs in the same words; [product/landing-page.md](product/landing-page.md) holds its positioning rules.
 - Keep only what the two jobs, the record or the engine need. Delete a surface, file or doc section that serves none of them; `research/`, `papers/`, `experiments/` and `gtm/` stay and are kept current instead.
 

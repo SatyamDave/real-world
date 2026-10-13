@@ -2,7 +2,7 @@
 
 ## What it does
 
-The home page, `/`. A person pastes a post of up to 500 characters (a tweet, a caption, a headline, a hook), picks who should see it (every simulated country by default, or some countries and age bands), and says what their gut expects: "It lands" or "It flops". "Test it" returns, in a few seconds on a real model:
+The Reaction primitive of the [playground](playground.md) (`/playground`). A person pastes a post of up to 500 characters (a tweet, a caption, a headline, a hook), picks who should see it (every simulated country by default, or some countries and age bands), and says what their gut expects: "It lands" or "It flops". "Test it" returns, in a few seconds on a real model:
 
 - **Landing chance**: the share of that audience who would like or share it, shown as a percentage with its spread across segments (p10 to p90) and the line "Uncalibrated until 100 marked tests".
 - **Reaction mix**: scroll past, read, like, share, as shares that add to 100%.
