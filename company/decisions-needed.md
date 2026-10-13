@@ -24,6 +24,10 @@ Open product decisions only the founder can make, ordered by when they block wor
 8. **Pro plan at launch.** Options: $49 a month with 50,000 agent-steps ([pricing models](../research/product/079-pricing-models.md), [CRO lens](../research/lenses/cro.md)), or pay-as-you-go credits only until there is usage data ([CFO lens](../research/lenses/cfo.md), [CPO lens](../research/lenses/cpo.md)).
 9. **The insights-team pilot offer.** Approve or change $7,500 for 6 weeks, converting to $2,000 a month, before the first buyer call quotes it. ([CRO lens](../research/lenses/cro.md), [`gtm/pricing.md`](../gtm/pricing.md))
 
+## After Gate 2 (Oct 22)
+
+15. **Approve an owned survey-finetuned model for `forecast_sim` ([0010](../research/decisions/0010-survey-finetuned-model.md), proposed).** Options: approve it; approve it but start in Q1 2027 as [science/029](../research/science/029-human-behavior-models.md) recommends; or reject it and keep Jev. The CEO and CTO lenses cut fine-tuning before Nov 2 ([CEO lens](../research/lenses/ceo.md), [CTO lens](../research/lenses/cto.md)), so approval also overrides that cut. Where it fits in [`plan-to-nov-2.md`](plan-to-nov-2.md): after Gate 2, as data work only, sending training-rights requests to the seven survey licensors and assembling the [E009](../experiments/E009/PREREG.md) test set; no training run starts before a written licence arrives, and E009 cannot run until surveys fielded after Oct 12 publish subgroup tables, so its result lands after Nov 2 (date unknown). Nothing in Gates 1-5 depends on it. ([105](../research/science/105-survey-finetuned-opinion-model.md), [data licensing](../research/data/060-data-licensing-legal.md))
+
 ## Before launch (Oct 27)
 
 10. **Paid human panel before YC.** Options: about $5k of Prolific completes from Oct 20 ([CFO lens](../research/lenses/cfo.md)), or none beyond a small retention pilot, with daily-question answers as the panel ([CEO lens](../research/lenses/ceo.md), [CPO lens](../research/lenses/cpo.md), [red team](../research/lenses/red-team.md)).

@@ -14,3 +14,4 @@ Check every hash with `shasum -a 256 experiments/E*/PREREG.md`.
 | [E006](E006/PREREG.md) | Assimilation v2 vs persistence on the E003 synthetic world | 2026-10-12 | CTO | `ad372cad8f2a3d2a00641b9205cdb97afa87d87e151c88c7e3e47593b8bc450d` | supported | [2026-10-12-none](E006/results/2026-10-12-none/RESULTS.md) |
 | [E007](E007/PREREG.md) | Jev forecasts are no worse calibrated than the Haiku baseline | 2026-10-12 | CTO | `cb68d107d9da5824e53b0d0dad2aaf7528f2cc0554ada13b7a334693f6033cc5` | registered | none |
 | [E008](E008/PREREG.md) | The self-improving loop on a synthetic question stream | 2026-10-12 | CTO | `ebc8593d8389a247d9a1e494a88bb4bbc69f89c8a1ff970da8375ce86e99440d` | registered | none |
+| [E009](E009/PREREG.md) | LoRA-tuned opinion model vs its base model vs Jev on survey questions fielded after registration | 2026-10-12 | CTO | `a83836b9b9fb03ff62854c15bbcd721437804d0edf4a0ca10590176b091c34c5` | registered | none |
