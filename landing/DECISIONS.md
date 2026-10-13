@@ -179,3 +179,31 @@ Decision: plain iframe with the fields in the address; fixed height (no `dynamic
 ### C4. Event names
 
 `typeform_opened` and `typeform_submitted` become `form_opened` and `form_submitted` (vendor-neutral). The staging funnel chart still names the old step until it is updated; the data in that project is test traffic.
+
+## Phase 2: the interactive globe and the 0012 hero (`landing/9-wow`)
+
+### C5. Which globe layer
+
+Options: cobe 2.0.1 with our own projection and drag controller; OGL (raw WebGL); three.js; GSAP and Lenis for scroll choreography.
+
+Evidence (esbuild, gzipped): cobe 5.7 KB, OGL 14.7, GSAP core 27.0, GSAP plus ScrollTrigger 44.1, Lenis 5.3, three 129.7 (`design/EQUIP.md`). First-load JavaScript after this change is 80.9 KB against the 120 KB budget (`pnpm check:bundle`). Local Lighthouse, pre-rendered build, five runs: LCP 1.80 to 1.83 s on four runs, 2.40 s on the cold first run; CLS 0.039.
+
+Risks and reversibility: cobe loads after first paint and only where `holdBackReason()` allows it; the poster stays otherwise. One file (`Globe.tsx`) plus `src/globe/`. GSAP and Lenis are not adopted: `product/design.md` bans scroll-triggered reveals and parallax, and the brief says not to hijack scroll.
+
+Decision: cobe plus `src/globe/controller.ts` (inertia, pinch, wheel with ctrl or cmd only so the page still scrolls). Runner-up: OGL, if we ever need a texture cobe cannot draw. Would change our mind: a device class where cobe's single canvas drops frames.
+
+### C6. The 0012 hero against "globe hero"
+
+Rohit asked for a globe hero; Satyam's direction 0012 says the globe may stay as decoration and the first screen is copy and the action. Decision: follow 0012 for order (copy and field first; on a phone the globe follows the field) and make the globe the way into the stake, not decoration: every marker opens its pending receipt, which ends in "Make your call". Runner-up: globe first on every screen. Would change our mind: Satyam and Rohit settling on the globe as the home page ([DIRECTIONS_C.md](design/DIRECTIONS_C.md): the Ledger is then the page to build).
+
+### C7. Reduced motion, save-data and weak devices
+
+Reading: under `prefers-reduced-motion`, save-data or a weak device the live globe is not loaded on its own; the visitor can ask for it ("Make the globe interactive"), and then it never spins or coasts. Runner-up: load it anyway but static. Would change our mind: evidence that visitors on those settings never see the interactive layer and the marker receipts are not enough (the receipts strip lists all three).
+
+### C8. What was adopted from Satyam's UI
+
+Tokens, type scale, 96/64 spacing, hairline chrome with the receipt as the only heavy object, a sticky top bar, system dark theme and the edge-docked cookie bar (his), all as listed in [SATYAM_DIFF.md](design/SATYAM_DIFF.md). His new tokens are open in PR #97, so they are mirrored in `tokens-next.css` and `tokens-dark.css` and should be deleted once it merges. Not adopted: anything from his app that needs `APP_URL`.
+
+### C9. Critique rounds
+
+Three rounds at 390x844 and 1440x900, light and dark (`design/c-rounds/r1-*`, `r2-*`, `r3-*`, `r4-*`). Round 1 found a double globe (poster showing behind cobe), a black dark-mode sphere, a card covering its own marker, a long hint, a redundant use-cases section and a story order that did not match 0012. Each was fixed. Round 4 is clearly better than the page we started from on the first screen (field and button visible on a phone, one sphere, a marker that opens its receipt). Known weaker spot, said plainly: on a phone the open card covers the whole globe (Close brings it back), and cobe's land dots are near black in light mode rather than green.
