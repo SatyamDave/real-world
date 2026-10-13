@@ -121,6 +121,16 @@ Order: Phase 1, then 2, then 3, then Finish. Commit after each phase. Resume fro
 - [ ] Adopt the improvements as tokens and patterns (not his components); log each in DECISIONS.md
 - [ ] Tell Rohit what to copy from his agent workflow
 
+### Satyam's product memo (pasted mid-run, 2026-10-13): incorporate without leaking
+- [ ] Use the memo's lesson: people adopt a fast answer to their own decision and believe it after seeing it checked; spectators are not retained, a stake is. So the page's job is to get a *personal call*: every globe marker opens a pending receipt with "Make your call" (the waitlist field, no v1 link)
+- [ ] Always show the baseline and keep misses visible (already allowed copy); "sealed" is the plain word
+- [ ] A 10-second honest "what happens next" for the first question: sealed, resolves, scored (from `receipts.json`)
+- [ ] Keep private: TypeSafe, MiroFish, Rally, Reach, prediction-market and consumer-trust figures, product directions A, B, C, the cut list. The copy test bans the names
+- [ ] DECISIONS C6: the tension between "the globe may be demoted" (his memo, undecided) and Rohit's globe-as-hero brief
+- [ ] Phase 3: add ForecastBench and the FRI update to the papers to verify (do not repeat the memo's figures unless the source says them)
+- [ ] FORM_SPEC: optional "Creator or publisher" role option, to test direction A with real waitlist data (flagged as optional)
+- [ ] Not done on purpose: the product brief the memo offers to write (out of scope of the landing run)
+
 ### Phase 2: Milestone C, an award-level page (`landing/9-wow`, off `landing/8-tally`, draft PR)
 - [ ] Audit first, no code: `design/UI_AUDIT.md` (screenshots at 390x844 and 1440x900, ruthless critique); references listed in `INSPIRATION.md`
 - [ ] `design/EQUIP.md`: options, byte costs, recommendation (skills, OGL/raw shaders/cobe, GSAP, Lenis, CSS scroll-driven, View Transitions)
