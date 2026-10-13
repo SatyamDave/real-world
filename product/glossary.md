@@ -29,7 +29,8 @@ One definition per term. Specs, code comments and UI copy use these words with t
 | Primitive | One kind of simulation the simulator runs: Reaction (a post test), Event (a fork) or Call (a sealed probability) ([home and simulator](playground.md)). | |
 | Use case | A prepared simulator input for one real decision, in `web/src/usecases.ts`, grouped by who it serves. | |
 | Ledger tape | The one mono line under the top bar on every page, from `GET /v1/status`: the last cycle, the latest receipt (the newest day record's hash), the anchor, the model and today's spend. | |
-| Post test | One run of a post through the engine for a chosen audience: landing chance, reaction mix, best and worst segments, two simulated accounts and a rewrite ([will it land](will-it-land.md)). | |
+| Message | What a founder or team tests: a launch post, a price change, a headline or an announcement, up to 500 characters. The user-facing word; the API keeps its field names (`text`, `posts`). | |
+| Post test | One run of a message (a post) through the engine; on screen "Message test" for a chosen audience: landing chance, reaction mix, best and worst segments, two simulated accounts and a rewrite ([will it land](will-it-land.md)). | |
 | Landing chance | The share of the chosen audience, weighted by population, that would like or share a post, with its p10-p90 across segments. Uncalibrated until 100 marked post tests. | |
 | Seal | The SHA-256 of a stored post test's canonical JSON, made when the test is made; the database refuses changes to a sealed test. | |
 | Gut | The person's own call on a post, "lands" or "flops", recorded before the result shows; the baseline the engine is scored against. | |

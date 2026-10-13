@@ -1,4 +1,4 @@
-# Your record
+# Your tests (`/record`)
 
 ## What it does
 
@@ -13,9 +13,9 @@ Each seal can be checked: "Check seal" recomputes the SHA-256 of the stored test
 States, written out:
 
 - Loading: "Loading your record". Error: "Could not load your record. The server did not respond." with "Try again".
-- No tests: "No sealed tests yet. Test a post to start your record." with a link to `/`.
+- No tests: "No sealed tests yet. Test a message to start." with a link to `/`.
 - No marked tests: "Mark a test Landed or Flopped once you know how it did."
-- Signed out: the record with nothing in it: "Every post test you seal waits here until you mark how it did. Then the engine and your gut are scored on the same posts.", a slip "The engine vs your gut" with "The engine" and "Your gut" each at "– Brier" and "0 marked tests", an empty seal grid and "Sign in to start your record", then "Brier: 0 is perfect, 0.25 is a coin flip." No other number.
+- Signed out: the page with nothing in it: "Every message test you seal waits here until you mark how it did. Then the engine and your gut are scored on the same messages.", a slip "The engine vs your gut" with "The engine" and "Your gut" each at "– Brier" and "0 marked tests", an empty seal grid and "Sign in to keep your tests", then "Brier: 0 is perfect, 0.25 is a coin flip." No other number.
 
 ## Who it is for
 

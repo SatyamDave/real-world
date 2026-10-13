@@ -74,8 +74,8 @@ button,
 .button {
   cursor: pointer;
   min-height: 44px;
-  border: 1.5px solid var(--ink);
-  background: transparent;
+  border: 1px solid var(--line);
+  background: var(--surface);
   border-radius: var(--radius);
   padding: 0 16px;
   font-weight: 600;
@@ -108,15 +108,16 @@ button:disabled {
 
 button.primary,
 .button.primary {
-  background: var(--ink);
+  border-color: var(--accent);
+  background: var(--accent);
   color: var(--on-accent);
   font-size: 16px;
 }
 
 button.primary:hover:not(:disabled),
 .button.primary:hover {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 85%, var(--ink));
+  border-color: color-mix(in srgb, var(--accent) 85%, var(--ink));
 }
 
 /* Keyboard focus is always visible. */
@@ -170,19 +171,14 @@ button.primary:hover:not(:disabled),
   font-weight: 600;
 }
 
-/* The receipt: printed header, a stamp, and a torn bottom edge. */
+/* A result card: a header row with its kind and a status pill. */
 .receipt,
 .card.receipt {
   background: var(--surface);
-  border: 1.5px solid var(--ink);
-  border-bottom: 0;
-  padding: 0 20px 34px;
-  -webkit-mask:
-    conic-gradient(from -45deg at bottom, transparent, black 1deg 89deg, transparent 90deg) 50% /
-    14px 100%;
-  mask:
-    conic-gradient(from -45deg at bottom, transparent, black 1deg 89deg, transparent 90deg) 50% /
-    14px 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  padding: 0 24px 24px;
 }
 
 .receipt-top {
@@ -192,23 +188,25 @@ button.primary:hover:not(:disabled),
   gap: 10px;
   padding: 12px 0;
   margin-bottom: 14px;
-  border-bottom: 1.5px dashed var(--line);
+  border-bottom: 1px solid var(--line);
   font-size: 14px;
   color: var(--muted);
 }
 
+/* A status pill: neutral by default, accent-tinted for sealed, verified and resolved. */
 .stamp {
   flex: none;
   font-size: 12px;
-  font-weight: 600;
-  color: var(--accent-2);
-  border: 1.5px solid currentColor;
-  padding: 1px 8px;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--paper-2);
+  padding: 2px 8px;
   border-radius: var(--radius);
 }
 
 .stamp.good {
   color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
 }
 
 .stamp.plain {
@@ -292,9 +290,10 @@ main {
 
 .card {
   background: var(--surface);
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 20px;
+  box-shadow: var(--card-shadow);
+  padding: 24px;
 }
 
 .skeleton {
@@ -346,7 +345,7 @@ main {
   height: 28px;
   border-radius: 50%;
   background: var(--surface);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--line);
   cursor: grab;
 }
 
@@ -355,7 +354,7 @@ main {
   height: 26px;
   border-radius: 50%;
   background: var(--surface);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--line);
   cursor: grab;
 }
 
@@ -451,7 +450,7 @@ main {
 .disclosure {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
   font-size: 12px;
   color: var(--muted);
   display: flex;
@@ -473,7 +472,7 @@ main {
   min-width: 20px;
   height: 20px;
   padding: 0 4px;
-  border: 1.5px solid currentColor;
+  background: var(--paper-2);
   border-radius: var(--radius);
   font-family: var(--font-mono);
   font-size: 12px;
@@ -515,7 +514,7 @@ main {
   gap: 10px;
   align-items: baseline;
   padding: 8px 0;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
   font-size: 14px;
 }
 
@@ -602,7 +601,7 @@ main {
   min-height: 44px;
   padding: 0 10px;
   border-radius: var(--radius);
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line);
   background: var(--paper);
   font-family: var(--font-mono);
   font-size: 14px;
@@ -640,13 +639,13 @@ button.icon {
   display: flex;
   flex-direction: column;
   padding: 8px 0;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
 }
 
 blockquote {
   margin: 0;
   padding: 12px 14px;
-  border-left: 3px solid var(--ink);
+  border-left: 3px solid var(--line);
   background: var(--paper-2);
 }
 
@@ -725,7 +724,7 @@ th {
 
 td {
   padding: 8px 12px 8px 0;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
   white-space: nowrap;
 }
 
@@ -815,7 +814,7 @@ main :is(p, li, dd, h3) a {
 
 .thesis .proof {
   padding-top: 14px;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
   font-weight: 600;
 }
 
@@ -857,7 +856,7 @@ main :is(p, li, dd, h3) a {
   width: 22px;
   height: 22px;
   vertical-align: middle;
-  border: 1.5px solid var(--muted);
+  border: 1px solid var(--muted);
   border-radius: var(--radius);
 }
 
@@ -965,7 +964,7 @@ main :is(p, li, dd, h3) a {
   position: relative;
   z-index: 2;
   background: var(--paper);
-  border-top: 1.5px solid var(--line);
+  border-top: 1px solid var(--line);
   padding: 24px var(--edge) 56px;
   font-size: 14px;
   color: var(--muted);
@@ -1050,7 +1049,7 @@ main :is(p, li, dd, h3) a {
 
   .table-wrap tr {
     padding: 8px 0;
-    border-top: 1.5px dashed var(--line);
+    border-top: 1px solid var(--line);
   }
 
   .table-wrap td::before {
@@ -1240,7 +1239,7 @@ main :is(p, li, dd, h3) a {
   width: 100%;
   font: inherit;
   padding: 12px;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--paper);
   color: var(--ink);
@@ -1257,7 +1256,7 @@ main :is(p, li, dd, h3) a {
   gap: 8px;
   min-height: 44px;
   padding: 0 12px;
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
 }
 
@@ -1280,7 +1279,7 @@ main :is(p, li, dd, h3) a {
 
 .mix span {
   padding: 4px 8px;
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
 }
 
@@ -1309,7 +1308,7 @@ main :is(p, li, dd, h3) a {
 .voice {
   margin: 16px 0;
   padding: 12px 16px;
-  border-left: 1.5px solid var(--accent-2);
+  border-left: 1px solid var(--line);
 }
 
 .rewrite {
@@ -1333,12 +1332,12 @@ main :is(p, li, dd, h3) a {
   margin-bottom: 8px;
 }
 
-/* ---- Your record and sign-in ---- */
+/* ---- Your tests and sign-in ---- */
 
 .confirm {
   margin-top: 12px;
   padding: 12px;
-  border: 1.5px solid var(--accent-2);
+  border: 1px solid var(--accent-2);
   border-radius: var(--radius);
 }
 
@@ -1359,7 +1358,7 @@ main :is(p, li, dd, h3) a {
 .mixbar {
   display: flex;
   margin: 12px 0;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
   font-family: var(--font-mono);
@@ -1373,7 +1372,7 @@ main :is(p, li, dd, h3) a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border-right: 1.5px solid var(--surface);
+  border-right: 1px solid var(--surface);
 }
 
 .mixbar-legend {
@@ -1403,7 +1402,7 @@ main :is(p, li, dd, h3) a {
 .swatch {
   width: 12px;
   height: 12px;
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
 }
 
 .mixbar-scroll_past {
@@ -1415,12 +1414,11 @@ main :is(p, li, dd, h3) a {
 }
 
 .mixbar-like {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: color-mix(in srgb, var(--accent) 40%, var(--surface));
 }
 
 .mixbar-share {
-  background: var(--ink);
+  background: var(--accent);
   color: var(--on-accent);
 }
 
@@ -1436,7 +1434,7 @@ main :is(p, li, dd, h3) a {
   min-height: 56px;
   padding: 0 var(--edge);
   background: var(--surface);
-  border-bottom: 1.5px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .topbar nav {
@@ -1473,7 +1471,7 @@ main :is(p, li, dd, h3) a {
 .tape {
   padding: 8px var(--edge);
   background: var(--paper-2);
-  border-bottom: 1.5px solid var(--line);
+  border-bottom: 1px solid var(--line);
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--muted);
@@ -1545,11 +1543,11 @@ main :is(p, li, dd, h3) a {
 }
 
 .seal-grid .s3 {
-  background: var(--ink);
+  background: var(--accent);
 }
 
 .seal-grid.empty span {
-  border: 1.5px dashed var(--line);
+  border: 1px solid var(--line);
 }
 
 /* A seal grid beside two lines: what is sealed, then the hash and where to check it. */
@@ -1629,7 +1627,7 @@ main :is(p, li, dd, h3) a {
 .bench input[type="number"] {
   width: 100%;
   padding: 12px;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
   font-family: var(--font-mono);
@@ -1643,10 +1641,11 @@ main :is(p, li, dd, h3) a {
 }
 
 .bench select,
-.register select {
+.register select,
+.ask-market select {
   min-height: 44px;
   padding: 0 8px;
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
 }
@@ -1682,7 +1681,7 @@ main :is(p, li, dd, h3) a {
   align-items: center;
   gap: 8px;
   min-height: 36px;
-  border-top: 1.5px solid var(--line);
+  border-top: 1px solid var(--line);
   font-size: 14px;
 }
 
@@ -1704,7 +1703,7 @@ main :is(p, li, dd, h3) a {
 .register-bar span {
   display: block;
   height: 100%;
-  background: var(--ink);
+  background: var(--accent);
 }
 
 .register-share {
@@ -1718,7 +1717,7 @@ main :is(p, li, dd, h3) a {
   gap: 12px;
   margin: 16px 0;
   padding-top: 16px;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .decisions h2 {
@@ -1744,11 +1743,11 @@ main :is(p, li, dd, h3) a {
   list-style: none;
   padding: 0;
   margin: 0;
-  border-top: 1.5px solid var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .decision-rows li {
-  border-bottom: 1.5px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .decision-rows a,
@@ -1778,7 +1777,7 @@ main :is(p, li, dd, h3) a {
   align-self: start;
   justify-self: start;
   padding: 2px 8px;
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   font-size: 12px;
   white-space: nowrap;
@@ -1795,7 +1794,7 @@ main :is(p, li, dd, h3) a {
   margin: 0;
   padding: 16px 0 0;
   list-style: none;
-  border-top: 1.5px solid var(--line);
+  border-top: 1px solid var(--line);
   font-size: 14px;
   font-weight: 500;
 }
@@ -1805,7 +1804,7 @@ main :is(p, li, dd, h3) a {
   justify-content: center;
   width: 24px;
   margin-right: 4px;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
 }
 
@@ -1825,8 +1824,17 @@ main :is(p, li, dd, h3) a {
 
 @media (min-width: 1024px) {
   .made-for {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
+}
+
+.ask-market {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .made-card {
@@ -1845,7 +1853,7 @@ main :is(p, li, dd, h3) a {
 
 .home-proof {
   padding-top: 48px;
-  border-top: 1.5px solid var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .today {
@@ -1854,7 +1862,7 @@ main :is(p, li, dd, h3) a {
   align-items: flex-start;
   gap: 12px;
   padding-top: 24px;
-  border-top: 1.5px solid var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .today-text {
@@ -1864,7 +1872,7 @@ main :is(p, li, dd, h3) a {
 
 .proof-line {
   padding-top: 24px;
-  border-top: 1.5px solid var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .proof-line h2 {
@@ -1901,7 +1909,7 @@ main :is(p, li, dd, h3) a {
 .kind-tabs {
   display: flex;
   flex-wrap: wrap;
-  border-bottom: 1.5px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .kind-tabs label,
@@ -1980,10 +1988,8 @@ main :is(p, li, dd, h3) a {
 .slip-quote {
   margin: 0 0 16px;
   padding: 12px 16px;
-  border-left: 1.5px solid var(--ink);
-  background: var(--paper);
-  font-family: var(--font-mono);
-  font-size: 14px;
+  border-radius: var(--radius);
+  background: var(--paper-2);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -2005,7 +2011,7 @@ main :is(p, li, dd, h3) a {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  box-shadow: inset 0 0 0 1.5px var(--line);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--muted) 50%, var(--surface));
 }
 
 .field span.on {
@@ -2056,7 +2062,7 @@ main :is(p, li, dd, h3) a {
 
 .matrix .m0 {
   background: var(--surface);
-  box-shadow: inset 0 0 0 1.5px var(--paper-2);
+  box-shadow: inset 0 0 0 1px var(--paper-2);
 }
 
 .matrix .m1 {
@@ -2097,7 +2103,7 @@ main :is(p, li, dd, h3) a {
   position: relative;
   height: 12px;
   background: var(--paper-2);
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
 }
 
@@ -2125,7 +2131,7 @@ main :is(p, li, dd, h3) a {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--ink);
+  background: var(--accent);
   transform: translate(-50%, -50%);
 }
 
@@ -2149,7 +2155,7 @@ main :is(p, li, dd, h3) a {
 
 .shift-dot.ai {
   background: var(--surface);
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--accent);
 }
 
 /* Call it after resolution: you, the AI and the outcome on one track. */
@@ -2184,12 +2190,12 @@ main :is(p, li, dd, h3) a {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--ink);
+  background: var(--accent);
 }
 
 .mark-ai {
   background: var(--surface);
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--accent);
 }
 
 .mark-outcome {
@@ -2246,16 +2252,14 @@ main :is(p, li, dd, h3) a {
 }
 
 .slider input.unset::-webkit-slider-thumb {
-  border-style: dashed;
   border-color: var(--muted);
 }
 
 .slider input.unset::-moz-range-thumb {
-  border-style: dashed;
   border-color: var(--muted);
 }
 
-/* ---- Your record ---- */
+/* ---- Your tests ---- */
 
 .record-cols {
   display: grid;
@@ -2281,7 +2285,7 @@ main :is(p, li, dd, h3) a {
   gap: 16px;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .record-strip {
@@ -2302,7 +2306,7 @@ main :is(p, li, dd, h3) a {
   align-items: center;
   gap: 8px 12px;
   padding: 12px 0;
-  border-top: 1.5px solid var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .record-post {
@@ -2331,7 +2335,7 @@ main :is(p, li, dd, h3) a {
 /* ---- Receipts: one open day, the rest one row each ---- */
 
 .day-record {
-  border-top: 1.5px solid var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .day-record > summary {
@@ -2373,7 +2377,7 @@ main :is(p, li, dd, h3) a {
   gap: 16px;
   margin: 16px 0;
   padding-top: 16px;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .seal-hash {

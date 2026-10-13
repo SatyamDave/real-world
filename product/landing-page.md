@@ -2,6 +2,8 @@
 
 ## Positioning since decision 0012 (applies to every landing change)
 
+Since decision 0015 the product is message testing for founders and companies, and the landing page adopts `web/src/styles/tokens.css` (the "Neutral" look in [design](design.md)) as its tokens when it merges.
+
 [Decision 0012](../research/decisions/0012-will-it-land-and-call-it.md) makes the product two jobs on the engine. The landing page sells the same two jobs, in this order, and nothing else:
 
 1. **Lead with "Will this land?"**: the headline promises knowing how a post lands before posting it, and the first action is pasting a post (or joining the waitlist for it). A live demo box that runs a post test, when the API is reachable, beats any explanation.

@@ -1,6 +1,6 @@
 # Design reference
 
-One look for every surface: the app in `web/`, the landing page, share images, ads, the API docs page and any text the API serves. The source is the landing design "Commit Slip" (direction A) by rovivek. Until the `landing/*` branches merge, read it with git, never by checking out or editing those branches:
+One look for every surface: the app in `web/`, the landing page, share images, ads, the API docs page and any text the API serves. The look is "Neutral" (founder direction, 2026-10-12): simple like production tools such as Jev and Linear, defined by `web/src/styles/tokens.css`, which the landing page adopts when it merges. It replaced the landing design "Commit Slip" (direction A) by rovivek, still readable with git for history:
 
 - Rationale and the receipt anatomy: `git show origin/landing/design-pass:landing/design/DESIGN-PASS.md`, `COPY.md`, `A11Y-REVIEW.md`
 - Reference shots: `landing/design/shots/after-desktop-full.png` (1440) and `after-mobile-full.png` (390) on `origin/landing/design-pass`; extract with `git show <ref>:<path> > /tmp/x.png`
@@ -12,20 +12,20 @@ What follows is that design written as rules a change can be checked against. `s
 
 Founder direction: the look of a top-tier deep-tech product: precise type, generous whitespace, one accent, crisp data, motion only where it explains. Evidence and per-site rules: [research/product/107](../research/product/107-design-direction-references.md) (TypeSafe, OpenAI developers, Cloudflare Workers AI, Linear, Perplexity). The decisions:
 
-1. App chrome is calm and hairline: 1px `--line` borders, tonal fills, no shadow. The receipt stays the one heavy object (1.5px `--ink` border, torn edge, `--card-shadow`), so it is the only thing that looks like a slip.
-2. Keep IBM Plex Sans and Mono, `--accent` green and `--accent-2` clay. No new font, no second accent, no gradient, no illustration, no emoji.
+1. Neutral and plain: white surfaces, gray text, 1px `--line` borders, 8px radius, generous whitespace (24px card padding), one big `h1` and muted secondary text. No torn edges, no dashed rules, no boxed stamps, no all-mono labels.
+2. One accent, indigo `--accent`, for primary actions, links, focus and positive data; amber `--accent-2` only for pending or a warning, sparingly. The system sans (Inter where installed) for reading and IBM Plex Mono for hashes and numbers only. No new font files, no gradient, no illustration, no emoji.
 3. Polish only: no claim, number, logo, customer, funding or traction appears that is not on the allowed list in [messaging](../gtm/messaging.md) or traced to a committed artifact. No testimonial or "trusted by" row, ever.
 4. A change to these rules lands here first, in its own PR, citing a research note; then in each surface.
 
-## Identity: the ledger desk (2026-10-12)
+## Identity: message testing on a public ledger (2026-10-12)
 
-Real World is a public ledger of simulated countries; every run prints a sealed slip from it ([decision 0014](../research/decisions/0014-ledger-desk.md)).
+Real World is message testing for startups and companies: test a launch, a price, a headline or an announcement on the simulated public of 16 countries before you ship it (decision 0015). Every run is a result card from a public ledger of simulated countries ([decision 0014](../research/decisions/0014-ledger-desk.md)).
 
 - The ledger is the chrome: no sidebar. A top bar, and under it the ledger tape, one mono 12px `--muted` line on `--paper-2` with the last cycle, the latest receipt, the anchor, the model and today's spend. Every page sits under it except the home, where it follows the content so the first screen says who the product is for.
-- The person is the hero: the home's first screen says who it is for (people who post online), what it simulates for them and what to do, with a labelled example result beside the post box. The 16 simulated countries, their tiers and the day record follow below it.
-- Each result is a slip (the receipt): the input quoted in mono at the top, the population drawn as data, the seal drawn at the foot.
-- The seal is visible: `SealGrid` draws the 64 hex digits of a SHA-256 as an 8 x 8 grid in four shades of `--ink`; unsealed is the same grid empty and dashed.
-- Mono for every number, hash, ISO code and the tape; dashed `--line` rules inside slips; torn edge only on slips; a tier badge wherever a country appears; green only for sealed, verified and "would like or share"; clay only for pending, not sealed and refused. No all-caps, no letter-spaced eyebrow.
+- The founder or team is the hero: the home's first screen says who it is for, what it simulates for them and what to do ("Test your launch on the public before you ship it.", "Test my message"), with a labelled example result beside the message box. The 16 simulated countries, their tiers and the day record follow below it.
+- Each result is a plain card: a header row with its kind and a status pill, the input quoted on a `--paper-2` fill, the population drawn as data, the seal small at the foot.
+- The seal is visible: `SealGrid` draws the 64 hex digits of a SHA-256 as an 8 x 8 grid in `--paper-2`, `--line`, `--muted` and `--accent`; unsealed is the same grid empty with `--line` outlines.
+- Mono for numbers, hashes, ISO codes and the tape only; a tier badge wherever a country appears; the accent for sealed, verified and "would like or share"; amber only for pending and warnings. Status pills ("Sealed", "Not sealed", "Resolved") are small: neutral on `--paper-2`, or accent-tinted for a good state. No all-caps, no letter-spaced eyebrow.
 - Retired phrases, on no surface: "Learn to simulate", "Real World in action", "Quickstart", "Primitive", "Playground", "Example requests", "Walkthrough lessons", "Real-life use cases", "Instructions", "Example output". "Primitive" stays only as an internal type name and glossary term.
 
 ## Tokens
@@ -34,26 +34,24 @@ Real World is a public ledger of simulated countries; every run prints a sealed 
 
 | Token | Role | Light | Dark |
 | --- | --- | --- | --- |
-| `--paper` | page | `#f2f4f3` | `#111814` |
-| `--paper-2` | raised or alternate fill, code blocks, table header, hover row | `#e7eae8` | `#1a231e` |
-| `--surface` | cards, inputs, menus | `#ffffff` | `#18201c` |
-| `--ink` | text, primary button | `#15201b` | `#e4eae6` |
-| `--muted` | secondary text, labels, feet; at least 4.5:1 on `--paper` | `#5c6660` | `#9aa69f` |
-| `--line` | the 1px hairline: borders, dividers, table rules, chart gridlines | `#cdd3cf` | `#34413a` |
-| `--line-strong` (new) | hover border, input border at rest | `#aab2ad` | `#4a584f` |
-| `--accent` | committed, verified, resolved, links, primary hover, focus, chart highlight | `#2f6f4e` | `#6dbd90` |
-| `--accent-wash` (new) | 10% accent fill: verified row, selected nav item, spread band | `#e1ece5` | `#1b2a22` |
-| `--accent-2` | pending, error, refused, destructive, event marker | `#b23a2e` | `#e8806f` |
-| `--clay-wash` (new) | error and refused fill | `#f3e1de` | `#2e1b18` |
+| `--paper` | page | `#ffffff` | `#0b0b0d` |
+| `--paper-2` | subtle fill: quotes, pills, table header, hover row | `#f6f6f7` | `#1b1b1f` |
+| `--surface` | cards, inputs, menus | `#ffffff` | `#141417` |
+| `--ink` | text | `#111113` | `#ededf0` |
+| `--muted` | secondary text, labels, feet | `#6b6b76` | `#9a9aa5` |
+| `--line` | the 1px hairline: borders, dividers, table rules, chart gridlines | `#e6e6ea` | `#26262c` |
+| `--accent` | primary actions, links, focus, sealed, verified, positive data | `#4f46e5` | `#818cf8` |
+| `--accent-2` | pending, warning, destructive; sparingly | `#d97706` | `#f59e0b` |
+| `--on-accent` | text on an `--accent` or `--ink` fill | `#ffffff` | `#0b0b0d` |
 | `--focus` | 2px outline, 2px offset | `--accent` | `--accent` |
-| `--radius` | 4px (was 2px) on everything with a radius; `0` and `50%` are the only others; no pill | | |
-| `--card-shadow` | receipt only | | |
+| `--radius` | 8px on everything with a radius; `0` and `50%` are the only others | | |
+| `--card-shadow` | cards: `0 1px 2px` at 6% ink; none in dark | | |
 
-Semantic colour is exactly two: green means verified or committed, clay means pending or wrong. Nothing else is coloured; a chart's other series are `--ink` and `--muted` at different dash or weight, not new hues. Contrast: text at least 4.5:1, borders that carry meaning at least 3:1, in both themes; a test computes it from the token files.
+Semantic colour is one accent and one warning: indigo means act, sealed or positive; amber means pending or careful. Charts and data visuals use the accent and neutral grays only. Contrast: text at least 4.5:1, borders that carry meaning at least 3:1, in both themes.
 
 ## Type
 
-IBM Plex Sans for reading, IBM Plex Mono for data and code. Weights 400, 500, 600 only. One scale, no value outside it:
+The system sans (`"Inter", ui-sans-serif, system-ui`) for reading, IBM Plex Mono for hashes, numbers and code. Weights 400, 500, 600 only. One scale, no value outside it:
 
 | Role | Size / line height | Weight | Tracking |
 | --- | --- | --- | --- |
@@ -83,27 +81,28 @@ One implementation per pattern; a second button, card, badge, disclaimer, loader
 
 | Pattern | Rule |
 | --- | --- |
-| Primary button | filled `--ink`, 16px 600, 44px min height; hover fills `--accent`; active 1px down; disabled 0.6 opacity; one per view |
-| Secondary button | 1px `--line-strong` border, transparent, 14px 600; hover `--paper-2` |
+| Primary button | filled `--accent` with `--on-accent` text, 8px radius, 16px 600, 44px min height; hover darkens the accent; active 1px down; disabled 0.6 opacity; one per view |
+| Secondary button | `--surface` with a 1px `--line` border, 14px 600; hover `--paper-2` |
 | Text action | `button.link`, underlined, 3px offset |
-| Card | `--surface`, 1px `--line` border, `--radius`, 20px padding, no shadow; whole-card links show the hover border `--line-strong` |
-| Receipt | unchanged: 1.5px `--ink` border, `--card-shadow`, torn edge, dashed header rule; the only card that is heavy |
+| Card | `--surface`, 1px `--line` border, `--radius`, 24px padding, `--card-shadow`; whole-card links fill `--paper-2` on hover |
+| Result card (`.receipt`) | the card with a header row (kind, status pill) over a 1px `--line` rule; no torn edge, no dashed rule |
+| Status pill (`.stamp`) | 12px 500, 2px 8px padding, `--radius`; `--muted` on `--paper-2`, or `.good`: `--accent` on a 12% accent tint |
 | Stamp | unchanged |
 | Input | 16px, 12px 14px padding, 1px `--line-strong` border, `--surface`; focus is the 2px `--focus` outline; the post box placeholder is "Paste a tweet, a caption, a headline or a hook" |
 | Tabs | underline tabs, not pills: 14px 500, 2px `--ink` underline on the active tab, `role="tablist"`, arrow-key navigation, 44px height; the chosen tab persists per surface in `localStorage` |
 | Inline code | Mono 14px, `--paper-2` fill, `--radius`, 2px 6px padding |
 | Table | full width, no vertical rules, 1px `--line` between rows, header row 12px `--muted` on `--paper-2`, 48px row height at 1024px and up, mono right-aligned numerals, sticky header when the body scrolls; at 390px a row becomes a stacked card list or the table scrolls inside its block with the first column sticky |
 | Nav item (docs, settings) | 14px, 36px row; active has `--accent-wash` fill and 2px `--accent` left rule |
-| Callout | `--paper-2` fill, 1px `--line` border, 14px text; the only coloured variant is clay for a refusal or an error; no icon, no emoji |
+| Callout | `--paper-2` fill, 1px `--line` border, 14px text; the only coloured variant is amber `--accent-2` for a refusal or an error; no icon, no emoji |
 | Header | a top bar with the ledger tape beneath it. `.topbar`: 56px high, bottom `--line`, brand, nav (Simulate, Call it, Your record, Receipts, Scores) with `aria-current="page"` underlined 2px `--ink`, then Sign in or the account; sticky. At 720px and below the nav takes a second row that scrolls inside itself. `.tape`: the ledger tape, one line with ellipsis at 720px and up, wrapping below |
 | `SealRow` | `App.tsx`: the one seal line: a `.lg` `SealGrid` left, 12px gap, `align-items: center`, then two lines: a 14px 500 title and a mono 12px line with the hash and where to check it. Used on the home's day record and Today's question, on Call it and at the foot of the post test |
 | `.button` | a link drawn as the button (`.button.primary` filled), for the one next action when it is a page: "Make your call", "Sign in to start your record" |
-| `SealGrid` | `App.tsx`: a SHA-256 as 8 x 8 cells of 8px (`.lg` 12px), shades `s0`..`s3` from `--paper-2`, `--line`, `--muted`, `--ink`; empty and dashed when there is no hash. On the sealed post test, the AI's sealed call and the home's day record |
+| `SealGrid` | `App.tsx`: a SHA-256 as 8 x 8 cells of 8px (`.lg` 12px), shades `s0`..`s3` from `--paper-2`, `--line`, `--muted`, `--accent`; empty with `--line` outlines when there is no hash (4px cells in a receipts day row). On the sealed message test, the AI's sealed call and the home's day record |
 | `PopulationField` | `results.tsx`: 100 dots split across segments by population weight (largest remainder), filled `--accent` where the segment would like or share it, empty as a `--line` ring; 20 x 5 at 720px and up, 10 x 10 below |
 | `MixBar` | `results.tsx`: the reaction mix as one stacked bar with labels inside; under 720px the in-bar labels hide and a mono 12px legend row with a swatch per part sits under the bar |
 | `SegmentMatrix` | `results.tsx`: country rows (ISO and tier, sticky first column) by age band and education columns, only the columns with at least one asked segment (an age band with none is dropped), mono landing chance shaded `m0`..`m4` (`--surface`, `--paper-2`, `--line`, `--accent` at 35% and 70%); scrolls inside its block at 390px |
 | `BeliefShifts` | `results.tsx`: a row per topic, a 0-100% track with the p10-p90 band (at least 2px, `--ink` at 25% on `--surface`), a 2px `--muted` tick at before that runs 6px above and below the track, and a 10px `--ink` dot at the median, and mono "{before} → {after} ({pts}) · p10–p90 {p10}–{p90}", which drops under the track at 720px and below. Call it reuses the track for its resolved strip: you as the filled dot, the AI as a hollow dot, the outcome as the tick |
-| Call it | two slips at 1024px and up (7fr 5fr, 32px gap), one column below with "Your call" first; the slider starts unset (a dashed thumb, "–", the button disabled reading "Move the slider to call it") |
+| Call it | two slips at 1024px and up (7fr 5fr, 32px gap), one column below with "Your call" first; the slider starts unset (a muted thumb, "–", the button disabled reading "Move the slider to call it") |
 | Charts | `Chart.tsx`: the svg's viewBox is its measured pixel width, so every chart spans its slip and axis text stays 12px mono at every width |
 | Use case list | `Home.tsx` `UseCaseList`: groups by who, rows (not cards) with an outlined mono kind tag, title, sentence and audience; 2 columns of groups at 1024px and up |
 | Footer | links (Receipts, Acceptable use, Privacy, Terms, Source), the disclosure, copyright; 44px targets |
@@ -112,7 +111,7 @@ One implementation per pattern; a second button, card, badge, disclaimer, loader
 
 Since [decision 0012](../research/decisions/0012-will-it-land-and-call-it.md) the landing page and the app's home tell one story, in this order; [landing-page.md](landing-page.md) holds the positioning rules. Each block is a headline, one lead sentence, and one artefact from real data; no stock imagery, no decoration.
 
-1. Hero: "See how people react before you post.", who it is for, what it simulates, and the post box itself as the one primary action ("Test my post"). The still globe poster may sit beside it as decoration, never as the action.
+1. Hero: "Test your launch on the public before you ship it.", who it is for, what it simulates, and the message box itself as the one primary action ("Test my message"). The still globe poster may sit beside it as decoration, never as the action.
 2. The result: a real post test card (landing chance with its range, best and worst audiences with tiers, two simulated accounts, the rewrite) and the seal line.
 3. Call it: today's question with "The AI's call is sealed" and its leaf hash.
 4. Proof: the latest receipts and the score card with its n, "No claim yet" until the rule allows one, linking `/receipts` and `/scores`.
@@ -144,7 +143,7 @@ Same roles, values in the Tokens table. Rules: the receipt keeps its light paper
 
 The implementation PRs, not this one, update these. Until they land, the mechanical guards still enforce the earlier values.
 
-- `scripts/check_design.py`: `--radius` becomes 4px; allow `1px` and `1.5px` borders only; keep one shadow and three weights; add `CodeBlock`, `Tabs` and `DataTable` to the duplicate-component guard.
+- `scripts/check_design.py`: `--radius` is 8px (Neutral) and borders are 1px; keep one shadow and three weights; add `CodeBlock`, `Tabs` and `DataTable` to the duplicate-component guard.
 - `web/src/theme.test.ts`: contrast of every token pair in both themes; `--line-strong`, `--accent-wash`, `--clay-wash` exist in both files.
 - A Playwright run at 390 and 1440, light and dark, on `/`, `/docs`, `/developers`: no horizontal page scroll, no layout shift when a skeleton is replaced (CLS under 0.05), focus visible on every control.
 

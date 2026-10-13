@@ -1,30 +1,30 @@
-# Will this land?
+# Message test (was "Will this land?")
 
 ## What it does
 
-The post test of the [simulator](playground.md) (`/simulate`, or the post box on `/`). A person pastes a post of up to 500 characters (a tweet, a caption, a headline, a hook), picks who should see it (every simulated country by default, or some countries and age bands), and says what their gut expects: "It lands" or "It flops". "Test it" returns, in a few seconds on a real model:
+The message test of the [simulator](playground.md) (`/simulate`, or the message box on `/`), for founders and companies (decision 0015). You paste a message of up to 500 characters (a launch post, a price change, a headline, an announcement), pick your market (every simulated country by default, or some countries and age bands), and say what your gut expects: "It lands" or "It flops". "Test my message" returns, in a few seconds on a real model:
 
 - **Landing chance**: the share of that audience who would like or share it, shown as a percentage with its spread across segments (p10 to p90) and the line "Uncalibrated until 100 marked tests".
 - **Reaction mix**: scroll past, read, like, share, as shares that add to 100%.
 - **Best and worst audiences**: the three segments most and least likely to like or share it, each with its coverage tier.
-- **Two simulated accounts**: one sentence each from someone in the best and the worst segment, stamped "Simulated account".
+- **What people say** (two simulated accounts): one sentence each from someone in the best and the worst segment, stamped "Simulated account".
 - **One rewrite**, with "Test this version", which fills the box with it.
 - Cost, and "AI-simulated. Not a poll or a prediction of a real person".
 
-Signed in, the test is sealed when it is made: the page shows "Sealed <time> · <first 12 characters of the hash>". The test then appears in [your record](track-record.md), where the person marks it "Landed" or "Flopped" once they know. Signed out, the result shows with "Sign in to seal this test and keep your record." and nothing is stored.
+Signed in, the test is sealed when it is made: the page shows "Sealed <time> · <first 12 characters of the hash>". The test then appears in [your tests](track-record.md), where the person marks it "Landed" or "Flopped" once they know. Signed out, the result shows with "Sign in to seal this test and keep your record." and nothing is stored.
 
-Under the box, "Check it on posts you already published" opens the retrospective check: up to five past posts, each marked "landed" or "flopped" by the person, run through the same engine. It shows "The engine would have called <k> of <n>" and each post's landing chance, stamped "Retrospective: not on your record".
+Under the box, "Check it on messages you already published" opens the retrospective check: up to five past messages, each marked "landed" or "flopped" by the person, run through the same engine. It shows "The engine would have called <k> of <n>" and each post's landing chance, stamped "Retrospective: not on your record".
 
 States, written out:
 
-- Empty box: "Test it" is disabled.
+- Empty box: "Test my message" is disabled.
 - Running: "Asking <n> audiences".
 - Refused: the API's `detail` sentence as sent.
 - Error: "Could not test the post. The server did not respond." with "Try again".
 
 ## Who it is for
 
-Creators, founders and anyone about to post something they care about, deciding between versions in the minute before publishing ([product/108](../research/product/108-consumer-wedge.md)).
+Founders and teams at startups and companies (growth and marketing, pricing and product, comms and PR, market entry) deciding between versions of a launch, a price, a headline or an announcement before they ship it (decision 0015).
 
 ## How we know it works
 

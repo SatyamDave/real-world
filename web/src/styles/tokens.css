@@ -1,33 +1,26 @@
-/* Mirrors landing/src/styles/tokens.css on the landing branches; change both together until they share one file. */
+/* Mirrors the landing page's tokens; the landing page adopts this file when it merges. */
 /*
- * Design tokens — Direction A, "Commit Slip" (the chosen direction).
- * Scores and rationale: landing/MORNING.md and landing/OVERNIGHT_LOG.md.
- *
- * To switch directions, change the single tokens import in src/main.tsx:
- *   import "./styles/tokens.css";    (A, current)
- *   import "./styles/tokens-b.css";  (B, Observatory)
- *   import "./styles/tokens-c.css";  (C, Almanac)
- * The component CSS only uses the semantic variables below, so the swap is total.
- * (Directions B and C reuse the loaded IBM Plex fonts; load their display fonts
- *  in index.html too if you want B's serif or C's grotesque.)
+ * Design tokens: "Neutral". White surfaces, gray text and hairlines, one indigo accent for
+ * primary actions, links, focus and positive data, and amber only for pending or warning.
+ * The component CSS only uses the semantic variables below.
  */
 :root {
-  --paper: #f2f4f3; /* page background */
-  --paper-2: #e7eae8; /* raised/alt background */
+  --paper: #ffffff; /* page background */
+  --paper-2: #f6f6f7; /* subtle fill */
   --surface: #ffffff; /* cards, inputs */
-  --ink: #15201b; /* primary text */
-  --muted: #5c6660; /* secondary text */
-  --accent: #2f6f4e; /* verify green */
-  --accent-2: #b23a2e; /* pending clay */
-  --line: #cdd3cf; /* borders, dividers */
-  --focus: #2f6f4e; /* focus ring */
-  --on-accent: #f2f4f3; /* text on --ink / solid buttons */
+  --ink: #111113; /* primary text */
+  --muted: #6b6b76; /* secondary text */
+  --accent: #4f46e5; /* primary actions, links, focus, positive data */
+  --accent-2: #d97706; /* pending, warning; used sparingly */
+  --line: #e6e6ea; /* borders, dividers */
+  --focus: #4f46e5; /* focus ring */
+  --on-accent: #ffffff; /* text on --accent and --ink fills */
 
-  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
 
-  --radius: 2px;
-  --card-shadow: 6px 6px 0 var(--paper-2);
-  --globe-dot: #2f6f4e; /* live cobe land dots */
-  --globe-glow: 47, 111, 78; /* rgb of accent, for marker glow */
+  --radius: 8px;
+  --card-shadow: 0 1px 2px rgba(17, 17, 19, 0.06);
+  --globe-dot: #4f46e5; /* live cobe land dots */
+  --globe-glow: 79, 70, 229; /* rgb of accent, for marker glow */
 }

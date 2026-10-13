@@ -1,22 +1,22 @@
-/* Dark theme for the product. The landing design defines no dark theme, so this is built from
-   the same hues as tokens.css; change it when tokens.css changes. */
+/* Dark theme for the product, built from the same hues as tokens.css; change both together. */
 @media (prefers-color-scheme: dark) {
   .globe-poster {
     filter: invert(0.9) hue-rotate(180deg);
   }
 
   :root {
-    --paper: #111814;
-    --paper-2: #1a231e;
-    --surface: #18201c;
-    --ink: #e4eae6;
-    --muted: #9aa69f;
-    --accent: #6dbd90;
-    --accent-2: #e8806f;
-    --line: #34413a;
-    --focus: #6dbd90;
-    --on-accent: #111814;
-    --globe-dot: #6dbd90;
-    --globe-glow: 109, 189, 144;
+    --paper: #0b0b0d;
+    --paper-2: #1b1b1f;
+    --surface: #141417;
+    --ink: #ededf0;
+    --muted: #9a9aa5;
+    --accent: #818cf8;
+    --accent-2: #f59e0b;
+    --line: #26262c;
+    --focus: #818cf8;
+    --on-accent: #0b0b0d;
+    --card-shadow: none;
+    --globe-dot: #818cf8;
+    --globe-glow: 129, 140, 248;
   }
 }

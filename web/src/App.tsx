@@ -22,10 +22,10 @@ const PAGES: Record<string, ComponentType<{ param?: string }>> = Object.fromEntr
 );
 const NAV = [
   ["Simulate", "/simulate"],
-  ["Call it", "/call"],
-  ["Your record", "/record"],
+  ["Your tests", "/record"],
   ["Receipts", "/receipts"],
   ["Scores", "/scores"],
+  ["Call it", "/call"],
 ] as const;
 
 export const DISCLOSURE = "AI-simulated. Not a poll or a prediction of a real person";
@@ -292,7 +292,7 @@ function Footer() {
 }
 
 const TITLES: Record<string, string> = {
-  "/": "Will this land? · Real World",
+  "/": "Test your launch before you ship it · Real World",
   "/receipts": "Receipts · Real World",
   "/acceptable-use": "Acceptable use · Real World",
 };

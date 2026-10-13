@@ -250,7 +250,7 @@ function SealLine({ seal }: { seal: PostTestOut["seal"] }) {
             <span key={i}>{seal.sha256.slice(i, i + 16)}</span>
           ))}
         </p>
-        <a href="/record">Mark it in your record once you know how it did</a>
+        <a href="/record">Mark it in your tests once you know how it did</a>
       </SealRow>
     </div>
   ) : (
@@ -328,7 +328,7 @@ export function ReactionResult({
   return (
     <section className="card receipt land-result" aria-live="polite">
       <div className="receipt-top">
-        <span className="slip-kind">Post test</span>
+        <span className="slip-kind">Message test</span>
         <span className={`stamp${out.seal ? " good" : ""}`}>
           {out.seal ? "Sealed" : "Not sealed"}
         </span>
@@ -350,7 +350,7 @@ export function ReactionResult({
         <Segments title="Most likely to like or share it" rows={r.best} />
         <Segments title="Least likely" rows={r.worst} />
       </div>
-      <h3>Two simulated accounts</h3>
+      <h3>What people say</h3>
       {r.voices.map((v) => (
         <blockquote key={v.label} className="voice">
           <span className="stamp">

@@ -22,7 +22,14 @@ export default function Simulate() {
   const [primitive, setPrimitive] = useState<Primitive>(start?.primitive ?? "reaction");
   const [text, setText] = useState(start?.text ?? (params.get("text") ?? "").trim().slice(0, MAX));
   const [audience, setAudience] = useState<Audience>({
-    country: start?.countries?.length === 1 ? start.countries[0] : "",
+    country:
+      start?.countries?.length === 1
+        ? start.countries[0]
+        : start
+          ? ""
+          : /^[A-Z]{3}$/.test(params.get("country") ?? "")
+            ? (params.get("country") as string)
+            : "",
     ages: start?.ages ?? [...AGES],
   });
   const [countries, setCountries] = useState<string[] | null>(
@@ -85,8 +92,8 @@ export default function Simulate() {
     <div className="simulate">
       <h1>Simulate</h1>
       <p className="lead muted">
-        Run a post or one event on today's simulated populations. Every result is AI-simulated and
-        shows its coverage tier.
+        Test a message or one event on today's simulated populations. Every result is AI-simulated
+        and shows its coverage tier.
       </p>
       <div className="kind-tabs" role="radiogroup" aria-label="Simulation">
         {(["reaction", "event"] as const).map((p) => (
@@ -97,7 +104,7 @@ export default function Simulate() {
               checked={primitive === p}
               onChange={() => setPrimitive(p)}
             />
-            {p === "reaction" ? "Test a post" : "Test an event"}
+            {p === "reaction" ? "Test a message" : "Test an event"}
           </label>
         ))}
         <a href="/call">Call today's question</a>
@@ -113,7 +120,7 @@ export default function Simulate() {
         }}
       >
         <label htmlFor="pg-text" className="bench-label">
-          {primitive === "reaction" ? "Post" : "Event"}
+          {primitive === "reaction" ? "Message" : "Event"}
         </label>
         <textarea
           id="pg-text"
@@ -122,7 +129,7 @@ export default function Simulate() {
           value={text}
           placeholder={
             primitive === "reaction"
-              ? "Paste a tweet, a caption, a headline or a hook"
+              ? "Paste a launch post, a price change, a headline or an announcement"
               : "One event in plain words, such as: The central bank cuts rates sharply."
           }
           onChange={(e) => setText(e.target.value)}
@@ -205,7 +212,7 @@ export default function Simulate() {
               busy || !text.trim() || (primitive === "reaction" && audience.ages.length === 0)
             }
           >
-            {primitive === "reaction" ? "Test it" : "Test the event"}
+            {primitive === "reaction" ? "Test my message" : "Test the event"}
           </button>
         </div>
         <p className="mono small muted">
@@ -274,22 +281,22 @@ function Retrospective({ countries }: { countries: string[] | null }) {
 
   return (
     <details className="retro">
-      <summary>Check it on posts you already published</summary>
+      <summary>Check it on messages you already published</summary>
       <p className="muted small">
-        Paste up to five posts and say how each did. The engine calls each one without knowing.
+        Paste up to five messages and say how each did. The engine calls each one without knowing.
       </p>
       {posts.map((p, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: rows have no id and are only appended
         <div key={i} className="retro-row">
           <textarea
-            aria-label={`Past post ${i + 1}`}
+            aria-label={`Past message ${i + 1}`}
             rows={2}
             maxLength={MAX}
             value={p.text}
             onChange={(e) => set(i, { text: e.target.value })}
           />
           <select
-            aria-label={`How post ${i + 1} did`}
+            aria-label={`How message ${i + 1} did`}
             value={p.outcome}
             onChange={(e) => set(i, { outcome: e.target.value as Past["outcome"] })}
           >
@@ -304,7 +311,7 @@ function Retrospective({ countries }: { countries: string[] | null }) {
             type="button"
             onClick={() => setPosts((all) => [...all, { text: "", outcome: "landed" }])}
           >
-            Add a post
+            Add a message
           </button>
         )}{" "}
         <button type="button" disabled={busy || !filled.length} onClick={run}>

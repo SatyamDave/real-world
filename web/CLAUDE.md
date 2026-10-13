@@ -1,6 +1,6 @@
 # web/
 
-The Vite + React + TypeScript web app: "Will this land?" (post tests), "Call it" (the daily question against the AI), the person's record, sign-in, and the receipts and scores pages as proof ([decision 0012](../research/decisions/0012-will-it-land-and-call-it.md)). `web/README.md` maps each file.
+The Vite + React + TypeScript web app: message testing for founders and companies (a message test on the simulated public of 16 countries), "Your tests", sign-in, the receipts and scores pages as proof, and "Call it" (the daily question against the AI) as a secondary page (decision 0015, [decision 0012](../research/decisions/0012-will-it-land-and-call-it.md)). `web/README.md` maps each file.
 
 ## Specs and research
 

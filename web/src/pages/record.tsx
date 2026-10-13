@@ -3,13 +3,13 @@ import { useState } from "react";
 import { failure, LoadError, Loading, pct, plural, SealGrid, shortDate, useLoad } from "../App";
 import { account, sealOf, signInHref, useSession } from "../session";
 
-export const title = "Your record";
+export const title = "Your tests";
 
 export default function Record() {
   const session = useSession();
   if (session.error)
-    return <LoadError what="your record" error={session.error} retry={session.retry} />;
-  if (session.data === undefined) return <Loading what="your record" />;
+    return <LoadError what="your tests" error={session.error} retry={session.retry} />;
+  if (session.data === undefined) return <Loading what="your tests" />;
   if (session.data === null) return <SignedOut />;
   return <Signed person={session.data} />;
 }
@@ -20,10 +20,10 @@ const BRIER_LINE = "Brier: 0 is perfect, 0.25 is a coin flip.";
 function SignedOut() {
   return (
     <div className="record">
-      <h1>Your record</h1>
+      <h1>Your tests</h1>
       <p className="lead muted">
-        Every post test you seal waits here until you mark how it did. Then the engine and your gut
-        are scored on the same posts.
+        Every message test you seal waits here until you mark how it did. Then the engine and your
+        gut are scored on the same messages.
       </p>
       <section className="card receipt" aria-label="The engine vs your gut">
         <div className="receipt-top">
@@ -42,7 +42,7 @@ function SignedOut() {
         <div className="record-empty">
           <SealGrid />
           <a href={signInHref("/record")} className="button primary">
-            Sign in to start your record
+            Sign in to keep your tests
           </a>
         </div>
       </section>
@@ -55,14 +55,14 @@ function Signed({ person }: { person: Person }) {
   const r = useLoad(() => account.tests());
   return (
     <div className="record">
-      <h1>Your record</h1>
+      <h1>Your tests</h1>
       {r.error ? (
-        <LoadError what="your record" error={r.error} retry={r.retry} />
+        <LoadError what="your tests" error={r.error} retry={r.retry} />
       ) : !r.data ? (
-        <Loading what="your record" />
+        <Loading what="your tests" />
       ) : r.data.tests.length === 0 ? (
         <p>
-          No sealed tests yet. <a href="/">Test a post to start your record.</a>
+          No sealed tests yet. <a href="/">Test a message to start.</a>
         </p>
       ) : (
         <>

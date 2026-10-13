@@ -405,10 +405,10 @@ test("a post test shows the landing chance, both sides, the accounts and a sign-
   const calls = serve({ "/v1/me": [401, { detail: "signed out" }], "/v1/tests": [200, tested] });
   const el = await render(<App path="/simulate" />);
   await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
-  expect(button("Test it").disabled).toBe(true);
+  expect(button("Test my message").disabled).toBe(true);
   await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "Half off"));
   await act(async () => (el.querySelector("input[name=gut]") as HTMLInputElement).click());
-  await act(async () => button("Test it").click());
+  await act(async () => button("Test my message").click());
   await until(() => expect(el.querySelector(".land-result")).not.toBeNull());
   const sent = calls.find((c) => c.path === "/v1/tests")?.body;
   expect(sent).toEqual({ text: "Half off", gut: "lands", countries: null, age_bands: null });
@@ -437,7 +437,7 @@ test("a refused post test shows the API's sentence", async () => {
   const el = await render(<App path="/simulate" />);
   await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
   await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "x"));
-  await act(async () => button("Test it").click());
+  await act(async () => button("Test my message").click());
   await until(() => expect(el.textContent).toContain("this address has run 20 tests today."));
 });
 
@@ -460,7 +460,7 @@ test("a signed-in test shows its seal and the retrospective check is labelled", 
   const el = await render(<App path="/simulate" />);
   await until(() => expect(el.textContent).toContain("ada@example.org"));
   await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "Half off"));
-  await act(async () => button("Test it").click());
+  await act(async () => button("Test my message").click());
   await until(() => expect(el.querySelector(".seal")?.textContent).toContain("abababababab"));
   expect(el.querySelector(".land-result .stamp")?.textContent).toBe("Sealed");
   const cells = [...el.querySelectorAll(".seal-line .seal-grid span")];
@@ -470,7 +470,7 @@ test("a signed-in test shows its seal and the retrospective check is labelled", 
   expect(el.textContent).toContain("Sealed 2026-10-06 12:00 UTC");
 
   await act(async () =>
-    typeInto(el.querySelector("[aria-label='Past post 1']") as HTMLTextAreaElement, "old post"),
+    typeInto(el.querySelector("[aria-label='Past message 1']") as HTMLTextAreaElement, "old post"),
   );
   await act(async () => button("Run the check").click());
   await until(() => expect(el.textContent).toContain("The engine would have called 1 of 1."));
@@ -524,7 +524,7 @@ test("a resolved question draws you, the AI and the outcome on one strip", async
 test("the record signed out shows an empty engine-vs-gut slip and no numbers", async () => {
   serve({ "/v1/me": [401, {}] });
   const el = await render(<App path="/record" />);
-  await until(() => expect(el.textContent).toContain("Sign in to start your record"));
+  await until(() => expect(el.textContent).toContain("Sign in to keep your tests"));
   const main = el.querySelector("main")?.textContent ?? "";
   for (const s of ["The engine", "Your gut", "– Brier", "0 marked tests"])
     expect(main).toContain(s);
@@ -596,10 +596,10 @@ test("the top bar lists the pages, marks the active one, and offers sign-in", as
   await until(() => expect(el.querySelector(".account")).not.toBeNull());
   expect([...el.querySelectorAll(".topbar nav a")].map((a) => a.textContent)).toEqual([
     "Simulate",
-    "Call it",
-    "Your record",
+    "Your tests",
     "Receipts",
     "Scores",
+    "Call it",
   ]);
   expect(el.querySelector(".topbar nav [aria-current]")?.textContent).toBe("Call it");
   expect(el.querySelector(".account")?.textContent).toBe("Sign in");
@@ -611,14 +611,17 @@ test("the home asks the post question, lists today's populations and links every
   vi.mocked(rw.world).mockResolvedValue(world);
   vi.mocked(rw.status).mockResolvedValue(statusFixture as SystemStatus);
   const el = await render(<App path="/" />);
-  expect(el.querySelector("h1")?.textContent).toBe("See how people react before you post.");
-  expect(el.querySelector("main form button")?.textContent).toBe("Test my post");
+  expect(el.querySelector("h1")?.textContent).toBe(
+    "Test your launch on the public before you ship it.",
+  );
+  expect(el.querySelector("main form button")?.textContent).toBe("Test my message");
   expect(el.querySelector(".example-slip .stamp")?.textContent).toBe("Example");
   expect([...el.querySelectorAll(".made-for strong")].map((x) => x.textContent)).toEqual([
-    "Creators",
-    "Small brands",
     "Founders",
-    "Newsrooms",
+    "Growth and marketing",
+    "Pricing and product",
+    "Comms and PR",
+    "Market entry",
   ]);
   // The ledger tape follows the home's content instead of leading it.
   expect(el.querySelector("main ~ .tape")).not.toBeNull();
@@ -656,7 +659,7 @@ test("?text= starts the simulator with that post", async () => {
   expect(
     (el.querySelector("input[name=primitive]:checked") as HTMLInputElement).parentElement
       ?.textContent,
-  ).toBe("Test a post");
+  ).toBe("Test a message");
   history.replaceState(null, "", "/");
 });
 
@@ -684,7 +687,7 @@ test("the reaction slip draws 100 dots and a segment matrix", async () => {
   const el = await render(<App path="/simulate" />);
   await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
   await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "Half off"));
-  await act(async () => button("Test it").click());
+  await act(async () => button("Test my message").click());
   await until(() => expect(el.querySelector(".land-result")).not.toBeNull());
   expect(el.querySelector(".slip-quote")?.textContent).toBe("Half off");
   expect(el.querySelectorAll(".field span")).toHaveLength(100);
