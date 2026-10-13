@@ -9,7 +9,9 @@
 #   TYPEFORM_WEBHOOK_SECRET     the secret Typeform signs with (rotate it first if it was shared)
 # Optional: RATE_LIMIT_SALT_PROD (a random one is generated when absent).
 #
-# Usage: bash landing/scripts/set-prod-secrets.sh [--yes]
+# Usage: bash landing/scripts/set-prod-secrets.sh [--check | --yes]
+#   --check  validate .dev.vars and print what would be set (names only); writes nothing.
+#   Preview and staging keep Cloudflare's test Turnstile keys; this script touches production only.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -39,6 +41,12 @@ esac
 case "$DATABASE_URL_PROD" in
   *"$(get DATABASE_URL_DEV | sed -E 's#.*@([^/]*)/.*#\1#')"*) fail "DATABASE_URL_PROD points at the dev branch host" ;;
 esac
+
+if [ "${1:-}" = "--check" ]; then
+  echo "checks passed: DATABASE_URL_PROD, AMPLITUDE_API_KEY_PROD, TURNSTILE_SECRET_KEY_PROD (real), TYPEFORM_WEBHOOK_SECRET are set and distinct from test values."
+  echo "would set on production: DATABASE_URL, AMPLITUDE_API_KEY, TURNSTILE_SECRET_KEY, TYPEFORM_WEBHOOK_SECRET, RATE_LIMIT_SALT"
+  exit 0
+fi
 
 echo "This will set 5 PRODUCTION secrets on Pages project '$PROJECT':"
 echo "  (ENVIRONMENT=production comes from wrangler.toml, not from here)"
