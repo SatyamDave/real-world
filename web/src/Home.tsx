@@ -1,23 +1,21 @@
 import { useState } from "react";
 import {
+  ANCHOR,
   Disclosure,
   LoadError,
   Loading,
   pct,
-  SealGrid,
+  SealRow,
   TierBadge,
   topicLabel,
   useLoad,
 } from "./App";
 import { rw } from "./api";
-import { caseHref, type Primitive, USE_CASES, WHO } from "./usecases";
+import { TodayQuestion } from "./DailyQuestion";
+import { MixBar } from "./results";
+import { caseHref, findUseCase, type Primitive, USE_CASES, WHO } from "./usecases";
 
-const KIND = { reaction: "Post test", event: "Fork", call: "Call it" } as const;
-const ANCHOR = {
-  anchored: "anchored",
-  pending: "anchor pending",
-  not_anchored: "not anchored",
-} as const;
+const KIND = { reaction: "Message", event: "Event" } as const;
 
 /** The prepared decisions grouped by who they serve; `only` keeps one simulation kind. */
 export function UseCaseList({ only, onPick }: { only?: Primitive; onPick?: (id: string) => void }) {
@@ -33,7 +31,7 @@ export function UseCaseList({ only, onPick }: { only?: Primitive; onPick?: (id: 
               {rows.map((u) => {
                 const body = (
                   <>
-                    <span className="kind-tag mono">{KIND[u.primitive]}</span>
+                    <span className="kind-tag">{KIND[u.primitive]}</span>
                     <strong>{u.title}</strong>
                     <span className="muted">{u.blurb}</span>
                     <span className="mono muted decision-audience">{u.audience}</span>
@@ -41,7 +39,7 @@ export function UseCaseList({ only, onPick }: { only?: Primitive; onPick?: (id: 
                 );
                 return (
                   <li key={u.id}>
-                    {onPick && u.primitive !== "call" ? (
+                    {onPick ? (
                       <button type="button" onClick={() => onPick(u.id)}>
                         {body}
                       </button>
@@ -113,19 +111,75 @@ function Register() {
         })}
       </ul>
       <div className="register-foot">
-        <SealGrid hash={s.root} large />
         {s.root && s.date ? (
-          <p className="mono small">
-            Day record {s.date} · root {s.root.slice(0, 8)}…{s.root.slice(-8)} ·{" "}
-            {s.anchor ? ANCHOR[s.anchor] : "not anchored"}.{" "}
+          <SealRow hash={s.root} title={`Day record ${s.date}`}>
+            root {s.root.slice(0, 8)}…{s.root.slice(-8)} ·{" "}
+            {s.anchor ? ANCHOR[s.anchor] : "not anchored"} ·{" "}
             <a href={`/receipts#${s.date}`}>Check it on Receipts</a>
-          </p>
+          </SealRow>
         ) : (
-          <p className="mono small">No day record yet</p>
+          <SealRow title="No day record yet" />
         )}
       </div>
       <Disclosure tiers={countries.map((c) => c.tier)} />
     </>
+  );
+}
+
+const MADE_FOR = [
+  ["Founders", "Test a launch post or an announcement.", "launch-post"],
+  ["Growth and marketing", "Test an ad line or a landing page headline.", "ad-line"],
+  ["Pricing and product", "Test a price change or a new plan.", "price-rise"],
+  ["Comms and PR", "Test an apology after an incident or a policy change.", "outage-apology"],
+  ["Market entry", "Test the same message in a new country.", "student-offer"],
+] as const;
+
+/** A fixed, labelled example of a message test result, so a visitor sees the output first. */
+function ExampleResult() {
+  return (
+    <section className="card receipt example-slip" aria-labelledby="example">
+      <div className="receipt-top">
+        <span className="slip-kind" id="example">
+          Example result: a launch post
+        </span>
+        <span className="stamp plain">Example</span>
+      </div>
+      <blockquote className="slip-quote">
+        Today we launch a calendar that books a meeting only when everyone has a free hour. Free for
+        teams under ten.
+      </blockquote>
+      <p className="land-chance">
+        <span className="big">41%</span>
+        <span>of this audience would like or share it</span>
+      </p>
+      <MixBar mix={{ scroll_past: 0.32, read: 0.27, like: 0.25, share: 0.16 }} />
+      <p className="small">
+        Most likely: adults 18 to 34 in India, 63%. Least likely: adults 55 and over in Japan, 18%.
+      </p>
+      <p className="muted small">
+        Example numbers, not a real test. Every real result is AI-simulated and shows the coverage
+        tier of each country.
+      </p>
+    </section>
+  );
+}
+
+/** The target market for the home's form; the simulator reads it as ?country=. */
+function MarketSelect() {
+  const world = useLoad(() => rw.world());
+  return (
+    <label className="ask-market">
+      <span>Your market</span>
+      <select name="country" defaultValue="">
+        <option value="">Every simulated country</option>
+        {world.data?.countries.map((c) => (
+          <option key={c.iso3} value={c.iso3}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+      <span className="muted small">Pick the country you are shipping to, or keep all 16.</span>
+    </label>
   );
 }
 
@@ -134,28 +188,75 @@ export function Home() {
     <div className="home">
       <div className="home-top">
         <section className="home-ask">
-          <h1>Will this land?</h1>
+          <h1>Test your launch on the public before you ship it.</h1>
           <p className="lead muted">
-            Test a post on simulated audiences in 16 countries before you publish. Every test you
-            seal is scored when you mark how it did.
+            Paste a launch post, a price change, a headline or an announcement. Real World simulates
+            how people in 16 countries, by age and education, react: who ignores it, who likes it,
+            who shares it, and what simulated people say about it. Every result is AI-simulated.
           </p>
           <form action="/simulate" method="get" className="ask-form">
-            <label htmlFor="home-text">Your post</label>
+            <label htmlFor="home-text">Your message</label>
             <textarea
               id="home-text"
               name="text"
               rows={4}
               maxLength={500}
-              placeholder="Paste a tweet, a caption, a headline or a hook"
+              placeholder="Paste a launch post, a price change, a headline or an announcement"
             />
+            <MarketSelect />
             <button type="submit" className="primary">
-              Test it
+              Test my message
             </button>
           </form>
-          <p className="muted">
-            Or <a href="/call">call today's question</a> against the AI, whose call is sealed before
-            you answer.
+          <ol className="steps">
+            <li>
+              <span className="mono">1</span> Paste your message
+            </li>
+            <li>
+              <span className="mono">2</span> Pick your market
+            </li>
+            <li>
+              <span className="mono">3</span> See who reacts, and what they say
+            </li>
+          </ol>
+          <p className="muted small">
+            See how the engine scores in public:{" "}
+            <a href="/call">play today's question against it</a>.
           </p>
+        </section>
+        <ExampleResult />
+      </div>
+      <section aria-labelledby="made-for">
+        <h2 id="made-for">Made for</h2>
+        <ul className="made-for">
+          {MADE_FOR.map(([who, what, id]) => {
+            const u = findUseCase(id);
+            return (
+              <li key={who}>
+                <a href={u ? caseHref(u) : "/simulate"} className="card made-card">
+                  <strong>{who}</strong>
+                  <span>{what}</span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+      <div className="home-top home-proof">
+        <section className="home-ask">
+          <TodayQuestion />
+          <div className="proof-line">
+            <h2>Sealed before the outcome</h2>
+            <p className="muted">
+              The AI's daily calls are hashed before the outcome and scored in public, misses
+              included. Your sealed tests are scored against your own gut.
+            </p>
+            <p className="proof-links">
+              <a href="/receipts">Receipts</a>
+              <a href="/scores">Scores</a>
+              <a href="/record">Your tests</a>
+            </p>
+          </div>
         </section>
         <section className="card register" aria-labelledby="register">
           <h2 id="register">Today's simulated populations</h2>
@@ -168,18 +269,6 @@ export function Home() {
           Each one opens the simulator filled in. Change anything before you run it.
         </p>
         <UseCaseList />
-      </section>
-      <section className="proof-line" aria-labelledby="proof">
-        <h2 id="proof">Sealed before the outcome</h2>
-        <p className="muted">
-          The AI's daily calls are hashed before the outcome and scored in public, misses included.
-          Your sealed tests are scored against your own gut.
-        </p>
-        <p className="proof-links">
-          <a href="/receipts">Receipts</a>
-          <a href="/scores">Scores</a>
-          <a href="/record">Your record</a>
-        </p>
       </section>
     </div>
   );

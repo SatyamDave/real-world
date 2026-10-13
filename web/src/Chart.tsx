@@ -1,10 +1,26 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useCallback, useState } from "react";
 
-// Hand-drawn SVG on the design tokens: no chart dependency. Every chart draws in a 360 x H box and
-// scales to its container; the numbers always sit in a data table behind the drawing.
+// Hand-drawn SVG on the design tokens: no chart dependency. Every chart draws in a box as wide as
+// its container in pixels (360 until measured), so 12px text stays 12px at every width; the
+// numbers always sit in a data table behind the drawing.
 export type Point = { x: string; y: number; low?: number; high?: number };
 
-const W = 360;
+const W0 = 360;
+
+/** The svg's drawn width in px, so one viewBox unit is one pixel. */
+function useWidth() {
+  const [w, setW] = useState(W0);
+  const ref = useCallback((el: SVGSVGElement | null) => {
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([e]) => {
+      const px = Math.round(e.contentRect.width);
+      if (px > 0) setW(px);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, w] as const;
+}
 const PAD = { l: 48, r: 12, t: 12, b: 28 };
 const TICKS = 4;
 const plain = (v: number) => String(Number(v.toPrecision(3)));
@@ -30,6 +46,8 @@ function Frame({
   title,
   enough,
   label,
+  width,
+  svgRef,
   height,
   head,
   rows,
@@ -38,6 +56,8 @@ function Frame({
   title: string;
   enough: boolean;
   label: string;
+  width: number;
+  svgRef: (el: SVGSVGElement | null) => void;
   height: number;
   head: string[];
   rows: ReactNode[][];
@@ -47,7 +67,12 @@ function Frame({
     <figure className="chart">
       <figcaption>{title}</figcaption>
       {enough ? (
-        <svg viewBox={`0 0 ${W} ${height}`} role="img" aria-label={`${title}. ${label}`}>
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${width} ${height}`}
+          role="img"
+          aria-label={`${title}. ${label}`}
+        >
           {children}
         </svg>
       ) : (
@@ -97,6 +122,7 @@ export function Trajectory(p: {
   format?: (y: number) => string;
   reference?: number;
 }) {
+  const [svgRef, W] = useWidth();
   const f = p.format ?? plain;
   const H = 220;
   const all = p.points.flatMap((q) => [q.y, q.low ?? q.y, q.high ?? q.y]);
@@ -112,6 +138,8 @@ export function Trajectory(p: {
   return (
     <Frame
       title={p.title}
+      width={W}
+      svgRef={svgRef}
       enough={n >= 2}
       height={H}
       label={`${n} points from ${p.points[0]?.x} to ${p.points.at(-1)?.x}, ${p.yLabel ?? "value"} from ${f(Math.min(...all))} to ${f(Math.max(...all))}.`}
@@ -167,6 +195,7 @@ export function Bars(p: {
   format?: (v: number) => string;
   reference?: number;
 }) {
+  const [svgRef, W] = useWidth();
   const f = p.format ?? plain;
   const ROW = 44;
   const top = 8;
@@ -179,6 +208,8 @@ export function Bars(p: {
   return (
     <Frame
       title={p.title}
+      width={W}
+      svgRef={svgRef}
       enough={p.rows.length >= 1}
       height={H}
       label={`${p.rows.length} rows, values from ${f(Math.min(...p.rows.map((r) => r.value)))} to ${f(Math.max(...p.rows.map((r) => r.value)))}.`}
@@ -249,6 +280,7 @@ export function Scatter(p: {
   diagonal?: boolean;
   format?: (v: number) => string;
 }) {
+  const [svgRef, W] = useWidth();
   const f = p.format ?? plain;
   const H = 280;
   const xs = p.points.map((q) => q.x);
@@ -261,6 +293,8 @@ export function Scatter(p: {
   return (
     <Frame
       title={p.title}
+      width={W}
+      svgRef={svgRef}
       enough={p.points.length >= 2}
       height={H}
       label={`${p.points.length} points, ${p.xLabel} from ${f(xd[0])} to ${f(xd[1])}, ${p.yLabel} from ${f(yd[0])} to ${f(yd[1])}.`}
@@ -315,6 +349,7 @@ export function Histogram(p: {
   bins: { low: number; high: number; count: number }[];
   format?: (v: number) => string;
 }) {
+  const [svgRef, W] = useWidth();
   const f = p.format ?? plain;
   const H = 200;
   const lo = Math.min(...p.bins.map((b) => b.low));
@@ -326,6 +361,8 @@ export function Histogram(p: {
   return (
     <Frame
       title={p.title}
+      width={W}
+      svgRef={svgRef}
       enough={p.bins.length >= 1}
       height={H}
       label={`${total} values in ${p.bins.length} bins from ${f(lo)} to ${f(hi)}.`}

@@ -70,11 +70,12 @@ textarea {
   color: inherit;
 }
 
-button {
+button,
+.button {
   cursor: pointer;
   min-height: 44px;
-  border: 1.5px solid var(--ink);
-  background: transparent;
+  border: 1px solid var(--line);
+  background: var(--surface);
   border-radius: var(--radius);
   padding: 0 16px;
   font-weight: 600;
@@ -97,15 +98,26 @@ button:disabled {
   cursor: not-allowed;
 }
 
-button.primary {
-  background: var(--ink);
+.button {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+button.primary,
+.button.primary {
+  border-color: var(--accent);
+  background: var(--accent);
   color: var(--on-accent);
   font-size: 16px;
 }
 
-button.primary:hover:not(:disabled) {
-  background: var(--accent);
-  border-color: var(--accent);
+button.primary:hover:not(:disabled),
+.button.primary:hover {
+  background: color-mix(in srgb, var(--accent) 85%, var(--ink));
+  border-color: color-mix(in srgb, var(--accent) 85%, var(--ink));
 }
 
 /* Keyboard focus is always visible. */
@@ -159,19 +171,14 @@ button.primary:hover:not(:disabled) {
   font-weight: 600;
 }
 
-/* The receipt: printed header, a stamp, and a torn bottom edge. */
+/* A result card: a header row with its kind and a status pill. */
 .receipt,
 .card.receipt {
   background: var(--surface);
-  border: 1.5px solid var(--ink);
-  border-bottom: 0;
-  padding: 0 20px 34px;
-  -webkit-mask:
-    conic-gradient(from -45deg at bottom, transparent, black 1deg 89deg, transparent 90deg) 50% /
-    14px 100%;
-  mask:
-    conic-gradient(from -45deg at bottom, transparent, black 1deg 89deg, transparent 90deg) 50% /
-    14px 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  padding: 0 24px 24px;
 }
 
 .receipt-top {
@@ -181,23 +188,25 @@ button.primary:hover:not(:disabled) {
   gap: 10px;
   padding: 12px 0;
   margin-bottom: 14px;
-  border-bottom: 1.5px dashed var(--line);
+  border-bottom: 1px solid var(--line);
   font-size: 14px;
   color: var(--muted);
 }
 
+/* A status pill: neutral by default, accent-tinted for sealed, verified and resolved. */
 .stamp {
   flex: none;
   font-size: 12px;
-  font-weight: 600;
-  color: var(--accent-2);
-  border: 1.5px solid currentColor;
-  padding: 1px 8px;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--paper-2);
+  padding: 2px 8px;
   border-radius: var(--radius);
 }
 
 .stamp.good {
   color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
 }
 
 .stamp.plain {
@@ -281,9 +290,10 @@ main {
 
 .card {
   background: var(--surface);
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 20px;
+  box-shadow: var(--card-shadow);
+  padding: 24px;
 }
 
 .skeleton {
@@ -335,7 +345,7 @@ main {
   height: 28px;
   border-radius: 50%;
   background: var(--surface);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--line);
   cursor: grab;
 }
 
@@ -344,7 +354,7 @@ main {
   height: 26px;
   border-radius: 50%;
   background: var(--surface);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--line);
   cursor: grab;
 }
 
@@ -440,7 +450,7 @@ main {
 .disclosure {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
   font-size: 12px;
   color: var(--muted);
   display: flex;
@@ -462,7 +472,7 @@ main {
   min-width: 20px;
   height: 20px;
   padding: 0 4px;
-  border: 1.5px solid currentColor;
+  background: var(--paper-2);
   border-radius: var(--radius);
   font-family: var(--font-mono);
   font-size: 12px;
@@ -504,7 +514,7 @@ main {
   gap: 10px;
   align-items: baseline;
   padding: 8px 0;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
   font-size: 14px;
 }
 
@@ -591,7 +601,7 @@ main {
   min-height: 44px;
   padding: 0 10px;
   border-radius: var(--radius);
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line);
   background: var(--paper);
   font-family: var(--font-mono);
   font-size: 14px;
@@ -629,13 +639,13 @@ button.icon {
   display: flex;
   flex-direction: column;
   padding: 8px 0;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
 }
 
 blockquote {
   margin: 0;
   padding: 12px 14px;
-  border-left: 3px solid var(--ink);
+  border-left: 3px solid var(--line);
   background: var(--paper-2);
 }
 
@@ -714,7 +724,7 @@ th {
 
 td {
   padding: 8px 12px 8px 0;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
   white-space: nowrap;
 }
 
@@ -804,7 +814,7 @@ main :is(p, li, dd, h3) a {
 
 .thesis .proof {
   padding-top: 14px;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
   font-weight: 600;
 }
 
@@ -846,7 +856,7 @@ main :is(p, li, dd, h3) a {
   width: 22px;
   height: 22px;
   vertical-align: middle;
-  border: 1.5px solid var(--muted);
+  border: 1px solid var(--muted);
   border-radius: var(--radius);
 }
 
@@ -954,7 +964,7 @@ main :is(p, li, dd, h3) a {
   position: relative;
   z-index: 2;
   background: var(--paper);
-  border-top: 1.5px solid var(--line);
+  border-top: 1px solid var(--line);
   padding: 24px var(--edge) 56px;
   font-size: 14px;
   color: var(--muted);
@@ -1039,7 +1049,7 @@ main :is(p, li, dd, h3) a {
 
   .table-wrap tr {
     padding: 8px 0;
-    border-top: 1.5px dashed var(--line);
+    border-top: 1px solid var(--line);
   }
 
   .table-wrap td::before {
@@ -1084,7 +1094,6 @@ main :is(p, li, dd, h3) a {
 .chart svg {
   display: block;
   width: 100%;
-  max-width: 540px;
   height: auto;
 }
 
@@ -1212,7 +1221,6 @@ main :is(p, li, dd, h3) a {
 /* ---- Will this land? ---- */
 
 .land,
-.call,
 .record {
   display: flex;
   flex-direction: column;
@@ -1231,7 +1239,7 @@ main :is(p, li, dd, h3) a {
   width: 100%;
   font: inherit;
   padding: 12px;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--paper);
   color: var(--ink);
@@ -1248,7 +1256,7 @@ main :is(p, li, dd, h3) a {
   gap: 8px;
   min-height: 44px;
   padding: 0 12px;
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
 }
 
@@ -1271,7 +1279,7 @@ main :is(p, li, dd, h3) a {
 
 .mix span {
   padding: 4px 8px;
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
 }
 
@@ -1300,7 +1308,7 @@ main :is(p, li, dd, h3) a {
 .voice {
   margin: 16px 0;
   padding: 12px 16px;
-  border-left: 1.5px solid var(--accent-2);
+  border-left: 1px solid var(--line);
 }
 
 .rewrite {
@@ -1324,20 +1332,12 @@ main :is(p, li, dd, h3) a {
   margin-bottom: 8px;
 }
 
-/* ---- Your record and sign-in ---- */
-
-.tests {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+/* ---- Your tests and sign-in ---- */
 
 .confirm {
   margin-top: 12px;
   padding: 12px;
-  border: 1.5px solid var(--accent-2);
+  border: 1px solid var(--accent-2);
   border-radius: var(--radius);
 }
 
@@ -1358,7 +1358,7 @@ main :is(p, li, dd, h3) a {
 .mixbar {
   display: flex;
   margin: 12px 0;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
   font-family: var(--font-mono);
@@ -1372,7 +1372,37 @@ main :is(p, li, dd, h3) a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border-right: 1.5px solid var(--surface);
+  border-right: 1px solid var(--surface);
+}
+
+.mixbar-legend {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .mixbar > span {
+    color: transparent;
+  }
+
+  .mixbar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin: -4px 0 12px;
+    font-size: 12px;
+  }
+
+  .mixbar-legend > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--line);
 }
 
 .mixbar-scroll_past {
@@ -1384,12 +1414,11 @@ main :is(p, li, dd, h3) a {
 }
 
 .mixbar-like {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: color-mix(in srgb, var(--accent) 40%, var(--surface));
 }
 
 .mixbar-share {
-  background: var(--ink);
+  background: var(--accent);
   color: var(--on-accent);
 }
 
@@ -1405,7 +1434,7 @@ main :is(p, li, dd, h3) a {
   min-height: 56px;
   padding: 0 var(--edge);
   background: var(--surface);
-  border-bottom: 1.5px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .topbar nav {
@@ -1442,7 +1471,7 @@ main :is(p, li, dd, h3) a {
 .tape {
   padding: 8px var(--edge);
   background: var(--paper-2);
-  border-bottom: 1.5px solid var(--line);
+  border-bottom: 1px solid var(--line);
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--muted);
@@ -1514,15 +1543,28 @@ main :is(p, li, dd, h3) a {
 }
 
 .seal-grid .s3 {
-  background: var(--ink);
+  background: var(--accent);
 }
 
 .seal-grid.empty span {
-  border: 1.5px dashed var(--line);
+  border: 1px solid var(--line);
 }
 
-p.seal .seal-grid {
-  margin-right: 8px;
+/* A seal grid beside two lines: what is sealed, then the hash and where to check it. */
+.seal-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.seal-row-title {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.seal-row-meta {
+  font-size: 12px;
+  overflow-wrap: anywhere;
 }
 
 .lead {
@@ -1542,6 +1584,10 @@ p.seal .seal-grid {
   display: grid;
   gap: 48px;
   align-items: start;
+}
+
+.home-top > * {
+  min-width: 0;
 }
 
 @media (min-width: 1024px) {
@@ -1581,7 +1627,7 @@ p.seal .seal-grid {
 .bench input[type="number"] {
   width: 100%;
   padding: 12px;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
   font-family: var(--font-mono);
@@ -1595,10 +1641,11 @@ p.seal .seal-grid {
 }
 
 .bench select,
-.register select {
+.register select,
+.ask-market select {
   min-height: 44px;
   padding: 0 8px;
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
 }
@@ -1634,7 +1681,7 @@ p.seal .seal-grid {
   align-items: center;
   gap: 8px;
   min-height: 36px;
-  border-top: 1.5px solid var(--line);
+  border-top: 1px solid var(--line);
   font-size: 14px;
 }
 
@@ -1656,7 +1703,7 @@ p.seal .seal-grid {
 .register-bar span {
   display: block;
   height: 100%;
-  background: var(--ink);
+  background: var(--accent);
 }
 
 .register-share {
@@ -1670,12 +1717,7 @@ p.seal .seal-grid {
   gap: 12px;
   margin: 16px 0;
   padding-top: 16px;
-  border-top: 1.5px dashed var(--line);
-}
-
-.register-foot p {
-  font-size: 12px;
-  overflow-wrap: anywhere;
+  border-top: 1px solid var(--line);
 }
 
 .decisions h2 {
@@ -1701,11 +1743,11 @@ p.seal .seal-grid {
   list-style: none;
   padding: 0;
   margin: 0;
-  border-top: 1.5px solid var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .decision-rows li {
-  border-bottom: 1.5px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .decision-rows a,
@@ -1735,7 +1777,7 @@ p.seal .seal-grid {
   align-self: start;
   justify-self: start;
   padding: 2px 8px;
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   font-size: 12px;
   white-space: nowrap;
@@ -1745,9 +1787,92 @@ p.seal .seal-grid {
   font-size: 12px;
 }
 
-.proof-line {
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 0;
+  padding: 16px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.steps .mono {
+  display: inline-flex;
+  justify-content: center;
+  width: 24px;
+  margin-right: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.made-for {
+  display: grid;
+  gap: 16px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 720px) {
+  .made-for {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .made-for {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.ask-market {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.made-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  min-height: 44px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.made-card:hover {
+  background: var(--paper-2);
+}
+
+.home-proof {
   padding-top: 48px;
-  border-top: 1.5px solid var(--line);
+  border-top: 1px solid var(--line);
+}
+
+.today {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.today-text {
+  font-size: 18px;
+  text-wrap: balance;
+}
+
+.proof-line {
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
 }
 
 .proof-line h2 {
@@ -1784,7 +1909,7 @@ p.seal .seal-grid {
 .kind-tabs {
   display: flex;
   flex-wrap: wrap;
-  border-bottom: 1.5px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .kind-tabs label,
@@ -1863,10 +1988,8 @@ p.seal .seal-grid {
 .slip-quote {
   margin: 0 0 16px;
   padding: 12px 16px;
-  border-left: 1.5px solid var(--ink);
-  background: var(--paper);
-  font-family: var(--font-mono);
-  font-size: 14px;
+  border-radius: var(--radius);
+  background: var(--paper-2);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -1888,7 +2011,7 @@ p.seal .seal-grid {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  box-shadow: inset 0 0 0 1.5px var(--line);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--muted) 50%, var(--surface));
 }
 
 .field span.on {
@@ -1939,7 +2062,7 @@ p.seal .seal-grid {
 
 .matrix .m0 {
   background: var(--surface);
-  box-shadow: inset 0 0 0 1.5px var(--paper-2);
+  box-shadow: inset 0 0 0 1px var(--paper-2);
 }
 
 .matrix .m1 {
@@ -1970,7 +2093,7 @@ p.seal .seal-grid {
 
 .shifts li {
   display: grid;
-  grid-template-columns: 160px minmax(0, 1fr) 184px;
+  grid-template-columns: 160px minmax(0, 1fr) 304px;
   align-items: center;
   gap: 12px;
   font-size: 14px;
@@ -1980,7 +2103,7 @@ p.seal .seal-grid {
   position: relative;
   height: 12px;
   background: var(--paper-2);
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
 }
 
@@ -1988,13 +2111,15 @@ p.seal .seal-grid {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: var(--line);
+  min-width: 2px;
+  background: color-mix(in srgb, var(--ink) 25%, var(--surface));
 }
 
+/* Taller than the dot so the before tick shows above and below it. */
 .shift-tick {
   position: absolute;
-  top: -4px;
-  bottom: -4px;
+  top: -6px;
+  bottom: -6px;
   width: 2px;
   margin-left: -1px;
   background: var(--muted);
@@ -2003,10 +2128,10 @@ p.seal .seal-grid {
 .shift-dot {
   position: absolute;
   top: 50%;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: var(--ink);
+  background: var(--accent);
   transform: translate(-50%, -50%);
 }
 
@@ -2015,16 +2140,235 @@ p.seal .seal-grid {
   text-align: right;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 720px) {
   .shifts li {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 120px minmax(0, 1fr);
     gap: 4px 12px;
   }
 
-  .shift-track {
+  .shift-text {
     grid-column: 1 / -1;
     grid-row: 2;
+    text-align: left;
   }
+}
+
+.shift-dot.ai {
+  background: var(--surface);
+  border: 1px solid var(--accent);
+}
+
+/* Call it after resolution: you, the AI and the outcome on one track. */
+.outcome-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 20px 0 16px;
+}
+
+.outcome-strip .shift-track {
+  display: block;
+}
+
+.outcome-marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 12px;
+}
+
+.mark-you,
+.mark-ai,
+.mark-outcome {
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.mark-you,
+.mark-ai {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.mark-ai {
+  background: var(--surface);
+  border: 1px solid var(--accent);
+}
+
+.mark-outcome {
+  width: 2px;
+  height: 12px;
+  background: var(--muted);
+}
+
+.copy-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 16px 0;
+}
+
+.copy-result textarea {
+  flex-basis: 100%;
+}
+
+/* ---- Call it: your call and the AI's, side by side from 1024px ---- */
+
+.call {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.call .thesis {
+  max-width: 720px;
+}
+
+.call-slips {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .call-slips {
+    grid-template-columns: 7fr 5fr;
+    gap: 32px;
+  }
+}
+
+.ai-slip .seal-row {
+  margin-bottom: 16px;
+}
+
+.ai-number {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slider input.unset::-webkit-slider-thumb {
+  border-color: var(--muted);
+}
+
+.slider input.unset::-moz-range-thumb {
+  border-color: var(--muted);
+}
+
+/* ---- Your tests ---- */
+
+.record-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.record-cols h2 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.record-brier {
+  font-size: 26px;
+  font-weight: 500;
+}
+
+.record-empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.record-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.record-rows {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+
+.record-rows li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.record-post {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.record-row-act {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  .record-rows li {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .record-row-act {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---- Receipts: one open day, the rest one row each ---- */
+
+.day-record {
+  border-top: 1px solid var(--line);
+}
+
+.day-record > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+/* A 32px seal so each closed day stays one 44px row. */
+.day-record .seal-grid {
+  grid-template-columns: repeat(8, 4px);
+  gap: 0;
+}
+
+.day-record .seal-grid span {
+  width: 4px;
+  height: 4px;
+}
+
+.day-line {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.day-record[open] > summary {
+  margin-bottom: 8px;
 }
 
 .seal-line {
@@ -2033,7 +2377,7 @@ p.seal .seal-grid {
   gap: 16px;
   margin: 16px 0;
   padding-top: 16px;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .seal-hash {

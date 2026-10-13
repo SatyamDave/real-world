@@ -1,17 +1,18 @@
-// Prepared inputs, one real decision each (product/playground.md). Reaction texts are example
-// posts and event texts are hypothetical events, not news. Nothing here tests election messaging
-// or names a private person (product/acceptable-use.md).
+// Prepared inputs, one company decision each (product/playground.md,
+// research/decisions/0015-founders-and-companies.md). Reaction texts are example messages and
+// event texts are hypothetical events, not news. Nothing here tests election messaging or names a
+// private person (product/acceptable-use.md).
 
 export type Primitive = "reaction" | "event";
 
-export type Who = "creators" | "founders" | "newsrooms" | "policy" | "curious";
+export type Who = "founders" | "growth" | "pricing" | "comms" | "entry";
 
 export const WHO: [Who, string][] = [
-  ["creators", "Creators"],
-  ["founders", "Founders and marketers"],
-  ["newsrooms", "Newsrooms"],
-  ["policy", "Policy and public affairs"],
-  ["curious", "Curious people"],
+  ["founders", "Founders"],
+  ["growth", "Growth and marketing"],
+  ["pricing", "Pricing and product"],
+  ["comms", "Comms and PR"],
+  ["entry", "Market entry"],
 ];
 
 export type UseCase = {
@@ -19,8 +20,7 @@ export type UseCase = {
   who: Who;
   title: string;
   blurb: string;
-  primitive: Primitive | "call";
-  /** "" for a call. */
+  primitive: Primitive;
   text: string;
   /** Shown on the card, literal. */
   audience: string;
@@ -29,27 +29,6 @@ export type UseCase = {
 };
 
 export const USE_CASES: UseCase[] = [
-  {
-    id: "video-hook",
-    who: "creators",
-    primitive: "reaction",
-    title: "Video hook",
-    blurb: "Check whether the first line of a video makes people stay.",
-    text: "I lived on $20 of groceries a week for a month. Here is everything I ate.",
-    audience: "Adults 18-34 in the United States",
-    countries: ["USA"],
-    ages: ["18-34"],
-  },
-  {
-    id: "sponsored-post",
-    who: "creators",
-    primitive: "reaction",
-    title: "Sponsored post",
-    blurb: "See whether an honest sponsor read costs you trust.",
-    text: "This video is sponsored by a budgeting app I have used for a year. My honest review, including what I do not like, is below.",
-    audience: "The United States and the United Kingdom",
-    countries: ["USA", "GBR"],
-  },
   {
     id: "launch-post",
     who: "founders",
@@ -60,120 +39,135 @@ export const USE_CASES: UseCase[] = [
     audience: "Every simulated country",
   },
   {
-    id: "price-rise",
+    id: "launch-india",
     who: "founders",
     primitive: "reaction",
-    title: "Price rise",
-    blurb: "Read the reaction to a subscription price rise before customers see it.",
-    text: "From next month our subscription goes from $8 to $10 a month. Here is what you get for it.",
-    audience: "The United States",
-    countries: ["USA"],
-  },
-  {
-    id: "outage-apology",
-    who: "founders",
-    primitive: "reaction",
-    title: "Outage apology",
-    blurb: "Check whether an apology after an outage reads as sincere.",
-    text: "Yesterday our service was down for six hours. That is on us. Every customer gets a free month.",
-    audience: "Every simulated country",
-  },
-  {
-    id: "student-offer",
-    who: "founders",
-    primitive: "reaction",
-    title: "Student offer in India",
-    blurb: "See whether a student discount lands with young adults in one country.",
-    text: "Students get half price on every plan this week. Show your student ID at checkout.",
+    title: "Launch in India",
+    blurb: "Test a launch post on the young adults you want first.",
+    text: "Our budgeting app is live in India today. See every rupee you spend in one place, free for students.",
     audience: "Adults 18-34 in India",
     countries: ["IND"],
     ages: ["18-34"],
   },
   {
-    id: "grocery-headline",
-    who: "newsrooms",
+    id: "waitlist-brazil",
+    who: "founders",
     primitive: "reaction",
-    title: "Cost-of-living headline",
-    blurb: "Test a headline on younger and older readers before you publish.",
-    text: "Your groceries cost more than three years ago. Here is where the money went.",
+    title: "Waitlist launch in Brazil",
+    blurb: "Check whether a waitlist offer makes people sign up or scroll past.",
+    text: "Join the waitlist: the first 10,000 people in Brazil get a year of our language app free.",
+    audience: "Brazil",
+    countries: ["BRA"],
+  },
+  {
+    id: "ad-line",
+    who: "growth",
+    primitive: "reaction",
+    title: "Ad line",
+    blurb: "Compare how an ad line reads in two English-speaking markets.",
+    text: "Stop paying for software your team forgot it has. We find unused seats in five minutes.",
+    audience: "The United States and the United Kingdom",
+    countries: ["USA", "GBR"],
+  },
+  {
+    id: "landing-headline",
+    who: "growth",
+    primitive: "reaction",
+    title: "Landing page headline",
+    blurb: "See which age bands a headline reaches before you spend on traffic.",
+    text: "Customer support that answers in under a minute, in 40 languages.",
     audience: "Every simulated country",
   },
   {
-    id: "energy-explainer",
-    who: "newsrooms",
+    id: "price-rise",
+    who: "pricing",
     primitive: "reaction",
-    title: "Energy bill explainer",
-    blurb: "See whether an explainer headline lands in two European countries.",
-    text: "Why your energy bill will rise this winter, explained in four charts.",
-    audience: "Germany and the United Kingdom",
-    countries: ["DEU", "GBR"],
-  },
-  {
-    id: "europe-heatwave",
-    who: "newsrooms",
-    primitive: "event",
-    title: "Harvest failure",
-    blurb: "Follow beliefs in Germany, France and the UK after a heatwave ruins the wheat harvest.",
-    text: "A summer heatwave destroys much of the wheat harvest across Europe.",
-    audience: "Germany, France and the United Kingdom",
-    countries: ["DEU", "FRA", "GBR"],
-  },
-  {
-    id: "ai-tutors",
-    who: "policy",
-    primitive: "event",
-    title: "Free AI tutors",
-    blurb:
-      "What shifts in Brazil, India and the US if every public school student gets a free AI tutor?",
-    text: "The government makes an AI tutor free for every public school student.",
-    audience: "Brazil, India and the United States",
-    countries: ["BRA", "IND", "USA"],
-  },
-  {
-    id: "pension-age",
-    who: "policy",
-    primitive: "event",
-    title: "Pension age rise",
-    blurb:
-      "Trace trust in government and spending intent after the pension age rises by two years.",
-    text: "The government raises the state pension age by two years.",
-    audience: "France, Germany and Japan",
-    countries: ["FRA", "DEU", "JPN"],
-  },
-  {
-    id: "rate-cut",
-    who: "policy",
-    primitive: "event",
-    title: "Surprise rate cut",
-    blurb: "Trace spending intent and optimism after a surprise interest rate cut.",
-    text: "The central bank surprises markets with a large interest rate cut.",
+    title: "Price rise from $8 to $10",
+    blurb: "Read the reaction to a price rise before customers see it.",
+    text: "From March 1 our Plus plan goes from $8 to $10 a month. Everything you have today stays included.",
     audience: "The United States",
     countries: ["USA"],
   },
   {
+    id: "free-tier",
+    who: "pricing",
+    primitive: "reaction",
+    title: "Ending the free plan",
+    blurb: "Check how removing a free tier lands before you announce it.",
+    text: "We are ending our free plan on June 30. Free accounts can export their data or move to Starter at $5 a month.",
+    audience: "The United States, the United Kingdom and Germany",
+    countries: ["USA", "GBR", "DEU"],
+  },
+  {
+    id: "ai-personal-data",
+    who: "pricing",
+    primitive: "reaction",
+    title: "A feature that uses AI on personal data",
+    blurb: "See who welcomes it and who pulls back before it ships.",
+    text: "Our new assistant reads your inbox to draft replies for you. You can turn it off at any time.",
+    audience: "Every simulated country",
+  },
+  {
     id: "chip-shortage",
-    who: "curious",
+    who: "pricing",
     primitive: "event",
-    title: "Phone prices double",
-    blurb: "How do worries about prices move if phone prices double worldwide?",
+    title: "Phone prices double before your launch",
+    blurb: "How a chip shortage that doubles phone prices shifts spending intent.",
     text: "A chip shortage doubles phone prices worldwide.",
     audience: "Every simulated country",
   },
   {
-    id: "todays-call",
-    who: "curious",
-    primitive: "call",
-    title: "Today's question",
-    blurb: "Call one real question against the AI, whose call is sealed before you answer.",
-    text: "",
-    audience: "Everyone, one question a day",
+    id: "outage-apology",
+    who: "comms",
+    primitive: "reaction",
+    title: "Outage apology",
+    blurb: "Check whether an apology after an incident reads as sincere.",
+    text: "Yesterday our service was down for six hours. That is on us. Every customer gets a free month.",
+    audience: "Every simulated country",
+  },
+  {
+    id: "return-to-office",
+    who: "comms",
+    primitive: "reaction",
+    title: "Return-to-office announcement",
+    blurb: "Read how a policy change lands with the public before it is reported.",
+    text: "From September everyone at our company works from the office three days a week.",
+    audience: "The United States, the United Kingdom and India",
+    countries: ["USA", "GBR", "IND"],
+  },
+  {
+    id: "sustainability-germany",
+    who: "entry",
+    primitive: "reaction",
+    title: "Sustainability claim in Germany",
+    blurb: "Test a green claim in a market that reads them closely.",
+    text: "Every order now ships carbon neutral, at no extra cost to you.",
+    audience: "Germany",
+    countries: ["DEU"],
+  },
+  {
+    id: "student-offer",
+    who: "entry",
+    primitive: "reaction",
+    title: "Student offer in Mexico",
+    blurb: "Test the offer you plan to enter a new country with.",
+    text: "Now in Mexico: students get half price on every plan this month.",
+    audience: "Adults 18-34 in Mexico",
+    countries: ["MEX"],
+    ages: ["18-34"],
+  },
+  {
+    id: "rate-cut",
+    who: "entry",
+    primitive: "event",
+    title: "A surprise rate cut",
+    blurb: "How spending intent and optimism move in a market you are about to enter.",
+    text: "The central bank surprises markets with a large interest rate cut.",
+    audience: "The United States",
+    countries: ["USA"],
   },
 ];
 
-export const caseHref = (u: UseCase) =>
-  u.primitive === "call" ? "/call" : `/simulate?use=${u.id}`;
+export const caseHref = (u: UseCase) => `/simulate?use=${u.id}`;
 
-export const findUseCase = (id: string | null) =>
-  USE_CASES.find(
-    (u): u is UseCase & { primitive: Primitive } => u.id === id && u.primitive !== "call",
-  );
+export const findUseCase = (id: string | null) => USE_CASES.find((u) => u.id === id);

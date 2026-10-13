@@ -1,10 +1,10 @@
-# Your record
+# Your tests (`/record`)
 
 ## What it does
 
 `/record` shows a signed-in person their sealed calls and how they scored.
 
-**Post tests.** Every sealed post test, newest first: the post, the audience, their gut, the landing chance, "Sealed <time> · <hash prefix>", and two buttons, "Landed" and "Flopped", until they mark it. A marked test shows its outcome and both Briers (engine and gut). The top line reads "Engine <brier> · your gut <brier> on <n> marked tests (lower is better)", and "Hits <k> of <n>" counts tests where the engine's side of 50% matched the outcome.
+**Post tests.** A strip "The engine vs your gut" with both Brier scores in mono, "<n> marked tests · hits <k> of <n>" (hits count tests where the engine's side of 50% matched the outcome) and "Brier: 0 is perfect, 0.25 is a coin flip." Then "Waiting to be marked": each sealed test without an outcome as a row with its small seal grid, the post quoted on one line, "Sealed <date> · <hash prefix> · landing <n>%", their gut, and "Landed" and "Flopped". Then "Marked": the same rows with the outcome stamp ("Landed" green, "Flopped" clay) and both Briers.
 
 **Call it.** Their daily calls against the AI on resolved questions: "You <brier> · AI <brier> on <n> questions", and "You beat the AI on <k>".
 
@@ -13,9 +13,9 @@ Each seal can be checked: "Check seal" recomputes the SHA-256 of the stored test
 States, written out:
 
 - Loading: "Loading your record". Error: "Could not load your record. The server did not respond." with "Try again".
-- No tests: "No sealed tests yet. Test a post to start your record." with a link to `/`.
+- No tests: "No sealed tests yet. Test a message to start." with a link to `/`.
 - No marked tests: "Mark a test Landed or Flopped once you know how it did."
-- Signed out: "Sign in to keep your record." and "Sign in".
+- Signed out: the page with nothing in it: "Every message test you seal waits here until you mark how it did. Then the engine and your gut are scored on the same messages.", a slip "The engine vs your gut" with "The engine" and "Your gut" each at "– Brier" and "0 marked tests", an empty seal grid and "Sign in to keep your tests", then "Brier: 0 is perfect, 0.25 is a coin flip." No other number.
 
 ## Who it is for
 

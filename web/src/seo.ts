@@ -8,12 +8,12 @@ export const ROUTES: Route[] = [
   {
     path: "/",
     description:
-      "Will this land? Test a post on simulated audiences in 16 countries before you publish; call the news against an AI that seals its calls first. AI-simulated.",
+      "Test a launch post, a price change, a headline or an announcement on simulated people in 16 countries before you ship it. AI-simulated.",
   },
   {
     path: "/simulate",
     description:
-      "Test a post or fork today's world on simulated populations of 16 countries, from prepared real decisions. AI-simulated.",
+      "Test a message or one event on simulated populations of 16 countries, from prepared company decisions. AI-simulated.",
   },
   {
     path: "/call",

@@ -1,7 +1,9 @@
 import type { PostTestOut, SegmentReaction, SimulateResult } from "@real-world/sdk";
-import { Disclosure, pct, pts, SealGrid, TierBadge, topicLabel, usd } from "./App";
+import { useState } from "react";
+import { Disclosure, pct, pts, SealRow, sentence, TierBadge, topicLabel, usd } from "./App";
 import { Trajectory } from "./Chart";
 import { signInHref } from "./session";
+import { postShareText } from "./share";
 
 export const MIX: [keyof PostTestOut["result"]["mix"], string][] = [
   ["scroll_past", "Scroll past"],
@@ -10,21 +12,36 @@ export const MIX: [keyof PostTestOut["result"]["mix"], string][] = [
   ["share", "Share"],
 ];
 
-/** The reaction mix as one bar whose parts add to 100%. */
+/** The reaction mix as one bar whose parts add to 100%; under 720px its labels move to a legend. */
 export function MixBar({ mix }: { mix: PostTestOut["result"]["mix"] }) {
+  const items = MIX.map(([k, label]) => [k, `${label} ${pct(mix[k])}`] as const);
   return (
-    <div className="mixbar" role="img" aria-label="Reaction mix">
-      {MIX.map(([k, label]) => (
-        <span
-          key={k}
-          className={`mixbar-${k}`}
-          style={{ /* design: computed width */ flexGrow: mix[k] }}
-          title={`${label} ${pct(mix[k])}`}
-        >
-          {label} {pct(mix[k])}
-        </span>
-      ))}
-    </div>
+    <>
+      <div
+        className="mixbar"
+        role="img"
+        aria-label={`Reaction mix: ${items.map(([, t]) => t).join(", ")}`}
+      >
+        {items.map(([k, t]) => (
+          <span
+            key={k}
+            className={`mixbar-${k}`}
+            style={{ /* design: computed width */ flexGrow: mix[k] }}
+            title={t}
+          >
+            {t}
+          </span>
+        ))}
+      </div>
+      <p className="mono mixbar-legend" aria-hidden="true">
+        {items.map(([k, t]) => (
+          <span key={k}>
+            <span className={`swatch mixbar-${k}`} />
+            {t}
+          </span>
+        ))}
+      </p>
+    </>
   );
 }
 
@@ -41,8 +58,33 @@ function allocate(n: number, weights: number[]): number[] {
   return counts;
 }
 
-/** The audience as 100 dots split by population weight; filled dots would like or share it. */
-export function PopulationField({ rows }: { rows: SegmentReaction[] }) {
+/** `n` spread by `weights` with no part above its cap; a capped part's overflow goes to the
+ * parts with room, largest shortfall first. Needs n <= the sum of `caps`. */
+export function spread(n: number, weights: number[], caps: number[]): number[] {
+  const total = weights.reduce((a, b) => a + b, 0) || 1;
+  const out = allocate(n, weights).map((v, i) => Math.min(v, caps[i]));
+  let left = n - out.reduce((a, b) => a + b, 0);
+  const order = weights
+    .map((w, i) => [(n * w) / total - out[i], i])
+    .sort((a, b) => b[0] - a[0])
+    .map(([, i]) => i);
+  while (left > 0)
+    for (const i of order)
+      if (left > 0 && out[i] < caps[i]) {
+        out[i] += 1;
+        left -= 1;
+      }
+  return out;
+}
+
+/** The audience as 100 dots split by population weight; the filled count is the headline's. */
+export function PopulationField({
+  rows,
+  landingChance,
+}: {
+  rows: SegmentReaction[];
+  landingChance: number;
+}) {
   const sorted = [...rows].sort(
     (a, b) => a.country.localeCompare(b.country) || b.landing - a.landing,
   );
@@ -50,11 +92,14 @@ export function PopulationField({ rows }: { rows: SegmentReaction[] }) {
     100,
     sorted.map((s) => s.weight),
   );
+  const target = Math.min(100, Math.max(0, Math.round(landingChance * 100)));
+  const on = spread(
+    target,
+    sorted.map((s, i) => counts[i] * s.landing),
+    counts,
+  );
   const dots = sorted.flatMap((s, i) =>
-    Array.from({ length: counts[i] }, (_, j) => ({
-      label: s.label,
-      on: j < Math.round(s.landing * counts[i]),
-    })),
+    Array.from({ length: counts[i] }, (_, j) => ({ label: s.label, on: j < on[i] })),
   );
   const filled = dots.filter((d) => d.on).length;
   const line = `Filled dots would like or share it: ${filled} of 100. Weighted by population.`;
@@ -72,12 +117,16 @@ export function PopulationField({ rows }: { rows: SegmentReaction[] }) {
   );
 }
 
-/** Landing chance per segment as a country by age band by education table. */
+/** Landing chance per segment as a country by age band by education table, asked columns only. */
 export function SegmentMatrix({ rows }: { rows: SegmentReaction[] }) {
   const bySegment = new Map(rows.map((s) => [s.segment, s]));
   const countries = [...new Map(rows.map((s) => [s.country, s.coverage_tier])).entries()].sort(
     ([a], [b]) => a.localeCompare(b),
   );
+  const asked = new Set(rows.map((s) => s.segment.split("|").slice(1).join("|")));
+  const bands = AGE_BANDS.map(
+    (a) => [a, EDUCATION.filter((e) => asked.has(`${a}|${e}`))] as const,
+  ).filter(([, eds]) => eds.length > 0);
   return (
     <section
       className="matrix-wrap"
@@ -86,21 +135,24 @@ export function SegmentMatrix({ rows }: { rows: SegmentReaction[] }) {
       tabIndex={0}
     >
       <table className="matrix">
-        <caption>Landing chance by country, age band and education</caption>
+        <caption>
+          Landing chance by country, age band and education. {rows.length} segments asked, each
+          country's most populous first; – means not asked.
+        </caption>
         <thead>
           <tr>
             <th rowSpan={2} scope="col">
               Country
             </th>
-            {AGE_BANDS.map((a) => (
-              <th key={a} colSpan={3} scope="colgroup" className="mono">
+            {bands.map(([a, eds]) => (
+              <th key={a} colSpan={eds.length} scope="colgroup" className="mono">
                 {a}
               </th>
             ))}
           </tr>
           <tr>
-            {AGE_BANDS.flatMap((a) =>
-              EDUCATION.map((e) => (
+            {bands.flatMap(([a, eds]) =>
+              eds.map((e) => (
                 <th key={`${a}-${e}`} scope="col">
                   {e}
                 </th>
@@ -114,8 +166,8 @@ export function SegmentMatrix({ rows }: { rows: SegmentReaction[] }) {
               <th scope="row">
                 <span className="mono">{iso}</span> <TierBadge tier={tier} />
               </th>
-              {AGE_BANDS.flatMap((a) =>
-                EDUCATION.map((e) => {
+              {bands.flatMap(([a, eds]) =>
+                eds.map((e) => {
                   const s = bySegment.get(`${iso}|${a}|${e}`);
                   return s ? (
                     <td
@@ -176,7 +228,8 @@ export function BeliefShifts({ result }: { result: SimulateResult }) {
               />
             </span>
             <span className="mono shift-text">
-              {pct(o.baseline_share)} → {pct(o.final.p50)} ({pts(o.final.p50 - o.baseline_share)})
+              {pct(o.baseline_share)} → {pct(o.final.p50)} ({pts(o.final.p50 - o.baseline_share)}) ·
+              p10–p90 {pct(o.final.p10)}–{pct(o.final.p90)}
             </span>
           </li>
         ))}
@@ -191,26 +244,53 @@ const utc = (iso: string) => `${new Date(iso).toISOString().slice(0, 16).replace
 function SealLine({ seal }: { seal: PostTestOut["seal"] }) {
   return seal ? (
     <div className="seal-line seal">
-      <SealGrid hash={seal.sha256} large />
-      <div>
-        <p className="small">Sealed {utc(seal.sealed_at)}</p>
-        <p className="mono seal-hash">
+      <SealRow hash={seal.sha256} title={`Sealed ${utc(seal.sealed_at)}`}>
+        <p className="seal-hash">
           {[0, 16, 32, 48].map((i) => (
             <span key={i}>{seal.sha256.slice(i, i + 16)}</span>
           ))}
         </p>
-        <p className="small">
-          <a href="/record">Mark it in your record once you know how it did</a>
-        </p>
-      </div>
+        <a href="/record">Mark it in your tests once you know how it did</a>
+      </SealRow>
     </div>
   ) : (
     <div className="seal-line">
-      <SealGrid />
-      <p className="small">
-        Not sealed. Sign in to seal this test and keep your record.{" "}
-        <a href={signInHref()}>Sign in</a>
-      </p>
+      <SealRow title="Not sealed">
+        Sign in to seal this test and keep your record. <a href={signInHref()}>Sign in</a>
+      </SealRow>
+    </div>
+  );
+}
+
+/** Copies the result as one line of text; when the clipboard refuses, shows the text to select. */
+function CopyResult({ text }: { text: string }) {
+  const [state, setState] = useState<"" | "copied" | "failed">("");
+  return (
+    <div className="copy-result">
+      <button
+        type="button"
+        onClick={() =>
+          navigator.clipboard.writeText(text).then(
+            () => {
+              setState("copied");
+              setTimeout(() => setState(""), 2000);
+            },
+            () => setState("failed"),
+          )
+        }
+      >
+        Copy result
+      </button>
+      <span role="status" className="small">
+        {state === "copied"
+          ? "Copied"
+          : state === "failed"
+            ? "Copy failed: select the text below"
+            : ""}
+      </span>
+      {state === "failed" && (
+        <textarea className="share-text" readOnly rows={3} value={text} aria-label="Result text" />
+      )}
     </div>
   );
 }
@@ -222,7 +302,7 @@ function Segments({ title, rows }: { title: string; rows: SegmentReaction[] }) {
       <ul className="segments">
         {rows.map((s) => (
           <li key={s.segment}>
-            <span>{s.label}</span>
+            <span>{sentence(s.label)}</span>
             <span className="mono">{pct(s.landing)}</span>
             <TierBadge tier={s.coverage_tier} />
           </li>
@@ -248,7 +328,7 @@ export function ReactionResult({
   return (
     <section className="card receipt land-result" aria-live="polite">
       <div className="receipt-top">
-        <span className="slip-kind">Post test</span>
+        <span className="slip-kind">Message test</span>
         <span className={`stamp${out.seal ? " good" : ""}`}>
           {out.seal ? "Sealed" : "Not sealed"}
         </span>
@@ -262,7 +342,7 @@ export function ReactionResult({
         {pct(r.band[0])} to {pct(r.band[1])} across {r.segments} audiences (p10 to p90).{" "}
         {r.calibration}.
       </p>
-      <PopulationField rows={r.audiences} />
+      <PopulationField rows={r.audiences} landingChance={r.landing_chance} />
       <h3>Reaction mix</h3>
       <MixBar mix={r.mix} />
       <SegmentMatrix rows={r.audiences} />
@@ -270,7 +350,7 @@ export function ReactionResult({
         <Segments title="Most likely to like or share it" rows={r.best} />
         <Segments title="Least likely" rows={r.worst} />
       </div>
-      <h3>Two simulated accounts</h3>
+      <h3>What people say</h3>
       {r.voices.map((v) => (
         <blockquote key={v.label} className="voice">
           <span className="stamp">
@@ -278,7 +358,7 @@ export function ReactionResult({
             {fake ? ", fake model, placeholder text" : ""}
           </span>
           <p>{v.text}</p>
-          <footer className="muted small">{v.label}</footer>
+          <footer className="muted small">{sentence(v.label)}</footer>
         </blockquote>
       ))}
       <div className="rewrite">
@@ -289,6 +369,7 @@ export function ReactionResult({
         </button>
       </div>
       {(out.seal || !signedIn) && <SealLine seal={out.seal} />}
+      <CopyResult text={postShareText(out, text, location.origin)} />
       <p className="muted small">
         {r.model_calls} model calls · {fake ? "fake model, nothing spent" : usd(r.cost_usd)}
       </p>
@@ -309,7 +390,7 @@ export function EventResult({ result, text }: { result: SimulateResult; text: st
     <section className="card receipt event-result" aria-live="polite">
       <div className="receipt-top">
         <span className="slip-kind">
-          Fork · {result.days} simulated days from the world of {result.world_snapshot_id}
+          Event · {result.days} simulated days from the world of {result.world_snapshot_id}
         </span>
         <span className="stamp">{result.note}</span>
       </div>
