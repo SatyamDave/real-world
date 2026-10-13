@@ -172,6 +172,74 @@ test.describe("globe", () => {
   });
 });
 
+test.describe("sections below the receipts", () => {
+  test("thesis, use cases, research and collaboration render, with the waitlist still the one action", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(
+      page.getByRole("heading", {
+        name: "A forecast is only worth something if you can check it.",
+      }),
+    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "What you can do with it" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Research and limits" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Work on this with us." })).toBeVisible();
+    // No demo and no app link: nothing here depends on APP_URL.
+    await expect(page.getByText(/try today's question|demo/i)).toHaveCount(0);
+    // One primary form on the page.
+    await expect(page.locator("form.signup")).toHaveCount(1);
+  });
+
+  test("the collaboration action points back to the waitlist field until a contact address exists", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Join the waitlist and choose your role" }).click();
+    await expect(page.locator("#email")).toBeFocused();
+  });
+});
+
+test.describe("pre-rendered home page", () => {
+  test("with JavaScript off the headline, the email field and the globe poster are in the HTML", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto("/");
+    await expect(page.locator("h1")).toHaveText("Simulations with receipts.");
+    await expect(page.locator("#email")).toHaveCount(1);
+    await expect(page.locator("img.globe-poster")).toHaveCount(1);
+    await context.close();
+  });
+
+  for (const [id, h1] of [
+    ["hashed", "Forecasts, hashed before the outcome."],
+    ["public-score", "We publish our misses."],
+    ["your-call", "Make your call before the world does."],
+  ] as const) {
+    test(`utm_content=${id} hydrates cleanly with its own headline`, async ({ page }) => {
+      const errors: string[] = [];
+      page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+      page.on("pageerror", (e) => errors.push(e.message));
+      await page.goto(`/?utm_content=${id}`);
+      await page.waitForTimeout(1200);
+      await expect(page.locator("h1")).toHaveText(h1);
+      await page.fill("#email", "a@b.co");
+      await expect(page.locator("#email")).toHaveValue("a@b.co");
+      expect(errors).toEqual([]);
+    });
+  }
+
+  test("privacy and terms do not show the home markup", async ({ page }) => {
+    for (const path of ["/privacy", "/terms"]) {
+      await page.goto(path);
+      await expect(page.locator("h1")).toHaveCount(1);
+      await expect(page.locator("img.globe-poster")).toHaveCount(0);
+    }
+  });
+});
+
 test.describe("legal pages", () => {
   test("privacy lists the processors and is marked as a draft", async ({ page }) => {
     await page.goto("/privacy");

@@ -81,3 +81,62 @@ Decision: tighten the drafts, keep the draft banner, and put every open legal qu
 ### Left out of Milestone A, and why
 
 The analytics guide, runbook and decisions describe how we operate; none of that is on the page. The page itself changed only on the privacy text, which states what we collect. Nothing about pricing, customers, YC or the engine appears anywhere in what is shipped.
+
+## Milestone B: sections below the hero (`landing/7-sections`)
+
+### B1. What goes below the receipts
+
+Options:
+1. Eight or more sections: thesis, how it works, use cases, research, FAQ, roadmap, team, collaboration.
+2. Four new sections only (thesis, use cases, research and limits, collaboration) plus the existing how it works and repeat CTA.
+3. Leave the page as it is.
+
+Evidence: the screenshot critique at 390x844 and 1440x900, two passes (`design/section-passes/pass1-*` and `pass2-*`). Pass 1 showed the thesis statement works as the one large type moment, but the collaboration band had nothing to press and was as tall as the content sections. Pass 2 fixed both (one row on desktop, an action that focuses the waitlist field). The page is about 3,360 px tall on desktop and about 4,600 CSS px on a phone, which is already long for a visitor from an ad, so more sections were rejected. A roadmap, team and FAQ would need content that is not approved for public use.
+
+Risks and reversibility: every new sentence is a restatement of an allowed claim in [gtm/messaging.md](../gtm/messaging.md) or a statement of what we leave out; `src/copy/sections.test.ts` fails on forbidden claims and on competitor, price, funding, model and "demo" wording. Each section is one component and one line in `App.tsx`, so any can be removed alone.
+
+Checks: copy against messaging.md (done by the test and by reading); privacy (no new data collected; four new `section_viewed` values and one `outbound_clicked` value, in the tracking plan); mobile and desktop critique (above); axe on `/` passes on both viewports.
+
+Decision: option 2. Runner-up: option 1 minus the FAQ and roadmap. Would change our mind: measured scroll depth (the "Sections seen" chart) showing most visitors never reach the lower sections, in which case cut them; or a founder-approved FAQ.
+
+### B2. Collaboration call to action
+
+Options: a contact form of its own; a mailto link; the waitlist's role question as the entry point.
+
+Evidence: `BRAND.contactEmail` is empty because email routing does not exist yet (RUNBOOK section 3), so a mailto would be a dead address. The waitlist form already asks "Which best describes you?" with "Developer or builder" among the answers.
+
+Decision: a mailto link when `contactEmail` is set; until then a button that focuses the waitlist field ("Join the waitlist and choose your role"). The waitlist stays the single dominant action and no partner is named. Runner-up: a form (a second place to collect email, so rejected). Would change our mind: collaboration enquiries that do not want to join a list.
+
+### B3. LCP: pre-render, Preact, or leave as shipped
+
+Options:
+1. Leave the React bundle as it is (Rohit's 2026-10-12 decision, made before this brief gave the choice back).
+2. Swap React for Preact to shrink the JavaScript.
+3. Pre-render the home page into the HTML at build time and hydrate it.
+
+Evidence (Lighthouse mobile, simulated slow 4G, 4x CPU, the method in [perf/LIGHTHOUSE.md](perf/LIGHTHOUSE.md); all on the build with the new sections):
+
+| Series | Where | Runs | LCP median | Under 2.0 s | LCP range |
+| --- | --- | --- | --- | --- | --- |
+| F, as shipped (no pre-render) | local preview | 8 | 2085 ms | 3 of 8 | 1830 to 2130 ms |
+| G, pre-rendered | local preview | 12 (8 + 4 on another headline) | 1805 ms | 12 of 12 | 1803 to 1812 ms |
+| H, as shipped | live staging | 8 | 2274 ms | 2 of 8 | 1832 to 2514 ms |
+| I, pre-rendered | live staging, run right after H | 8 | 2027 ms | 4 of 8 | 1774 to 2645 ms |
+| J, pre-rendered and stylesheet inlined (tried, reverted) | live staging | 8 | 2082 ms | 1 of 8 | 1871 to 2356 ms |
+
+The LCP element was the globe poster image in every run. Its real load is about 20 to 200 ms; without pre-rendering the image only exists once JavaScript has run, which Lighthouse's simulation counts. Pre-rendering took local LCP from 3 of 8 to 12 of 12 under 2.0 s, but on the live host it moved the median by about 250 ms (2274 to 2027) and the count from 2 to 4 of 8, with FCP steady near 1.8 s. So pre-rendering is a measured improvement, and the budget is still not reliably met on the live host. Inlining the 3 KB stylesheet cut FCP (about 850 to 1400 ms) but not LCP, and was worse on the count, so it was reverted. Live and local differ because the live runs add real network time to first byte (90 to 210 ms in the reports). Preact was not built or measured: pre-rendering already puts the element in the HTML, so what remains is network path, which a smaller bundle does not change much.
+
+Risks and reversibility: pre-rendering adds a build step (`scripts/prerender.mjs`) and a hydration path. The risks are a hydration mismatch and home markup flashing on `/privacy` and `/terms`. Mitigations, each tested in `e2e/landing.spec.ts`: the h1 and subline for each `utm_content` are swapped by an inline script before first paint so hydration sees the text it renders; the script empties the root on any path but `/`; with JavaScript off the headline, email field and poster are in the HTML; each variant loads with zero console errors and a working form. Reversible by removing the `prerender.mjs` step from `build` and `build.mjs`; `main.tsx` falls back to `createRoot` when the root is empty.
+
+Checks: copy unchanged; privacy unchanged (the markup is what the page already shows); no tracking change (analytics still start after load or first interaction).
+
+Decision: option 3, kept because it is a measured gain with the tests green (54 end-to-end tests, 44 unit tests), and not claimed as meeting the budget on the live host. Runner-up: option 1. Would change our mind: real-user LCP from the first ad days (the lab number is a simulation), or a hydration problem in the field. Still open if the budget matters: reduce what competes with the poster on first paint (the 80 KB script and two fonts are fetched in parallel with it), or serve the hero from a single smaller poster.
+
+### Left out of Milestone B, and why
+
+- Pricing, customers, ICP language, funding or accelerator plans, competitor names and positioning tables: private strategy ([gtm/messaging.md](../gtm/messaging.md) positioning is for us, not the page).
+- Research findings on persona panels, vendors' accuracy, the red-team and lens documents: internal; the page says only that we claim nothing about accuracy.
+- Model, prompt and engine details (which model, how archetypes are called, agent counts): not allowed as a headline and not needed.
+- Any live demo, v1 link, API description, or anything depending on `APP_URL`: out of scope by the brief; the "Try today's question" link remains hidden while `APP_URL` is empty.
+- Partner, advisor or customer names, team bios, a roadmap and dates other than Oct 27 and the three event dates: no approved source.
+- Backtest numbers and any accuracy figure: forbidden by messaging.md.

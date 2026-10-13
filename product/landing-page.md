@@ -10,7 +10,7 @@ Strangers arriving from a Reddit or X ad on a phone, who need to understand the 
 
 ## How we know it works
 
-- Routes: `/` (header with a join button, hero, receipt strip, how-it-works, repeat CTA, footer), `/privacy`, `/terms`. Two Pages Functions: `POST /api/signup` and `POST /api/typeform`. The field and event shapes are defined once in `landing/db/migrations/` (the signup row) and `landing/analytics/TRACKING_PLAN.md` (events); this spec does not restate them.
+- Routes: `/` (header with a join button, hero, receipt strip, thesis, how-it-works, use cases, research and limits, collaboration, repeat CTA, footer), `/privacy`, `/terms`. Two Pages Functions: `POST /api/signup` and `POST /api/typeform`. The field and event shapes are defined once in `landing/db/migrations/` (the signup row) and `landing/analytics/TRACKING_PLAN.md` (events); this spec does not restate them.
 - The email CTA writes a row to Neon before any Typeform iframe loads, so a Typeform outage never loses a lead ([101](../research/product/101-prelaunch-landing-waitlist-ads.md)).
 - The headline is chosen from `utm_content` against the allow-list in [`gtm/prelaunch-ads.md`](../gtm/prelaunch-ads.md); an unknown or missing value falls back to the default headline. The chosen `headline_variant` is recorded on every analytics event and on the signup row.
 - Automated checks (Vitest + Playwright, in `landing/`): the headline resolver returns the default for an unknown `utm_content` and the right headline for each known id; the signup form shows each state below from a mocked endpoint (empty, loading, error, duplicate, success); the globe falls back to the poster under `prefers-reduced-motion` and when WebGL is absent; an axe pass finds no violations on `/`. "Works" for the deploy is a Playwright signup on the preview URL that writes a row to Neon and an event to Amplitude.
@@ -54,6 +54,15 @@ All copy below is the whole of what the page says. `{BRAND}` is the display name
 2. "Hash. We commit the forecast as a hash before the outcome exists, so the record cannot be backfilled."
 3. "Score. When the event resolves, we score the forecast in public against the market price and a plain-language-model baseline — misses included."
 
+### Thesis, use cases, research and limits, collaboration (below the receipts)
+
+Every sentence restates a claim on the allowed list in [messaging](../gtm/messaging.md) or says what we do not claim. `landing/src/copy/sections.test.ts` bans the forbidden claims and any competitor, price, funding or model wording. No demo, no app link, nothing that depends on `APP_URL`. The waitlist stays the one dominant call to action.
+
+- Thesis, large statement: "A forecast is only worth something if you can check it." Three ruled rows: "Committed first" (hashed before the outcome exists, so the record cannot be backfilled), "Questions fixed" (the list is committed before any forecast on them, so we cannot choose the ones that went well), "Misses stay" (every forecast scored in public against the market price at commit time, misses included).
+- Use cases, heading "What you can do with it", note "From the launch on Oct 27.": "Make a call", "Read the record" (hash and score will be public), "Get a first pass" ("A cheap first pass with stated error. Then run the real poll.").
+- Research and limits, note "What we say, and what we leave out.": two lists. Say: hashed before the outcome and scored in public from the day of the first hash; population calibrated to published marginals; news in 65 languages through GDELT translation; every output labelled AI-simulated. Leave out: no accuracy figure; not a poll and not a prediction about any real person; not a way to bet or trade. Below them: "The hash proves the forecast has not changed since it was anchored. The fixed question list is what stops us choosing questions afterwards."
+- Collaboration, heading "Work on this with us.", body "Open to people who forecast, research or build. Tell us what you would do." Contact only, no partner names. With `contactEmail` set the action is a mailto link ("Email us"); while it is empty the action is the button "Join the waitlist and choose your role", which focuses the email field.
+
 ### Receipt strip (directly under the hero, where other sites put client logos)
 
 - Section heading: "The first receipts."
@@ -82,7 +91,7 @@ All copy below is the whole of what the page says. `{BRAND}` is the display name
 - Not the launch. It never links to a waitlist from Show HN; Show HN links the live daily page ([launch plan](../gtm/launch-plan.md)). It is deleted on Oct 27.
 - Not a place that shows a forecast number, a hash, a probability or an accuracy claim. The record does not exist yet, and inventing one is forbidden ([messaging](../gtm/messaging.md), [CLAUDE.md](../CLAUDE.md)).
 - Not the app. No account, no daily question answered here, no fork. The teaser forecast is collected by Typeform for the waitlist only.
-- Not targeted outside the US until a consent banner exists ([101](../research/product/101-prelaunch-landing-waitlist-ads.md)).
+- A cookie notice asks before any analytics: until the visitor accepts, Amplitude and the ad pixels do not load and nothing is sent ([TRACKING_PLAN](../landing/analytics/TRACKING_PLAN.md)).
 - Not built in `web/`; it is a separate app so it cannot break the launch ([0003](../research/decisions/0003-prelaunch-landing-and-waitlist.md)).
 
 ## Where the code lives

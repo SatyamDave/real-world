@@ -87,16 +87,16 @@ Waitlist is the only call to action; v1 is not connected before ads. Decisions f
 - [x] Real Typeform submission through the embed on staging with Playwright; the signed webhook filled the row; test data deleted by id
 - [x] Legal drafts tightened to the code; `LEGAL_REVIEW.md` for a lawyer
 - [x] RUNBOOK go-live checklist; stale "4 devices" notes fixed
-- [ ] draft PR, CI green
+- [x] draft PR [#92](https://github.com/SatyamDave/real-world/pull/92)
 
 ### Milestone B: design and content (`landing/7-sections`, separate draft PR)
-- [ ] frontend-design: thesis and research, how it works, use cases, collaboration CTA (contact only)
-- [ ] No live demo, no v1 link, nothing that depends on APP_URL; waitlist stays the single dominant call to action
-- [ ] Screenshot critique loop at least twice at 390x844 and 1440x900; Lighthouse and a11y; LCP and CLS reported honestly
-- [ ] Preact or pre-rendering only if it proves LCP under 2.0 s without breaking tests
+- [x] frontend-design: thesis, use cases, research and limits, collaboration CTA (contact only); how it works kept
+- [x] No live demo, no v1 link, nothing that depends on APP_URL; waitlist stays the single dominant call to action
+- [x] Screenshot critique loop twice at 390x844 and 1440x900; Lighthouse and axe; LCP (not reliably met live) and CLS reported honestly. PR [#93](https://github.com/SatyamDave/real-world/pull/93)
+- [x] Pre-rendering adopted (measured gain, tests green); Preact not tried; live budget still not reliably met (DECISIONS B3)
 
 ### Later
-- [ ] `landing/SYNC.md`: a manual prompt to sync landing copy to product changes as a draft PR (one file, no watcher)
+- [x] `landing/SYNC.md`: a manual prompt to sync landing copy to product changes as a draft PR (one file, no watcher)
 
 ### Finish
-- [ ] MORNING.md: evidence per milestone, what still needs Rohit, mistakes. Stop servers and browsers, clean tree.
+- [x] MORNING.md: evidence per milestone, what still needs Rohit, mistakes. Stop servers and browsers, clean tree.

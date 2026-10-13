@@ -46,3 +46,18 @@ Medians of LCP: A 1806, B 1957 (runs 2 to 8), C 2055, D 2194, E 2053.
 - Replace React with Preact through an alias: about 40 KB gzipped less JavaScript. Touches the test setup and every component's imports.
 - Pre-render the page's HTML at build time so the first paint does not wait on JavaScript. The headline depends on `utm_content`, so a single pre-rendered page would show the wrong headline to ad visitors. Doing it per variant needs a Pages Function in front of every page view.
 - Accept the budget as a lab target on a slow-phone simulation and judge on real-user numbers once ads run.
+
+
+## 2026-10-13: the sections build, with and without pre-rendering
+
+Same command as above, run by subagents, 8 runs per series unless noted. Raw JSON stays in the session scratchpad (not committed). The table and the reading are in [DECISIONS.md](../DECISIONS.md) B3.
+
+| Series | Where | LCP (ms), runs in order | Median | Under 2.0 s |
+| --- | --- | --- | --- | --- |
+| F as shipped | local | 2043, 1835, 2130, 1830, 1832, 2128, 2129, 2128 | 2085 | 3 of 8 |
+| G pre-rendered | local | 1805, 1805, 1804, 1805, 1812, 1806, 1804, 1803 (plus 4 on `utm_content=hashed`: 1803, 1804, 1803, 1803) | 1805 | 12 of 12 |
+| H as shipped | live staging | 2380, 2168, 2514, 2379, 2064, 1892, 1832, 2397 | 2274 | 2 of 8 |
+| I pre-rendered | live staging | 2067, 1937, 1987, 1774, 1966, 2497, 2292, 2645 | 2027 | 4 of 8 |
+| J pre-rendered, stylesheet inlined (reverted) | live staging | 1871, 2074, 2056, 2089, 2032, 2356, 2093, 2211 | 2082 | 1 of 8 |
+
+CLS 0 to 0.001 and accessibility and best practices 100 in every run; SEO 66 on the live preview (Cloudflare adds `noindex` to previews). Run 1 of the local as-shipped series was the known cold-start outlier (total blocking time 3010 ms). The first live staging deploy of the pre-rendered build (before series I) measured 4 of 8 with a median of 2027 ms; series I is a repeat on a build with the same code.

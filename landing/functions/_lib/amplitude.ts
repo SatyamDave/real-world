@@ -23,7 +23,8 @@ export async function sendEvent(
     console.debug("[amplitude:dev]", e.event_type, { signup_id: e.signup_id, ...e.props });
     return;
   }
-  if (!apiKey) return;
+  // A device id exists only once the visitor accepted the cookie notice; without one, send nothing.
+  if (!apiKey || !e.device_id) return;
   try {
     await doFetch(URL_V2, {
       method: "POST",
@@ -34,9 +35,7 @@ export async function sendEvent(
           {
             event_type: e.event_type,
             insert_id: e.insert_id,
-            // Amplitude needs a user_id or device_id; the signup id is the stable join key.
-            user_id: e.device_id ? undefined : e.signup_id,
-            device_id: e.device_id ?? undefined,
+            device_id: e.device_id,
             time: now.getTime(),
             event_properties: {
               environment,

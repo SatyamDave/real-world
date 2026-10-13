@@ -1,5 +1,5 @@
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 import { App } from "./App";
 import { initAfterPaint, setConsented, setHeadlineVariant, track } from "./analytics";
 import { CookieNotice, storedConsent } from "./components/CookieNotice";
@@ -17,12 +17,17 @@ setConsented(storedConsent() === "accepted");
 const root = document.getElementById("root");
 if (!root) throw new Error("index.html has no #root element");
 
-createRoot(root).render(
+const app = (
   <StrictMode>
     <App headline={headline} path={window.location.pathname} />
-    <CookieNotice />
-  </StrictMode>,
+  </StrictMode>
 );
+// The build pre-renders the home page into index.html (scripts/prerender.mjs); hydrate it when
+// it is there, and render from scratch on the other routes and in dev.
+if (root.hasChildNodes()) hydrateRoot(root, app);
+else createRoot(root).render(app);
+// Its own root, so the pre-rendered home hydrates without it.
+createRoot(document.body.appendChild(document.createElement("div"))).render(<CookieNotice />);
 
 track("landing_viewed", {
   path: window.location.pathname,

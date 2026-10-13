@@ -63,6 +63,7 @@ if (target === "staging") {
 for (const cmd of [
   ["tsc", "--noEmit"],
   ["vite", "build"],
+  ["node", "scripts/prerender.mjs"],
 ]) {
   const r = spawnSync("pnpm", ["exec", ...cmd], { stdio: "inherit", env });
   if (r.status !== 0) process.exit(r.status ?? 1);

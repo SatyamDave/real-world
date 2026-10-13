@@ -2,6 +2,49 @@
 
 Read this first. Everything below was done on draft PRs and a preview deploy. Nothing touched `tryrealworld.com`, DNS, a production branch, or the production database.
 
+## Update 2026-10-13 (read this first): the revised brief
+
+Same guardrails: draft PRs only, no merge, no DNS, no production deploy, no production secret set, nothing in `web/`, `engine/` or `api/`. Two new draft PRs on top of the stack: [#92](https://github.com/SatyamDave/real-world/pull/92) `landing/6-envs` (base `landing/5-readiness`) and [#93](https://github.com/SatyamDave/real-world/pull/93) `landing/7-sections` (base `landing/6-envs`). Decisions with options, evidence and what would change them: [DECISIONS.md](DECISIONS.md). Plan: [PLAN.md](PLAN.md).
+
+### Milestone A: ads-ready (#92)
+
+- **Environments.** dev logs events to the console; staging is the Pages preview; prod is the Pages production branch (never deployed to). Every event carries `environment`. Evidence: Amplitude Staging (877388) holds 349 events tagged `staging` in the last day; the Prod project (878019) has **zero events over 30 days** (queried at the end of the session).
+- **Neon.** New `staging` branch for the preview; schema on `main` verified (3 tables, 19 columns on the signups table). All three branches (`main`, `dev`, `staging`) are at **0 rows**; test rows were deleted by id.
+- **Prod secrets.** `landing/scripts/set-prod-secrets.sh` is written and **not run**. `--check` validates `.dev.vars` and writes nothing; it passes with your real Turnstile keys. The production Pages environment still has no variables.
+- **Amplitude.** Dashboard now has 6 charts (limit 10), renamed "Landing page (staging): funnel and sources"; autocapture on; session replay at 100% staging and 10% production; [analytics/AMPLITUDE_GUIDE.md](analytics/AMPLITUDE_GUIDE.md) for a beginner; one experiment proposed in the guide and **not launched**.
+- **Real Typeform submission through the embed on staging, with Playwright** (`scripts/verify-staging.mjs --typeform`): three runs. The signed webhook filled each row (role, forecast, completion time), each run's webhook event was logged as signature-valid. Test data deleted by id. (You wrote "Typeform to D1"; we stayed on Neon Postgres.)
+- **Legal.** Privacy page tightened to what the code stores (device id saved with the signup, Amplitude browser id, Typeform's own cookies, Turnstile on focus). [LEGAL_REVIEW.md](LEGAL_REVIEW.md) lists ten questions for a lawyer. Nothing has been read by a lawyer.
+- **RUNBOOK** has the go-live checklist (section 10) and the three-environment tables. The stale "4 devices" notes are fixed in the #24 body, the dashboard note and below (it was 20).
+
+### Milestone B: sections and pre-rendering (#93)
+
+- **Four new sections** (thesis, use cases, research and limits, collaboration) from allowed claims only; a test fails on forbidden claims and on competitor, price, funding, model or demo wording. No demo, no v1 link, nothing depends on `APP_URL`. Screenshot critique, two passes at 390x844 and 1440x900, in `design/section-passes/`. What I left out and why is at the end of DECISIONS.md.
+- **LCP, honestly.** The budget is **not reliably met on the live host**. Lighthouse mobile, 8 runs a series: local as shipped 3 of 8 under 2.0 s (median 2085 ms); local pre-rendered 12 of 12 (1805 ms); live staging as shipped 2 of 8 (2274 ms); live staging pre-rendered 4 of 8 (2027 ms). Pre-rendering is kept (a measured gain, 54 end-to-end tests pass), and it supersedes the "ship as is" decision of 2026-10-12 only in that the page is now pre-rendered; the real test is real-user LCP once ads run. Inlining the stylesheet did not help and was reverted. Preact was not tried. Details: [perf/LIGHTHOUSE.md](perf/LIGHTHOUSE.md).
+- `SYNC.md`: one file with a manual prompt for syncing landing copy to product changes as a draft PR. No watcher.
+
+### What still needs you (updated)
+
+- [ ] **Rotate the Typeform token**, then create the production form: `node landing/scripts/typeform-sync.mjs --env production --webhook-url https://tryrealworld.com/api/typeform`. Staging and production use two forms so a staging test cannot reach the production webhook.
+- [ ] **Real Turnstile keys.** They are in `.dev.vars` (thank you) and `set-prod-secrets.sh` maps them. Still to do: add `tryrealworld.com` and `www.tryrealworld.com` to the widget's allowed hostnames and check one real signup. Preview and staging keep the test keys.
+- [ ] **Connect `tryrealworld.com` to Cloudflare** (RUNBOOK section 1), then `bash landing/scripts/set-prod-secrets.sh --check`, then without `--check`, then `pnpm --filter landing build:prod` and the production deploy, then the production test (RUNBOOK section 10 steps 4 to 9).
+- [ ] **Rebuild the dashboard in the Prod Amplitude project** after the first production visit (AMPLITUDE_GUIDE, go-live checklist). Decide whether to run the proposed experiment once the first ad days show the visitor count.
+- [ ] **Read the draft legal pages with LEGAL_REVIEW.md**, pick a retention period, set `contactEmail` (this also turns the collaboration link into a mailto).
+- [ ] **Ad accounts and pixels**, **Typeform plan** and **pick the design** as in the list below. Decide whether to chase LCP further or wait for real-user numbers.
+
+### Verification traffic from this session (filter these out)
+
+All of it is in the **Staging** Amplitude project, which is test traffic by definition. By `environment`: events tagged `staging` are verification; four server events from the first run are wrongly tagged `production` (see mistakes) and belong to signups `2cdd1854-b79c-4f0d-b3bf-11c17f69d7fb` and `a0b3b8b3-c3c7-47a7-8bde-70fa4bd19c4e`. Browser-driven staging devices (all three had a real Typeform submission): `d3b1d4e7-15c9-4436-a603-0660929ab49a`, `da510a36-f595-41ca-adb7-d56e52f7677a`, `a6b706df-3fbe-453a-9917-39bc42c1919c` (signup `15ce7c71-4e67-447b-8782-75e8f37bbf4f` for the last). The Lighthouse runs on the live staging page (32 today) each created a device; their ids were not captured, but they have `environment = staging` and no `utm_source`. The Prod project has none of it.
+
+### Mistakes this time, and fixes
+
+- **First staging run tagged four server events `production`** in the Staging project. Cause: Pages ignores dashboard plain-text variables when a `wrangler.toml` exists. Found by querying events by `environment`; fixed by setting `ENVIRONMENT` in `wrangler.toml`; the next signup was tagged `staging`. The four events cannot be deleted with the tools I have.
+- **A scripted edit silently did not apply again** (Biome had reformatted `scripts/build.mjs`), so the staging build skipped the pre-render step and I deployed it once before noticing. Caught by asserting the pre-render marker in `dist/index.html`; fixed and redeployed.
+- **The end-to-end server built without the pre-render step**, so the tests would not have covered it. Now it runs `pnpm build`.
+- **A flaky axe test** (measured contrast while a chip was fading in) was found by the subagent run, not by me; fixed and rerun 3 times.
+- **I first read the local 12 of 12 as a win.** The live host showed a smaller gain (4 of 8, not 12 of 12). I measured the live A/B before writing the decision; DECISIONS.md B3 gives both.
+- **My verify script printed the signup id of only the last of two runs** (I had cut the output); I recovered the first from the database. The cleanup went by exact ids.
+- **Inlined stylesheet experiment** made the live count worse (1 of 8). Reverted.
+
 ## Where it is
 
 - **Preview:** https://landing-preview.real-world-landing.pages.dev (Cloudflare Pages project `real-world-landing`, preview branch `landing-preview`; it carries `noindex` by Cloudflare's design).
@@ -32,12 +75,12 @@ CI was read from GitHub after the last push of code (head `db73246` on #25, whic
 
 - [ ] **Pick the design.** Direction A, "Commit Slip", is built and is what the preview shows. Directions B (dark observatory) and C (almanac) exist only as token sets, `src/styles/tokens-b.css` and `tokens-c.css`; switching is the one `tokens.css` import in `src/main.tsx`. B and C were designed with their own display fonts (a serif for B, a grotesque for C); those font files are not in the repo, because the page now serves only IBM Plex. Screenshots of all three are in `landing/design/direction-*/` and the scores are under "Design decisions" below.
 - [ ] **Replace the Typeform token.** `TYPEFORM_TOKEN` in `landing/.dev.vars` is read only by `scripts/typeform-sync.mjs` (it is not a Pages secret). Put the new token there and revoke the old one in Typeform. If the new token belongs to a different Typeform account, delete `landing/typeform/form-id.txt` and run `node landing/scripts/typeform-sync.mjs --webhook-url <the /api/typeform URL>` to create the form and its webhook there, then set `VITE_TYPEFORM_FORM_ID` and rebuild ([RUNBOOK section 6](RUNBOOK.md)). The current form is `xHCo5APC`, with its webhook pointing at the preview.
-- [ ] **Real Turnstile keys.** The preview uses Cloudflare's always-pass test keys. For production, create a widget, add `tryrealworld.com` to its allowed hostnames, set the site key as `VITE_TURNSTILE_SITE_KEY` at build time and the secret as the `TURNSTILE_SECRET_KEY` production secret, then do one real signup ([RUNBOOK sections 1 and 4](RUNBOOK.md)).
+- [ ] **Real Turnstile keys.** (Keys now in `.dev.vars`; see the update above.) The preview uses Cloudflare's always-pass test keys. For production, create a widget, add `tryrealworld.com` to its allowed hostnames, set the site key as `VITE_TURNSTILE_SITE_KEY` at build time and the secret as the `TURNSTILE_SECRET_KEY` production secret, then do one real signup ([RUNBOOK sections 1 and 4](RUNBOOK.md)).
 - [ ] **Connect `tryrealworld.com` to Cloudflare.** Nameservers at Namecheap, then the Pages custom domain, `www` redirect and SSL ([RUNBOOK section 1](RUNBOOK.md)). Then set `VITE_PUBLIC_BASE_URL`, repoint the Typeform webhook, and redeploy. Not done by me.
 - [ ] **Ad accounts and pixels.** Create the Reddit and X ad accounts and their pixels, set `VITE_REDDIT_PIXEL_ID`, `VITE_X_PIXEL_ID` and the X Lead event id, and check the pixel calls against the live pixels, which I could not do ([RUNBOOK section 9](RUNBOOK.md)). The images are in `landing/ads/`; the caps and the kill rule are in [prelaunch-ads.md](../gtm/prelaunch-ads.md).
 - [ ] **Typeform Plus.** Upgrade the Typeform account to the Plus plan. I do not know which plan the current account is on, or what response limits, hidden fields and webhooks the plans include: that is unknown to me, so check the plan page before the ads run. The page depends on hidden fields (`signup_id` and three others) and on the webhook.
 - [ ] **Read the draft legal pages.** `/privacy` and `/terms` carry a draft banner. Read them, decide a retention period, set `contactEmail` in `src/brand.ts` once `hello@tryrealworld.com` exists, then remove the banner (`src/pages/DraftBanner.tsx`).
-- [ ] **Test a real Typeform submission through the embed on the deployed preview.** Open `https://landing-preview.real-world-landing.pages.dev/?utm_source=test&utm_content=hashed`, sign up with your own address, and answer both questions in the embedded form. Then check that the row in the Neon `dev` branch has `role`, `forecast_probability` and `completed_at` (the preview writes to `dev`, not `main`), and that Amplitude shows `waitlist_completed`. I tested the webhook only with a correctly signed request, never with Typeform's own delivery. Delete your test row afterwards by id ([RUNBOOK section 8](RUNBOOK.md)).
+- [x] **Test a real Typeform submission through the embed on the deployed preview.** Done on staging on 2026-10-13 with Playwright (see the update above). Original note: Open `https://landing-preview.real-world-landing.pages.dev/?utm_source=test&utm_content=hashed`, sign up with your own address, and answer both questions in the embedded form. Then check that the row in the Neon `dev` branch has `role`, `forecast_probability` and `completed_at` (the preview writes to `dev`, not `main`), and that Amplitude shows `waitlist_completed`. I tested the webhook only with a correctly signed request, never with Typeform's own delivery. Delete your test row afterwards by id ([RUNBOOK section 8](RUNBOOK.md)).
 
 ## Verification traffic in Amplitude (filter these out)
 
