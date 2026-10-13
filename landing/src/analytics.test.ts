@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   type AnalyticsConfig,
   appDeepLink,
@@ -146,4 +146,44 @@ test("initAfterPaint starts once: on the first interaction or after the delay, w
   } finally {
     vi.useRealTimers();
   }
+});
+
+describe("environment", () => {
+  const loaders = () => {
+    const start = vi.fn(async () => ({ deviceId: "d", track: vi.fn() }));
+    return {
+      start,
+      loaders: { amplitude: async () => ({ start }) as never, pixels: async () => ({}) as never },
+    };
+  };
+  const base = {
+    amplitudeKey: "k",
+    replaySampleRate: 0,
+    redditPixelId: "",
+    xPixelId: "",
+    xLeadEventId: "",
+  };
+  const nav = { doNotTrack: "0" } as Navigator;
+
+  test("development does not load Amplitude by default", async () => {
+    const l = loaders();
+    await initAnalytics({ ...base, environment: "development" }, l.loaders, nav);
+    expect(l.start).not.toHaveBeenCalled();
+  });
+
+  test("development loads it with the staging key only when asked", async () => {
+    const l = loaders();
+    await initAnalytics(
+      { ...base, environment: "development", amplitudeDevSend: true },
+      l.loaders,
+      nav,
+    );
+    expect(l.start).toHaveBeenCalledWith(expect.objectContaining({ environment: "development" }));
+  });
+
+  test("staging passes its environment to the SDK and tags queued events", async () => {
+    const l = loaders();
+    await initAnalytics({ ...base, environment: "staging" }, l.loaders, nav);
+    expect(l.start).toHaveBeenCalledWith(expect.objectContaining({ environment: "staging" }));
+  });
 });

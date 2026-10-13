@@ -8,6 +8,7 @@ export interface StartOptions {
   apiKey: string;
   replaySampleRate: number;
   headlineVariant: string;
+  environment: string;
 }
 
 export interface Started {
@@ -37,6 +38,7 @@ export async function start(opts: StartOptions): Promise<Started> {
 
   const identify = new amp.Identify();
   identify.set("headline_variant", opts.headlineVariant);
+  identify.set("environment", opts.environment);
   amp.identify(identify);
 
   if (opts.replaySampleRate > 0) {

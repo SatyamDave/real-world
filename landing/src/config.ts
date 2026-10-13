@@ -12,6 +12,11 @@ export const config = {
   turnstileSiteKey: (env.VITE_TURNSTILE_SITE_KEY ?? "").trim(),
   // Typeform form id (landing/typeform/form.json, created by scripts/typeform-sync.mjs).
   typeformFormId: (env.VITE_TYPEFORM_FORM_ID ?? "").trim(),
+  // "development" | "staging" | "production". Set per build with VITE_ENVIRONMENT; with
+  // nothing set, `vite dev` is development and any build is production.
+  environment: (env.VITE_ENVIRONMENT ?? (env.DEV ? "development" : "production")).trim(),
+  // Development only: send to Amplitude (the staging key) instead of logging to the console.
+  amplitudeDevSend: (env.VITE_AMPLITUDE_DEV_SEND ?? "false").trim() === "true",
   // Amplitude browser key (public) and the session-replay sample rate, 0..1.
   amplitudeKey: (env.VITE_AMPLITUDE_API_KEY ?? "").trim(),
   replaySampleRate: Math.min(

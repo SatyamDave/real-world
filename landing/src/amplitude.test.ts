@@ -19,7 +19,12 @@ import { start } from "./amplitude";
 beforeEach(() => vi.clearAllMocks());
 
 test("the SDK is started without IP collection and with the autocapture we documented", async () => {
-  await start({ apiKey: "k", replaySampleRate: 0, headlineVariant: "hashed" });
+  await start({
+    apiKey: "k",
+    replaySampleRate: 0,
+    headlineVariant: "hashed",
+    environment: "staging",
+  });
   const [key, , options] = sdk.init.mock.calls[0] as unknown as [
     string,
     unknown,
@@ -39,9 +44,14 @@ test("the SDK is started without IP collection and with the autocapture we docum
 });
 
 test("session replay loads only when the sample rate is above zero, with inputs masked", async () => {
-  await start({ apiKey: "k", replaySampleRate: 0, headlineVariant: "x" });
+  await start({ apiKey: "k", replaySampleRate: 0, headlineVariant: "x", environment: "staging" });
   expect(replay.sessionReplayPlugin).not.toHaveBeenCalled();
-  await start({ apiKey: "k", replaySampleRate: 0.25, headlineVariant: "x" });
+  await start({
+    apiKey: "k",
+    replaySampleRate: 0.25,
+    headlineVariant: "x",
+    environment: "staging",
+  });
   expect(replay.sessionReplayPlugin).toHaveBeenCalledWith({
     sampleRate: 0.25,
     privacyConfig: { defaultMaskLevel: "medium" },
@@ -49,8 +59,18 @@ test("session replay loads only when the sample rate is above zero, with inputs 
 });
 
 test("it returns the device id and a track function", async () => {
-  const started = await start({ apiKey: "k", replaySampleRate: 0, headlineVariant: "x" });
+  const started = await start({
+    apiKey: "k",
+    replaySampleRate: 0,
+    headlineVariant: "x",
+    environment: "staging",
+  });
   expect(started.deviceId).toBe("dev-1");
   started.track("cta_clicked", { a: 1 });
   expect(sdk.track).toHaveBeenCalledWith("cta_clicked", { a: 1 });
+});
+
+test("the environment is stored on the user as well", async () => {
+  await start({ apiKey: "k", replaySampleRate: 0, headlineVariant: "x", environment: "staging" });
+  expect(sdk.identify).toHaveBeenCalled();
 });

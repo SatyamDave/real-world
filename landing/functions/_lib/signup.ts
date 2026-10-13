@@ -83,6 +83,7 @@ export async function handleSignup(
       },
       deps.fetch,
       now,
+      env.ENVIRONMENT,
     ),
   );
   return json({ signup_id: signupId, duplicate: false });

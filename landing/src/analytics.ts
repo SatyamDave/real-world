@@ -7,6 +7,8 @@
 import { config } from "./config";
 
 let headlineVariant = "unknown";
+// Set from the build, so events queued before the SDK starts carry it too.
+let environment = config.environment;
 
 export function setHeadlineVariant(variant: string): void {
   headlineVariant = variant;
@@ -42,6 +44,9 @@ export interface Loaders {
   pixels: () => Promise<typeof import("./pixels")>;
 }
 export interface AnalyticsConfig {
+  // Optional so a missing value reads as production, never as a test environment.
+  environment?: string;
+  amplitudeDevSend?: boolean;
   amplitudeKey: string;
   replaySampleRate: number;
   redditPixelId: string;
@@ -67,7 +72,7 @@ export function privacySignal(nav: Navigator & { globalPrivacyControl?: boolean 
 
 export function track(name: EventName, props: Record<string, unknown> = {}): void {
   if (!enabled) return;
-  const payload = { headline_variant: headlineVariant, ...props };
+  const payload = { headline_variant: headlineVariant, environment, ...props };
   if (import.meta.env.DEV) {
     console.debug("[track]", name, payload);
   }
@@ -87,10 +92,15 @@ export async function initAnalytics(
     queue = [];
     return;
   }
+  environment = cfg.environment ?? environment;
+  // Local dev logs events to the console (see track) and does not load Amplitude, unless
+  // asked to, with the staging key. Events are tagged "development" either way.
+  const useAmplitude =
+    Boolean(cfg.amplitudeKey) && (environment !== "development" || cfg.amplitudeDevSend);
   const wantsPixels = Boolean(cfg.redditPixelId || cfg.xPixelId);
   const jobs: Promise<void>[] = [];
 
-  if (cfg.amplitudeKey) {
+  if (useAmplitude) {
     jobs.push(
       loaders
         .amplitude()
@@ -99,6 +109,7 @@ export async function initAnalytics(
             apiKey: cfg.amplitudeKey,
             replaySampleRate: cfg.replaySampleRate,
             headlineVariant,
+            environment,
           }),
         )
         .then((started) => {
@@ -191,4 +202,5 @@ export function resetAnalyticsForTests(): void {
   enabled = true;
   leadSender = null;
   headlineVariant = "unknown";
+  environment = "production";
 }

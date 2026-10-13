@@ -1,20 +1,36 @@
 # Copy to landing/.dev.vars and fill in. NEVER commit .dev.vars (it is git-ignored).
 # For Cloudflare Pages preview, load each with: wrangler pages secret put <NAME>
 
-# Neon Postgres connection strings (pooled). Created by the Neon project real-world-landing.
-# DATABASE_URL points at the `main` branch; DATABASE_URL_DEV at the `dev` branch used by tests.
+# --- Environments: dev (local), staging (Pages preview), prod (Pages production) ---
+# ENVIRONMENT tags every Amplitude event. "development" logs events to the console and sends
+# nothing. Pages sets its own value: "staging" on preview, "production" on production.
+ENVIRONMENT=development
+
+# Neon Postgres connection strings (pooled), project real-world-landing, database "landing".
+# DATABASE_URL is what `wrangler pages dev` reads locally: keep it on the `dev` branch.
+# DATABASE_URL_STAGING is the `staging` branch (written to the Pages preview env by
+# scripts/set-staging-env.mjs). DATABASE_URL_PROD is the `main` branch (read only by
+# scripts/set-prod-secrets.sh at go-live).
 DATABASE_URL=
 DATABASE_URL_DEV=
+DATABASE_URL_STAGING=
+DATABASE_URL_PROD=
 
 # Optional salt for the rate-limit IP hash; falls back to TURNSTILE_SECRET_KEY.
 RATE_LIMIT_SALT=
 
-# Amplitude — server-side HTTP API key (same project as the browser SDK).
-AMPLITUDE_API_KEY=
+# Amplitude is capped at two projects. STAGING is "Real World - Staging": staging, and dev when
+# you opt in with VITE_AMPLITUDE_DEV_SEND=true. PROD is "Real World - Prod": production only.
+AMPLITUDE_API_KEY_STAGING=
+AMPLITUDE_API_KEY_PROD=
 
 # Cloudflare Turnstile (bot check on the signup form).
 TURNSTILE_SITE_KEY=
 TURNSTILE_SECRET_KEY=
+# Real widget for tryrealworld.com (production only; scripts/build.mjs and set-prod-secrets.sh
+# refuse Cloudflare's test keys).
+TURNSTILE_SITE_KEY_PROD=
+TURNSTILE_SECRET_KEY_PROD=
 
 # Typeform — personal access token (form create/update) and webhook signing secret.
 TYPEFORM_TOKEN=
@@ -30,8 +46,12 @@ APP_URL=
 VITE_PUBLIC_BASE_URL=
 # The v1 app URL exposed to the client (mirror of APP_URL). Empty hides all "Try it" links.
 VITE_APP_URL=
-# Amplitude browser API key (public client key). May equal AMPLITUDE_API_KEY on the free plan.
+# Set by scripts/build.mjs (pnpm build:staging / build:prod) from the values above; set by hand
+# only for `pnpm dev`. VITE_ENVIRONMENT defaults to "development" under `vite dev`.
+VITE_ENVIRONMENT=
 VITE_AMPLITUDE_API_KEY=
+# Dev only: send to Amplitude (staging key) instead of logging to the console.
+VITE_AMPLITUDE_DEV_SEND=false
 # Typeform form id (printed by `node scripts/typeform-sync.mjs`, stored in typeform/form-id.txt).
 VITE_TYPEFORM_FORM_ID=
 # Turnstile site key again, exposed to the browser widget.
