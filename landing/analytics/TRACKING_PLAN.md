@@ -16,15 +16,17 @@ The one list of what the page sends and why. The code is `src/analytics.ts` (the
 | Event | When | Properties besides `headline_variant` |
 | --- | --- | --- |
 | `landing_viewed` | Once per load of any route | `path`, `referrer`, and any of `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` present in the URL |
-| `section_viewed` | First time 40% of a section is on screen | `section`: `hero`, `receipts`, `thesis`, `how_it_works`, `use_cases`, `research`, `collaborate`, `repeat_cta`, `legal` |
+| `section_viewed` | First time 40% of a section is on screen | `section`: `hero`, `receipts`, `thesis`, `how_it_works`, `research`, `papers`, `collaborate`, `repeat_cta`, `legal` |
 | `globe_ready` | The animated globe started | none |
-| `globe_fallback_shown` | Poster only | `reason`: `reduced_motion` or `no_webgl` |
 | `cta_clicked` | Any call to action pressed | `location`: `hero`, `header`, `repeat`, `hero_secondary`, `collaborate` |
+| `email_focused` | The email field got focus (once per page view) | `location` |
+| `email_started` | The first character was typed (once per page view) | `location` |
+| `email_invalid` | Submit pressed with an address that is not valid | `location` |
 | `email_submitted` | Valid email sent to the server | `location` |
 | `signup_saved` | Server saved a new signup (the conversion) | `location`, `signup_id` |
-| `signup_duplicate` | Server found the email already saved | `location`, `signup_id` |
 | `signup_failed` | The request failed | `location`, `reason`: `request_failed`, `bot_check`, `rate_limited` |
 | `form_opened` | The Tally form step mounted | `signup_id` |
+| `form_loaded` | Tally reported the form rendered (`Tally.FormLoaded`) | `signup_id` |
 | `form_submitted` | Tally reported the form submitted (a `Tally.FormSubmitted` message from tally.so) | `signup_id` |
 | `app_link_clicked` | "Try today's question" pressed (only when `APP_URL` is set) | `location` |
 | `outbound_clicked` | Contact link pressed | `to`: `contact` (footer) or `collaboration` |
@@ -54,7 +56,7 @@ The signup id as the conversion id lets a later server-side conversion call dedu
 
 ## Funnel the dashboard shows
 
-`landing_viewed` to `section_viewed` (receipts) to `cta_clicked` to `email_submitted` to `signup_saved` to `form_opened` to `form_submitted`, split by `headline_variant` and by `utm_source`. The server events are the check on the browser ones: `waitlist_email_saved` should match `signup_saved` within a few percent, and a gap means ad blockers or a failed script.
+`landing_viewed` to `email_focused` to `email_started` to `email_submitted` to `signup_saved` to `form_opened` to `form_loaded` to `form_submitted`, split by `headline_variant` and by `utm_source`. The server events are the check on the browser ones: `waitlist_email_saved` should match `signup_saved` within a few percent, and a gap means ad blockers or a failed script.
 
 ## Verify after a deploy
 
@@ -64,3 +66,23 @@ The signup id as the conversion id lets a later server-side conversion call dedu
 3. Submit a `test+<timestamp>@example.com` address. Expect `email_submitted`, `signup_saved` and the server `waitlist_email_saved` with the same `signup_id`.
 4. Open the test device's events: the browser events should show no IP address and no city; if they do, the SDK option is not enough and the privacy page must say Amplitude records them.
 5. Delete the test row by id afterwards (steps in `landing/RUNBOOK.md`, added in the next PR).
+
+## Where people drop off (review on #24, 2026-10-13)
+
+Satyam asked to monitor where people drop off in the form interaction. Each step above is one event, so the funnel shows the loss between them: page seen but field never focused (the form is not noticed), focused but nothing typed (hesitation), typed but not submitted (second thoughts, or a too-long consent line), submitted but not saved (`signup_failed` with its `reason`), saved but the Tally form not loaded or not submitted. Tally reports nothing per answer, so inside its form the only measurable gap is `form_loaded` to `form_submitted`. Visitors who decline the cookie notice are not measured at all, so every rate here is for consenting visitors.
+
+Removed in the same review: `globe_fallback_shown` (complexity for no decision) and `signup_duplicate` (a repeat email is not a conversion; the page still says "You're already on the list."). My reading of "remove sign-up duplication" was the second event; the first sentence of the review on #24 is unambiguous.
+
+## Which section the visitor was in when they clicked (review on #24)
+
+Satyam asked for an event that shows at which section a visitor clicked the call to action, worked out from the cursor and not from counting scrolls. `src/sectionTracker.ts` follows the pointer (after the visitor accepts the cookie notice) and every `cta_clicked`, `email_focused`, `email_started`, `email_invalid` and `email_submitted` event carries three extra properties:
+
+| Property | Meaning |
+| --- | --- |
+| `cursor_section` | The content section the cursor was last in: `hero`, `receipts`, `thesis`, `how_it_works`, `research`, `papers`, `collaborate` or `repeat_cta`. When the click lands on the sticky header or the cookie notice, this is the section the cursor was in just before, so a header press still says what the visitor was reading |
+| `cursor_dwell_ms` | Milliseconds the cursor spent in that section on its last visit |
+| `viewport_section` | The section at the middle of the screen at the moment of the event; the fallback on a phone, where there is no cursor trail |
+
+Sections are found by a `data-section` attribute (set by `useViewed`, and by hand on the header and the cookie notice). The `location` property on `cta_clicked` is still the button that was pressed.
+
+On "not possible on the free plan": nothing here depends on a plan. These are properties on our own events, sent like any other. For replays, Amplitude documents that a captured replay is linked to analytics through `[Amplitude] Session Replay ID` and an automatic `[Amplitude] Replay Captured` event ([Session Replay docs](https://amplitude.com/docs/session-replay)); the replay search can then filter by event, so a `cta_clicked` with `cursor_section = research` leads to the sessions that did it. Replay is sampled (10% in production), so the replay is available for about one click in ten; the property is on every click from a consenting visitor. I did not test the replay filter on a staging session; do that in the Amplitude replay search the first time.

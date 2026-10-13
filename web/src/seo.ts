@@ -8,12 +8,17 @@ export const ROUTES: Route[] = [
   {
     path: "/",
     description:
-      "AI simulates how the world reacts to the news. Every forecast is sealed before the outcome and scored in public.",
+      "Learn to simulate: three primitives, Reaction, Event and Call, on simulated populations of 16 countries. AI-simulated.",
   },
   {
-    path: "/world",
+    path: "/playground",
     description:
-      "The simulated population: agents are rows of numbers, and the model is called once per segment, never per agent. AI-simulated.",
+      "Run a simulation: test a post on simulated audiences or follow beliefs after one event, from ready use cases.",
+  },
+  {
+    path: "/call",
+    description:
+      "Call today's question against an AI whose call is sealed before you answer, then see who was closer.",
   },
   {
     path: "/scores",
@@ -26,13 +31,8 @@ export const ROUTES: Route[] = [
       "Every forecast, hashed before its outcome existed. Verify each hash in your browser.",
   },
   {
-    path: "/docs",
-    description:
-      "The Real World API reference: a first call with curl, every operation and the SDK quickstarts.",
-  },
-  {
     path: "/acceptable-use",
-    description: "What the Real World API and fork box refuse, and the refusal codes.",
+    description: "What Real World refuses to test, and the refusal codes.",
   },
 ];
 
@@ -40,7 +40,6 @@ export const ROUTES: Route[] = [
 const PARAM_DESCRIPTIONS: Record<string, string> = {
   questions:
     "One question's forecasts, committed before it resolved: the simulation, a plain LLM and the market side by side. AI-simulated.",
-  fork: "A fork of today's world: the top segment shifts with the number of agents behind each, and what the run cost. AI-simulated.",
 };
 
 const normalize = (path: string) => (path.length > 1 ? path.replace(/\/+$/, "") : path) || "/";
@@ -77,7 +76,7 @@ export const canonicalUrl = (origin: string, path: string) =>
   `${origin}${normalize(path) === "/" ? "/" : normalize(path)}`;
 
 export const robotsTxt = (origin: string) =>
-  `User-agent: *\nAllow: /\nDisallow: /fork/\n\nSitemap: ${origin}/sitemap.xml\n`;
+  `User-agent: *\nAllow: /\nDisallow: /record\nDisallow: /sign-in\n\nSitemap: ${origin}/sitemap.xml\n`;
 
 export const sitemapXml = (origin: string) =>
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${ROUTES.map(

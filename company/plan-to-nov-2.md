@@ -2,7 +2,7 @@
 
 22 days, Oct 11 to Nov 1. Launch on Oct 27; submit the YC application by Nov 1. The Winter 2027 deadline is Nov 2 at 8:00 p.m. PT ([YC application](../research/business/088-yc-application.md)); we submit a day early so a failed upload is not fatal.
 
-What we launch: a daily question, a receipts page of forecasts hashed before their outcomes, a fork card, and `POST /v1/simulate`. Anything else waits ([CPO lens](../research/lenses/cpo.md), [CEO lens](../research/lenses/ceo.md)).
+What we launch, since [0012](../research/decisions/0012-will-it-land-and-call-it.md): "Will this land?" (post tests, sealed for signed-in people), "Call it" (the daily question against the AI's sealed call), the person's record, and the receipts and scores pages as the public proof. Forks and `POST /v1/simulate` stay as the engine's interface. Anything else waits ([CPO lens](../research/lenses/cpo.md), [CEO lens](../research/lenses/ceo.md)).
 
 Amended 2026-10-12 by [decision 0011](../research/decisions/0011-consumer-product-and-api.md) (founder ruling): we also launch free email accounts, a skippable onboarding, a personal home with the daily briefing, saved forks with history and share links, a personal track record, and self-serve API keys with a daily cap per key. Today's question, receipts and the proof surfaces stay open with no sign-in. No paid plan, billing, teams or workspaces. Build order: the slices in 0011's build plan. A product slice not green by Gate 3 ships switched off; the open daily page and proof surfaces never wait on it.
 

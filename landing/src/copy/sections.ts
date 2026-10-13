@@ -25,37 +25,18 @@ export const THESIS = {
   ] satisfies LedgerRow[],
 };
 
-export const USE_CASES = {
-  title: "What you can do with it",
-  note: "From the launch on Oct 27.",
-  rows: [
-    {
-      term: "Make a call",
-      text: "Give your forecast on a question before it resolves. We score you against the simulated world and the market price.",
-    },
-    {
-      term: "Read the record",
-      text: "Each forecast's hash and score will be public. Read the receipts instead of taking our word.",
-    },
-    {
-      term: "Get a first pass",
-      text: "A cheap first pass with stated error. Then run the real poll.",
-    },
-  ] satisfies LedgerRow[],
-};
-
 export const RESEARCH = {
   title: "Research and limits",
   note: "What we say, and what we leave out.",
   say: [
     "Forecasts hashed before the outcome, scored in public from the day of the first hash.",
-    "The population is calibrated to published marginals.",
+    "The simulated population is calibrated to published marginals.",
     "News in 65 languages through GDELT translation.",
     "Every output is labelled AI-simulated.",
   ],
   leave: [
     "No accuracy figure.",
-    "Not a poll, and not a prediction about any real person.",
+    "Not a poll, and not a prediction about any real person. It does not predict likes or followers.",
     "Not a way to bet or trade. Markets are only our yardstick.",
   ],
   caveat:
@@ -67,4 +48,76 @@ export const COLLABORATE = {
   body: "Open to people who forecast, research or build. Tell us what you would do.",
   withEmail: "Email us",
   withoutEmail: "Join the waitlist and choose your role",
+};
+
+// Other people's results, in plain words, with no figure and no claim about our own accuracy.
+// design/PAPERS.md records what was opened for each line and what it does not show.
+export const PAPERS = {
+  title: "What the research says, and where it stops",
+  note: "Other people's results. None of them is ours, and none says what our simulations will do.",
+  rows: [
+    {
+      term: "Agents can act believably",
+      text: "Software agents with memory can behave in ways people find believable in a game world. Believable is not the same as accurate.",
+      cites: [
+        { label: "Park et al., Generative Agents, 2023", href: "https://arxiv.org/abs/2304.03442" },
+      ],
+    },
+    {
+      term: "Given a person's own interview",
+      text: "Agents built from a long interview with a person came close to that person's own survey answers, though not as consistent as the person is with themselves two weeks later.",
+      cites: [{ label: "Park et al., 2024 preprint", href: "https://arxiv.org/abs/2411.10109" }],
+    },
+    {
+      term: "Simulated samples can resemble surveys",
+      text: "Models given backstories of age, income and region produced answers that looked like human subgroups on some US surveys.",
+      cites: [
+        {
+          label: "Argyle et al., Political Analysis, 2023",
+          href: "https://doi.org/10.1017/pan.2023.2",
+        },
+      ],
+    },
+    {
+      term: "And can miss",
+      text: "Averages can match while the spread is too narrow and the results change with the wording and the month. Opinions can differ from real groups by a wide margin.",
+      cites: [
+        {
+          label: "Bisbee et al., Political Analysis, 2024",
+          href: "https://doi.org/10.1017/pan.2024.5",
+        },
+        { label: "Santurkar et al., ICML, 2023", href: "https://arxiv.org/abs/2303.17548" },
+      ],
+    },
+    {
+      term: "Forecasting is close, not settled",
+      text: "In 2024 studies a crowd of models and a retrieval system came near a crowd of people on questions that resolved later. In the latest public comparison we read, expert forecasters were still ahead.",
+      cites: [
+        { label: "Schoenegger et al., 2024", href: "https://arxiv.org/abs/2402.19379" },
+        { label: "Halawi et al., NeurIPS, 2024", href: "https://arxiv.org/abs/2402.18563" },
+        {
+          label: "Forecasting Research Institute, 2026",
+          href: "https://forecastingresearch.substack.com/p/llms-are-closing-the-gap-on-human",
+        },
+      ],
+    },
+    {
+      term: "Public scoring works for people",
+      text: "In a government-funded tournament, training, teaming and combining forecasts each improved scored accuracy.",
+      cites: [
+        {
+          label: "Mellers et al., Psychological Science, 2014",
+          href: "https://doi.org/10.1177/0956797614524255",
+        },
+      ],
+    },
+    {
+      term: "Why we seal first",
+      text: "Committing to a plan before the outcome separates a prediction from an after-the-fact story. A proper scoring rule rewards honest probabilities.",
+      cites: [
+        { label: "Nosek et al., PNAS, 2018", href: "https://doi.org/10.1073/pnas.1708274114" },
+        { label: "Gneiting and Raftery, 2007", href: "https://doi.org/10.1198/016214506000001437" },
+      ],
+    },
+  ] satisfies { term: string; text: string; cites: { label: string; href: string }[] }[],
 };

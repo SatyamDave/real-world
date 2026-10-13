@@ -884,3 +884,35 @@ def test_a_receipt_leaf_proves_inclusion_up_to_the_days_root(client):
         assert body["anchor"] == "not_anchored" and body["anchored_at"] is None
     assert client.get(f"/v1/receipts/{day}/leaves/{'0' * 64}").status_code == 404
     assert client.get(f"/v1/receipts/2020-01-01/leaves/{leaves[0]}").status_code == 404
+
+
+def test_the_ai_call_is_sealed_but_hidden_before_the_answer(client, conn, answers_open):
+    d = client.get("/v1/daily").json()
+    leaf = api._sim_leaf(conn, d["date"], d["question"]["id"])
+    assert leaf is not None
+    assert d["sealed"] == {"leaf_hash": leaf["leaf_hash"], "date": d["date"]}
+    assert d["reveal"] is None and "probability" not in json.dumps(d["sealed"])
+
+
+def test_the_record_scores_player_and_ai_on_the_same_questions(client, conn, answers_open):
+    resolved = conn.execute("SELECT question_id, outcome FROM resolutions").fetchall()
+    day, qid, outcome = next(
+        (day, q, o)
+        for q, o in resolved
+        for day in daily.FIXTURE_DAYS
+        if api._sim_leaf(conn, day, q) is not None
+    )
+    with conn:
+        conn.execute(
+            "INSERT INTO daily_answers (question_id, player_id, date, probability, created_at)"
+            " VALUES (?, 'p-vs-ai', ?, 0.9, ?)",
+            (qid, day, api._now()),
+        )
+    leaf = api._sim_leaf(conn, day, qid)
+    assert leaf is not None
+    ai = float(leaf["entry"]["probability"])
+    record = api._vs_ai(conn, "p-vs-ai")
+    assert record.n == 1 and record.you is not None and record.ai is not None
+    assert record.you == pytest.approx((0.9 - outcome) ** 2)
+    assert record.ai == pytest.approx((ai - outcome) ** 2)
+    assert record.wins == int(record.you < record.ai)

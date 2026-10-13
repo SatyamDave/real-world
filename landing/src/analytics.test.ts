@@ -106,7 +106,7 @@ test("pixels load only for configured ids, and Lead fires on a new signup only, 
   expect(pixels.loadReddit).toHaveBeenCalledWith("r1");
   expect(pixels.loadX).not.toHaveBeenCalled();
   track("cta_clicked");
-  track("signup_duplicate", { signup_id: "s0" });
+  track("email_invalid", { location: "hero" });
   expect(pixels.sendLead).not.toHaveBeenCalled();
   track("signup_saved", { signup_id: "s1" });
   expect(pixels.sendLead).toHaveBeenCalledTimes(1);

@@ -17,6 +17,17 @@ Founder direction: the look of a top-tier deep-tech product: precise type, gener
 3. Polish only: no claim, number, logo, customer, funding or traction appears that is not on the allowed list in [messaging](../gtm/messaging.md) or traced to a committed artifact. No testimonial or "trusted by" row, ever.
 4. A change to these rules lands here first, in its own PR, citing a research note; then in each surface.
 
+## Identity: the ledger desk (2026-10-12)
+
+Real World is a public ledger of simulated countries; every run prints a sealed slip from it ([decision 0014](../research/decisions/0014-ledger-desk.md)).
+
+- The ledger is the chrome: no sidebar. A top bar, and under it the ledger tape, one mono 12px `--muted` line on `--paper-2` with the last cycle, the ledger head, the anchor, the model and today's spend. Every page sits under it.
+- The populations are the hero: the home shows the 16 simulated countries with their coverage tier and one belief's simulated share.
+- Each result is a slip (the receipt): the input quoted in mono at the top, the population drawn as data, the seal drawn at the foot.
+- The seal is visible: `SealGrid` draws the 64 hex digits of a SHA-256 as an 8 x 8 grid in four shades of `--ink`; unsealed is the same grid empty and dashed.
+- Mono for every number, hash, ISO code and the tape; dashed `--line` rules inside slips; torn edge only on slips; a tier badge wherever a country appears; green only for sealed, verified and "would like or share"; clay only for pending, not sealed and refused. No all-caps, no letter-spaced eyebrow.
+- Retired phrases, on no surface: "Learn to simulate", "Real World in action", "Quickstart", "Primitive", "Playground", "Example requests", "Walkthrough lessons", "Real-life use cases", "Instructions", "Example output". "Primitive" stays only as an internal type name and glossary term.
+
 ## Tokens
 
 `web/src/styles/tokens.css` is a byte-for-byte copy of the landing tokens; `tokens-dark.css` is the dark theme from the same hues. No colour, font, radius or shadow is written anywhere else. Light follows the system (`prefers-color-scheme`); a stored user choice in settings overrides it with `data-theme` on `html`. Both themes ship from the first build of any surface.
@@ -78,77 +89,28 @@ One implementation per pattern; a second button, card, badge, disclaimer, loader
 | Card | `--surface`, 1px `--line` border, `--radius`, 20px padding, no shadow; whole-card links show the hover border `--line-strong` |
 | Receipt | unchanged: 1.5px `--ink` border, `--card-shadow`, torn edge, dashed header rule; the only card that is heavy |
 | Stamp | unchanged |
-| Input | 16px, 12px 14px padding, 1px `--line-strong` border, `--surface`; focus is the 2px `--focus` outline; the fork input placeholder is "What if …" |
+| Input | 16px, 12px 14px padding, 1px `--line-strong` border, `--surface`; focus is the 2px `--focus` outline; the post box placeholder is "Paste a tweet, a caption, a headline or a hook" |
 | Tabs | underline tabs, not pills: 14px 500, 2px `--ink` underline on the active tab, `role="tablist"`, arrow-key navigation, 44px height; the chosen tab persists per surface in `localStorage` |
 | Inline code | Mono 14px, `--paper-2` fill, `--radius`, 2px 6px padding |
 | Table | full width, no vertical rules, 1px `--line` between rows, header row 12px `--muted` on `--paper-2`, 48px row height at 1024px and up, mono right-aligned numerals, sticky header when the body scrolls; at 390px a row becomes a stacked card list or the table scrolls inside its block with the first column sticky |
 | Nav item (docs, settings) | 14px, 36px row; active has `--accent-wash` fill and 2px `--accent` left rule |
 | Callout | `--paper-2` fill, 1px `--line` border, 14px text; the only coloured variant is clay for a refusal or an error; no icon, no emoji |
-| Header | `.topbar`: 56px high, 1px bottom `--line`, brand, nav with `aria-current="page"`, then Sign in or the account button; sticky |
-| Footer | links in columns (Product, Proof, Developers, Legal), the disclosure, copyright; 44px targets |
-
-### Code blocks and language tabs
-
-One `CodeBlock` component renders every snippet on the landing page, docs, the keys page and the fork card's "Get this via API".
-
-- Frame: `--paper-2` fill, 1px `--line` border, `--radius`; header row 40px with the language tabs at the left and a "Copy" text action at the right; Mono 14px / 1.6; 16px padding; horizontal scroll inside the block, no wrapping, no line numbers unless a prose step cites a line.
-- Tabs are `curl`, `Python`, `TypeScript`, in that order, on every endpoint, with the same request in each. The Python and TypeScript tabs are the SDK quickstarts' own snippets, as `Docs.tsx` already reads them; the `curl` tab is generated from `api/openapi.json`. `check_sdk_parity.py` keeps them aligned.
-- Highlighting uses four tones only: `--ink` for names, `--muted` for punctuation and comments, `--accent` for strings, `--accent-2` never. No rainbow theme.
-- "Copy" changes to "Copied" for 1.5s and announces it to screen readers. A response block sits under the request with a "Response" label and the status code; a response example is the API's real shape from a fixture, never invented fields.
-- The key in a snippet is read from the environment variable `REAL_WORLD_API_KEY` or shown as `rw_...`; a real key is never rendered into a snippet.
-
-### Docs
-
-- Page header: breadcrumb (12px), page title, lead sentence, one meta row: "Last updated <ISO date>", "Copy as Markdown". No other chrome.
-- Left nav groups: Get started, Concepts, API reference (one entry per operation, in `openapi.json` order), SDKs, Changelog. Active item per Nav item rule.
-- Right TOC lists `h2` and `h3`, highlights the one in view, and uses plain anchor links.
-- Each operation page: one-sentence summary, the `curl`/`Python`/`TypeScript` block, a parameter table (name, type, required, description), a response table, a refusal-codes table, the error shape. Every page ends with "Was this page useful?" (Yes, No) only if its answer is stored; otherwise omit it.
-- Search is a 14px input in the header opened with `/`; results show page title and the matching line. A search with no results says "No pages match <query>."
-
-### Keys page (`/developers`)
-
-- Top: the one-line spend rule ("A key cannot spend more than its daily cap; when the cap cannot be checked the call is refused."), then "Create key".
-- Create: a name field and a daily dollar cap field, one primary button. On success the full key shows once in a callout with "Copy" and the line "This key is shown once. Store it now."; leaving the page removes it, and the list shows only the prefix.
-- List is a table: name, key prefix (Mono), created (ISO date), last used (ISO date or "Never"), daily cap, spent today, and a "Revoke" text action. Revoke asks for confirmation in a dialog with focus on "Cancel".
-- Under the table: "Use your key" with the code block and the three tabs, pre-filled with `REAL_WORLD_API_KEY`.
-- Empty: "No keys yet. Create one to call the API." with the primary button. Loading, error, signed-out: States below.
-
-### Charts and data visualisation
-
-- One `Chart` component family, each with its data table (existing rule). Marks are `--ink` for the main series, `--accent` for the highlighted one (ours against the baseline), `--muted` for the rest. No fills except the spread band (`--accent-wash`, the p10 to p90 range) and bars.
-- Axes: 1px `--line`, tick labels 12px Mono `--muted`; gridlines dashed 1px `--line`, horizontal only; zero line `--line-strong`. The y axis starts at zero for bars; a zoomed axis says so in the caption.
-- Label series directly at the line end; a legend only for more than three series. No 3D, no dual axis, no pie, no gradient, no animation on load.
-- Always shown with the chart: n, the interval, the coverage tier, and the line "AI-simulated". Hover and focus show a tooltip (14px, `--surface`, 1px `--line`) and a focus ring on each point; keyboard arrows move between points.
-- A score with fewer than 10 resolved questions shows no interval; fewer than 100 shows "No claim yet" (existing rule).
-
-## States
-
-Every view shows one of: loading, empty, result, refused, error. No state exists for something that only happens when the product is broken; fix the cause.
-
-| State | Rule |
-| --- | --- |
-| Loading | A skeleton in the exact shape and height of the result (`.skeleton`, `--paper-2`, `--radius`), shown only after 200ms so fast loads show nothing; no spinner except inside a button that has been pressed; a status line "Loading <what>" for screen readers (`aria-live="polite"`); layout does not shift when the result arrives |
-| Empty | One sentence saying there is nothing yet and when there will be, in `--muted`, plus the one next action as a button; no illustration |
-| Result | Always with tier, spread and "AI-simulated" where they apply |
-| Refused | The API's `detail` sentence as sent, in a clay callout, with the one link that helps (for example acceptable use) |
-| Error | `LoadError`: what did not load, why in one clause, "Try again"; the response body is never shown; the failed region keeps its size |
-| Signed out | The one-line reason and "Sign in"; the page returns here after sign-in |
-
-Copy for each state is written in the surface's spec, literally.
+| Header | a top bar with the ledger tape beneath it. `.topbar`: 56px high, bottom `--line`, brand, nav (Simulate, Call it, Your record, Receipts, Scores) with `aria-current="page"` underlined 2px `--ink`, then Sign in or the account; sticky. At 720px and below the nav takes a second row that scrolls inside itself. `.tape`: the ledger tape, one line with ellipsis at 720px and up, wrapping below |
+| `SealGrid` | `App.tsx`: a SHA-256 as 8 x 8 cells of 8px (`.lg` 12px), shades `s0`..`s3` from `--paper-2`, `--line`, `--muted`, `--ink`; empty and dashed when there is no hash. On the sealed post test, the AI's sealed call and the home's day record |
+| `PopulationField` | `results.tsx`: 100 dots split across segments by population weight (largest remainder), filled `--accent` where the segment would like or share it, empty as a `--line` ring; 20 x 5 at 720px and up, 10 x 10 below |
+| `SegmentMatrix` | `results.tsx`: country rows (ISO and tier, sticky first column) by age band and education columns, mono landing chance shaded `m0`..`m4` (`--surface`, `--paper-2`, `--line`, `--accent` at 35% and 70%); scrolls inside its block at 390px |
+| `BeliefShifts` | `results.tsx`: a row per topic, a 0-100% track with the p10-p90 band in `--line`, a 2px `--muted` tick at before and a 12px `--ink` dot at the median, and mono "{before} → {after} ({pts})" |
+| Use case list | `Home.tsx` `UseCaseList`: groups by who, rows (not cards) with an outlined mono kind tag, title, sentence and audience; 2 columns of groups at 1024px and up |
+| Footer | links (Receipts, Acceptable use, Privacy, Terms, Source), the disclosure, copyright; 44px targets |
 
 ## Landing narrative
 
-One page, `/` signed out, in this order. Each block is a headline (section title), one lead sentence, and one artefact read from committed data; no stock imagery, no decoration.
+Since [decision 0012](../research/decisions/0012-will-it-land-and-call-it.md) the landing page and the app's home tell one story, in this order; [landing-page.md](landing-page.md) holds the positioning rules. Each block is a headline, one lead sentence, and one artefact from real data; no stock imagery, no decoration.
 
-1. Hero: display headline "Simulations with receipts.", the sub-line from [messaging](../gtm/messaging.md), one primary action ("Fork today's world") and one text action ("Read the record"). The still globe poster beside it at 1024px and up.
-2. How it works, four numbered blocks (`1`, `2`, `3`, `4` in Mono, not "Fig"), each the same anatomy: title, two sentences of mechanism, one artefact, a link to the proof page.
-   - Population: agents are rows of traits with a belief per topic; the artefact is a real agent row and the coverage-tier legend ([coverage tiers](../research/data/099-country-coverage-tiers.md)).
-   - Daily cycle: the eight steps of the [glossary](glossary.md) as a horizontal list with today's run status from `GET /v1/status`.
-   - Receipts: the forecast sealed before it resolves; the artefact is a real leaf hash, salt-free, and its inclusion proof, with "Verify in your browser" opening `/receipts`.
-   - Scoring: forecasts against the market price at commit time, misses included; the artefact is the real score card with its n, and "No claim yet" until the rule allows one.
-3. Live proof: the latest three receipts and today's question, from the API; if none exist, the empty state, not a placeholder.
-4. For developers: the first call as the three-tab code block, the key line, a link to `/docs`.
-5. Closing band: one sentence and one action; the footer with the disclosure.
+1. Hero: "Will this land?", the sub-line from [messaging](../gtm/messaging.md), and the post box itself as the one primary action ("Test it"). The still globe poster may sit beside it as decoration, never as the action.
+2. The result: a real post test card (landing chance with its range, best and worst audiences with tiers, two simulated accounts, the rewrite) and the seal line.
+3. Call it: today's question with "The AI's call is sealed" and its leaf hash.
+4. Proof: the latest receipts and the score card with its n, "No claim yet" until the rule allows one, linking `/receipts` and `/scores`.
 
 Never on this page: customer or investor mentions, a "trusted by" or logo row, testimonials, user counts, a speed, cost or accuracy comparison, "world model", "beats the market", any backtest number.
 

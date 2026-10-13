@@ -106,13 +106,30 @@ Waitlist is the only call to action; v1 is not connected before ads. Decisions f
 Order: Phase 1, then 2, then 3, then Finish. Commit after each phase. Resume from the first unchecked box. Decisions follow the protocol in DECISIONS.md (Milestone C).
 
 ### Phase 1: Tally instead of Typeform (`landing/8-tally`, off `landing/7-sections`, draft PR on top of #93)
-- [ ] Verify Tally facts from docs: hidden fields on the free plan and how they reach the embed; the `Tally-Signature` header and what it signs; payload shape; retries and duplicates; CSP the embed needs
-- [ ] Screenshot and report the free-plan "Made with Tally" badge
-- [ ] Replace the Typeform webhook and embed with Tally (signature, replay, tamper, idempotency); remove Typeform code and `TYPEFORM_TOKEN`
-- [ ] Per-environment secrets and form ids; `set-prod-secrets.sh`, RUNBOOK, go-live checklist
-- [ ] `landing/tally/FORM_SPEC.md`: click-by-click for two forms (staging, prod)
-- [ ] Privacy page and LEGAL_REVIEW.md: Tally is a processor
-- [ ] Commit, push, draft PR
+- [x] Verify Tally facts from docs: hidden fields on the free plan and how they reach the embed; the `Tally-Signature` header and what it signs; payload shape; retries and duplicates; CSP the embed needs
+- [x] Screenshot and report the free-plan "Made with Tally" badge (not possible: no free-plan form to load; reported in DECISIONS C1 and FORM_SPEC step 9)
+- [x] Replace the Typeform webhook and embed with Tally (signature, replay, tamper, idempotency); remove Typeform code and `TYPEFORM_TOKEN`
+- [x] Per-environment secrets and form ids; `set-prod-secrets.sh`, RUNBOOK, go-live checklist
+- [x] `landing/tally/FORM_SPEC.md`: click-by-click for two forms (staging, prod)
+- [x] Privacy page and LEGAL_REVIEW.md: Tally is a processor
+- [x] Commit, push, draft PR [#98](https://github.com/SatyamDave/real-world/pull/98)
+
+### Satyam sync (added mid-run)
+- [x] Fetched origin/main; Satyam merged main into the landing stack and added a cookie notice; Phase 1 rebased onto `origin/landing/7-sections` (SYNC.md)
+- [x] Screenshots of his UI and ours in `design/satyam-diff/`
+- [ ] `design/SATYAM_DIFF.md`: every difference that makes his better, and why
+- [ ] Adopt the improvements as tokens and patterns (not his components); log each in DECISIONS.md
+- [ ] Tell Rohit what to copy from his agent workflow
+
+### Satyam's product memo (pasted mid-run, 2026-10-13): incorporate without leaking
+- [ ] Use the memo's lesson: people adopt a fast answer to their own decision and believe it after seeing it checked; spectators are not retained, a stake is. So the page's job is to get a *personal call*: every globe marker opens a pending receipt with "Make your call" (the waitlist field, no v1 link)
+- [ ] Always show the baseline and keep misses visible (already allowed copy); "sealed" is the plain word
+- [ ] A 10-second honest "what happens next" for the first question: sealed, resolves, scored (from `receipts.json`)
+- [ ] Keep private: TypeSafe, MiroFish, Rally, Reach, prediction-market and consumer-trust figures, product directions A, B, C, the cut list. The copy test bans the names
+- [ ] DECISIONS C6: the tension between "the globe may be demoted" (his memo, undecided) and Rohit's globe-as-hero brief
+- [ ] Phase 3: add ForecastBench and the FRI update to the papers to verify (do not repeat the memo's figures unless the source says them)
+- [ ] FORM_SPEC: optional "Creator or publisher" role option, to test direction A with real waitlist data (flagged as optional)
+- [ ] Not done on purpose: the product brief the memo offers to write (out of scope of the landing run)
 
 ### Phase 2: Milestone C, an award-level page (`landing/9-wow`, off `landing/8-tally`, draft PR)
 - [ ] Audit first, no code: `design/UI_AUDIT.md` (screenshots at 390x844 and 1440x900, ruthless critique); references listed in `INSPIRATION.md`
@@ -128,6 +145,19 @@ Order: Phase 1, then 2, then 3, then Finish. Commit after each phase. Resume fro
 - [ ] `design/PAPERS.md`: every source opened and verified (title, authors, year, exact finding); unverifiable entries dropped
 - [ ] A citations section on the page; every line checked against `gtm/messaging.md`; no accuracy implication
 - [ ] Commit
+
+### Phase 4: Satyam's directives (pasted mid-run, 2026-10-13; read his PR comments every phase)
+Review comments on #22 and #24 are tracked in `landing/REVIEW_LOG.md` with the commit that answers each.
+- [ ] #22: remove `referrer`; `landing_path` is always "/" (only the home page has the form), remove it too; say so in the migration comments
+- [ ] Sister DB "D1": the waitlist and conversion data move to Cloudflare D1 (SQLite, like the product's main DB "R1"); email is the primary key (lower-cased, same rule as R1's `users.email`); a random `spoof_id` is the only id analytics sees; no product user id ever enters D1
+- [ ] R1: a proposal for the column that shows which users came from the waitlist (api/ is read-only for me), and a one-way sync from R1 emails to D1 `converted_at`
+- [ ] Amplitude: which waitlist people convert, filterable for ICP (role, source, variant); the same data saved in D1; cookie policy respected for Amplitude
+- [ ] LaunchDarkly: flag abstraction, consent-gated, flags for the headline and one small change at a time; no account or keys exist here, so tests use a fake and live verification is open
+- [ ] Iteration loop: staging flag on, end-to-end check, then prod flag on a person's say-so, then read the Amplitude drop-off; every iteration stored in D1 `experiments`
+- [ ] SEO: canonical, Open Graph, sitemap, robots, structured data; per-environment noindex
+- [ ] Reference sites converted to design tokens (`design/REFERENCE_TOKENS.md`), compared with `product/design.md`
+- [ ] Relocation: `landing/` out of the repo root as a skin of the product; a proposal and one script, not run (it touches every open PR and his guards)
+- [ ] Keep reading origin/main docs, gtm and research; shape the work to the direction (consumer pivot 0012 is open as #99)
 
 ### Finish
 - [ ] Check `.dev.vars` for `TALLY_SIGNING_SECRET_STAGING` and the staging form id; if present, real Playwright submission on staging plus replay, tamper, unsigned, cleanup by id; if not, first unchecked item in MORNING.md

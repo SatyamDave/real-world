@@ -2,26 +2,25 @@
 
 ## One-liner
 
-Every morning Real World simulates how the world's population will react to today's news, publishes its forecasts as hashes before anything resolves, and scores itself in public against the prediction markets, misses included.
+Know how a post will land before you post it, and call the news against an AI that seals its calls first ([0012](../research/decisions/0012-will-it-land-and-call-it.md)).
 
 Short form: simulations with receipts.
 
-Sub-line: AI simulates how the world reacts to the news. Every forecast is sealed before the outcome and scored in public. "Sealed" is the plain word for hashed and anchored; it makes no accuracy claim, and every country or result next to it still carries its coverage tier.
+Sub-line: Test a post on simulated audiences in 16 countries before you publish. Every test you seal is scored when you mark how it did, and the AI's daily calls are sealed before the outcome and scored in public. "Sealed" is the plain word for hashed and timestamped; it makes no accuracy claim, and every result still carries its coverage tier.
 
-Category: a forecast and simulation API with a public score, not a world model or an agent-based modelling platform ([VC lens](../research/lenses/vc.md), [funding landscape](../research/market/012-funding-landscape-2026.md), [world-model state of the art](../research/engineering/100-world-model-sota.md)).
+Category: a consumer app on a population-simulation engine with a public score, not a world model, a poll or an agent-based modelling platform ([VC lens](../research/lenses/vc.md), [funding landscape](../research/market/012-funding-landscape-2026.md), [world-model state of the art](../research/engineering/100-world-model-sota.md), [consumer wedge](../research/product/108-consumer-wedge.md)).
 
-The demo order is receipts, then one fork, then one agent's "what moved it" panel ([CEO lens](../research/lenses/ceo.md)).
+The demo order is one post test (paste, test, read the best and worst audiences), then the seal, then the record ([consumer wedge](../research/product/108-consumer-wedge.md)).
 
 ## User journeys
 
-Every surface proves one part of the one-liner, and each page offers one next action.
+Each page does one job and offers one next action.
 
 | Who | Starts on | Next action per page |
 | --- | --- | --- |
-| Daily-question visitor | `/` | "See how the world answered" opens `/questions/{id}`; "Fork today's world" opens the fork card; "Run this from your code" opens `/docs`. |
-| Receipts and forecasting skeptic | `/receipts` | Verify the hashes in the browser, then `/scores` (skill with n and interval), then `/research` (papers and experiments). |
-| Analyst forking events | The fork box on `/` | Read the segments and the trace on the fork card, then repeat the same fork through the API. |
-| Developer on the API with a capped key | `/docs` | Request a key with a dollar cap, then run the SDK quickstart. |
+| Person about to post | `/` | "Test it", then "Test this version" on the rewrite; signed in, the test is sealed and "Your record" marks it later. |
+| Person calling the news | `/call` | "Call it", then the reveal against the AI and "Your record". |
+| Skeptic | Any "Sealed" line | `/receipts` to verify in the browser, then `/scores` for skill with n and an interval. |
 
 Surface specs: [product/README.md](../product/README.md).
 
@@ -44,6 +43,8 @@ Surface specs: [product/README.md](../product/README.md).
 - The number of archetype calls made today, and the coverage tier of every country we show ([large-scale sims](../research/science/028-large-scale-llm-sims.md), [coverage tiers](../research/data/099-country-coverage-tiers.md)).
 - "AI-simulated" on every output, and "simulated account, not the cause" on agent narratives ([regulation](../research/business/091-regulation.md), [trust](../research/product/087-trust-and-explainability.md)).
 - "A cheap first pass with stated error; then run the real poll." ([policy ICP](../research/product/081-icp-policy-research.md))
+- "Test a post on simulated audiences before you post it." and "Your tests are sealed when you make them." ([consumer wedge](../research/product/108-consumer-wedge.md))
+- "See how the AI does against your gut", only as the number the record computes on marked tests.
 
 ## Claims we may not make
 

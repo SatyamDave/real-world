@@ -1,5 +1,7 @@
 # Ideal customer profiles
 
+**Since [0012](../research/decisions/0012-will-it-land-and-call-it.md):** the first users are people about to post (creators, founders, people who post for work) and people who like calling the news against an AI, reached by the product itself, not by sales ([consumer wedge](../research/product/108-consumer-wedge.md)). The buyer profiles below are paused: no pilot is sold until the consumer product has a record. They stay as the later B2B path for the engine.
+
 Ranked by who can pay us first, not by who is most interesting. No buyer calls have happened yet; every rank below rests on desk research and must be re-checked against the ten calls in [`launch-plan.md`](launch-plan.md).
 
 ## 1. Consumer-brand and agency insights teams (first paying buyer)

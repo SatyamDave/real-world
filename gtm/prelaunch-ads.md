@@ -22,7 +22,8 @@ Each headline is built only from a claim on the "Claims we may make" list in [`m
 
 | id | Headline | Rests on the allowed claim |
 | --- | --- | --- |
-| `receipts` (default) | "Simulations with receipts." | the short-form one-liner in [messaging](messaging.md) |
+| `lands` (default) | "Know how a post will land before you post it." | "Test a post on simulated audiences before you post it." ([messaging](messaging.md), [0012](../research/decisions/0012-will-it-land-and-call-it.md)) |
+| `receipts` | "Simulations with receipts." | the short-form one-liner in [messaging](messaging.md) |
 | `hashed` | "Forecasts, hashed before the outcome." | "Forecasts hashed before the outcome, scored in public since <date>" ([messaging](messaging.md)) |
 | `public-score` | "We publish our misses." | "A record that cannot be backfilled" and scoring in public, misses included ([messaging](messaging.md)) |
 | `your-call` | "Make your call before the world does." | the daily-question forecast hook, which previews the core loop without showing any simulated number ([product/101](../research/product/101-prelaunch-landing-waitlist-ads.md), [CPO lens](../research/lenses/cpo.md)) |

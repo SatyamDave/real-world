@@ -6,6 +6,7 @@
 // Do Not Track signal nothing loads and nothing is sent. Event list and
 // properties: landing/analytics/TRACKING_PLAN.md.
 import { config } from "./config";
+import { sectionSnapshot, startSectionTracker } from "./sectionTracker";
 
 let headlineVariant = "unknown";
 // Set from the build, so events queued before the SDK starts carry it too.
@@ -22,13 +23,18 @@ export function getHeadlineVariant(): string {
 export type EventName =
   | "landing_viewed"
   | "globe_ready"
-  | "globe_fallback_shown"
+  | "globe_dragged"
+  | "globe_zoomed"
+  | "marker_opened"
   | "cta_clicked"
+  | "email_focused"
+  | "email_started"
+  | "email_invalid"
   | "email_submitted"
   | "signup_saved"
-  | "signup_duplicate"
   | "signup_failed"
   | "form_opened"
+  | "form_loaded"
   | "form_submitted"
   | "section_viewed"
   | "app_link_clicked"
@@ -76,11 +82,22 @@ export function privacySignal(nav: Navigator & { globalPrivacyControl?: boolean 
 export function setConsented(value: boolean): void {
   consented = value;
   if (!value) queue = [];
+  else startSectionTracker(); // the pointer is followed only after consent
 }
+
+// Events that say what the visitor did next to a section also say where the cursor was.
+const SECTION_EVENTS = new Set<EventName>([
+  "cta_clicked",
+  "email_focused",
+  "email_started",
+  "email_invalid",
+  "email_submitted",
+]);
 
 export function track(name: EventName, props: Record<string, unknown> = {}): void {
   if (!enabled || !consented) return;
-  const payload = { headline_variant: headlineVariant, environment, ...props };
+  const where = SECTION_EVENTS.has(name) ? sectionSnapshot() : {};
+  const payload = { headline_variant: headlineVariant, environment, ...where, ...props };
   if (import.meta.env.DEV) {
     console.debug("[track]", name, payload);
   }

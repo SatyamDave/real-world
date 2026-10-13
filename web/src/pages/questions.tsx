@@ -1,5 +1,4 @@
 import { ApiError, type QuestionPage } from "@real-world/sdk";
-import { ApiCall } from "../ApiCall";
 import {
   Disclosure,
   FORECASTER,
@@ -197,9 +196,6 @@ function Computed({ p }: { p: QuestionPage }) {
 
 function Question({ p }: { p: QuestionPage }) {
   const latest = p.days.at(-1);
-  const csv = p.days.flatMap((d) =>
-    Object.entries(d.forecasts).map(([who, f]) => ({ date: d.date, forecaster: who, ...f })),
-  );
   return (
     <div className="question-page">
       <Header p={p} />
@@ -212,13 +208,6 @@ function Question({ p }: { p: QuestionPage }) {
         <p className="muted">No forecast has been committed on this question yet.</p>
       )}
       <Computed p={p} />
-      <ApiCall
-        path={`/v1/questions/${p.question.id}`}
-        sdk={`question("${p.question.id}")`}
-        data={p}
-        csv={csv}
-        filename={p.question.id}
-      />
       <Disclosure tiers={p.question.countries.map((c) => c.tier)} />
     </div>
   );

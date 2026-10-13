@@ -7,7 +7,7 @@ The pages are `src/pages/Privacy.tsx` and `src/pages/Terms.tsx`, shown at `/priv
 | Data | Where it goes | Source in code |
 | --- | --- | --- |
 | Email, consent line version, time | Neon, table `waitlist_signups` | `functions/_lib/signup.ts` |
-| utm values, referrer, landing path, headline shown, Amplitude device id, country | same row | same |
+| utm values, headline shown, Amplitude device id, country | same row | same |
 | Hashed IP (salted, per time window), no raw IP | Neon, `signup_rate_limit`, rows deleted after a day | `functions/_lib/ratelimit.ts` |
 | Forecast probability and role | Tally (free plan), then the same row through a signed webhook | `functions/_lib/tally.ts` |
 | Page views, clicks, scroll sections, form steps; random device id in a cookie or local storage | Amplitude (browser SDK, IP collection turned off) | `src/amplitude.ts` |

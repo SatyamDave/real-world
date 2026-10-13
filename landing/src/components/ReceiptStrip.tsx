@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { BRAND } from "../brand";
 import receiptsData from "../data/receipts.json";
 import { useViewed } from "../useViewed";
+import { Receipt } from "./Receipt";
 
 const receipts = receiptsData.receipts;
 
@@ -49,27 +50,7 @@ export function ReceiptStrip() {
         <ul className="receipts">
           {receipts.map((r) => (
             <li className="receipt-wrap" key={r.id}>
-              <article className="receipt">
-                <div className="top">
-                  <span>Receipt</span>
-                  <span className="stamp">Pending</span>
-                </div>
-                <h3 className="q">{r.question}</h3>
-                <dl className="cols">
-                  <div>
-                    <dt>Committed</dt>
-                    <dd className="pending">{r.status}</dd>
-                  </div>
-                  <div>
-                    <dt>Resolves</dt>
-                    <dd>
-                      {r.resolvesOn}
-                      <span className="src">{r.source}</span>
-                    </dd>
-                  </div>
-                </dl>
-                <p className="foot">AI-simulated. Not a poll.</p>
-              </article>
+              <Receipt receipt={r} />
             </li>
           ))}
         </ul>

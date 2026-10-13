@@ -1,18 +1,18 @@
 import { expect, test } from "vitest";
-import { COLLABORATE, RESEARCH, THESIS, USE_CASES } from "./sections";
+import { COLLABORATE, PAPERS, RESEARCH, THESIS } from "./sections";
 
 function allText(): string {
   return [
     THESIS.statement,
     ...THESIS.rows.flatMap((r) => [r.term, r.text]),
-    USE_CASES.title,
-    USE_CASES.note,
-    ...USE_CASES.rows.flatMap((r) => [r.term, r.text]),
     RESEARCH.title,
     RESEARCH.note,
     ...RESEARCH.say,
     ...RESEARCH.leave,
     RESEARCH.caveat,
+    PAPERS.title,
+    PAPERS.note,
+    ...PAPERS.rows.flatMap((r) => [r.term, r.text]),
     ...Object.values(COLLABORATE),
   ].join("\n");
 }

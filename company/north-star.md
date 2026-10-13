@@ -12,6 +12,10 @@ It is always shown next to its quality: the paired Brier differences in input 2.
 
 Targets from the [CEO lens](../research/lenses/ceo.md): at least 25 pre-registered forecasts by Oct 26, at least 12 resolved by Nov 7, and about 100 resolved before any comparative claim.
 
+## Consumer metric beside it (proposed in [0012](../research/decisions/0012-will-it-land-and-call-it.md))
+
+**People with three or more marked post tests.** A person who has sealed a post test and come back to mark three of them has used the product, trusted it enough to return, and added to the per-person record that proves the engine against their gut. Source: the `post_tests` table. Current value: 0. Waiting on the founder in [decisions-needed](decisions-needed.md) item 12.
+
 ## The five input metrics
 
 | # | Metric | Definition and source | Target | Why |

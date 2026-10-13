@@ -1,0 +1,27 @@
+/* Dark theme: the same roles from the same hues, copied from Satyam's open PR #97
+   (web/src/styles/tokens-dark.css). It follows the system; the landing page has no theme toggle.
+   Replace this file with web's when #97 merges (landing/SYNC.md). */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --paper: #111814;
+    --paper-2: #1a231e;
+    --surface: #18201c;
+    --ink: #e4eae6;
+    --muted: #9aa69f;
+    --line: #34413a;
+    --line-strong: #4a584f;
+    --accent: #6dbd90;
+    --accent-wash: #1b2a22;
+    --accent-2: #e8806f;
+    --clay-wash: #2e1b18;
+    --focus: #6dbd90;
+    --on-accent: #111814;
+    --globe-dot: #6dbd90;
+    --globe-glow: 109, 189, 144;
+  }
+
+  .globe-poster {
+    filter: invert(0.9) hue-rotate(180deg);
+  }
+}
