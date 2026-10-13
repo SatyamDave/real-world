@@ -140,3 +140,42 @@ Decision: option 3, kept because it is a measured gain with the tests green (54 
 - Any live demo, v1 link, API description, or anything depending on `APP_URL`: out of scope by the brief; the "Try today's question" link remains hidden while `APP_URL` is empty.
 - Partner, advisor or customer names, team bios, a roadmap and dates other than Oct 27 and the three event dates: no approved source.
 - Backtest numbers and any accuracy figure: forbidden by messaging.md.
+
+## Phase 1: Tally instead of Typeform (`landing/8-tally`)
+
+### C1. Replace the form vendor
+
+Options:
+1. Stay on Typeform (a paid plan is needed for the response volume, and its webhook secret and token had to be rotated).
+2. Tally free plan: hidden fields, webhooks and signing are free; a "Made with Tally" badge stays.
+3. Build our own form on the page (no vendor, but a second place that collects answers, with its own bot check and storage).
+
+Evidence (read from Tally's own pages on 2026-10-13, not from memory): hidden fields are free to all users and are passed as URL query parameters ([hidden fields](https://tally.so/help/hidden-fields)); webhooks are free, signed with a `Tally-Signature` header when a secret is set, retried five times and need a 2xx within 10 seconds ([webhooks](https://tally.so/help/webhooks)); the payload puts hidden fields in `data.fields` as `HIDDEN_FIELDS` entries with the name in `label`, and choice answers as option ids plus an `options` list (same page's example); removing Tally branding needs Tally Pro ([embed page](https://tally.so/help/embed-your-form)). I embedded a Tally demo form in a bordered box to see how a Tally form sits on our page (`design/phase1/tally-demo-*.png`): it renders and scrolls inside the box, but its default blue button clashes with our palette, and that demo form is a Tally-owned form without the free-plan badge, so the badge itself is not screenshotted.
+
+Risks and reversibility: the vendor is behind two small files (`functions/_lib/tally.ts`, `src/components/TallySlot.tsx`). Reversible by restoring them. The database table keeps its first-vendor names (`typeform_events`, `typeform_response_id`) because renaming them is a production schema change nobody asked for; comments say so.
+
+Checks: copy unchanged except processor names on the privacy page (Tally); LEGAL_REVIEW.md has a new question for Tally; no new claim.
+
+Decision: option 2. Runner-up: option 1. Would change our mind: the Tally badge or its default styling hurting conversion (then Tally Pro, $29 a month by a third-party price page, unverified against Tally's own pricing page), or a delivery problem in the final check.
+
+### C2. Verifying the signature
+
+Options: verify the raw body only; verify the re-serialized JSON only (what Tally's docs example does); accept either.
+
+Evidence: Tally's own page signs `JSON.stringify(webhookPayload)` after `express.json()` parsed the body, and says the header is "a SHA256 cryptographic hash of the webhook payload"; third-party guides say raw body. I could not receive a real delivery without a form, so which one Tally actually signs is **unverified**. Unit tests cover both (a pretty-printed body signed either way verifies; any changed value fails both).
+
+Risks: accepting both adds no forgery path, because each needs the secret; a change in whitespace only re-serializes to the same JSON and verifies, which is the same payload. Reversible.
+
+Decision: accept either, raw bytes first. Runner-up: raw only (the safer reading of the docs, and what a bad guess would break). Would change our mind: the first real delivery (the final check logs `signature_valid`); if the raw form always verifies, drop the fallback.
+
+### C3. How the form is embedded and how hidden fields get in
+
+Options: Tally's `embed.js` widget (it forwards the host page's own URL query parameters as hidden fields, per Tally's embed page); a plain iframe with the hidden fields in the embed address; a popup.
+
+Evidence: the widget forwards the *page's* query string, but our `signup_id` exists only after signup and is not in the page URL, so it would need a history rewrite. A plain iframe needs no third-party script on our origin and keeps the bundle small. The submit event is a `Tally.FormSubmitted` message from tally.so ([events](https://developers.tally.so/widgets/events.md)); we listen for it and check the origin. Whether `/embed/<id>?signup_id=...` fills the hidden field is **unverified** until a form exists (FORM_SPEC step 12).
+
+Decision: plain iframe with the fields in the address; fixed height (no `dynamicHeight`, which needs `embed.js`). Runner-up: `embed.js` with a history rewrite. Would change our mind: the hidden field not arriving, or the fixed height clipping the form on small phones.
+
+### C4. Event names
+
+`typeform_opened` and `typeform_submitted` become `form_opened` and `form_submitted` (vendor-neutral). The staging funnel chart still names the old step until it is updated; the data in that project is test traffic.

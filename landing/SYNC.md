@@ -41,3 +41,9 @@ open no PR.
 ## After the PR is open
 
 A person reads the before and after table, checks it against `gtm/messaging.md` and merges. Deploying is a separate step in [RUNBOOK.md](RUNBOOK.md).
+
+## Log: main and the landing branches
+
+- **2026-10-13, `origin/main` a698ebd.** `landing/` was untouched on main, but main changed files the page depends on: `gtm/messaging.md` (a "sealed" sub-line and user journeys), the root `CLAUDE.md` (one product, one look, one voice), `product/design.md`, `scripts/check_design.py` and `check_glossary.py`, `pr-quality.yml` (screenshots required for UI PRs). I read them with `git show origin/main:<path>`; I did not rebase.
+- **2026-10-13, Satyam merged main into the landing stack himself** and pushed two landing commits on top (`5a1e500` no analytics before the cookie notice is accepted; `4bd815a` server events and privacy text follow consent). I found this when a subagent reported `landing/7-sections` at `4bd815a`, not at the `0f01888` I had pushed. My local branches were stale. Action: `git rebase --onto origin/landing/7-sections 0f01888 landing/8-tally` (the only conflict was `product/landing-page.md`: took his text, re-applied the Typeform to Tally rename). My local `landing/6-envs` and `landing/7-sections` are behind origin and are not mine to push over: next time, fetch first, branch from `origin/...`, and never force-push a branch someone else has pushed to.
+- **Not done on purpose:** no force-push to any existing branch, no rebase of the older PRs (#20 to #25, #92, #93). Satyam's merges already carry main.

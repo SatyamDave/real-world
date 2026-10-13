@@ -87,7 +87,7 @@ function LegalShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="wrap" style={{ padding: "32px 24px 64px", maxWidth: 760 }}>
+      <main id="main" className="wrap legal-main">
         {children}
       </main>
       <Footer />

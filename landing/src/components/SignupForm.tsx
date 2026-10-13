@@ -156,7 +156,7 @@ export function SignupForm({
   const loading = state.kind === "loading";
   return (
     <form className="signup" onSubmit={onSubmit} noValidate>
-      <label htmlFor="email" style={{ display: "block", fontWeight: 600, marginBottom: 10 }}>
+      <label htmlFor="email" className="signup-label">
         Get the first receipts in your inbox.
       </label>
       <div className="row">

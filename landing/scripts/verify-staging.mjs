@@ -23,6 +23,8 @@ page.on("pageerror", (e) => logs.push(`pageerror: ${e.message.slice(0, 160)}`));
 await page.goto(
   `${BASE}/?utm_source=verify&utm_medium=test&utm_campaign=staging_verify_${stamp}&utm_content=hashed`,
 );
+// Analytics start only after the cookie notice is accepted (src/components/CookieNotice.tsx).
+await page.getByRole("button", { name: "Accept" }).click();
 await page.waitForTimeout(2500);
 await page.fill("#email", email);
 const resp = page.waitForResponse(
