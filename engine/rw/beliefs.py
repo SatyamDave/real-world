@@ -5,7 +5,13 @@ from typing import Any, NamedTuple
 
 import numpy as np
 
-from rw.settings import ANCHOR_PULL, NUDGE_CAP_LOGIT, SPREAD_BAND, STEP_CAP_LOGIT
+from rw.settings import (
+    ANCHOR_PULL,
+    KALMAN_WALK_SD_LOGIT,
+    NUDGE_CAP_LOGIT,
+    SPREAD_BAND,
+    STEP_CAP_LOGIT,
+)
 
 
 class Nudge(NamedTuple):
@@ -63,6 +69,42 @@ def nudge(
         out[mask, topic] += applied
         records.append(Nudge(group_id, topic, wanted, applied))
     return out, records
+
+
+def kalman_update(
+    B: np.ndarray,
+    C: np.ndarray,
+    P: np.ndarray,
+    group_ids: np.ndarray,
+    targets: Mapping[tuple[Any, int], tuple[float, float]],
+    walk_sd: float = KALMAN_WALK_SD_LOGIT,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[Nudge]]:
+    """Decision 0005: one day of a scalar Kalman filter on each group's mean belief.
+
+    C is each agent's group anchor offset and P its group's variance, both (n_agents, n_topics).
+    Means hold and P grows by walk_sd**2; each observed (group, topic), given as (share, error SD
+    in logit), moves the whole group and its offset by K times the innovation. P is first raised
+    to innovation**2 - R when that is larger, so a shock is absorbed by one poll."""
+    B, C = np.array(B, dtype=float), np.array(C, dtype=float)
+    P = np.asarray(P, dtype=float) + walk_sd**2
+    group_ids = np.asarray(group_ids)
+    records = []
+    for (group_id, topic), (share, obs_sd) in targets.items():
+        mask = group_ids == group_id
+        if not mask.any():
+            continue
+        innovation = logit(share) - float(B[mask, topic].mean())
+        r = obs_sd**2
+        # ponytail: one-sample covariance matching also fires on ordinary poll noise, so a quiet,
+        # densely polled group forgets old polls sooner than a fixed-gain filter would; a
+        # jump-mixture gain is the upgrade once real poll series give a shock rate.
+        p = max(float(P[mask, topic].max()), innovation**2 - r)
+        gain = p / (p + r)
+        B[mask, topic] += gain * innovation
+        C[mask, topic] += gain * innovation
+        P[mask, topic] = (1 - gain) * p
+        records.append(Nudge(group_id, topic, innovation, gain * innovation))
+    return B, C, P, records
 
 
 def spread_audit(
