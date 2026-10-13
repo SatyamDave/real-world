@@ -416,6 +416,11 @@ test.describe("sections below the receipts", () => {
       }),
     ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Research and limits" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "What the research says, and where it stops" }),
+    ).toBeVisible();
+    for (const link of await page.locator("#papers-title ~ dl a").all())
+      await expect(link).toHaveAttribute("rel", "noopener noreferrer");
     await expect(page.getByRole("heading", { name: "Work on this with us." })).toBeVisible();
     // No demo and no app link: nothing here depends on APP_URL.
     await expect(page.getByText(/try today's question|demo/i)).toHaveCount(0);

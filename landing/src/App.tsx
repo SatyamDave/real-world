@@ -5,6 +5,7 @@ import { Collaborate } from "./components/Collaborate";
 import { Footer } from "./components/Footer";
 import { Hero } from "./components/Hero";
 import { HowItWorks } from "./components/HowItWorks";
+import { Papers } from "./components/Papers";
 import { ReceiptStrip } from "./components/ReceiptStrip";
 import { Research } from "./components/Research";
 import { Thesis } from "./components/Thesis";
@@ -74,6 +75,7 @@ function Home({ headline }: { headline: Headline }) {
         <ReceiptStrip />
         <Thesis />
         <Research />
+        <Papers />
         <Collaborate onJoin={() => focusEmail("collaborate")} />
         <RepeatCta />
       </main>

@@ -22,7 +22,7 @@ Strangers arriving from a Reddit or X ad on a phone, who need to understand the 
 
 ## How we know it works
 
-- Routes: `/` (header with a join button, hero with the interactive globe, how a test works, receipt strip, thesis, research and limits, collaboration, repeat CTA, footer), `/privacy`, `/terms`. Two Pages Functions: `POST /api/signup` and `POST /api/tally`. The field and event shapes are defined once in `landing/db/migrations/` (the signup row) and `landing/analytics/TRACKING_PLAN.md` (events); this spec does not restate them.
+- Routes: `/` (header with a join button, hero with the interactive globe, how a test works, receipt strip, thesis, research and limits, what the research says, collaboration, repeat CTA, footer), `/privacy`, `/terms`. Two Pages Functions: `POST /api/signup` and `POST /api/tally`. The field and event shapes are defined once in `landing/db/migrations/` (the signup row) and `landing/analytics/TRACKING_PLAN.md` (events); this spec does not restate them.
 - The email CTA writes a row to Neon before any Tally iframe loads, so a Tally outage never loses a lead ([101](../research/product/101-prelaunch-landing-waitlist-ads.md)).
 - The headline is chosen from `utm_content` against the allow-list in [`gtm/prelaunch-ads.md`](../gtm/prelaunch-ads.md); an unknown or missing value falls back to the default headline. The chosen `headline_variant` is recorded on every analytics event and on the signup row.
 - Automated checks (Vitest + Playwright, in `landing/`): the headline resolver returns the default for an unknown `utm_content` and the right headline for each known id; the signup form shows each state below from a mocked endpoint (empty, loading, error, duplicate, success); the globe falls back to the poster under `prefers-reduced-motion` and when WebGL is absent; an axe pass finds no violations on `/`. "Works" for the deploy is a Playwright signup on the preview URL that writes a row to Neon and an event to Amplitude.
@@ -65,6 +65,10 @@ All copy below is the whole of what the page says. `{BRAND}` is the display name
 1. "Simulate. Each morning {BRAND} simulates how the world's population reacts to the day's news, calibrated to published population marginals." 
 2. "Hash. We commit the forecast as a hash before the outcome exists, so the record cannot be backfilled."
 3. "Score. When the event resolves, we score the forecast in public against the market price and a plain-language-model baseline — misses included."
+
+### What the research says (below research and limits)
+
+Seven plain lines on other people's results, each with a link, and no figure: believable agents (Park 2023), agents built from a person's own interview (Park 2024), simulated samples that resemble surveys (Argyle 2023) and miss (Bisbee 2024, Santurkar 2023), forecasting close but not settled (Schoenegger 2024, Halawi 2024, FRI 2026), public scoring (Mellers 2014), and why we seal first (Nosek 2018, Gneiting and Raftery 2007). What was opened for each source and what it does not show is in `landing/design/PAPERS.md`. The note says none of it is ours.
 
 ### Thesis, research and limits, collaboration (below the receipts)
 

@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { COLLABORATE, RESEARCH, THESIS } from "./sections";
+import { COLLABORATE, PAPERS, RESEARCH, THESIS } from "./sections";
 
 function allText(): string {
   return [
@@ -10,6 +10,9 @@ function allText(): string {
     ...RESEARCH.say,
     ...RESEARCH.leave,
     RESEARCH.caveat,
+    PAPERS.title,
+    PAPERS.note,
+    ...PAPERS.rows.flatMap((r) => [r.term, r.text]),
     ...Object.values(COLLABORATE),
   ].join("\n");
 }

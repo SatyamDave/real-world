@@ -16,7 +16,7 @@ The one list of what the page sends and why. The code is `src/analytics.ts` (the
 | Event | When | Properties besides `headline_variant` |
 | --- | --- | --- |
 | `landing_viewed` | Once per load of any route | `path`, `referrer`, and any of `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` present in the URL |
-| `section_viewed` | First time 40% of a section is on screen | `section`: `hero`, `receipts`, `thesis`, `how_it_works`, `use_cases`, `research`, `collaborate`, `repeat_cta`, `legal` |
+| `section_viewed` | First time 40% of a section is on screen | `section`: `hero`, `receipts`, `thesis`, `how_it_works`, `research`, `papers`, `collaborate`, `repeat_cta`, `legal` |
 | `globe_ready` | The animated globe started | none |
 | `cta_clicked` | Any call to action pressed | `location`: `hero`, `header`, `repeat`, `hero_secondary`, `collaborate` |
 | `email_focused` | The email field got focus (once per page view) | `location` |
@@ -79,7 +79,7 @@ Satyam asked for an event that shows at which section a visitor clicked the call
 
 | Property | Meaning |
 | --- | --- |
-| `cursor_section` | The content section the cursor was last in: `hero`, `receipts`, `thesis`, `how_it_works`, `use_cases`, `research`, `collaborate` or `repeat_cta`. When the click lands on the sticky header or the cookie notice, this is the section the cursor was in just before, so a header press still says what the visitor was reading |
+| `cursor_section` | The content section the cursor was last in: `hero`, `receipts`, `thesis`, `how_it_works`, `research`, `papers`, `collaborate` or `repeat_cta`. When the click lands on the sticky header or the cookie notice, this is the section the cursor was in just before, so a header press still says what the visitor was reading |
 | `cursor_dwell_ms` | Milliseconds the cursor spent in that section on its last visit |
 | `viewport_section` | The section at the middle of the screen at the moment of the event; the fallback on a phone, where there is no cursor trail |
 
