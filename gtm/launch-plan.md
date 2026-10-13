@@ -1,5 +1,7 @@
 # Launch plan: Oct 27, 2026
 
+**Since [0015](../research/decisions/0015-founders-and-companies.md):** launch to founders where they are: Show HN, Product Hunt, founder communities and YC's network, with one live demo of a launch post tested on India and the USA, then sealed. Ten founder calls before Oct 27 replace the insights-team calls as the first evidence: what they last launched, where, and what reaction surprised them.
+
 **Since [0012](../research/decisions/0012-will-it-land-and-call-it.md):** the launch leads with one post test, not the receipts page: a live demo where a visitor pastes a post and reads the best and worst audiences, then sees it sealed. Like TypeSafe's Pong demo, one public proof moment beats a tour ([market/004](../research/market/004-jev-typesafe.md), [consumer wedge](../research/product/108-consumer-wedge.md)). The receipts story below stays as the proof a skeptic reaches from any sealed line.
 
 The launch is the receipts page, not the globe. On Oct 27 a visitor with no account can see forecasts we hashed before their outcomes existed, some already resolved in public, next to the market price and a plain-LLM baseline, then answer today's question and fork today's world ([CEO lens](../research/lenses/ceo.md), [CPO lens](../research/lenses/cpo.md)). The company-wide gates and kill criteria live in [`company/plan-to-nov-2.md`](../company/plan-to-nov-2.md); this file covers what faces the public.

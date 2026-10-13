@@ -2,15 +2,15 @@
 
 ## One-liner
 
-Know how a post will land before you post it, and call the news against an AI that seals its calls first ([0012](../research/decisions/0012-will-it-land-and-call-it.md)).
+Test your launch on the public before you ship it ([0015](../research/decisions/0015-founders-and-companies.md)).
 
 Short form: simulations with receipts.
 
-Sub-line: Test a post on simulated audiences in 16 countries before you publish. Every test you seal is scored when you mark how it did, and the AI's daily calls are sealed before the outcome and scored in public. "Sealed" is the plain word for hashed and timestamped; it makes no accuracy claim, and every result still carries its coverage tier.
+Sub-line: Paste a launch post, a price change, a headline or an announcement. Real World simulates how people in 16 countries, by age and education, react: who ignores it, who likes it, who shares it, and why. Every result is AI-simulated, and every test you seal is scored when you mark how it did.
 
-Category: a consumer app on a population-simulation engine with a public score, not a world model, a poll or an agent-based modelling platform ([VC lens](../research/lenses/vc.md), [funding landscape](../research/market/012-funding-landscape-2026.md), [world-model state of the art](../research/engineering/100-world-model-sota.md), [consumer wedge](../research/product/108-consumer-wedge.md)).
+Category: message testing on a population-simulation engine with a public score, for startups and companies; not a world model, a poll or a survey replacement ([VC lens](../research/lenses/vc.md), [who buys](../research/market/014-who-buys.md)).
 
-The demo order is one post test (paste, test, read the best and worst audiences), then the seal, then the record ([consumer wedge](../research/product/108-consumer-wedge.md)).
+The demo order is one message test (paste, pick a market, read who reacts and why), then the seal, then the public record.
 
 ## User journeys
 
@@ -18,9 +18,8 @@ Each page does one job and offers one next action.
 
 | Who | Starts on | Next action per page |
 | --- | --- | --- |
-| Person about to post | `/` | "Test it", then "Test this version" on the rewrite; signed in, the test is sealed and "Your record" marks it later. |
-| Person calling the news | `/call` | "Call it", then the reveal against the AI and "Your record". |
-| Skeptic | Any "Sealed" line | `/receipts` to verify in the browser, then `/scores` for skill with n and an interval. |
+| Founder or company team | `/` | "Test my message", then "Test this version" on the rewrite; signed in, the test is sealed and "Your tests" marks it later. |
+| Skeptic or investor | Any "Sealed" line, or "Play today's question" | `/receipts` to verify in the browser, `/scores` for skill with n and an interval, `/call` to play against the engine. |
 
 Surface specs: [product/README.md](../product/README.md).
 
@@ -43,7 +42,7 @@ Surface specs: [product/README.md](../product/README.md).
 - The number of archetype calls made today, and the coverage tier of every country we show ([large-scale sims](../research/science/028-large-scale-llm-sims.md), [coverage tiers](../research/data/099-country-coverage-tiers.md)).
 - "AI-simulated" on every output, and "simulated account, not the cause" on agent narratives ([regulation](../research/business/091-regulation.md), [trust](../research/product/087-trust-and-explainability.md)).
 - "A cheap first pass with stated error; then run the real poll." ([policy ICP](../research/product/081-icp-policy-research.md))
-- "Test a post on simulated audiences before you post it." and "Your tests are sealed when you make them." ([consumer wedge](../research/product/108-consumer-wedge.md))
+- "Test your launch on the public before you ship it." and "Test a message on 16 countries' simulated public, by age and education." and "Your tests are sealed when you make them." ([consumer wedge](../research/product/108-consumer-wedge.md))
 - "See how the AI does against your gut", only as the number the record computes on marked tests.
 
 ## Claims we may not make

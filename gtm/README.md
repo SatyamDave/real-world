@@ -1,6 +1,6 @@
 # Go-to-market
 
-How Real World reaches its first users: people about to post and people calling the news ([0012](../research/decisions/0012-will-it-land-and-call-it.md)). Buyers come later, through the engine. Every fact here links the research note it comes from; where the seat lenses disagree, the doc says so and the open question sits in [`company/decisions-needed.md`](../company/decisions-needed.md).
+How Real World reaches its first users and buyers: startup founders and company teams testing messages before they ship them ([0015](../research/decisions/0015-founders-and-companies.md)), after people about to post and people calling the news ([0012](../research/decisions/0012-will-it-land-and-call-it.md)). Buyers come later, through the engine. Every fact here links the research note it comes from; where the seat lenses disagree, the doc says so and the open question sits in [`company/decisions-needed.md`](../company/decisions-needed.md).
 
 | File | Answers |
 | --- | --- |
