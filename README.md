@@ -76,6 +76,12 @@ Everything above runs with no secret. Each of these switches one thing on:
 | `RW_TRUSTED_PROXIES` | API environment | Comma-separated proxy addresses whose last `X-Forwarded-For` hop is taken as the caller for the signed-out fork and post-test limits; otherwise the peer address is used. |
 | `RW_EMAIL_API_KEY`, `RW_EMAIL_FROM` | API environment | Sign-in emails go through the email provider instead of `$RW_HOME/outbox/`. Required when any allowed origin is not localhost; the API refuses to start without them ([accounts](product/accounts.md)). |
 
+## Run with a real key
+
+Export `OPENROUTER_API_KEY` (a dedicated key with its own limit; the account needs credit at https://openrouter.ai/settings/credits).
+`make keycheck` prints the key's remaining limit, the account's remaining credit and whether the Jev and text models are listed, and exits non-zero when the key is missing or the balance is zero.
+Then `make daily-fixtures` or `make dev` run on the real models.
+
 ## Where things live
 
 | Folder | What it holds | Product spec |
