@@ -9,6 +9,7 @@ Small, reviewable data files the engine reads: the licence table, the fixed voca
 | `sources.csv` | One row per data source: licence, whether commercial use and redistribution are allowed (`yes`, `no`, `unknown`, or `n/a` for fixtures we wrote), the citation to show, and when it was checked. `rw.sources.require()` refuses every row whose `commercial_use` is not `yes`, unless its `kind` is `fixture`. |
 | `topics.csv` | The eight belief topics every agent holds, with the yes/no question each one measures. Adding a topic is a data change. |
 | `countries.csv` | The 16 countries in the base sample: centroid, population in millions, region, and the five coverage rubric parts from [research/data/099](../research/data/099-country-coverage-tiers.md) (population 0-25, attitudes 0-25, markets 0-15, news 0-20, ground truth 0-15). The tier is computed from their sum (A 75+, B 50-74, C 25-49, D below 25), never typed in. |
+| `questions/` | Real question lists, one file per horizon, each `proposed` until the founder approves and freezes it. See [questions/README.md](questions/README.md). |
 
 ## The values are illustrative
 

@@ -40,5 +40,5 @@ The nightly run is cheap. Multiplication is the risk: ensembles, 7-day horizons 
 ## Open, for the founder
 
 - Free fork allowance: 3 a day ([CEO lens](../research/lenses/ceo.md), [CTO lens](../research/lenses/cto.md)) or 3 a month ([CFO lens](../research/lenses/cfo.md)) or a dollar cap per fork with the sample sized to fit ([CPO lens](../research/lenses/cpo.md)).
-- A $49 Pro plan with 50,000 steps at launch ([pricing models](../research/product/079-pricing-models.md), [CRO lens](../research/lenses/cro.md)) or pay-as-you-go only ([CFO lens](../research/lenses/cfo.md), [CPO lens](../research/lenses/cpo.md)).
+- Decided 2026-10-12: no Pro plan and no paid credits at launch; accounts and self-serve keys are free with daily caps ([decision 0011](../research/decisions/0011-consumer-product-and-api.md)).
 - The pilot price and terms above.

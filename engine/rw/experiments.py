@@ -10,7 +10,7 @@ import json
 import re
 import subprocess
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from statistics import fmean
@@ -37,12 +37,19 @@ E003_SHOCK_SD_LOGIT = 0.5
 E003_PRIOR_BIAS_LOGIT = 0.5
 E003_PRIOR_NOISE_LOGIT = 0.3
 E003_RESAMPLES = 10_000
+# E006 design, fixed by its PREREG: new seeds, v2 at the settings walk SD, halved and doubled.
+E006_SEEDS = range(1000, 1050)
+E006_V2_ARMS = {
+    "v2": settings.KALMAN_WALK_SD_LOGIT,
+    "v2_walk_half": settings.KALMAN_WALK_SD_LOGIT / 2,
+    "v2_walk_double": settings.KALMAN_WALK_SD_LOGIT * 2,
+}
 E001_COST_CAP_USD = 100.0
 NAIVE_PROBABILITY = 0.5
 BOOTSTRAP_SEED = 7
 
 FAKE_NOTE = (
-    "Provider fake: these numbers come from the deterministic fake model. Fake-model results test"
+    "Provider fake: these numbers come from the fake model. Fake-model results test"
     " the pipeline, not the science, and support no claim."
 )
 
@@ -75,6 +82,8 @@ def registry(root: Path = EXPERIMENTS) -> dict[str, Row]:
             cells = [c.strip() for c in line.strip().strip("|").split("|")]
             rows[m.group(1)] = {
                 "title": cells[1],
+                "registered": cells[2],
+                "owner": cells[3],
                 "sha256": cells[4].strip("`"),
                 "status": cells[5],
             }
@@ -102,6 +111,42 @@ def check_registration(exp_id: str, root: Path = EXPERIMENTS) -> str:
     return actual
 
 
+def prereg_section(exp_id: str, heading: str, root: Path = EXPERIMENTS) -> str:
+    """The text under `## heading` in an experiment's PREREG.md, up to the next heading."""
+    text = (root / exp_id / "PREREG.md").read_text()
+    m = re.search(rf"^## {re.escape(heading)}\n(.*?)(?=^## |\Z)", text, re.M | re.S)
+    return m.group(1).strip() if m else ""
+
+
+def results(exp_id: str, root: Path = EXPERIMENTS) -> list[Row]:
+    """Each committed run of an experiment, oldest first, read from its results.json."""
+    out = []
+    for path in sorted((root / exp_id / "results").glob("*/results.json")):
+        r = json.loads(path.read_text())
+        key = next((k for k in r["metrics"] if k.startswith("primary")), None)
+        m = r["metrics"].get(key) if key else None
+        out.append(
+            {
+                "path": str((path.parent / "RESULTS.md").relative_to(root.parent)),
+                "date": r["started_at"][:10],
+                "command": r["command"],
+                "commit": r["git_commit"],
+                "provider": r["provider"],
+                "model": r["model"],
+                "primary": m
+                and {
+                    "metric": key,
+                    "value": m["mean"],
+                    "low": m["low"],
+                    "high": m["high"],
+                    "n": m["n"],
+                },
+                "outcome": (m or {}).get("verdict", "no verdict recorded"),
+            }
+        )
+    return out
+
+
 def _rmse(x: np.ndarray) -> float:
     return float(np.sqrt(np.mean(np.square(x)))) if x.size else float("nan")
 
@@ -112,11 +157,20 @@ def _segment_means(B: np.ndarray, seg: np.ndarray, n_seg: int) -> np.ndarray:
     return np.column_stack(sums) / counts[:, None]
 
 
-def e003_seed(seed: int, days: int = E003_DAYS) -> list[Row]:
+def _segment_sds(B: np.ndarray, seg: np.ndarray, n_seg: int) -> np.ndarray:
+    mean = _segment_means(B, seg, n_seg)
+    return np.sqrt(np.maximum(_segment_means(B * B, seg, n_seg) - mean * mean, 0.0))
+
+
+def e003_seed(
+    seed: int, days: int = E003_DAYS, v2_walk_sds: Mapping[str, float] | None = None
+) -> list[Row]:
     """One seed of E003: per day and arm, logit RMSE of segment beliefs against the hidden truth.
 
     The truth is a population.py world whose segment beliefs walk in logit space; the model starts
-    from a biased copy and runs the daily operators (update_beliefs, then nudge on polls)."""
+    from a biased copy and runs the daily operators (update_beliefs, then nudge on polls).
+    v2_walk_sds adds one kalman_update arm per name with that walk SD (E006); it draws no random
+    numbers, so the other arms match E003 exactly."""
     rng = np.random.default_rng(seed)
     world = population.sample_population(E003_AGENTS, seed)
     tps = population.topics()[:E003_TOPICS]
@@ -131,6 +185,12 @@ def e003_seed(seed: int, days: int = E003_DAYS) -> list[Row]:
     unexposed = np.zeros(len(B0), dtype=bool)
 
     arms = {"none": B0.copy(), "nudge": B0.copy()}
+    walks = v2_walk_sds or {}
+    v2 = {
+        name: (B0.copy(), np.zeros_like(B0), np.full_like(B0, settings.KALMAN_PRIOR_SD_LOGIT**2))
+        for name in walks
+    }
+    sd0 = _segment_sds(B0, seg, n_seg)
     held = _segment_means(B0, seg, n_seg)
     seen_ever = np.zeros(truth.shape, dtype=bool)
     rows = []
@@ -148,11 +208,23 @@ def e003_seed(seed: int, days: int = E003_DAYS) -> list[Row]:
             for i, j in zip(*np.nonzero(seen), strict=True)
         }
         arms["nudge"], _ = beliefs.nudge(arms["nudge"], seg, targets)
+        polls = {cell: (share, E003_POLL_NOISE_LOGIT) for cell, share in targets.items()}
+        for name, (B, C, P) in v2.items():
+            B = beliefs.update_beliefs(B, B0 + C, s, no_signal, unexposed)
+            v2[name] = beliefs.kalman_update(B, C, P, seg, polls, walks[name])[:3]
         held = np.where(seen, poll, held)
         seen_ever |= seen
 
         estimates = {arm: _segment_means(B, seg, n_seg) for arm, B in arms.items()}
         estimates["persistence"] = held
+        extra: dict[str, dict[str, float]] = {}
+        for name, (B, _, P) in v2.items():
+            estimates[name] = _segment_means(B, seg, n_seg)
+            extra[name] = {
+                "filter_sd_logit": float(np.sqrt(_segment_means(P, seg, n_seg).mean())),
+                "max_within_sd_change": float(np.abs(_segment_sds(B, seg, n_seg) - sd0).max()),
+            }
+        blank = {"filter_sd_logit": float("nan"), "max_within_sd_change": float("nan")}
         for arm, est in estimates.items():
             err = est - truth
             rows.append(
@@ -164,6 +236,7 @@ def e003_seed(seed: int, days: int = E003_DAYS) -> list[Row]:
                     "rmse_logit_never_observed": _rmse(err[~seen_ever]),
                     "cells_never_observed": int((~seen_ever).sum()),
                     "cells": int(err.size),
+                    **(extra.get(arm, blank) if v2 else {}),
                 }
             )
     # With no observations the operators must not shrink the spread of beliefs.
@@ -276,6 +349,93 @@ def run_e003() -> Outcome:
     }
 
 
+def run_e006() -> Outcome:
+    seeds = list(E006_SEEDS)
+    rows = [r for seed in seeds for r in e003_seed(seed, v2_walk_sds=E006_V2_ARMS)]
+    last = {(r["seed"], r["arm"]): r for r in rows if r["day"] == E003_DAYS}
+
+    def diff(a: str, b: str, key: str = "rmse_logit") -> dict[str, Any]:
+        out = {s: last[s, a][key] - last[s, b][key] for s in seeds}
+        return _interval({s: d for s, d in out.items() if not np.isnan(d)})
+
+    primary = diff("v2", "persistence")
+    wins = primary["high"] is not None and primary["high"] < 0
+    calibration = [last[s, "v2"]["rmse_logit"] / last[s, "v2"]["filter_sd_logit"] for s in seeds]
+    sd_change = max(last[s, "v2"]["max_within_sd_change"] for s in seeds)
+    ratios = [last[s, "none"]["zero_evidence_min_variance_ratio"] for s in seeds]
+    zero_ok = min(ratios) >= 1 - 1e-9
+    arms = ["none", "nudge", "persistence", *E006_V2_ARMS]
+    curve = {
+        arm: [
+            fmean(r["rmse_logit"] for r in rows if r["arm"] == arm and r["day"] == d)
+            for d in range(1, E003_DAYS + 1)
+        ]
+        for arm in arms
+    }
+    secondary = {
+        "day30_rmse_v2_minus_nudge": diff("v2", "nudge"),
+        "day30_rmse_v2_minus_none": diff("v2", "none"),
+        "never_observed_day30_rmse_v2_minus_none": diff("v2", "none", "rmse_logit_never_observed"),
+        "day30_rmse_v2_walk_half_minus_persistence": diff("v2_walk_half", "persistence"),
+        "day30_rmse_v2_walk_double_minus_persistence": diff("v2_walk_double", "persistence"),
+    }
+    metrics = {
+        "primary_day30_rmse_v2_minus_persistence": {
+            **primary,
+            "verdict": "supported" if wins else "not supported",
+        },
+        **secondary,
+        "day30_rmse_over_filter_sd_v2": {
+            "n": len(calibration),
+            "mean": fmean(calibration),
+            "min": min(calibration),
+            "max": max(calibration),
+        },
+        "day30_max_within_segment_sd_change_v2": sd_change,
+        "zero_evidence_variance_does_not_shrink": {
+            "passed": zero_ok,
+            "min_variance_ratio": min(ratios),
+        },
+        "rmse_logit_by_day": curve,
+    }
+    verdict = metrics["primary_day30_rmse_v2_minus_persistence"]["verdict"]
+    shown = [*range(0, E003_DAYS, 5), E003_DAYS - 1]
+    by_day = "; ".join(
+        f"day {d + 1}: " + " / ".join(f"{curve[a][d]:.3f}" for a in arms) for d in shown
+    )
+    report = [
+        "- Primary, day-30 RMSE in logit, v2 minus persistence, paired by seed:"
+        f" {_fmt(primary)}. Verdict: {verdict}; v2 wins only if the whole interval is below zero.",
+        *(f"- {k.replace('_', ' ')}: {_fmt(m)}." for k, m in secondary.items()),
+        "- Day-30 RMSE over v2's own predicted SD (1 is calibrated):"
+        f" mean {fmean(calibration):.3f}, range {min(calibration):.3f} to"
+        f" {max(calibration):.3f}, n = {len(calibration)}.",
+        f"- Largest change in within-segment SD under v2 by day 30: {sd_change:.2e} logit.",
+        "- Zero-evidence property (variance does not shrink with no observations):"
+        f" {'pass' if zero_ok else 'fail'}, smallest variance ratio {min(ratios):.6f}.",
+        f"- Mean RMSE in logit by day ({' / '.join(arms)}): {by_day}. Every day is in"
+        " results.json.",
+        "- Decision 0005: the daily default "
+        + ("switches to v2 ('kalman')." if wins else "stays capped nudging ('nudge')."),
+    ]
+    segments = rows[0]["cells"] // E003_TOPICS
+    deviations = [
+        "None from the E006 plan. As in E003, segments are those present in a"
+        f" {E003_AGENTS}-agent world ({segments} on seed {seeds[0]}), and the market aggregate"
+        " is not generated.",
+    ]
+    return {
+        "metrics": metrics,
+        "n": len(seeds),
+        "seeds": seeds,
+        "rows": rows,
+        "report": report,
+        "deviations": deviations,
+        "uses_llm": False,
+        "cost_usd": 0.0,
+    }
+
+
 def run_e001_fixtures() -> Outcome:
     """E001 pipeline on the fixture questions: sim vs plain LLM vs a naive 0.5, scored by Brier."""
     protocol = score.load_protocol()
@@ -361,7 +521,7 @@ def run_e001_fixtures() -> Outcome:
     }
 
 
-PROTOCOLS: dict[str, Callable[[], Outcome]] = {"E003": run_e003}
+PROTOCOLS: dict[str, Callable[[], Outcome]] = {"E003": run_e003, "E006": run_e006}
 FIXTURE_PROTOCOLS: dict[str, Callable[[], Outcome]] = {"E001": run_e001_fixtures}
 
 
@@ -401,8 +561,8 @@ def run(exp_id: str, fixtures: bool = False, root: Path = EXPERIMENTS, command: 
     commit = git_commit()
     started = datetime.now(UTC)
     out = protocol()
-    provider = llm.provider().name if out["uses_llm"] else "none"
-    model = {"none": "none", "fake": "fake"}.get(provider, settings.MODEL)
+    provider = llm.decider().name if out["uses_llm"] else "none"
+    model = "none" if provider == "none" else llm.model_name()
     path = root / exp_id / "results" / f"{started.date().isoformat()}-{provider}"
     if path.exists():
         raise FileExistsError(f"{path} exists; results are never overwritten")
@@ -437,8 +597,8 @@ def run(exp_id: str, fixtures: bool = False, root: Path = EXPERIMENTS, command: 
         f"- Command: `{meta['command']}`",
         f"- Commit: `{commit}`",
         f"- PREREG.md sha256: `{prereg}` (matches REGISTRY.md)",
-        f"- Engine {settings.ENGINE_VERSION}, provider {provider}, model {model},"
-        f" cost ${out['cost_usd']:.6f}",
+        f"- Engine {settings.ENGINE_VERSION}, provider {provider}, model {model}",
+        f"- Cost: {llm.cost_text(out['cost_usd'], provider)}",
         f"- n = {out['n']}; raw rows in `rows.csv`, every number in `results.json`",
         "",
         "## Pre-registered metrics",
@@ -469,7 +629,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 check_registration(exp_id)
                 hashed = "hash ok"
             except NotRegistered:
-                hashed = "hash MISMATCH"
+                hashed = "hash mismatch"
             runs = (
                 "runs"
                 if exp_id in PROTOCOLS
@@ -483,7 +643,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         command = "python -m rw.experiments " + " ".join(sys.argv[1:] if argv is None else argv)
         path = run(args.id, args.fixtures, command=command)
     except (NotRegistered, MissingInput, FileExistsError, llm.BudgetExceeded) as e:
-        print(f"refused: {e}", file=sys.stderr)
+        print(f"experiment refused, nothing written: {e}", file=sys.stderr)
         return 1
     print(f"wrote {path}")
     return 0

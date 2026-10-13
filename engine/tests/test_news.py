@@ -13,7 +13,6 @@ FIXTURES = news.DATA / "fixtures"
 @pytest.fixture(autouse=True)
 def isolated(tmp_path, monkeypatch):
     monkeypatch.setenv("RW_HOME", str(tmp_path / "var"))
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
 
 def read(path):
@@ -118,21 +117,28 @@ def test_a_poll_from_a_refused_source_is_refused(monkeypatch, tmp_path):
     assert conn.execute("SELECT count(*) FROM observations").fetchone()[0] == 0
 
 
-def test_signal_values_are_clipped(monkeypatch):
-    wild = {t: (5.0 if i % 2 else -5.0) for i, t in enumerate(news.topics())}
-    wild["salience"] = 3.0
-    monkeypatch.setattr(llm, "complete_json", lambda *a, **k: wild)
+def test_signal_maps_score_levels_onto_minus_one_to_one(monkeypatch):
+    def answers(*a, **k):
+        # Levels indexed from 1, as Jev may number them: the mapping reads the order only.
+        out = {
+            t: {"type": "score", "probabilities": {"1": 1.0, "2": 0, "3": 0, "4": 0, "5": 0}}
+            for t in news.topics()
+        }
+        out["salience"] = {"type": "noul", "noul": 0.25}
+        return out
+
+    monkeypatch.setattr(llm, "decide", answers)
     signal = news.extract_signal("FIXTURE: anything", None, llm.Budget(1.0))
     assert set(signal) == set(news.topics()) | {"salience"}
-    assert all(signal[t] in (-1.0, 1.0) for t in news.topics())
-    assert signal["salience"] == 1.0
+    assert all(signal[t] == -1.0 for t in news.topics())
+    assert signal["salience"] == 0.25
 
 
 def test_extract_signal_uses_the_signal_purpose_and_audience():
     conn = db.connect()
     budget = llm.Budget(1.0)
     out = news.extract_signal("FIXTURE: fuel up", "Women 55+ in Brazil", budget, conn=conn)
-    llm.validate(out, news.signal_schema())
+    assert all(-1 <= out[t] <= 1 for t in news.topics()) and 0 <= out["salience"] <= 1
     row = conn.execute("SELECT purpose, prompt FROM llm_calls").fetchone()
     assert row["purpose"] == "signal" and "Women 55+ in Brazil" in row["prompt"]
 

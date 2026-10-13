@@ -8,7 +8,7 @@
 
 ## Pending results
 
-Nothing in the paper is a Real World result. Each hypothesis is pre-registered (Section 6, Appendix A) and waits on a future artifact. None of these paths exist yet.
+No forecast result exists. Each hypothesis is pre-registered (Section 6, Appendix A) and waits on a future artifact; none of these paths exists yet. The only Real World numbers in the paper are the synthetic checks E003 and E006 of the assimilation operator (new Section 7), which are not forecast skill.
 
 | Hypothesis | What it tests | Produced by |
 | --- | --- | --- |
@@ -101,3 +101,13 @@ Rechecked every must-fix item of the three reviews against the revised text. Clo
 - Citations re-verified in bulk: all 35 arXiv IDs match their titles through the arXiv API, all 35 DOIs resolve to matching titles through doi.org, and the 4 web-only entries (IPUMS, GDELT data page, OpenTimestamps, Leetaru–Schrodt PDF) return HTTP 200. Abstract numbers rechecked for Schoenegger, Ozkan, Chuyao Wang, Xiao and Axial EFE. No entry needed removal.
 
 Compiles with tectonic: no errors, no undefined citations or references; one cosmetic underfull line inside the bibliography.
+
+## Update for PRs #6-#38 (2026-10-12)
+
+The engine now exists (version 0.1.0, `engine/rw/`, through commit ad95a99). New Section 7, "What Is Built, and Synthetic Checks":
+
+- Table 3 lists where engine 0.1.0 differs from the design: illustrative fixture marginals instead of GLOPOP-S (10,000 agents, 16 countries); per-agent news step scaled by stubbornness (not a pure segment shift); a scalar Kalman update per (country, topic) with an anchor offset (decision 0005) instead of the iterated EKF with h_F and house effects; one LLM call per segment for every question (no class P/C split); a same-feed LLM not matched on calls; the pre-genesis decision 0002 ledger and day-block bootstrap; forks without a paired no-event arm; the 29-question list still proposed and unhashed.
+- E003 and E006 reported with every pre-registered metric, n and 95% interval as their committed results give them (`experiments/E003/results/2026-10-12-none/results.json`, run at b6957be; `experiments/E006/results/2026-10-12-none/RESULTS.md`, run at 3163def), including E003's loss to persistence, the dropped ETKF arm and E006's filter understating its error (RMSE/filter SD 1.367). Labelled synthetic and retrospective, not forecast skill.
+- Abstract, author line, Section 3.5 (pointer to the built operator) and the limitations on validation and cost updated to match.
+
+What produces the pending results is unchanged. Before any of them can run: an approved and hashed question list, real poll ingestion, the Receipts v1 ledger, and W built to this paper's design (or the paper revised to the built system before its hash).

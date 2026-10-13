@@ -18,35 +18,45 @@ from rw import ledger, llm, news, settings, sources
 from rw.population import Agents
 
 FIXTURES = sources.SOURCES_CSV.parent / "fixtures"
+QUESTION_LISTS = sources.SOURCES_CSV.parent / "questions"
 MARKETS_SOURCE = "fixture_markets"
-# Belongs in settings.py, which this slice may not touch; move it there in a follow-up.
-HEADLINES_PER_QUESTION = 8
-# Keeps logit finite when the model answers exactly 0 or 1.
-P_EPS = 1e-4
 
 Question = dict[str, Any]
 
-ANSWER_SCHEMA: llm.Schema = {
-    "type": "object",
-    "properties": {
-        "yes": {"type": "number", "minimum": 0, "maximum": 1},
-        "no": {"type": "number", "minimum": 0, "maximum": 1},
-    },
-    "required": ["yes", "no"],
-    "additionalProperties": False,
-}
+
+class ListNotApproved(ValueError):
+    """A live question list that the founder has not approved (data/questions/README.md)."""
 
 
-def load_questions() -> list[Question]:
-    return json.loads((FIXTURES / "questions.json").read_text())
+def question_sets(which: str = "fixtures") -> list[tuple[str, list[Question]]]:
+    """(sha256 of the file bytes, its questions) for each list. Live lists must be approved."""
+    if which == "fixtures":
+        raw = (FIXTURES / "questions.json").read_bytes()
+        return [(ledger.sha256_hex(raw), json.loads(raw))]
+    paths = sorted(QUESTION_LISTS.glob("*.json"))
+    if not paths:
+        raise ListNotApproved(f"no question list in {QUESTION_LISTS}")
+    sets = []
+    for path in paths:
+        raw = path.read_bytes()
+        data = json.loads(raw)
+        status = data.get("status") if isinstance(data, dict) else None
+        if status != "approved":
+            raise ListNotApproved(f"{path.name} has status {status!r}; only an approved list runs")
+        sets.append((ledger.sha256_hex(raw), data["questions"]))
+    return sets
+
+
+def load_questions(which: str = "fixtures") -> list[Question]:
+    return [q for _, qs in question_sets(which) for q in qs]
 
 
 def question_hash(q: Question) -> str:
     return ledger.sha256_hex(ledger.canonical_json(q))
 
 
-def open_questions(date: str) -> list[Question]:
-    return [q for q in load_questions() if q["opens"] <= date <= q["closes"]]
+def open_questions(date: str, which: str = "fixtures") -> list[Question]:
+    return [q for q in load_questions(which) if q["opens"] <= date <= q["closes"]]
 
 
 def market_price(question_id: str, date: str) -> float:
@@ -65,7 +75,7 @@ def headlines(conn: sqlite3.Connection, date: str, countries: list[str]) -> list
     rows = conn.execute(
         f"SELECT title FROM signals WHERE date = ? AND iso3 IN ({marks})"
         " GROUP BY title ORDER BY MAX(salience) DESC, title LIMIT ?",
-        (date, *countries, HEADLINES_PER_QUESTION),
+        (date, *countries, settings.HEADLINES_PER_QUESTION),
     ).fetchall()
     return [r[0] for r in rows]
 
@@ -75,56 +85,99 @@ def _news_block(titles: list[str]) -> str:
     return f"Today's headlines:\n{lines}\n"
 
 
-def _yes_share(answer: dict[str, Any]) -> float:
-    yes, no = float(answer["yes"]), float(answer["no"])
-    return yes / (yes + no) if yes + no > 0 else 0.5
+def sim_share(answers: dict[str, Any]) -> float:
+    """The group's yes share from a stored `decide` answer to sim_questions."""
+    return float(answers["answer"]["probabilities"]["yes"])
+
+
+def plain_share(answers: dict[str, Any]) -> float:
+    """The yes probability from a stored `decide` answer to PLAIN_QUESTIONS."""
+    return float(answers["resolves_yes"]["noul"])
+
+
+def sim_questions(date: str, q: Question, segment: str) -> llm.Questions:
+    """One Jev choice whose yes probability is the group's yes share. The option order is seeded
+    per segment so no single order biases every segment."""
+    options = ["yes", "no"]
+    random.Random(f"{date}|{q['id']}|{segment}").shuffle(options)
+    return {
+        "answer": {
+            "type": "choice",
+            "instructions": f"How would a randomly chosen member of this group answer: {q['text']}",
+            "criteria": dict.fromkeys(options),
+        }
+    }
+
+
+PLAIN_QUESTIONS: llm.Questions = {
+    "resolves_yes": {
+        "type": "noul",
+        "instructions": "Will the question in the state resolve yes by its resolution date?",
+    }
+}
 
 
 def _sigmoid(x: np.ndarray) -> np.ndarray:
     return 1 / (1 + np.exp(-x))
 
 
-def _segment_text(segment: str) -> str:
+def segment_text(segment: str) -> str:
     iso3, age_band, education = segment.split("|")
     return f"adults aged {age_band} in {news.country_names()[iso3]} with {education} education"
 
 
 def sim_prompt(date: str, q: Question, titles: list[str], segment: str, share: float) -> str:
-    options = ["yes", "no"]
-    random.Random(f"{date}|{q['id']}|{segment}").shuffle(options)
     return (
-        _news_block(titles) + f"\nYou answer for this group of people: {_segment_text(segment)}.\n"
+        _news_block(titles) + f"\nGroup of people: {segment_text(segment)}.\n"
         f"Today {share:.0%} of them answer yes to: {news.topics()[q['topic']]}\n"
         f"\nQuestion: {q['text']}\n"
-        f"Options, in this order: {', '.join(options)}.\n"
-        "Give the share of this group that would answer each option, as numbers from 0 to 1."
     )
+
+
+def sim_inputs(
+    conn: sqlite3.Connection, date: str, q: Question, agents: Agents
+) -> tuple[np.ndarray, list[tuple[str, np.ndarray, float, str]]]:
+    """The question's agent offsets and, per present segment, (segment, agent mask over those
+    agents, the segment's prior share, the prompt the model is asked)."""
+    in_q = np.isin(agents["country"], q["countries"])
+    if not in_q.any():
+        raise ValueError(f"no agents in {q['countries']} for {q['id']}")
+    segments = agents["segment"][in_q]
+    beliefs = agents[f"b_{q['topic']}"][in_q]
+    titles = headlines(conn, date, q["countries"])
+    asks = []
+    for seg in sorted(set(segments.tolist())):
+        mask = segments == seg
+        share = float(_sigmoid(beliefs[mask]).mean())
+        asks.append((seg, mask, share, sim_prompt(date, q, titles, seg, share)))
+    return agents["offset"][in_q], asks
 
 
 def sim_forecast(
     conn: sqlite3.Connection, date: str, q: Question, agents: Agents, budget: llm.Budget
 ) -> tuple[float, float, float]:
     """Return (probability, p10, p90) from one call per present segment, spread to agents."""
-    in_q = np.isin(agents["country"], q["countries"])
-    if not in_q.any():
-        raise ValueError(f"no agents in {q['countries']} for {q['id']}")
-    segments = agents["segment"][in_q]
-    beliefs = agents[f"b_{q['topic']}"][in_q]
-    offsets = agents["offset"][in_q]
-    titles = headlines(conn, date, q["countries"])
+    offsets, asks = sim_inputs(conn, date, q, agents)
+    logits = np.empty(len(offsets))
+    for seg, mask, _, prompt in asks:
+        answers = llm.decide("forecast_sim", prompt, sim_questions(date, q, seg), budget, conn=conn)
+        logits[mask] = segment_logit(sim_share(answers))
+    return sim_summary(date, q["id"], logits, offsets)
 
-    logits = np.empty(len(segments))
-    for seg in sorted(set(segments.tolist())):
-        mask = segments == seg
-        share = float(_sigmoid(beliefs[mask]).mean())
-        prompt = sim_prompt(date, q, titles, seg, share)
-        p = _yes_share(llm.complete_json("forecast_sim", prompt, ANSWER_SCHEMA, budget, conn=conn))
-        p = float(np.clip(p, P_EPS, 1 - P_EPS))
-        logits[mask] = np.log(p / (1 - p))
 
+def segment_logit(share: float) -> float:
+    p = float(np.clip(share, settings.P_EPS, 1 - settings.P_EPS))
+    return float(np.log(p / (1 - p)))
+
+
+def sim_summary(
+    date: str, question_id: str, logits: np.ndarray, offsets: np.ndarray
+) -> tuple[float, float, float]:
+    """(probability, p10, p90) of the agents' answers: each draws its segment's logit plus its own
+    offset, and the spread is a bootstrap of DAILY_FORECAST_MEMBERS means."""
     agent_p = _sigmoid(logits + offsets)
     prob = float(agent_p.mean())
-    seed = int.from_bytes(hashlib.sha256(f"{date}|{q['id']}".encode()).digest()[:8], "big")
+    seed = int.from_bytes(hashlib.sha256(f"{date}|{question_id}".encode()).digest()[:8], "big")
     rng = np.random.default_rng(seed)
     picks = rng.integers(0, len(agent_p), (settings.DAILY_FORECAST_MEMBERS, len(agent_p)))
     p10, p90 = np.quantile(agent_p[picks].mean(axis=1), [0.1, 0.9])
@@ -137,34 +190,46 @@ def plain_prompt(q: Question, titles: list[str], sample: int) -> str:
         _news_block(titles) + f"\nQuestion: {q['text']}\n"
         f"Resolves by {q['resolves_by']}.\n"
         f"This is independent forecast {sample + 1} of {settings.PLAIN_LLM_SAMPLES}.\n"
-        "Give the probability of yes and of no, as numbers from 0 to 1."
     )
+
+
+def plain_mean(samples: list[float]) -> float:
+    """The mean of the samples without the lowest and the highest."""
+    ps = sorted(samples)
+    kept = ps[1:-1] if len(ps) > 2 else ps
+    return sum(kept) / len(kept)
 
 
 def plain_llm_forecast(
     conn: sqlite3.Connection, date: str, q: Question, budget: llm.Budget
 ) -> float:
     titles = headlines(conn, date, q["countries"])
-    ps = sorted(
-        _yes_share(
-            llm.complete_json(
-                "forecast_plain", plain_prompt(q, titles, i), ANSWER_SCHEMA, budget, conn=conn
+    return plain_mean(
+        [
+            plain_share(
+                llm.decide(
+                    "forecast_plain", plain_prompt(q, titles, i), PLAIN_QUESTIONS, budget, conn=conn
+                )
             )
-        )
-        for i in range(settings.PLAIN_LLM_SAMPLES)
+            for i in range(settings.PLAIN_LLM_SAMPLES)
+        ]
     )
-    kept = ps[1:-1] if len(ps) > 2 else ps
-    return sum(kept) / len(kept)
 
 
-def forecast_day(conn: sqlite3.Connection, date: str, agents: Agents, budget: llm.Budget) -> None:
+def forecast_day(
+    conn: sqlite3.Connection,
+    date: str,
+    agents: Agents,
+    budget: llm.Budget,
+    which: str = "fixtures",
+) -> None:
     """Write sim, plain_llm and market rows for every question open on date; skip done ones."""
     done = {
         r[0]
         for r in conn.execute("SELECT DISTINCT question_id FROM forecasts WHERE date = ?", (date,))
     }
-    model = "fake" if llm.provider().name == "fake" else settings.MODEL
-    for q in open_questions(date):
+    model = llm.model_name()
+    for q in open_questions(date, which):
         if q["id"] in done:
             continue
         p, p10, p90 = sim_forecast(conn, date, q, agents, budget)

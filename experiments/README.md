@@ -12,7 +12,7 @@ Every claim about how well Real World works comes from an experiment registered 
    ```
 
    Merge that commit before any run. From then on the `PREREG.md` is frozen; a change is a new experiment or a hashed amendment file.
-3. **Run.** Once the engine exists, every experiment runs with one command:
+3. **Run.** Every experiment runs with one command:
 
    ```sh
    make experiment ID=<id>
@@ -45,4 +45,4 @@ Each hash must match its row in `REGISTRY.md`, and `git log` must show the row c
 
 ## Registered experiments
 
-See [`REGISTRY.md`](REGISTRY.md). None has run; the engine does not exist yet.
+See [`REGISTRY.md`](REGISTRY.md). E003 has one committed run, [`E003/results/2026-10-12-none/`](E003/results/2026-10-12-none/RESULTS.md); the others have not run. `uv run python -m rw.experiments list` shows which can run now.
