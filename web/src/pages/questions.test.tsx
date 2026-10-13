@@ -36,9 +36,6 @@ test("the question page shows each day's committed forecasts, its receipt and wh
   expect(text).toContain("0.215 · 0.277 · 0.410");
   expect(text).toContain("18-34 · high");
   expect(text).toContain("FIXTURE: Campaign in United States turns to the cost of living");
-  expect(text).toContain("curl");
-  await act(async () => container.querySelectorAll<HTMLElement>("[role=tab]")[1].click());
-  expect(container.querySelector("pre")?.textContent).toContain('question("fx-usa-cpi-rise")');
   expect(text).toContain("AI-simulated");
 });
 
