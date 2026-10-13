@@ -31,7 +31,7 @@ After step 4 also update, then redeploy:
 
 - `VITE_PUBLIC_BASE_URL` is `https://tryrealworld.com` in `pnpm build:prod` already; nothing to set.
 - Turnstile: add `tryrealworld.com` to the widget's allowed hostnames (Cloudflare dashboard, Turnstile). Without it the bot check fails on the new domain and every signup shows "We couldn't confirm you're human."
-- Typeform webhook: `node landing/scripts/typeform-sync.mjs --env production --webhook-url https://tryrealworld.com/api/typeform` (section 6).
+- Tally webhook: in the production Tally form, Integrations, Webhooks, set the endpoint to `https://tryrealworld.com/api/tally` (section 6, [tally/FORM_SPEC.md](tally/FORM_SPEC.md)).
 - Reddit and X ad accounts: add the domain where they ask for a verified or allowed site.
 
 Rollback: remove the custom domain from the Pages project (Custom domains, remove). The page stays on `real-world-landing.pages.dev`. Nameservers can stay on Cloudflare.
@@ -59,11 +59,11 @@ Never commit a secret. Local values live in `landing/.dev.vars` (git-ignored); `
 | `AMPLITUDE_API_KEY` | secret | Pages secret, one per environment: the Staging project key on preview, the Prod project key on production. |
 | `AMPLITUDE_API_KEY_STAGING`, `AMPLITUDE_API_KEY_PROD` | local only | `.dev.vars`; the source for the scripts and for `pnpm build:staging` and `pnpm build:prod`. |
 | `TURNSTILE_SECRET_KEY` | secret | Pages secret. Preview: Cloudflare's always-pass test secret. Production: the real one, kept as `TURNSTILE_SECRET_KEY_PROD` in `.dev.vars`. |
-| `TYPEFORM_WEBHOOK_SECRET` | secret | Pages secret; the same value `typeform-sync.mjs` sends to Typeform. |
-| `TYPEFORM_TOKEN` | local only | `.dev.vars`; used only by `typeform-sync.mjs`. |
+| `TALLY_SIGNING_SECRET` | secret | Pages secret, one per environment: the signing secret of that environment's Tally form webhook. Local sources: `TALLY_SIGNING_SECRET_STAGING` and `TALLY_SIGNING_SECRET_PROD` in `.dev.vars`; the two must differ. |
+| `TALLY_FORM_ID_STAGING`, `TALLY_FORM_ID_PROD` | local, public | `.dev.vars`; the id after `tally.so/r/`. `build.mjs` turns it into `VITE_TALLY_FORM_ID`. Not a secret (it is in the embed URL). |
 | `RATE_LIMIT_SALT` | optional secret | Pages secret. Falls back to `TURNSTILE_SECRET_KEY`. `set-prod-secrets.sh` generates one for production. |
 | `APP_URL` | variable | Pages variable; mirror in `VITE_APP_URL`. Empty for now. |
-| `VITE_*` (Amplitude key, replay rate, Turnstile site key, Typeform form id, base URL, pixel ids, `VITE_ENVIRONMENT`) | build-time | Set by `scripts/build.mjs` from `.dev.vars` (`pnpm build:staging`, `pnpm build:prod`). They end up in the public bundle, so none may be a secret. |
+| `VITE_*` (Amplitude key, replay rate, Turnstile site key, Tally form id, base URL, pixel ids, `VITE_ENVIRONMENT`) | build-time | Set by `scripts/build.mjs` from `.dev.vars` (`pnpm build:staging`, `pnpm build:prod`). They end up in the public bundle, so none may be a secret. |
 
 **Preview (staging)** variables are set with `node landing/scripts/set-staging-env.mjs`. It uses wrangler's own login, writes only the preview environment, prints variable names and never values, and removes nothing else. **Production** secrets are set with `bash landing/scripts/set-prod-secrets.sh`, which you run yourself at go-live (section 10). It reads `.dev.vars`, refuses test keys and a shared Amplitude key, asks you to type `production`, and prints names only. Wrangler 4.149 has no flag for the preview environment, and a preview deployment does not see production secrets (tested on 2026-10-12 with a dummy secret, since removed). The production environment has no variables set today (checked 2026-10-13).
 
@@ -72,15 +72,21 @@ The staging environment deliberately differs from production: its database is th
 ## 5. Deploy and roll back
 
 - **Preview** (safe, any time): `pnpm --filter landing build:staging`, then `pnpm exec wrangler pages deploy landing/dist --project-name real-world-landing --branch landing-preview`. The URL is `https://landing-preview.real-world-landing.pages.dev` (the exact URL is printed). Plain `pnpm build` makes a production-tagged build with no keys; do not deploy it.
-- **Production** (only at go-live, by a person): `pnpm --filter landing build:prod`, then the deploy command with `--branch main` (section 1 step 5 and section 10). `build:prod` refuses test Turnstile keys, a shared Amplitude key and a missing production Typeform id.
+- **Production** (only at go-live, by a person): `pnpm --filter landing build:prod`, then the deploy command with `--branch main` (section 1 step 5 and section 10). `build:prod` refuses test Turnstile keys, a shared Amplitude key and a missing production Tally form id.
 - **Functions** deploy with the same command; they come from `landing/functions/`.
 - **Roll back:** Workers & Pages, `real-world-landing`, Deployments, pick the last good deployment, Rollback. Or check out the last good commit and deploy it again.
 - **Budgets before any production deploy:** `pnpm --filter landing check:bundle` (first-load JS under 120 KB gzipped) and a Lighthouse mobile run with LCP under 2.0 s and CLS under 0.05.
 - **Browser checks:** `pnpm --filter landing e2e` (Playwright, needs Google Chrome; 40 tests across a phone and a desktop viewport, including an axe pass).
 
-## 6. The Typeform and its webhook
+## 6. The Tally forms and their webhooks
 
-The form is code: `landing/typeform/form.json`. `node landing/scripts/typeform-sync.mjs` creates it the first time (it writes the id to `typeform/form-id.txt`) and updates it after that; add `--webhook-url https://<host>/api/typeform` to point the webhook at a deployment. A Typeform webhook is one URL per form, so staging and production need two forms: the default run manages the staging form (`typeform/form-id.txt`) and `--env production` creates and manages a separate production form (`typeform/form-id.production.txt`). Point the production form's webhook at `https://tryrealworld.com/api/typeform` and leave the staging form on the preview. It reads `TYPEFORM_TOKEN` and `TYPEFORM_WEBHOOK_SECRET` from `.dev.vars`. Set `VITE_TYPEFORM_FORM_ID` to the id and rebuild. The webhook is signed; a request with a missing or wrong `Typeform-Signature` gets `401` and is logged with no payload in `typeform_events`.
+The post-signup question form is a Tally form on the free plan (Tally replaced Typeform on 2026-10-13: webhooks, hidden fields and signing are free; the form keeps a "Made with Tally" badge, and removing it needs Tally Pro). Forms are built by hand: [tally/FORM_SPEC.md](tally/FORM_SPEC.md) gives the click-by-click steps for **two** forms, one for staging and one for production, because a Tally webhook is set per form and a staging test must not reach the production database. The page embeds the form in a plain iframe (`https://tally.so/embed/<form id>?signup_id=...`), so no Tally script runs on our origin.
+
+- **Webhook:** `POST /api/tally`. Tally signs each delivery with `Tally-Signature` (base64 HMAC-SHA256 with the form's signing secret). The function checks the raw bytes and, failing that, the re-serialized JSON (Tally's own docs sign the re-serialized form), constant-time; a missing or wrong signature gets `401` and is logged with no payload in `typeform_events` (the table keeps its first-vendor name; it holds Tally events now, and `typeform_response_id` holds Tally's `responseId`).
+- **Retries:** Tally retries a failed delivery five times (5 min, 30 min, 1 h, 6 h, 1 day) and emails the form owner when all fail; success is any 2xx within 10 seconds. Duplicates are stopped by the Tally `eventId` (logged once) and by the first-answer rule.
+- **Secrets and ids:** `TALLY_SIGNING_SECRET_STAGING` / `_PROD` and `TALLY_FORM_ID_STAGING` / `_PROD` in `.dev.vars` (section 4).
+- **CSP, if you add one:** the page needs `frame-src https://tally.so`. The iframe sends `postMessage` to the page, which is allowed by default. No `script-src` entry is needed because we do not load Tally's `embed.js`. There is no CSP header today (`public/_headers` only caches fonts), so nothing is blocking the embed.
+- **Cookies:** Tally sets its own cookies inside the iframe; the privacy page says so.
 
 ## 7. Export the waitlist (CSV)
 
@@ -92,7 +98,7 @@ Use the production connection string (`DATABASE_URL_PROD` in `.dev.vars`, the Ne
 
 ## 8. Verify tracking after a deploy
 
-Follow "Verify after a deploy" in [analytics/TRACKING_PLAN.md](analytics/TRACKING_PLAN.md). On staging, `node landing/scripts/verify-staging.mjs --typeform` does it for you: it signs up on the preview, completes the real Typeform embed, and prints the signup id. Expect `environment = staging` on every event, browser and server. Then check the Prod project is empty (filter `environment = production`, or open User Look-Up for the device). Delete the rows the check created, by id, never by pattern (run it on the branch you tested: staging for a preview, `main` only for a production check):
+Follow "Verify after a deploy" in [analytics/TRACKING_PLAN.md](analytics/TRACKING_PLAN.md). On staging, `node landing/scripts/verify-staging.mjs --form` does it for you: it signs up on the preview, completes the real Tally embed, and prints the signup id. Expect `environment = staging` on every event, browser and server. Then check the Prod project is empty (filter `environment = production`, or open User Look-Up for the device). Delete the rows the check created, by id, never by pattern (run it on the branch you tested: staging for a preview, `main` only for a production check):
 
 ```
 delete from waitlist_signups where id = '<signup id>';
@@ -114,12 +120,12 @@ Each step is yours to run. Nothing here has been done.
 
 1. **Read the legal pages.** Founders read `/privacy` and `/terms` with [LEGAL_REVIEW.md](LEGAL_REVIEW.md), ideally with a lawyer, then remove the draft banner (`src/pages/DraftBanner.tsx`) or decide what changes.
 2. **Real Turnstile keys.** Cloudflare dashboard, Turnstile, add a widget with hostnames `tryrealworld.com` and `www.tryrealworld.com` (and the `*.pages.dev` host if you want to test the real keys there first). Put the site key in `.dev.vars` as `TURNSTILE_SITE_KEY_PROD` and the secret as `TURNSTILE_SECRET_KEY_PROD` (done 2026-10-13; the script maps the secret to the production `TURNSTILE_SECRET_KEY`, and `build:prod` uses the site key). Preview and staging keep the test keys.
-3. **Rotate the Typeform token.** Create a new personal token in Typeform, replace `TYPEFORM_TOKEN` in `.dev.vars`, revoke the old one. Run `node landing/scripts/typeform-sync.mjs --env production --webhook-url https://tryrealworld.com/api/typeform` to create the production form (see MORNING.md on the Typeform plan).
+3. **Build the production Tally form.** Follow [tally/FORM_SPEC.md](tally/FORM_SPEC.md) for the production form, paste `https://tryrealworld.com/api/tally` as its webhook with a new signing secret, and put the form id and the secret in `.dev.vars` as `TALLY_FORM_ID_PROD` and `TALLY_SIGNING_SECRET_PROD`. Then revoke the old Typeform token in Typeform (it is no longer used by anything).
 4. **Connect the domain.** Section 1, steps 1 to 4 and 6. Do not deploy yet.
-5. **Set the production secrets.** Check `.dev.vars` has `DATABASE_URL_PROD`, `AMPLITUDE_API_KEY_PROD`, `TURNSTILE_SECRET_KEY_PROD`, `TYPEFORM_WEBHOOK_SECRET`, run `bash landing/scripts/set-prod-secrets.sh --check` first (validates, writes nothing), then `bash landing/scripts/set-prod-secrets.sh`. Check the names with `pnpm exec wrangler pages secret list --project-name real-world-landing`.
+5. **Set the production secrets.** Check `.dev.vars` has `DATABASE_URL_PROD`, `AMPLITUDE_API_KEY_PROD`, `TURNSTILE_SECRET_KEY_PROD`, `TALLY_SIGNING_SECRET_PROD`, `TALLY_FORM_ID_PROD`, run `bash landing/scripts/set-prod-secrets.sh --check` first (validates, writes nothing), then `bash landing/scripts/set-prod-secrets.sh`. Check the names with `pnpm exec wrangler pages secret list --project-name real-world-landing`.
 6. **Pixels and email.** Section 9 step 3 (pixel ids, or leave them empty on purpose) and section 3 (`hello@tryrealworld.com`, `contactEmail`). Sections 2 and 9: app URL left empty unless the app is ready.
 7. **Build and deploy production.** `pnpm --filter landing check:bundle`, `pnpm --filter landing build:prod`, then section 1 step 5.
-8. **Test production once.** Section 1 step 7 and section 8: sign up with a `test+<time>@example.com` address, complete the Typeform, confirm the row in Neon `main` and the events in the **Prod** Amplitude project with `environment = production`, confirm the Staging project got nothing new, then delete the rows by id.
+8. **Test production once.** Section 1 step 7 and section 8: sign up with a `test+<time>@example.com` address, complete the Tally form, confirm the row in Neon `main` and the events in the **Prod** Amplitude project with `environment = production`, confirm the Staging project got nothing new, then delete the rows by id.
 9. **Amplitude.** The Prod project's dashboard: [AMPLITUDE_GUIDE.md](analytics/AMPLITUDE_GUIDE.md), "Go-live checklist for Amplitude". Check the replay count after the first ad day.
 10. **Lighthouse** on the production URL, mobile, and judge LCP on real-user numbers once ads run ([perf/LIGHTHOUSE.md](perf/LIGHTHOUSE.md)).
 11. **The question list** on the page is the one the founders want public: three central-bank decisions (US Fed, ECB, Bank of Japan); the election question was removed ([decisions-needed item 2](../company/decisions-needed.md) stays open).
@@ -128,6 +134,6 @@ Each step is yours to run. Nothing here has been done.
 ## 11. Retire on Oct 27
 
 1. Export the waitlist (section 7) and send the launch email from the provider chosen for sending.
-2. Point `tryrealworld.com` at the live daily receipts page: attach it to that project, then remove it from `real-world-landing` (Custom domains, remove). Keep `/api/*` working until the Typeform webhook is removed.
-3. Remove the Typeform webhook; stop the ad flights and remove the pixels.
+2. Point `tryrealworld.com` at the live daily receipts page: attach it to that project, then remove it from `real-world-landing` (Custom domains, remove). Keep `/api/*` working until the Tally webhook is removed.
+3. Remove the Tally webhooks; stop the ad flights and remove the pixels.
 4. Decide retention for the waitlist table and update the privacy page, then archive or delete this folder ([0003](../research/decisions/0003-prelaunch-landing-and-waitlist.md)).

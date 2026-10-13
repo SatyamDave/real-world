@@ -3,7 +3,7 @@ import { appDeepLink, getDeviceId, getHeadlineVariant, track } from "../analytic
 import { BRAND } from "../brand";
 import { config, hasAppUrl } from "../config";
 import { CONSENT_TEXT, CONSENT_VERSION } from "../copy/consent";
-import { TypeformSlot } from "./TypeformSlot";
+import { TallySlot } from "./TallySlot";
 import { useTurnstile } from "./useTurnstile";
 
 // A lenient client-side email check; the server (PR3) is the real validator.
@@ -139,7 +139,7 @@ export function SignupForm({
             ? "We've got this email. Answer the teaser question below to finish."
             : `One quick question while you're here — it's the kind ${BRAND.name} scores every day.`}
         </p>
-        <TypeformSlot signupId={state.result.signupId} deviceId={getDeviceId()} />
+        <TallySlot signupId={state.result.signupId} deviceId={getDeviceId()} />
         {hasAppUrl ? (
           <a
             className="try-link"

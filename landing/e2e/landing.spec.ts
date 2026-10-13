@@ -245,14 +245,14 @@ test.describe("legal pages", () => {
     await page.goto("/privacy");
     await expect(page.locator(".draft-banner")).toContainText("reviewed by the founders");
     const text = await page.locator("main").innerText();
-    for (const name of ["Cloudflare", "Neon", "Amplitude", "Typeform", "Reddit", "X "]) {
+    for (const name of ["Cloudflare", "Neon", "Amplitude", "Tally", "Reddit", "X "]) {
       expect(text).toContain(name);
     }
     expect(text).toContain("We do not sell your data.");
     // What the code really stores and sends, so the page cannot drift from it.
     expect(text).toContain("random device id");
     expect(text).toContain("local storage");
-    expect(text).toContain("Typeform keeps them");
+    expect(text).toContain("Tally keeps them");
     expect(text).toContain("not meant for children under 13");
   });
 

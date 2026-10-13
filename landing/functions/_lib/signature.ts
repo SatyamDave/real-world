@@ -9,15 +9,19 @@ function b64decode(s: string): Uint8Array | null {
   }
 }
 
-// Typeform signs the raw body: header `Typeform-Signature: sha256=<base64 HMAC-SHA256>`.
-// crypto.subtle.verify compares in constant time, so no timing side channel.
-export async function verifyTypeformSignature(
+// Tally sends `Tally-Signature: <base64 HMAC-SHA256>` (no prefix). Its docs example computes
+// it over JSON.stringify(parsedBody); other write-ups say the raw body. We check the raw
+// bytes first and, only if that fails, the re-serialized form of the same JSON, so a
+// delivery verifies whichever way Tally signs. Both need the secret, so accepting either
+// weakens nothing: a changed body fails both. crypto.subtle.verify compares in constant
+// time, so there is no timing side channel.
+export async function verifyTallySignature(
   secret: string,
   rawBody: string,
   header: string | null,
 ): Promise<boolean> {
-  if (!secret || !header?.startsWith("sha256=")) return false;
-  const sig = b64decode(header.slice("sha256=".length));
+  if (!secret || !header) return false;
+  const sig = b64decode(header.trim());
   if (!sig) return false;
   const key = await crypto.subtle.importKey(
     "raw",
@@ -26,7 +30,14 @@ export async function verifyTypeformSignature(
     false,
     ["verify"],
   );
-  return crypto.subtle.verify("HMAC", key, sig, enc.encode(rawBody));
+  if (await crypto.subtle.verify("HMAC", key, sig, enc.encode(rawBody))) return true;
+  try {
+    const reserialized = JSON.stringify(JSON.parse(rawBody));
+    if (reserialized === rawBody) return false;
+    return crypto.subtle.verify("HMAC", key, sig, enc.encode(reserialized));
+  } catch {
+    return false;
+  }
 }
 
 export async function sha256Hex(input: string): Promise<string> {

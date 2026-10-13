@@ -9,7 +9,8 @@ export interface Env {
   // so a missing value can never tag production traffic as test.
   ENVIRONMENT?: string;
   TURNSTILE_SECRET_KEY?: string;
-  TYPEFORM_WEBHOOK_SECRET?: string;
+  // Tally signs each webhook with this per-environment secret (set in the form's webhook).
+  TALLY_SIGNING_SECRET?: string;
   // Salt for the IP hash. Falls back to TURNSTILE_SECRET_KEY so no new secret is needed.
   RATE_LIMIT_SALT?: string;
 }

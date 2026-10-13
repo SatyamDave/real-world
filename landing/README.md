@@ -37,8 +37,8 @@ Preview deploy: `wrangler pages deploy ./dist --branch <branch>` (see `RUNBOOK.m
 | `src/styles/tokens.css` | chosen design tokens (A); `tokens-b/-c.css` are swappable |
 | `scripts/gen_globe_poster.py` | builds `public/globe-poster.svg` from Natural Earth |
 | `design/direction-{a,b,c}/` | the three design directions and their screenshots |
-| `functions/` | Cloudflare Pages Functions: `api/signup`, `api/typeform`, shared code in `_lib/` |
-| `typeform/` | The waitlist form as code (`form.json`); `scripts/typeform-sync.mjs` creates or updates it |
+| `functions/` | Cloudflare Pages Functions: `api/signup`, `api/tally`, shared code in `_lib/` |
+| `tally/` | `FORM_SPEC.md`: click-by-click steps to build the two waitlist forms (staging and production) in Tally |
 | `db/migrations/` | Neon Postgres migrations — added in PR3 |
 
 See [PLAN.md](PLAN.md) for the build plan and [OVERNIGHT_LOG.md](OVERNIGHT_LOG.md) for decisions.

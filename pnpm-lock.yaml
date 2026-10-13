@@ -23,9 +23,6 @@ importers:
       '@neondatabase/serverless':
         specifier: 1.2.0
         version: 1.2.0
-      '@typeform/embed':
-        specifier: 6.1.0
-        version: 6.1.0
       cobe:
         specifier: 2.0.1
         version: 2.0.1
@@ -472,10 +469,6 @@ packages:
 
   '@tweenjs/tween.js@25.0.0':
     resolution: {integrity: sha512-XKLA6syeBUaPzx4j3qwMqzzq+V4uo72BnlbOjmuljLrRqdsd3qnzvZZoxvMHZ23ndsRS4aufU6JOZYpCbU6T1A==}
-
-  '@typeform/embed@6.1.0':
-    resolution: {integrity: sha512-QPuic/WCE7VZBlIfuQb4oewFYRPbLMkUPKoftquNFBOxrMpf8W0b5edZyTD5prHO1+5ShoS2pY1ZsAI6yZjxUA==}
-    engines: {node: '>=18'}
 
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
@@ -1692,8 +1685,6 @@ snapshots:
       tslib: 2.8.1
 
   '@tweenjs/tween.js@25.0.0': {}
-
-  '@typeform/embed@6.1.0': {}
 
   '@types/chai@5.2.3':
     dependencies:

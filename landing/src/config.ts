@@ -10,8 +10,8 @@ export const config = {
   baseUrl: (env.VITE_PUBLIC_BASE_URL ?? "").trim(),
   // Turnstile public site key for the bot-check widget.
   turnstileSiteKey: (env.VITE_TURNSTILE_SITE_KEY ?? "").trim(),
-  // Typeform form id (landing/typeform/form.json, created by scripts/typeform-sync.mjs).
-  typeformFormId: (env.VITE_TYPEFORM_FORM_ID ?? "").trim(),
+  // Tally form id (the part after tally.so/r/), one form per environment: landing/tally/FORM_SPEC.md.
+  tallyFormId: (env.VITE_TALLY_FORM_ID ?? "").trim(),
   // "development" | "staging" | "production". Set per build with VITE_ENVIRONMENT; with
   // nothing set, `vite dev` is development and any build is production.
   environment: (env.VITE_ENVIRONMENT ?? (env.DEV ? "development" : "production")).trim(),

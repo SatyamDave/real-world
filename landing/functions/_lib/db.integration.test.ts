@@ -6,14 +6,14 @@ import type { Deps, Env } from "./env";
 import { hashIp } from "./ratelimit";
 import { hmacHex } from "./signature";
 import { handleSignup } from "./signup";
+import { handleTally } from "./tally";
 import { DATABASE_URL_DEV } from "./testenv";
-import { handleTypeform } from "./typeform";
 
 const SECRET = "test-webhook-secret";
 const env: Env = {
   DATABASE_URL: DATABASE_URL_DEV ?? "",
   TURNSTILE_SECRET_KEY: "ts-test",
-  TYPEFORM_WEBHOOK_SECRET: SECRET,
+  TALLY_SIGNING_SECRET: SECRET,
   AMPLITUDE_API_KEY: "amp-test",
 };
 
@@ -64,17 +64,30 @@ describe.skipIf(!DATABASE_URL_DEV)("waitlist storage (Neon dev branch)", () => {
     return { res, body };
   }
 
-  async function sendTypeform(payload: unknown, header?: string | null) {
-    const raw = JSON.stringify(payload);
-    const sig =
-      header === undefined
-        ? `sha256=${btoa(String.fromCharCode(...Uint8Array.from((await hmacHex(SECRET, raw)).match(/../g) ?? [], (h) => Number.parseInt(h, 16))))}`
-        : header;
+  // Tally sends `Tally-Signature: <base64 HMAC-SHA256>`; `sign` chooses what is signed.
+  async function tallySig(text: string) {
+    const hex = await hmacHex(SECRET, text);
+    return btoa(
+      String.fromCharCode(
+        ...Uint8Array.from(hex.match(/../g) ?? [], (h) => Number.parseInt(h, 16)),
+      ),
+    );
+  }
+
+  async function sendTally(
+    payload: unknown,
+    header?: string | null,
+    wire: "compact" | "pretty" = "compact",
+    signs: "raw" | "reserialized" = "raw",
+  ) {
+    const raw = wire === "pretty" ? JSON.stringify(payload, null, 2) : JSON.stringify(payload);
+    const signed = signs === "raw" ? raw : JSON.stringify(JSON.parse(raw));
+    const sig = header === undefined ? await tallySig(signed) : header;
     const headers: Record<string, string> = {};
-    if (sig) headers["Typeform-Signature"] = sig;
+    if (sig) headers["Tally-Signature"] = sig;
     const pending: Promise<unknown>[] = [];
-    const res = await handleTypeform(
-      new Request("https://x/api/typeform", { method: "POST", headers, body: raw }),
+    const res = await handleTally(
+      new Request("https://x/api/tally", { method: "POST", headers, body: raw }),
       env,
       deps,
       (p) => pending.push(p),
@@ -83,16 +96,36 @@ describe.skipIf(!DATABASE_URL_DEV)("waitlist storage (Neon dev branch)", () => {
     return { res, body: (await res.json()) as Record<string, unknown> };
   }
 
+  // A FORM_RESPONSE in the shape https://tally.so/help/webhooks documents.
   const eventFor = (signupId: string, eventId: string) => {
     eventIds.push(eventId);
+    const options = [
+      { id: "opt-forecaster", text: "Forecaster or trader" },
+      { id: "opt-researcher", text: "Researcher or academic" },
+    ];
     return {
-      event_id: eventId,
-      form_response: {
-        token: `resp-${eventId}`,
-        hidden: { signup_id: signupId, question_id: "fed-2026-10-28" },
-        answers: [
-          { field: { ref: "role" }, type: "choice", choice: { label: "Researcher or academic" } },
-          { field: { ref: "forecast_probability" }, type: "number", number: 35 },
+      eventId,
+      eventType: "FORM_RESPONSE",
+      createdAt: "2026-10-13T00:00:00.000Z",
+      data: {
+        responseId: `resp-${eventId}`,
+        formId: "form-test",
+        fields: [
+          { key: "question_a", label: "signup_id", type: "HIDDEN_FIELDS", value: signupId },
+          {
+            key: "question_b",
+            label: "question_id",
+            type: "HIDDEN_FIELDS",
+            value: "fed-2026-10-28",
+          },
+          { key: "question_c", label: "Your chance", type: "INPUT_NUMBER", value: 35 },
+          {
+            key: "question_d",
+            label: "Which best describes you?",
+            type: "MULTIPLE_CHOICE",
+            value: ["opt-researcher"],
+            options,
+          },
         ],
       },
     };
@@ -168,11 +201,11 @@ describe.skipIf(!DATABASE_URL_DEV)("waitlist storage (Neon dev branch)", () => {
     expect(statuses).toEqual([200, 200, 200, 200, 200, 429]);
   });
 
-  test("typeform: valid signature updates the signup once and sends one event", async () => {
+  test("tally: valid signature updates the signup once and sends one event", async () => {
     const { body: s } = await signup(nextEmail());
     amplitudeCalls.length = 0;
     const evt = eventFor(String(s.signup_id), `evt-${run}-a`);
-    const { res, body } = await sendTypeform(evt);
+    const { res, body } = await sendTally(evt);
     expect(res.status).toBe(200);
     expect(body.matched).toBe(true);
     const row = (await db("SELECT * FROM waitlist_signups WHERE id = $1", [s.signup_id]))[0];
@@ -186,24 +219,24 @@ describe.skipIf(!DATABASE_URL_DEV)("waitlist storage (Neon dev branch)", () => {
     expect(amplitudeCalls).toHaveLength(1);
   });
 
-  test("typeform: a replayed delivery is ignored", async () => {
+  test("tally: a replayed delivery or retry is ignored", async () => {
     const { body: s } = await signup(nextEmail());
     const evt = eventFor(String(s.signup_id), `evt-${run}-b`);
-    expect((await sendTypeform(evt)).res.status).toBe(200);
+    expect((await sendTally(evt)).res.status).toBe(200);
     amplitudeCalls.length = 0;
-    const again = await sendTypeform(evt);
+    const again = await sendTally(evt);
     expect(again.body.replay).toBe(true);
     expect(amplitudeCalls).toHaveLength(0);
     const logged = await db("SELECT 1 FROM typeform_events WHERE id = $1", [`evt-${run}-b`]);
     expect(logged).toHaveLength(1);
   });
 
-  test("typeform: invalid and missing signatures are logged, rejected and change nothing", async () => {
+  test("tally: invalid, missing and tampered signatures are logged, rejected and change nothing", async () => {
     const { body: s } = await signup(nextEmail());
     const evt = eventFor(String(s.signup_id), `evt-${run}-c`);
     eventIds.pop(); // never stored under its own id when unverified
-    const bad = await sendTypeform({ ...evt, marker: run }, "sha256=AAAA");
-    const missing = await sendTypeform({ ...evt, marker: run }, null);
+    const bad = await sendTally({ ...evt, marker: run }, "AAAA");
+    const missing = await sendTally({ ...evt, marker: run }, null);
     expect(bad.res.status).toBe(401);
     expect(missing.res.status).toBe(401);
     const row = (
@@ -219,16 +252,51 @@ describe.skipIf(!DATABASE_URL_DEV)("waitlist storage (Neon dev branch)", () => {
     expect(JSON.stringify(logged[0].payload)).not.toContain(String(s.signup_id)); // metadata only
   });
 
-  test("typeform: the first completed answer wins; a later one cannot overwrite it", async () => {
+  test("tally: the first completed answer wins; a later one cannot overwrite it", async () => {
     const { body: s } = await signup(nextEmail());
     const first = eventFor(String(s.signup_id), `evt-${run}-d1`);
-    expect((await sendTypeform(first)).body.matched).toBe(true);
+    expect((await sendTally(first)).body.matched).toBe(true);
     const second = eventFor(String(s.signup_id), `evt-${run}-d2`);
-    (second.form_response.answers[1] as { number: number }).number = 99;
-    expect((await sendTypeform(second)).body.matched).toBe(false);
+    (second.data.fields[2] as { value: number }).value = 99;
+    expect((await sendTally(second)).body.matched).toBe(false);
     const row = (
       await db("SELECT forecast_probability FROM waitlist_signups WHERE id = $1", [s.signup_id])
     )[0];
     expect(Number(row.forecast_probability)).toBe(0.35);
+  });
+  test("tally: a pretty-printed body verifies whether Tally signed the raw bytes or the re-serialized JSON", async () => {
+    for (const [i, signs] of (["raw", "reserialized"] as const).entries()) {
+      const { body: s } = await signup(nextEmail());
+      const evt = eventFor(String(s.signup_id), `evt-${run}-p${i}`);
+      const out = await sendTally(evt, undefined, "pretty", signs);
+      expect(out.res.status).toBe(200);
+      expect(out.body.matched).toBe(true);
+    }
+  });
+
+  test("tally: a body changed after signing is rejected", async () => {
+    const { body: s } = await signup(nextEmail());
+    const evt = eventFor(String(s.signup_id), `evt-${run}-t`);
+    eventIds.pop();
+    const goodSig = await tallySig(JSON.stringify(evt));
+    (evt.data.fields[2] as { value: number }).value = 100; // changed after signing
+    const out = await sendTally(evt, goodSig);
+    expect(out.res.status).toBe(401);
+    const row = (
+      await db("SELECT completed_at FROM waitlist_signups WHERE id = $1", [s.signup_id])
+    )[0];
+    expect(row.completed_at).toBeNull();
+  });
+
+  test("tally: a verified event that is not a form response changes nothing", async () => {
+    const { body: s } = await signup(nextEmail());
+    const evt = { ...eventFor(String(s.signup_id), `evt-${run}-x`), eventType: "SOMETHING_ELSE" };
+    const out = await sendTally(evt);
+    expect(out.res.status).toBe(200);
+    expect(out.body.ignored).toBe(true);
+    const row = (
+      await db("SELECT completed_at FROM waitlist_signups WHERE id = $1", [s.signup_id])
+    )[0];
+    expect(row.completed_at).toBeNull();
   });
 });

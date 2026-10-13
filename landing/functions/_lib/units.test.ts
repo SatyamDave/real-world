@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { normalizeEmail } from "./email";
 import { hashIp, WINDOW_MS, windowStart } from "./ratelimit";
-import { hmacHex, verifyTypeformSignature } from "./signature";
+import { hmacHex, verifyTallySignature } from "./signature";
 import { verifyTurnstile } from "./turnstile";
 
 test("normalizeEmail trims, lowercases and rejects junk", () => {
@@ -14,19 +14,33 @@ test("normalizeEmail trims, lowercases and rejects junk", () => {
 async function sign(secret: string, body: string) {
   const hex = await hmacHex(secret, body);
   const bytes = Uint8Array.from(hex.match(/../g) ?? [], (h) => Number.parseInt(h, 16));
-  return `sha256=${btoa(String.fromCharCode(...bytes))}`;
+  return btoa(String.fromCharCode(...bytes));
 }
 
-test("typeform signature: valid, wrong secret, tampered body, missing, malformed", async () => {
-  const body = '{"event_id":"e1"}';
+test("tally signature: valid, wrong secret, tampered body, missing, malformed", async () => {
+  const body = '{"eventId":"e1"}';
   const header = await sign("s3cret", body);
-  expect(await verifyTypeformSignature("s3cret", body, header)).toBe(true);
-  expect(await verifyTypeformSignature("other", body, header)).toBe(false);
-  expect(await verifyTypeformSignature("s3cret", `${body} `, header)).toBe(false);
-  expect(await verifyTypeformSignature("s3cret", body, null)).toBe(false);
-  expect(await verifyTypeformSignature("s3cret", body, "sha256=!!!")).toBe(false);
-  expect(await verifyTypeformSignature("s3cret", body, "md5=abc")).toBe(false);
-  expect(await verifyTypeformSignature("", body, header)).toBe(false);
+  expect(await verifyTallySignature("s3cret", body, header)).toBe(true);
+  expect(await verifyTallySignature("other", body, header)).toBe(false);
+  expect(await verifyTallySignature("s3cret", body.replace("e1", "e3"), header)).toBe(false);
+  // Whitespace around the same JSON is the same payload, and it re-serializes to what was signed.
+  expect(await verifyTallySignature("s3cret", `${body} `, header)).toBe(true);
+  expect(await verifyTallySignature("s3cret", '{"eventId":"e2"}', header)).toBe(false);
+  expect(await verifyTallySignature("s3cret", body, null)).toBe(false);
+  expect(await verifyTallySignature("s3cret", body, "!!!")).toBe(false);
+  expect(await verifyTallySignature("", body, header)).toBe(false);
+});
+
+test("tally signature: accepts the signature of the raw body and of its re-serialized form", async () => {
+  // Pretty-printed on the wire, signed either way: both verify, a changed value does not.
+  const wire = '{\n  "eventId": "e1",\n  "n": 1\n}';
+  const rawSig = await sign("s3cret", wire);
+  const reserializedSig = await sign("s3cret", JSON.stringify(JSON.parse(wire)));
+  expect(await verifyTallySignature("s3cret", wire, rawSig)).toBe(true);
+  expect(await verifyTallySignature("s3cret", wire, reserializedSig)).toBe(true);
+  const tampered = wire.replace('"n": 1', '"n": 2');
+  expect(await verifyTallySignature("s3cret", tampered, rawSig)).toBe(false);
+  expect(await verifyTallySignature("s3cret", tampered, reserializedSig)).toBe(false);
 });
 
 test("turnstile fails closed", async () => {

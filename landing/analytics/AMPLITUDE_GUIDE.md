@@ -38,7 +38,7 @@ Open Amplitude and pick the project from the top-left menu. Menu names below are
 
 ## Reading the funnel
 
-The funnel steps are `landing_viewed`, `email_submitted`, `signup_saved`, `typeform_opened`, `waitlist_completed`, split by `headline_variant`. Each bar is "people who did this step after the one before, within the window". The drop between two bars is the question to ask: a big drop after `landing_viewed` is a hero problem; a drop after `signup_saved` means people save the email and skip the forecast question.
+The funnel steps are `landing_viewed`, `email_submitted`, `signup_saved`, `form_opened`, `waitlist_completed`, split by `headline_variant`. Each bar is "people who did this step after the one before, within the window". The drop between two bars is the question to ask: a big drop after `landing_viewed` is a hero problem; a drop after `signup_saved` means people save the email and skip the forecast question.
 
 Rules for reading it honestly:
 

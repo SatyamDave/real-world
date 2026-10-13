@@ -55,6 +55,11 @@ await api(`/accounts/${account}/pages/projects/${PROJECT}`, {
           AMPLITUDE_API_KEY: secret(vars.AMPLITUDE_API_KEY_STAGING),
           // ENVIRONMENT comes from wrangler.toml; remove the dashboard copy set earlier.
           ENVIRONMENT: null,
+          // Tally replaced Typeform: drop the old secret, set the new one when it exists.
+          TYPEFORM_WEBHOOK_SECRET: null,
+          ...(vars.TALLY_SIGNING_SECRET_STAGING
+            ? { TALLY_SIGNING_SECRET: secret(vars.TALLY_SIGNING_SECRET_STAGING) }
+            : {}),
         },
       },
     },

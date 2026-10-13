@@ -1,12 +1,12 @@
-// Drives the deployed staging page like a visitor: signup, then the real Typeform embed.
+// Drives the deployed staging page like a visitor: signup, then the real Tally embed.
 // Prints ids only (signup id, device id, session id), never the email or any secret, so the
 // rows can be checked and deleted by id. Staging data only: BASE must be the preview URL.
-// Usage: node scripts/verify-staging.mjs [--typeform]
+// Usage: node scripts/verify-staging.mjs [--form]
 import { chromium } from "@playwright/test";
 
 const BASE = process.env.BASE ?? "https://landing-preview.real-world-landing.pages.dev";
 if (!BASE.includes("landing-preview")) throw new Error("refusing: BASE is not the staging preview");
-const withTypeform = process.argv.includes("--typeform");
+const withForm = process.argv.includes("--form");
 const stamp = Date.now();
 const email = `verify-${stamp}@example.com`;
 
@@ -47,24 +47,25 @@ const deviceId = await page.evaluate(() => {
 });
 console.log("device_id", deviceId);
 
-if (withTypeform) {
-  const frame = page.frameLocator(".typeform-embed iframe");
+if (withForm) {
+  // Tally's own page runs inside the iframe, so these locators are the least certain part of
+  // this script: if Tally changes its markup, adjust them here (see tally/FORM_SPEC.md).
+  const frame = page.frameLocator(".form-embed iframe");
   await frame.locator("input").first().waitFor({ timeout: 30000 });
-  await page.screenshot({ path: process.env.SHOT ?? "/tmp/tf-1.png" });
-  await frame.locator("input").first().fill("62");
-  await page.keyboard.press("Enter");
-  await page.waitForTimeout(1200);
+  await page.screenshot({ path: process.env.SHOT ?? "/tmp/tally-1.png" });
+  await frame.locator("input[type=number], input").first().fill("62");
   await frame.getByText("Just curious").first().click();
-  await page.waitForTimeout(1500);
-  await page.screenshot({ path: (process.env.SHOT ?? "/tmp/tf-1.png").replace("1", "2") });
-  // The choice may auto-advance to submit; click Submit if it is shown.
-  const submit = frame.getByRole("button", { name: /submit/i });
-  if (await submit.count()) await submit.first().click();
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: (process.env.SHOT ?? "/tmp/tally-1.png").replace("1", "2") });
   await frame
-    .getByText(/on the list/i)
+    .getByRole("button", { name: /submit/i })
+    .first()
+    .click();
+  await frame
+    .getByText(/on the list|thank/i)
     .first()
     .waitFor({ timeout: 30000 });
-  console.log("typeform: thank-you screen shown");
+  console.log("tally: thank-you screen shown");
   await page.waitForTimeout(8000);
 }
 await page.waitForTimeout(3000);
