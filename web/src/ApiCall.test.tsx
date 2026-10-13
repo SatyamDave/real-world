@@ -25,21 +25,18 @@ const click = (text: string) =>
 test("it shows the curl, Python and TypeScript calls with the real API URL", async () => {
   await draw(<ApiCall path="/v1/receipts" sdk="receipts()" />);
   expect(box.querySelector("h3")?.textContent).toBe("Get this via API");
-  const code = [...box.querySelectorAll("pre code")].map((c) => c.textContent);
-  expect(code).toEqual([
-    `curl ${API_URL}/v1/receipts`,
-    `from realworld import Client\n\nClient("${API_URL}").receipts()`,
-    `new Client("${API_URL}").receipts()`,
+  expect([...box.querySelectorAll("[role=tab]")].map((t) => t.textContent)).toEqual([
+    "curl",
+    "Python",
+    "TypeScript",
   ]);
+  const shown = () => box.querySelector("pre code")?.textContent;
+  expect(shown()).toBe(`curl ${API_URL}/v1/receipts`);
+  await click("Python");
+  expect(shown()).toBe(`from realworld import Client\n\nClient("${API_URL}").receipts()`);
+  await click("TypeScript");
+  expect(shown()).toBe(`new Client("${API_URL}").receipts()`);
   expect(box.textContent).not.toContain("Download CSV");
-});
-
-test("Copy writes the snippet to the clipboard", async () => {
-  const writeText = vi.fn();
-  Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
-  await draw(<ApiCall path="/v1/receipts" sdk="receipts()" />);
-  await act(async () => box.querySelector<HTMLButtonElement>("button.link")?.click());
-  expect(writeText).toHaveBeenCalledWith(`curl ${API_URL}/v1/receipts`);
 });
 
 test("the download buttons build a Blob of the data and of the CSV rows", async () => {

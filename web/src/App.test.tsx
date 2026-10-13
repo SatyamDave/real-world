@@ -497,9 +497,10 @@ test("the docs page lists every operation in openapi.json with its refusal codes
   );
   expect(el.querySelector(".first-call pre")?.textContent).toContain("Idempotency-Key");
   expect(el.textContent).toContain("Authorization: Bearer rw_...");
-  const [, py, ts] = [...el.querySelectorAll("pre")].map((p) => p.textContent);
-  expect(py).toContain("rw = Client(");
-  expect(ts).toContain("const rw = new Client(");
+  const sdk = () => [...el.querySelectorAll("pre")].at(-1)?.textContent;
+  expect(sdk()).toContain("rw = Client(");
+  await act(async () => button("TypeScript").click());
+  expect(sdk()).toContain("const rw = new Client(");
   expect(el.querySelector("header nav a[href='/docs']")?.textContent).toBe("API");
 });
 

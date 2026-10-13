@@ -1,4 +1,5 @@
 import { API_URL } from "./api";
+import { CodeBlock } from "./CodeBlock";
 
 const csvCell = (v: unknown) => {
   const s = v !== null && typeof v === "object" ? JSON.stringify(v) : String(v ?? "");
@@ -21,22 +22,6 @@ function save(name: string, type: string, body: string) {
   URL.revokeObjectURL(url);
 }
 
-function Snippet({ label, code }: { label: string; code: string }) {
-  return (
-    <div className="api-snippet">
-      <p className="muted small">
-        {label}{" "}
-        <button type="button" className="link" onClick={() => navigator.clipboard?.writeText(code)}>
-          Copy
-        </button>
-      </p>
-      <pre>
-        <code>{code}</code>
-      </pre>
-    </div>
-  );
-}
-
 /** The exact calls that return what the page shows, with the data itself to download. */
 export function ApiCall(p: {
   path: string;
@@ -49,12 +34,14 @@ export function ApiCall(p: {
   return (
     <section className="api-call" aria-labelledby="api-call">
       <h3 id="api-call">Get this via API</h3>
-      <Snippet label="curl" code={`curl ${API_URL}${p.path}`} />
-      <Snippet
-        label="Python"
-        code={`from realworld import Client\n\nClient("${API_URL}").${p.sdk}`}
+      <CodeBlock
+        label="Get this via API"
+        code={{
+          curl: `curl ${API_URL}${p.path}`,
+          python: `from realworld import Client\n\nClient("${API_URL}").${p.sdk}`,
+          typescript: `new Client("${API_URL}").${p.sdk}`,
+        }}
       />
-      <Snippet label="TypeScript" code={`new Client("${API_URL}").${p.sdk}`} />
       <p className="api-downloads">
         {p.data !== undefined && (
           <button
