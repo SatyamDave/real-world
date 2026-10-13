@@ -86,6 +86,8 @@ export function SignupForm({
   const [state, setState] = useState<State>({ kind: "idle" });
   const turnstile = useTurnstile(config.turnstileSiteKey);
   const doneHeading = useRef<HTMLHeadingElement>(null);
+  // Where people drop off: each step is reported once per page view (email_focused, email_started).
+  const reported = useRef({ focused: false, started: false });
   const done = state.kind === "success" || state.kind === "duplicate";
   // The form unmounts on success; move focus to the result so keyboard and screen reader users land on it.
   useEffect(() => {
@@ -97,6 +99,7 @@ export function SignupForm({
     track("cta_clicked", { location });
     if (!EMAIL_RE.test(email.trim())) {
       setState({ kind: "invalid" });
+      track("email_invalid", { location });
       return;
     }
     setState({ kind: "loading" });
@@ -114,11 +117,9 @@ export function SignupForm({
       });
       turnstile.dispose(); // the form is about to be replaced; remove the widget first
       setState(result.duplicate ? { kind: "duplicate", result } : { kind: "success", result });
-      // A new signup is the one conversion (the pixels' Lead). A duplicate is not.
-      track(result.duplicate ? "signup_duplicate" : "signup_saved", {
-        location,
-        signup_id: result.signupId,
-      });
+      // A new signup is the one conversion (the pixels' Lead). A repeat email is not one,
+      // and is not tracked as a separate event.
+      if (!result.duplicate) track("signup_saved", { location, signup_id: result.signupId });
     } catch (err) {
       turnstile.reset();
       const reason = err instanceof SignupError ? err.reason : "request_failed";
@@ -166,7 +167,13 @@ export function SignupForm({
           type="email"
           inputMode="email"
           autoComplete="email"
-          onFocus={turnstile.arm}
+          onFocus={() => {
+            turnstile.arm();
+            if (!reported.current.focused) {
+              reported.current.focused = true;
+              track("email_focused", { location });
+            }
+          }}
           placeholder="you@email.com"
           aria-label="Email address"
           aria-invalid={state.kind === "invalid" || state.kind === "error"}
@@ -175,7 +182,13 @@ export function SignupForm({
           }
           value={email}
           disabled={loading}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (e.target.value && !reported.current.started) {
+              reported.current.started = true;
+              track("email_started", { location });
+            }
+          }}
         />
         <div className="actions">
           <button className="btn" type="submit" disabled={loading}>

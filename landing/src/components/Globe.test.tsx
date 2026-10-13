@@ -17,7 +17,7 @@ beforeEach(() => {
 });
 afterEach(() => container.remove());
 
-test("with no WebGL (jsdom) the poster is shown and the fallback event fires", async () => {
+test("with no WebGL (jsdom) the poster is shown and nothing is tracked", async () => {
   await act(async () =>
     createRoot(container).render(<Globe markers={[{ lat: 38.9, lng: -77 }]} />),
   );
@@ -28,7 +28,7 @@ test("with no WebGL (jsdom) the poster is shown and the fallback event fires", a
   expect(poster?.getAttribute("src")).toBe("/globe-poster.svg");
   expect(poster?.getAttribute("alt")).toMatch(/globe/i);
 
-  expect(track).toHaveBeenCalledWith("globe_fallback_shown", { reason: "no_webgl" });
+  expect(track).not.toHaveBeenCalled();
 });
 
 test("a marker pulses once in its own window and is at base size otherwise", () => {

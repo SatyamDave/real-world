@@ -23,11 +23,11 @@ export function tallyEmbedUrl(
   return u.toString();
 }
 
-/** True for the message Tally's embed posts when the form is submitted. */
-export function isTallySubmit(origin: string, data: unknown): boolean {
-  if (origin !== TALLY) return false;
+/** The name of a message Tally's embed posts (Tally.FormLoaded, Tally.FormSubmitted), else null. */
+export function tallyEvent(origin: string, data: unknown): string | null {
+  if (origin !== TALLY) return null;
   const name = typeof data === "string" ? data : (data as { event?: unknown } | null)?.event;
-  return typeof name === "string" && name.includes("Tally.FormSubmitted");
+  return typeof name === "string" && name.startsWith("Tally.") ? name : null;
 }
 
 /**
@@ -51,7 +51,11 @@ export function TallySlot({
   useEffect(() => {
     if (!formId) return;
     const onMessage = (e: MessageEvent) => {
-      if (isTallySubmit(e.origin, e.data)) track("form_submitted", { signup_id: signupId });
+      // Loaded, then submitted: the gap between them is where people drop off inside the form
+      // (Tally reports nothing per answer).
+      const name = tallyEvent(e.origin, e.data);
+      if (name === "Tally.FormLoaded") track("form_loaded", { signup_id: signupId });
+      if (name === "Tally.FormSubmitted") track("form_submitted", { signup_id: signupId });
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);

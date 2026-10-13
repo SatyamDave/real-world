@@ -79,9 +79,6 @@ export function Globe({
     if (!canvas || !holder) return;
 
     if (prefersReducedMotion() || !hasWebGL()) {
-      track("globe_fallback_shown", {
-        reason: prefersReducedMotion() ? "reduced_motion" : "no_webgl",
-      });
       onPhase?.("static");
       return; // poster only
     }

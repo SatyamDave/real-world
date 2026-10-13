@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { isTallySubmit, tallyEmbedUrl } from "./TallySlot";
+import { tallyEmbedUrl, tallyEvent } from "./TallySlot";
 
 test("the embed URL carries the four hidden fields and hides the title", () => {
   const u = new URL(
@@ -20,12 +20,11 @@ test("a missing device id is an empty hidden field, not the word null", () => {
   expect(u.searchParams.get("device_id")).toBe("");
 });
 
-test("only Tally's own submit message counts", () => {
-  expect(isTallySubmit("https://tally.so", { event: "Tally.FormSubmitted", payload: {} })).toBe(
-    true,
-  );
-  expect(isTallySubmit("https://tally.so", "Tally.FormSubmitted")).toBe(true);
-  expect(isTallySubmit("https://tally.so", { event: "Tally.FormLoaded" })).toBe(false);
-  expect(isTallySubmit("https://evil.example", { event: "Tally.FormSubmitted" })).toBe(false);
-  expect(isTallySubmit("https://tally.so", null)).toBe(false);
+test("only Tally's own messages count, by name", () => {
+  const t = "https://tally.so";
+  expect(tallyEvent(t, { event: "Tally.FormSubmitted", payload: {} })).toBe("Tally.FormSubmitted");
+  expect(tallyEvent(t, "Tally.FormLoaded")).toBe("Tally.FormLoaded");
+  expect(tallyEvent(t, { event: "something.else" })).toBeNull();
+  expect(tallyEvent("https://evil.example", { event: "Tally.FormSubmitted" })).toBeNull();
+  expect(tallyEvent(t, null)).toBeNull();
 });
