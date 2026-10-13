@@ -79,7 +79,7 @@ NEWS_TITLES_PER_THEME = 5
 EVENT_TEXT_MAX_CHARS = 500
 
 # Post tests (product/will-it-land.md). Provisional caps until decisions-needed item 7.
-TEST_SEGMENTS = 12
+TEST_SEGMENTS = 24
 TEST_MAX_COST_USD = 0.05
 TEST_ANON_PER_DAY = 20
 TEST_RETRO_POSTS_MAX = 5

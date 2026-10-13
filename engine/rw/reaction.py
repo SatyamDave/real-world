@@ -125,8 +125,9 @@ def _tiers() -> dict[str, str]:
 
 
 def audience_segments(aud: Audience) -> list[tuple[str, float]]:
-    """(segment, weight) for the TEST_SEGMENTS most populous segments of the audience in the
-    latest snapshot, weights summing to 1."""
+    """(segment, weight) for up to TEST_SEGMENTS segments of the audience in the latest
+    snapshot, spread across its countries: round-robin over countries, each country's most
+    populous segment first. Weights are agent counts within the picked segments, summing to 1."""
     day = population.latest_snapshot_date()
     if day is None:
         raise ValueError("no world snapshot yet")
@@ -139,7 +140,14 @@ def audience_segments(aud: Audience) -> list[tuple[str, float]]:
     segs, counts = np.unique(world["segment"][keep], return_counts=True)
     if segs.size == 0:
         raise ValueError("the snapshot has no agents in that audience")
-    top = np.argsort(-counts, kind="stable")[: settings.TEST_SEGMENTS]
+    by_country: dict[str, list[int]] = {}
+    for i in np.argsort(-counts, kind="stable"):
+        by_country.setdefault(str(segs[i]).split("|", 1)[0], []).append(int(i))
+    queues = sorted(by_country.values(), key=lambda q: -counts[q[0]])
+    top: list[int] = []
+    for rank in range(max(len(q) for q in queues)):
+        top += [q[rank] for q in queues if rank < len(q)]
+    top = top[: settings.TEST_SEGMENTS]
     total = counts[top].sum()
     return [(str(segs[i]), float(counts[i] / total)) for i in top]
 

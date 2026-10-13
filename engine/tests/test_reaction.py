@@ -23,7 +23,7 @@ def test_a_post_test_weights_segments_and_reads_as_shares():
     out = reaction.run(PostTestRequest(text=POST, gut="lands"), db.connect(), budget)
     mix = out.mix
     assert abs(mix.scroll_past + mix.read + mix.like + mix.share - 1) < 1e-6
-    assert abs(out.landing_chance - (mix.like + mix.share)) < 1e-6
+    assert abs(out.landing_chance - (mix.like + mix.share)) < 2e-6  # each rounded to 6 places
     assert 0 <= out.band[0] <= out.band[1] <= 1
     assert out.segments == len(reaction.audience_segments(PostTestRequest(text=POST)))
     assert out.best[0].landing >= out.worst[0].landing
@@ -37,6 +37,12 @@ def test_the_audience_filters_countries_and_ages():
         PostTestRequest(text=POST, countries=["BRA"], age_bands=["18-34"])
     )
     assert segs and all(s.startswith("BRA|18-34|") for s, _ in segs)
+    assert abs(sum(w for _, w in segs) - 1) < 1e-9
+
+
+def test_a_whole_world_audience_spreads_across_countries():
+    segs = reaction.audience_segments(PostTestRequest(text=POST))
+    assert len({s.split("|", 1)[0] for s, _ in segs}) >= 12
     assert abs(sum(w for _, w in segs) - 1) < 1e-9
 
 
