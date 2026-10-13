@@ -1,7 +1,8 @@
 // One track() wrapper for the whole page. Every event carries headline_variant
 // and goes to Amplitude, and a saved signup also goes to the Reddit and X pixels.
 // The SDKs load after first paint (initAnalytics), so events fired earlier wait
-// in a queue and are replayed in order (see initAfterPaint for when they start). With a Global Privacy Control or
+// in a queue and are replayed in order (see initAfterPaint for when they start). Until the visitor accepts the cookie
+// notice nothing is queued, loaded or sent; with a Global Privacy Control or
 // Do Not Track signal nothing loads and nothing is sent. Event list and
 // properties: landing/analytics/TRACKING_PLAN.md.
 import { config } from "./config";
@@ -63,6 +64,7 @@ let queue: Queued[] = [];
 let sink: Sink | null = null;
 let deviceId: string | null = null;
 let enabled = true;
+let consented = false;
 let leadSender: ((eventId: string) => void) | null = null;
 
 /** True when the visitor signals they do not want to be tracked. */
@@ -70,8 +72,14 @@ export function privacySignal(nav: Navigator & { globalPrivacyControl?: boolean 
   return nav.globalPrivacyControl === true || nav.doNotTrack === "1";
 }
 
+/** Set from the cookie notice. Declining drops anything queued. */
+export function setConsented(value: boolean): void {
+  consented = value;
+  if (!value) queue = [];
+}
+
 export function track(name: EventName, props: Record<string, unknown> = {}): void {
-  if (!enabled) return;
+  if (!enabled || !consented) return;
   const payload = { headline_variant: headlineVariant, environment, ...props };
   if (import.meta.env.DEV) {
     console.debug("[track]", name, payload);
@@ -87,6 +95,7 @@ export async function initAnalytics(
   loaders: Loaders = defaultLoaders,
   nav: Navigator = navigator,
 ): Promise<void> {
+  if (!consented) return;
   if (privacySignal(nav)) {
     enabled = false;
     queue = [];
@@ -200,6 +209,7 @@ export function resetAnalyticsForTests(): void {
   sink = null;
   deviceId = null;
   enabled = true;
+  consented = false;
   leadSender = null;
   headlineVariant = "unknown";
   environment = "production";
