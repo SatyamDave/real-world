@@ -17,9 +17,14 @@ export function Papers() {
             <dt>{r.term}</dt>
             <dd>
               {r.text}{" "}
-              <a className="link" href={r.href} rel="noopener noreferrer" target="_blank">
-                {r.cite}
-              </a>
+              {r.cites.map((c, i) => (
+                <span key={c.href}>
+                  {i > 0 ? "; " : ""}
+                  <a className="link" href={c.href} rel="noopener noreferrer" target="_blank">
+                    {c.label}
+                  </a>
+                </span>
+              ))}
             </dd>
           </div>
         ))}
