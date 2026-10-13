@@ -4,7 +4,8 @@
 
 ## Scope
 
-- One spec per surface: `product/<surface>.md`. The launch surfaces are the daily question, the receipts page, the fork card and `POST /v1/simulate`; see `research/lenses/cpo.md`. A new surface needs a decision record first.
+- One spec per surface: `product/<surface>.md`. The product is two jobs, [Will this land?](will-it-land.md) and [Call it](daily-question.md), with [your record](track-record.md) and the public proof (receipts, scores, question pages), per [decision 0012](../research/decisions/0012-will-it-land-and-call-it.md). Forks, the world and `POST /v1/simulate` are the engine's interface, not product surfaces. A new surface needs a decision record first.
+- Every product screen does one job a person can finish in under a minute, proves itself with something sealed before the outcome, and never asks for trust it has not earned.
 - A field, endpoint or event is defined once, in the JSON Schema the code generates from. Specs link it; they never restate it in prose.
 - A term is defined once. Before using a word like agent-step, world snapshot, fork, ensemble member, receipt, skill or coverage tier, check how the existing specs define it, and reuse that definition.
 - `glossary.md` is the one list of terms; its `Do not write` column names the synonyms `scripts/check_glossary.py` refuses on every user-facing surface. Add a synonym there when a surface used it, with the PR in the rules log.

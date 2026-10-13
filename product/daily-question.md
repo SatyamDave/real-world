@@ -1,8 +1,8 @@
-# Daily question
+# Call it (daily question)
 
 ## What it does
 
-One question a day, the same for everyone, that resolves within 1 to 7 days ("Will the ECB cut rates on Oct 29?"). The visitor drags a slider from 0 to 100 and submits. Within a second they see four numbers side by side: their answer, the crowd of other visitors, the simulated world, and the market price. When the question resolves, everyone's answer is scored. A streak counts the days you submitted, not the days you were right. A share line gives a 7-square grid of your week plus a link to the receipt.
+`/call`: one question a day, the same for everyone, that resolves within 1 to 7 days ("Will the ECB cut rates on Oct 29?"), framed as the visitor against the AI. Before they answer, the page shows that the AI already called it: "The AI's call is sealed · <first 12 characters of the `sim` forecast's leaf hash> · <commit time>", linking that day's receipts; the number stays hidden. The visitor drags a slider from 0 to 100 and taps "Call it". Within a second they see four numbers side by side: their call, the crowd of other visitors, the AI (the simulated world's committed forecast), and the market price. Once questions resolve, the reveal carries their running record against the AI: "You <brier> · AI <brier> on <n> resolved questions · you beat the AI on <k>". When the question resolves, everyone's answer is scored. A streak counts the days you submitted, not the days you were right. A share line gives a 7-square grid of your week plus a link to the receipt.
 
 ## Who it is for
 
@@ -17,11 +17,12 @@ First-time visitors from Show HN and X, who need something to do in under a minu
 - When every question the day forecast has closed, today's question stays the day's own, and the page shows "Answers closed <time>. The next question opens after the next daily run." instead of the slider.
 - Streak is computed from answer rows, never stored as a counter; a test covers a gap day.
 - The `sim` number shown is the committed `sim` forecast for that question and date, the same value as its receipt.
+- Before the answer, `GET /v1/daily` returns `sealed`: the `sim` forecast's leaf hash and commit time, never its probability. The reveal's `record` counts the player's resolved answers on questions with a committed `sim` forecast and both mean Briers. Tests: `test_the_ai_call_is_sealed_but_hidden_before_the_answer`, `test_the_record_scores_player_and_ai_on_the_same_questions`.
 - Measured after launch: share of new visitors who submit within 60 seconds (target 30%+), and day-7 return of day-0 players ([research/lenses/cpo.md](../research/lenses/cpo.md)).
 
 ## What it is not
 
-- No sign-in to answer. The streak lives with the browser's player id; signing in links that id to the account, which carries the streak and the [track record](track-record.md) across browsers.
+- No sign-in to answer. The streak and the record against the AI live with the browser's player id; the signed-in [record](track-record.md) shows post tests.
 - No leagues, friend streaks, notifications or prizes.
 - No questions without a fixed, free resolution source and tie-break rule.
 - Player answers are not shown individually and are labelled "self-selected visitors", never "a poll".
@@ -29,4 +30,4 @@ First-time visitors from Show HN and X, who need something to do in under a minu
 ## Where the code lives
 
 - `api/rw_api/` (answers table and endpoints), question and `sim` forecast from `engine/rw/forecast.py`, screen in `web/`.
-- Research: [product/077](../research/product/077-daily-question-mechanics.md), [product/076](../research/product/076-viral-simulations.md), [business/092](../research/business/092-moat-theory.md), [data/059](../research/data/059-resolvable-events-calendar.md).
+- Decision: [0012](../research/decisions/0012-will-it-land-and-call-it.md). Research: [product/077](../research/product/077-daily-question-mechanics.md), [product/076](../research/product/076-viral-simulations.md), [business/092](../research/business/092-moat-theory.md), [data/059](../research/data/059-resolvable-events-calendar.md).

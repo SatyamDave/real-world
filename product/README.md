@@ -12,13 +12,10 @@ A PR that changes what a surface does updates its spec in the same PR.
 
 ## How people use it
 
-Real World is "Simulations with receipts.": AI simulates how the world reacts to the news, and every forecast is sealed before the outcome and scored in public. Four people use it, and each page offers one next action.
+Real World tells you how a post will land before you publish it, and lets you call today's question against an AI whose call is sealed first ([decision 0012](../research/decisions/0012-will-it-land-and-call-it.md)). Under both runs the engine: simulated populations of 16 countries, a typed decision per segment, and a ledger that seals forecasts before outcomes exist.
 
-- **Daily-question visitor.** Answers today's question on `/`, taps "See how the world answered" to reach `/questions/{id}`, then "Fork today's world" and, on the fork card, "Run this from your code". Specs: [daily-question.md](daily-question.md), `question.md`, [web-app.md](web-app.md).
-- **Receipts and forecasting skeptic.** Opens `/receipts`, verifies the hashes in the browser, then reads `/scores` for skill with n and an interval and `/research` for the papers and experiments. Specs: [receipts.md](receipts.md), `scores.md`, `research.md`.
-- **Analyst forking events.** Forks today's world from `/`, reads the segments and the trace on the fork card, then repeats the fork from the API; `/world` and `/cycle` show the snapshot and the run behind it. Specs: [simulate-api.md](simulate-api.md), `world-page.md`, `cycle.md`, [world.md](world.md).
-- **Developer on the API with a capped key.** Starts at `/docs`, requests a key with a dollar cap, and runs the SDK quickstart; every refusal is one sentence and every output is labelled AI-simulated. Specs: [simulate-api.md](simulate-api.md), [sdks.md](sdks.md).
+- **Person about to post.** Opens `/`, pastes a post, picks an audience, records their gut and taps "Test it"; reads the landing chance, the best and worst audiences, two simulated accounts and a rewrite; signed in, the test is sealed and later marked "Landed" or "Flopped" on `/record`. Specs: [will-it-land.md](will-it-land.md), [track-record.md](track-record.md), [accounts.md](accounts.md).
+- **Person calling the news.** Opens `/call`, sees that the AI's call is sealed, calls today's question, and sees their call next to the AI, the crowd and the market, then their running record against the AI. Spec: [daily-question.md](daily-question.md).
+- **Skeptic.** Opens `/receipts` and `/scores` from any result: every sealed forecast, verified in the browser, and the engine's skill with n and an interval. Specs: [receipts.md](receipts.md), [question.md](question.md).
 
-- **Signed-in person.** Makes a free account with an email, answers up to four onboarding questions, and returns to a home that opens on their briefing, then forks, their track record and, for builders, self-serve API keys; the surfaces above stay open as the proof layer ([decision 0011](../research/decisions/0011-consumer-product-and-api.md)). Specs: [accounts.md](accounts.md), [onboarding.md](onboarding.md), [home-and-briefing.md](home-and-briefing.md), [forks.md](forks.md), [track-record.md](track-record.md), [developer.md](developer.md).
-
-Journey page by page: [gtm/messaging.md](../gtm/messaging.md#user-journeys). The specs in code font (`question.md`, `scores.md`, `research.md`, `world-page.md`, `cycle.md`) land in their own PRs.
+The engine's own interface, `POST /v1/simulate` and the two SDKs, stays for the web app and for builders later; it is not a product surface. Specs: [simulate-api.md](simulate-api.md), [sdks.md](sdks.md), [world.md](world.md).

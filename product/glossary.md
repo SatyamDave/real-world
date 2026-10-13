@@ -24,9 +24,13 @@ One definition per term. Specs, code comments and UI copy use these words with t
 | Inclusion proof | The sibling hashes from one leaf up to the day's Merkle root; verifying it shows the leaf is in the day record. | |
 | Reliability diagram | Forecasts binned by stated probability against the share that resolved yes; the diagonal is perfect calibration. | |
 | Run log | The recorded steps, model calls, tokens and cost of one daily cycle, from `stage_runs` and `llm_calls`. | |
-| Account | A person's free sign-in, made by email, holding their profile, forks, linked player ids and API keys ([accounts](accounts.md)). | |
-| Profile | The four onboarding answers on an account: use, countries, topics and own country ([onboarding](onboarding.md)). | |
-| Briefing | The signed-in home's list of how simulated shares moved in the last daily cycle on the profile's countries and topics ([home and briefing](home-and-briefing.md)). | |
-| Track record | One account's Brier on the daily questions it answered, against the `sim` forecaster's Brier on the same questions, with n ([track record](track-record.md)). | |
+| Account | A person's free sign-in, made by email, holding their sessions and sealed post tests ([accounts](accounts.md)). | |
+| Record | One account's sealed post tests with their marks, scored engine against gut, and one browser's calls against the AI on resolved questions ([track record](track-record.md)). | |
+| Post test | One run of a post through the engine for a chosen audience: landing chance, reaction mix, best and worst segments, two simulated accounts and a rewrite ([will it land](will-it-land.md)). | |
+| Landing chance | The share of the chosen audience, weighted by population, that would like or share a post, with its p10-p90 across segments. Uncalibrated until 100 marked post tests. | |
+| Seal | The SHA-256 of a stored post test's canonical JSON, made when the test is made; the database refuses changes to a sealed test. | |
+| Gut | The person's own call on a post, "lands" or "flops", recorded before the result shows; the baseline the engine is scored against. | |
+| Mark | The person's one-time record of how a sealed post did: "landed" or "flopped". | |
+| Call | A visitor's answer to the daily question, set against the AI's sealed `sim` forecast ([call it](daily-question.md)). | |
 | Anonymous allowance | Forks a visitor without an account may start per address per UTC day (`FORK_ANON_PER_DAY`). | |
 | Replay | Re-running a step on the recorded model outputs in `llm_calls`; a differing result is shown as a diff. | |
