@@ -110,7 +110,7 @@ export function SignupForm({
         consentVersion: CONSENT_VERSION,
         deviceId: getDeviceId(),
         headlineVariant: getHeadlineVariant(),
-        turnstileToken: turnstile.token(),
+        turnstileToken: await turnstile.waitForToken(),
       });
       turnstile.dispose(); // the form is about to be replaced; remove the widget first
       setState(result.duplicate ? { kind: "duplicate", result } : { kind: "success", result });
@@ -166,6 +166,7 @@ export function SignupForm({
           type="email"
           inputMode="email"
           autoComplete="email"
+          onFocus={turnstile.arm}
           placeholder="you@email.com"
           aria-label="Email address"
           aria-invalid={state.kind === "invalid" || state.kind === "error"}

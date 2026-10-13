@@ -55,20 +55,21 @@ Legend: [ ] todo · [x] done · [~] in progress · [B] blocked (see OVERNIGHT_LO
 - [x] `landing/analytics/TRACKING_PLAN.md` with the full event list; every event carries headline_variant
 - [x] One `track()` wrapper fanning out to Reddit + X pixels (env-flagged, signup id as dedupe key, Lead on save only); GPC/DNT off-switch
 - [x] 15 event definitions registered in Amplitude project 877388 (planned events)
-- [ ] Funnel dashboard: built after the preview verification, once real events exist (step 5); link goes in MORNING.md
-- [ ] draft PR
+- [x] Funnel dashboard built after the preview verification (Amplitude dashboard rm64etf3, personal and unpublished); link in MORNING.md
+- [x] draft PR #24
 
-## PR 5 — launch readiness (`landing/5-readiness`, title `chore(landing): launch readiness`)
-- [ ] `/privacy` + `/terms` (draft, reviewed by founders); processors list; US-only; consent-banner follow-up
-- [ ] Consent line + stored version
-- [ ] Perf budgets (LCP<2.0s, CLS<0.05, JS<120KB gz); Lighthouse numbers in PR + MORNING
-- [ ] Playwright e2e: mobile+desktop, globe fallback, signup happy path (mocked), duplicate email, reduced motion
-- [ ] Ad creative script → PNGs 1080×1080/1350/1920 per headline id into `landing/ads/`; safe zones; no politics
-- [ ] `landing/RUNBOOK.md` (domain/DNS, Pages custom domain, app subdomain, email routing, secrets, webhook, deploy/rollback, CSV export, tracking verification, Reddit/X ad setup, retire Oct 27)
-- [ ] /ship-pr draft PR
+## PR 5 — launch readiness (`landing/5-readiness`, title `chore(landing): launch readiness`) — in review
+- [x] `/privacy` + `/terms` drafts written from what the code does; processors listed; US-only; draft banner until founders review
+- [x] Consent line + stored version (already in PR2/3; privacy page states the version)
+- [x] Perf budgets: `check:bundle` (first-load JS 75.7 KB gz); Lighthouse with the SDK and full-rate replay active, 8 runs: LCP 1.80 to 1.98 s on 7, one cold-start outlier at 2.66 s; CLS 0.0003
+- [x] Playwright e2e (40 tests, mobile + desktop): globe fallbacks, reduced motion, signup states (mocked), message match, receipts, legal pages, axe on all three routes
+- [x] Ad creative: `pnpm ads` -> 12 PNGs in `landing/ads/` (4 headlines x 3 sizes), forbidden-claim and safe-zone checks
+- [x] `landing/RUNBOOK.md` incl. tryrealworld.com -> Cloudflare Pages steps (not performed), secrets, webhook, deploy/rollback, CSV export, tracking verification, Reddit/X setup, go-live, retire Oct 27
+- [x] draft PR #25
 
 ## Final — deploy + MORNING.md
-- [ ] engineering:deploy-checklist, then `wrangler pages deploy --branch landing-preview`; set preview secrets
-- [ ] Verify on preview: Playwright signup (test+<ts>@…), row in Neon, events in Amplitude
-- [ ] Delete only the test rows created, by id
-- [ ] `landing/MORNING.md`: preview URL, done, screenshots, decisions to check, blocked + click-by-click, 10-step go-live checklist
+- [x] engineering:deploy-checklist, then `wrangler pages deploy --branch landing-preview` (project `real-world-landing` created; preview environment set through the Pages API: dev Neon branch, Turnstile test secret)
+- [x] Verified on the preview: browser signup -> Neon row -> Amplitude events (browser and server, same device and signup id); signed Typeform webhook valid, replay, tampered, unsigned
+- [x] Deleted only the test rows created, by id (dev and main Neon branches both at 0 rows)
+- [x] `landing/MORNING.md`
+- [ ] Open: LCP budget not reliably met on the live preview (3 of 6 runs); see landing/perf/LIGHTHOUSE.md

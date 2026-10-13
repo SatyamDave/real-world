@@ -1,8 +1,10 @@
+// @vitest-environment jsdom
 import { beforeEach, expect, test, vi } from "vitest";
 import {
   type AnalyticsConfig,
   appDeepLink,
   getDeviceId,
+  initAfterPaint,
   initAnalytics,
   type Loaders,
   privacySignal,
@@ -137,4 +139,28 @@ test("the app link carries ampDeviceId once the SDK has started", async () => {
     "https://app.example.com/?ampDeviceId=dev-123",
   );
   expect(appDeepLink("")).toBe("");
+});
+
+test("initAfterPaint starts once: on the first interaction or after the delay, whichever is first", () => {
+  vi.useFakeTimers();
+  try {
+    const start = vi.fn();
+    initAfterPaint(1500, start);
+    vi.advanceTimersByTime(1000);
+    expect(start).not.toHaveBeenCalled();
+    window.dispatchEvent(new Event("pointerdown"));
+    expect(start).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(5000);
+    window.dispatchEvent(new Event("keydown"));
+    expect(start).toHaveBeenCalledTimes(1);
+
+    const second = vi.fn();
+    initAfterPaint(1500, second);
+    vi.advanceTimersByTime(1499);
+    expect(second).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(2);
+    expect(second).toHaveBeenCalledTimes(1);
+  } finally {
+    vi.useRealTimers();
+  }
 });

@@ -4,6 +4,7 @@ import { App } from "./App";
 import { initAfterPaint, setConsented, setHeadlineVariant, track } from "./analytics";
 import { CookieNotice, storedConsent } from "./components/CookieNotice";
 import { resolveHeadline } from "./copy/headlines";
+import "./styles/fonts.css";
 import "./styles/tokens.css";
 import "./styles/global.css";
 

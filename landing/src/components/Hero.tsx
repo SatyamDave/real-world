@@ -79,6 +79,5 @@ function shortLabel(r: { question: string }): string {
   if (r.question.includes("Federal Reserve")) return "US Fed rate decision";
   if (r.question.includes("European Central Bank")) return "ECB rate decision";
   if (r.question.includes("Bank of Japan")) return "Bank of Japan rate decision";
-  if (r.question.includes("Brazilian")) return "Brazil presidential runoff";
   return r.question.slice(0, 40);
 }

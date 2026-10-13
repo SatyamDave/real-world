@@ -1,7 +1,7 @@
 // One track() wrapper for the whole page. Every event carries headline_variant
 // and goes to Amplitude, and a saved signup also goes to the Reddit and X pixels.
 // The SDKs load after first paint (initAnalytics), so events fired earlier wait
-// in a queue and are replayed in order. Until the visitor accepts the cookie
+// in a queue and are replayed in order (see initAfterPaint for when they start). Until the visitor accepts the cookie
 // notice nothing is queued, loaded or sent; with a Global Privacy Control or
 // Do Not Track signal nothing loads and nothing is sent. Event list and
 // properties: landing/analytics/TRACKING_PLAN.md.
@@ -142,14 +142,33 @@ export async function initAnalytics(
   await Promise.all(jobs);
 }
 
-/** Run initAnalytics once the page has painted and the browser is idle. */
-export function initAfterPaint(): void {
-  const go = () => void initAnalytics();
-  const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => void })
-    .requestIdleCallback;
-  const start = () => (idle ? idle(go) : window.setTimeout(go, 1));
-  if (document.readyState === "complete") start();
-  else window.addEventListener("load", start, { once: true });
+const INTERACTION_EVENTS = ["pointerdown", "keydown", "focusin", "touchstart"] as const;
+
+/**
+ * Start the SDKs after the page has loaded, on the first interaction or after `delayMs`,
+ * whichever comes first. Keeping the SDKs out of the first paint keeps them from
+ * competing with it on slow phones; events fired before the start wait in the queue.
+ * A visitor who leaves within `delayMs` without touching anything is not counted.
+ */
+export function initAfterPaint(
+  delayMs = 1500,
+  start: () => void = () => void initAnalytics(),
+): void {
+  let started = false;
+  const go = () => {
+    if (started) return;
+    started = true;
+    for (const e of INTERACTION_EVENTS) window.removeEventListener(e, go, true);
+    start();
+  };
+  const arm = () => {
+    for (const e of INTERACTION_EVENTS) {
+      window.addEventListener(e, go, { capture: true, passive: true });
+    }
+    window.setTimeout(go, delayMs);
+  };
+  if (document.readyState === "complete") arm();
+  else window.addEventListener("load", arm, { once: true });
 }
 
 // Amplitude device id, used to continue the funnel into the v1 app. Null until
