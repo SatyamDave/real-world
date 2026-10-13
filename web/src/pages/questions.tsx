@@ -2,6 +2,7 @@ import { ApiError, type QuestionPage } from "@real-world/sdk";
 import { ApiCall } from "../ApiCall";
 import {
   Disclosure,
+  Empty,
   FORECASTER,
   LoadError,
   Loading,
@@ -209,7 +210,9 @@ function Question({ p }: { p: QuestionPage }) {
           <Inputs d={latest} />
         </>
       ) : (
-        <p className="muted">No forecast has been committed on this question yet.</p>
+        <Empty action={{ label: "Open today's question", href: "/" }}>
+          No forecast has been committed on this question yet.
+        </Empty>
       )}
       <Computed p={p} />
       <ApiCall
@@ -230,7 +233,8 @@ export default function QuestionRoute({ param }: { param?: string }) {
   if (!id) return <NotFound />;
   if (r.error instanceof ApiError && r.error.status === 404)
     return <p className="muted">No question {id} on the committed list.</p>;
-  if (r.error) return <LoadError what="the question" error={r.error} retry={r.retry} />;
-  if (!r.data) return <Loading what="the question" />;
+  if (r.error)
+    return <LoadError what="the question" error={r.error} retry={r.retry} shape="rows" />;
+  if (!r.data) return <Loading what="the question" shape="rows" />;
   return <Question p={r.data} />;
 }

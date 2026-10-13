@@ -1,33 +1,52 @@
-/* Mirrors landing/src/styles/tokens.css on the landing branches; change both together until they share one file. */
-/*
- * Design tokens — Direction A, "Commit Slip" (the chosen direction).
- * Scores and rationale: landing/MORNING.md and landing/OVERNIGHT_LOG.md.
- *
- * To switch directions, change the single tokens import in src/main.tsx:
- *   import "./styles/tokens.css";    (A, current)
- *   import "./styles/tokens-b.css";  (B, Observatory)
- *   import "./styles/tokens-c.css";  (C, Almanac)
- * The component CSS only uses the semantic variables below, so the swap is total.
- * (Directions B and C reuse the loaded IBM Plex fonts; load their display fonts
- *  in index.html too if you want B's serif or C's grotesque.)
- */
+/* Light theme and the scales every surface shares (product/design.md, Tokens). The landing page
+   copies this file when its branches merge; change both together. */
 :root {
   --paper: #f2f4f3; /* page background */
-  --paper-2: #e7eae8; /* raised/alt background */
-  --surface: #ffffff; /* cards, inputs */
-  --ink: #15201b; /* primary text */
-  --muted: #5c6660; /* secondary text */
-  --accent: #2f6f4e; /* verify green */
-  --accent-2: #b23a2e; /* pending clay */
-  --line: #cdd3cf; /* borders, dividers */
+  --paper-2: #e7eae8; /* raised or alternate fill, code, table header, hover row */
+  --surface: #ffffff; /* cards, inputs, menus */
+  --ink: #15201b; /* text, primary button */
+  --muted: #5c6660; /* secondary text, labels */
+  --line: #cdd3cf; /* the 1px hairline */
+  --line-strong: #aab2ad; /* hover border, input border at rest */
+  --accent: #2f6f4e; /* committed, verified, links, focus */
+  --accent-wash: #e1ece5; /* 10% accent fill: verified row, selected nav item */
+  --accent-2: #b23a2e; /* pending, error, refused, destructive */
+  --clay-wash: #f3e1de; /* error and refused fill */
   --focus: #2f6f4e; /* focus ring */
   --on-accent: #f2f4f3; /* text on --ink / solid buttons */
 
   --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
 
-  --radius: 2px;
-  --card-shadow: 6px 6px 0 var(--paper-2);
+  --text-display: clamp(40px, 6vw, 56px);
+  --text-title: 28px;
+  --text-item: 20px;
+  --text-lead: 18px;
+  --text-body: 16px;
+  --text-small: 14px;
+  --text-label: 12px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  --dur-fast: 120ms; /* hover, press */
+  --dur-base: 200ms; /* tabs, disclosure, a new row */
+  --dur-slow: 240ms; /* drawer, dialog */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  --radius: 4px;
+  --card-shadow: 6px 6px 0 var(--paper-2); /* the receipt only */
   --globe-dot: #2f6f4e; /* live cobe land dots */
   --globe-glow: 47, 111, 78; /* rgb of accent, for marker glow */
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
 }

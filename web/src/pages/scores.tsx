@@ -2,6 +2,7 @@ import type { Scoreboard } from "@real-world/sdk";
 import { ApiCall } from "../ApiCall";
 import {
   Disclosure,
+  Empty,
   FORECASTER,
   LoadError,
   Loading,
@@ -375,16 +376,16 @@ const csvRows = (b: Board) =>
 
 export default function ScoresRoute() {
   const { data: b, error, retry } = useLoad(() => rw.scoreboard());
-  if (error) return <LoadError what="the scoreboard" error={error} retry={retry} />;
-  if (!b) return <Loading what="the scoreboard" />;
+  if (error) return <LoadError what="the scoreboard" error={error} retry={retry} shape="rows" />;
+  if (!b) return <Loading what="the scoreboard" shape="rows" />;
   const seen = new Map(b.resolved.map((r) => [r.question_id, r.tiers]));
   return (
     <div className="scores">
       <Header b={b} />
       {b.resolved_questions === 0 ? (
-        <p className="muted">
+        <Empty action={{ label: "Open today's question", href: "/" }}>
           No question has resolved yet. Scores appear when the first one does.
-        </p>
+        </Empty>
       ) : (
         <>
           <Table b={b} />

@@ -7,6 +7,7 @@ import { DailyQuestion } from "./DailyQuestion";
 import { Fork, ForkRun } from "./ForkCard";
 import { ReceiptsPage, ReceiptsStrip } from "./Receipts";
 import { applyMeta } from "./seo";
+import { applyTheme, storedTheme, type Theme } from "./theme";
 
 // three.js is most of the bundle, so the globe loads once the page is idle, and only on screens
 // wide enough to use it. A still poster holds its place until then, and is all a phone shows.
@@ -138,12 +139,42 @@ export function Disclosure({ tiers }: { tiers: string[] }) {
   );
 }
 
-export function Loading({ what }: { what: string }) {
+export type Shape = "lines" | "rows" | "card";
+const SKELETON_ROWS: Record<Shape, number> = { lines: 3, rows: 5, card: 1 };
+
+/** True once `ms` has passed since mount, so a fast load shows no placeholder at all. */
+function useAfter(ms: number) {
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setDone(true), ms);
+    return () => clearTimeout(t);
+  }, [ms]);
+  return done;
+}
+
+/**
+ * The loading state: a skeleton in the result's `shape`, drawn only after 200ms, with a polite
+ * status line for screen readers. `progress` is real progress text (a fork's day count) and shows.
+ */
+export function Loading({
+  what,
+  shape = "lines",
+  progress = false,
+}: {
+  what: string;
+  shape?: Shape;
+  progress?: boolean;
+}) {
+  const late = useAfter(200);
   return (
-    <p className="muted small loading" role="status">
-      <span className="spinner" aria-hidden="true" />
-      Loading {what}
-    </p>
+    <div className={`state state-${shape}`} role="status" aria-live="polite">
+      <span className={progress ? "muted small" : "sr-only"}>Loading {what}</span>
+      {late &&
+        Array.from({ length: SKELETON_ROWS[shape] }, (_, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: identical placeholder rows
+          <span key={i} className="skeleton" aria-hidden="true" />
+        ))}
+    </div>
   );
 }
 
@@ -152,10 +183,12 @@ export function LoadError({
   what,
   error,
   retry,
+  shape = "lines",
 }: {
   what: string;
   error: Error;
   retry?: () => void;
+  shape?: Shape;
 }) {
   const why =
     error instanceof ApiError
@@ -166,13 +199,50 @@ export function LoadError({
           : "The server refused the request."
       : "The server did not respond.";
   return (
-    <p className="muted small load-error" role="alert">
-      Could not load {what}. {why}{" "}
+    <div className={`state state-${shape} load-error`} role="alert">
+      <p>
+        Could not load {what}. {why}
+      </p>
       {retry && (
         <button type="button" className="link" onClick={retry}>
           Try again
         </button>
       )}
+    </div>
+  );
+}
+
+/** Nothing yet: one sentence saying when there will be, and at most one next action. */
+export function Empty({
+  children,
+  action,
+}: {
+  children: ReactNode;
+  action?: { label: string; href: string };
+}) {
+  return (
+    <div className="empty">
+      <p className="muted">{children}</p>
+      {action && (
+        <a className="button" href={action.href}>
+          {action.label}
+        </a>
+      )}
+    </div>
+  );
+}
+
+/** The API's own refusal sentence, as sent, in a clay callout with the one link that helps. */
+export function Refused({
+  children,
+  help,
+}: {
+  children: ReactNode;
+  help?: { label: string; href: string };
+}) {
+  return (
+    <p className="callout callout-refused" role="alert">
+      {children} {help && <a href={help.href}>{help.label}</a>}
     </p>
   );
 }
@@ -380,6 +450,24 @@ function StatusStrip() {
   );
 }
 
+const NEXT_THEME: Record<Theme, Theme> = { system: "light", light: "dark", dark: "system" };
+
+function ThemeToggle() {
+  const [theme, setTheme] = useState(storedTheme);
+  return (
+    <button
+      type="button"
+      className="link"
+      onClick={() => {
+        applyTheme(NEXT_THEME[theme], true);
+        setTheme(NEXT_THEME[theme]);
+      }}
+    >
+      Theme: {theme}
+    </button>
+  );
+}
+
 function Footer() {
   return (
     <footer className="site-footer">
@@ -389,6 +477,7 @@ function Footer() {
         <a href="/acceptable-use">Acceptable use</a>
         <a href="/docs">API</a>
         <a href="https://github.com/SatyamDave/real-world">Source</a>
+        <ThemeToggle />
       </nav>
       <p>
         Real World outputs are AI-simulated. Simulated populations are not polls and not predictions
@@ -432,7 +521,7 @@ export function App({ path = location.pathname }: { path?: string }) {
         ) : path === "/receipts" ? (
           <ReceiptsPage tiers={tiers} />
         ) : path === "/docs" ? (
-          <Suspense fallback={<Loading what="the API" />}>
+          <Suspense fallback={<Loading what="the API" shape="rows" />}>
             <Docs />
           </Suspense>
         ) : path === "/acceptable-use" ? (
@@ -440,7 +529,7 @@ export function App({ path = location.pathname }: { path?: string }) {
         ) : path === "/" ? (
           <Home w={w} tiers={tiers} alert={worldError} />
         ) : Page && page ? (
-          <Suspense fallback={<Loading what="the page" />}>
+          <Suspense fallback={<Loading what="the page" shape="rows" />}>
             <Page param={page[2] === undefined ? undefined : decodeURIComponent(page[2])} />
           </Suspense>
         ) : (

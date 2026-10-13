@@ -1,22 +1,50 @@
-/* Dark theme for the product. The landing design defines no dark theme, so this is built from
-   the same hues as tokens.css; change it when tokens.css changes. */
+/* Dark theme: the same roles from the same hues. It follows the system unless the visitor chose
+   a theme (data-theme on html, set by theme.ts). CSS cannot share one block across a media query
+   and an attribute selector, so theme.test.ts checks the two copies are identical. */
 @media (prefers-color-scheme: dark) {
-  .globe-poster {
-    filter: invert(0.9) hue-rotate(180deg);
-  }
-
-  :root {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --paper: #111814;
     --paper-2: #1a231e;
     --surface: #18201c;
     --ink: #e4eae6;
     --muted: #9aa69f;
-    --accent: #6dbd90;
-    --accent-2: #e8806f;
     --line: #34413a;
+    --line-strong: #4a584f;
+    --accent: #6dbd90;
+    --accent-wash: #1b2a22;
+    --accent-2: #e8806f;
+    --clay-wash: #2e1b18;
     --focus: #6dbd90;
     --on-accent: #111814;
     --globe-dot: #6dbd90;
     --globe-glow: 109, 189, 144;
   }
+
+  :root:not([data-theme="light"]) .globe-poster {
+    filter: invert(0.9) hue-rotate(180deg);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #111814;
+  --paper-2: #1a231e;
+  --surface: #18201c;
+  --ink: #e4eae6;
+  --muted: #9aa69f;
+  --line: #34413a;
+  --line-strong: #4a584f;
+  --accent: #6dbd90;
+  --accent-wash: #1b2a22;
+  --accent-2: #e8806f;
+  --clay-wash: #2e1b18;
+  --focus: #6dbd90;
+  --on-accent: #111814;
+  --globe-dot: #6dbd90;
+  --globe-glow: 109, 189, 144;
+}
+
+:root[data-theme="dark"] .globe-poster {
+  filter: invert(0.9) hue-rotate(180deg);
 }

@@ -45,7 +45,7 @@ export function AcceptableUse() {
         <code>code</code> and a plain <code>detail</code>; the web app shows the detail under the
         event box.
       </p>
-      <table>
+      <table className="compact">
         <thead>
           <tr>
             <th>

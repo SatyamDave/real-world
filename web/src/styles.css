@@ -15,7 +15,7 @@
   box-sizing: border-box;
 }
 
-/* Type scale: 12, 14, 16, 20, 26, 40, and 64 for the desktop headline. One body colour. */
+/* Type scale (tokens.css): label 12, small 14, body 16, item 20, title 28, display 40 to 56. */
 html,
 body {
   margin: 0;
@@ -41,8 +41,7 @@ h3 {
 }
 
 h1 {
-  font-size: clamp(28px, 5vw, 40px);
-  letter-spacing: -0.03em;
+  font-size: var(--text-title);
 }
 
 strong,
@@ -51,7 +50,8 @@ b {
 }
 
 h2 {
-  font-size: 20px;
+  font-size: var(--text-item);
+  line-height: 1.3;
 }
 
 h3 {
@@ -71,25 +71,32 @@ textarea {
   color: inherit;
 }
 
-button {
+button,
+a.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   min-height: 44px;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line-strong);
   background: transparent;
   border-radius: var(--radius);
   padding: 0 16px;
   font-weight: 600;
   font-size: 14px;
+  text-decoration: none;
   transition:
-    background-color 0.15s ease,
-    transform 0.1s ease;
+    background-color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
 }
 
-button:hover:not(:disabled) {
+button:hover:not(:disabled),
+a.button:hover {
   background: var(--paper-2);
 }
 
-button:active:not(:disabled) {
+button:active:not(:disabled),
+a.button:active {
   transform: translateY(1px);
 }
 
@@ -99,6 +106,7 @@ button:disabled {
 }
 
 button.primary {
+  border-color: var(--ink);
   background: var(--ink);
   color: var(--on-accent);
   font-size: 16px;
@@ -272,10 +280,10 @@ button.primary:hover:not(:disabled) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  height: 56px;
   padding: 0 var(--edge);
   background: var(--paper);
-  border-bottom: 1.5px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .brand {
@@ -302,20 +310,23 @@ button.primary:hover:not(:disabled) {
 .topbar nav a {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  height: 56px;
   padding: 0 12px;
+  border-bottom: 2px solid transparent;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--muted);
   text-decoration: none;
+  transition: color var(--dur-fast) var(--ease);
 }
 
-.topbar nav a:hover,
+.topbar nav a:hover {
+  color: var(--ink);
+}
+
 .topbar nav a[aria-current="page"] {
   color: var(--ink);
-  text-decoration: underline;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 6px;
+  border-bottom-color: var(--ink);
 }
 
 /* Layout: on wide screens the globe fills the viewport and the content column floats over it */
@@ -365,13 +376,9 @@ main {
 
 .card {
   background: var(--surface);
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 20px;
-}
-
-.skeleton {
-  min-height: 260px;
 }
 
 /* Daily question */
@@ -395,7 +402,7 @@ main {
 
 .slider-value {
   display: block;
-  font-size: 40px;
+  font-size: var(--text-title);
   font-weight: 500;
   letter-spacing: -0.03em;
   line-height: 1;
@@ -419,7 +426,7 @@ main {
   height: 28px;
   border-radius: 50%;
   background: var(--surface);
-  border: 2px solid var(--ink);
+  border: 1.5px solid var(--ink);
   cursor: grab;
 }
 
@@ -428,7 +435,7 @@ main {
   height: 26px;
   border-radius: 50%;
   background: var(--surface);
-  border: 2px solid var(--ink);
+  border: 1.5px solid var(--ink);
   cursor: grab;
 }
 
@@ -442,13 +449,12 @@ main {
 
 .reveal {
   margin-top: 20px;
-  animation: rise 0.35s ease-out;
+  animation: rise var(--dur-base) var(--ease);
 }
 
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(6px);
   }
 }
 
@@ -462,7 +468,7 @@ main {
   display: flex;
   flex-direction: column;
   padding: 10px 0 0;
-  border-top: 3px solid var(--c);
+  border-top: 1.5px solid var(--c);
   min-width: 0;
 }
 
@@ -488,7 +494,7 @@ main {
 }
 
 .stat-value {
-  font-size: 26px;
+  font-size: var(--text-title);
   font-weight: 500;
   letter-spacing: -0.02em;
 }
@@ -514,7 +520,7 @@ main {
   margin: -7px 0 0 -7px;
   border-radius: 50%;
   background: var(--c);
-  border: 2px solid var(--surface);
+  border: 1.5px solid var(--surface);
 }
 
 .streak {
@@ -524,7 +530,7 @@ main {
 .disclosure {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
   font-size: 12px;
   color: var(--muted);
   display: flex;
@@ -546,7 +552,7 @@ main {
   min-width: 20px;
   height: 20px;
   padding: 0 4px;
-  border: 1.5px solid currentColor;
+  border: 1px solid currentColor;
   border-radius: var(--radius);
   font-family: var(--font-mono);
   font-size: 12px;
@@ -588,7 +594,7 @@ main {
   gap: 10px;
   align-items: baseline;
   padding: 8px 0;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
   font-size: 14px;
 }
 
@@ -644,7 +650,7 @@ main {
   min-height: 64px;
   padding: 12px 14px 24px;
   border-radius: var(--radius);
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line-strong);
   background: var(--surface);
 }
 
@@ -673,23 +679,8 @@ main {
   font-variant-numeric: tabular-nums;
 }
 
-.spinner {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 2px solid var(--line);
-  border-top-color: var(--accent);
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .fork-card {
-  animation: rise 0.35s ease-out;
+  animation: rise var(--dur-base) var(--ease);
 }
 
 .page > .fork-card {
@@ -715,7 +706,7 @@ main {
   grid-template-columns: 1fr auto;
   grid-template-areas: "who value" "topic value";
   padding: 8px 0;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .shift-who {
@@ -786,7 +777,7 @@ main {
   margin: -5px 0 0 -5px;
   border-radius: 50%;
   background: var(--accent);
-  border: 2px solid var(--surface);
+  border: 1.5px solid var(--surface);
 }
 
 .band-value {
@@ -832,7 +823,7 @@ main {
   min-height: 44px;
   padding: 0 10px;
   border-radius: var(--radius);
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line-strong);
   background: var(--paper);
   font-family: var(--font-mono);
   font-size: 14px;
@@ -842,8 +833,8 @@ main {
 
 .globe {
   position: sticky;
-  top: 64px;
-  height: calc(100vh - 64px);
+  top: 56px;
+  height: calc(100vh - 56px);
   z-index: 1;
 }
 
@@ -860,7 +851,7 @@ main {
   position: absolute;
   inset: 0 0 var(--globe-controls) 0;
   opacity: 0;
-  transition: opacity 0.6s ease;
+  transition: opacity var(--dur-slow) var(--ease);
 }
 
 .globe-live.ready {
@@ -868,7 +859,7 @@ main {
 }
 
 .globe-poster {
-  transition: opacity 0.6s ease;
+  transition: opacity var(--dur-slow) var(--ease);
 }
 
 .globe:has(.globe-live.ready) .globe-poster {
@@ -886,7 +877,7 @@ main {
   padding: 12px 14px;
   border-radius: var(--radius);
   background: var(--surface);
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line);
   font-size: 12px;
 }
 
@@ -894,7 +885,7 @@ main {
   min-height: 44px;
   padding: 0 10px;
   border-radius: var(--radius);
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--line-strong);
   background: var(--surface);
   font-size: 14px;
   font-weight: 500;
@@ -952,15 +943,14 @@ main {
   z-index: 30;
   top: 76px;
   right: 16px;
-  max-height: calc(100vh - 92px);
+  max-height: calc(100vh - 84px);
   width: min(400px, calc(100% - 32px));
   overflow-y: auto;
   padding: 20px;
   border-radius: var(--radius);
   background: var(--surface);
-  border: 1.5px solid var(--ink);
-  box-shadow: var(--card-shadow);
-  animation: slide 0.25s ease-out;
+  border: 1px solid var(--line);
+  animation: slide var(--dur-slow) var(--ease);
 }
 
 @keyframes slide {
@@ -978,7 +968,7 @@ main {
 }
 
 .panel-head h2 {
-  font-size: 26px;
+  font-size: var(--text-title);
   margin-top: 4px;
 }
 
@@ -1005,7 +995,7 @@ button.icon {
   display: flex;
   flex-direction: column;
   padding: 8px 0;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .move-head {
@@ -1018,7 +1008,8 @@ button.icon {
 blockquote {
   margin: 0;
   padding: 12px 14px;
-  border-left: 3px solid var(--ink);
+  border-left: 1.5px solid var(--accent);
+  border-radius: var(--radius);
   background: var(--paper-2);
 }
 
@@ -1036,9 +1027,9 @@ blockquote {
 }
 
 .hero h1 {
-  font-size: clamp(40px, 6.4vw, 64px);
-  line-height: 1.02;
-  letter-spacing: -0.035em;
+  font-size: var(--text-display);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
   margin: 8px 0 16px;
   text-wrap: balance;
 }
@@ -1065,7 +1056,7 @@ blockquote {
 /* The n is data and prints in mono; "No claim yet" is words. */
 .skill-value,
 .skill-claim {
-  font-size: 26px;
+  font-size: var(--text-title);
   font-weight: 500;
 }
 
@@ -1091,13 +1082,15 @@ th {
   font-size: 12px;
   font-weight: 400;
   color: var(--muted);
+  background: var(--paper-2);
   padding: 8px 12px 8px 0;
   white-space: nowrap;
 }
 
 td {
   padding: 8px 12px 8px 0;
-  border-top: 1.5px dashed var(--line);
+  height: 48px;
+  border-top: 1px solid var(--line);
   white-space: nowrap;
 }
 
@@ -1106,6 +1099,14 @@ td:first-child {
   white-space: normal;
   min-width: 18rem;
   max-width: 32rem;
+}
+
+.compact td {
+  white-space: normal;
+}
+
+.compact td:first-child {
+  min-width: 0;
 }
 
 .committed-note {
@@ -1182,9 +1183,9 @@ main :is(p, li, dd, h3) a {
 }
 
 .thesis h1 {
-  font-size: clamp(40px, 6.4vw, 64px);
-  line-height: 1.02;
-  letter-spacing: -0.035em;
+  font-size: var(--text-display);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
   text-wrap: balance;
 }
 
@@ -1195,18 +1196,91 @@ main :is(p, li, dd, h3) a {
 
 .thesis .proof {
   padding-top: 14px;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
   font-weight: 600;
 }
 
-.loading {
+/* Loading, error and empty regions share a height per shape, so nothing shifts when the result arrives. */
+.state {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
 }
 
+.state-lines {
+  min-height: 72px;
+}
+
+.state-rows {
+  min-height: 272px;
+}
+
+.state-card {
+  min-height: 260px;
+}
+
+.skeleton {
+  display: block;
+  height: 16px;
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  animation: pulse 1.2s ease-in-out infinite alternate;
+}
+
+.state-lines .skeleton:nth-child(3) {
+  width: 92%;
+}
+
+.state-lines .skeleton:nth-child(4) {
+  width: 64%;
+}
+
+.state-rows .skeleton {
+  height: 48px;
+}
+
+.state-card .skeleton {
+  flex: 1;
+}
+
+@keyframes pulse {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0.45;
+  }
+}
+
+.callout {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  font-size: 14px;
+}
+
+.callout-refused,
 .load-error {
-  color: var(--accent-2);
+  border: 1px solid var(--accent-2);
+  background: var(--clay-wash);
+}
+
+.load-error {
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 24px 0;
 }
 
 .closed {
@@ -1237,7 +1311,7 @@ main :is(p, li, dd, h3) a {
   width: 22px;
   height: 22px;
   vertical-align: middle;
-  border: 1.5px solid var(--muted);
+  border: 1px solid var(--muted);
   border-radius: var(--radius);
 }
 
@@ -1374,7 +1448,9 @@ main :is(p, li, dd, h3) a {
   margin: 12px 0;
   padding: 12px;
   overflow-x: auto;
-  border: 1.5px dashed var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-2);
   line-height: 1.5;
 }
 
@@ -1404,7 +1480,7 @@ main :is(p, li, dd, h3) a {
   grid-template-columns: minmax(96px, 0.35fr) 1fr;
   gap: 12px;
   padding: 8px 0;
-  border-top: 1.5px dashed var(--line);
+  border-top: 1px solid var(--line);
 }
 
 .fields dd {
@@ -1424,7 +1500,7 @@ main :is(p, li, dd, h3) a {
   position: relative;
   z-index: 2;
   background: var(--paper);
-  border-top: 1.5px solid var(--line);
+  border-top: 1px solid var(--line);
   padding: 24px var(--edge) 56px;
   font-size: 14px;
   color: var(--muted);
@@ -1470,7 +1546,7 @@ main :is(p, li, dd, h3) a {
     height: 480px;
     margin: 16px var(--edge) 0;
     overflow: hidden;
-    border: 1.5px solid var(--ink);
+    border: 1px solid var(--line);
   }
 
   .globe-controls {
@@ -1577,7 +1653,7 @@ main :is(p, li, dd, h3) a {
 
   .table-wrap tr {
     padding: 8px 0;
-    border-top: 1.5px dashed var(--line);
+    border-top: 1px solid var(--line);
   }
 
   .table-wrap td::before {
@@ -1703,7 +1779,7 @@ main :is(p, li, dd, h3) a {
   overflow-x: auto;
   margin: 4px 0 12px;
   padding: 12px;
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
   font-family: var(--font-mono);
