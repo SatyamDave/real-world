@@ -387,6 +387,8 @@ function Footer() {
       <nav aria-label="Footer">
         <a href="/receipts">Receipts</a>
         <a href="/acceptable-use">Acceptable use</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
         <a href="/docs">API</a>
         <a href="https://github.com/SatyamDave/real-world">Source</a>
       </nav>

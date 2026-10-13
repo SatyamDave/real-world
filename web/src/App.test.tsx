@@ -452,7 +452,7 @@ test("an unknown path renders not found, not the home page", async () => {
 test.each(["/", "/receipts", "/fork/x", "/nothing-here"])("%s has the footer", async (path) => {
   const el = await render(<App path={path} />);
   const links = [...el.querySelectorAll("footer nav a")].map((a) => a.textContent);
-  expect(links).toEqual(["Receipts", "Acceptable use", "API", "Source"]);
+  expect(links).toEqual(["Receipts", "Acceptable use", "Privacy", "Terms", "API", "Source"]);
   expect(el.querySelector("footer a[href='/docs']")?.textContent).toBe("API");
   expect(el.querySelector("footer")?.textContent).toContain(
     "Real World outputs are AI-simulated. Simulated populations are not polls and not predictions about real people.",
@@ -476,6 +476,18 @@ test("the acceptable-use page shows the three rules and the refusal codes", asyn
     "election_persuasionNo persuasion testing on elections or candidates",
     "election_windowElection window",
   ]);
+});
+
+test.each([
+  ["/privacy", "Privacy", "rw_session"],
+  ["/terms", "Terms", DISCLOSURE],
+])("%s renders its page and the footer links it", async (path, name, text) => {
+  const el = await render(<App path={path} />);
+  await until(() => expect(el.querySelector("article h1")).not.toBeNull());
+  expect(el.querySelector("article h1")?.textContent).toBe(name);
+  expect(el.querySelector("article")?.textContent).toContain(text);
+  expect(el.querySelector(`footer a[href='${path}']`)?.textContent).toBe(name);
+  expect(document.title).toBe(`${name} · Real World`);
 });
 
 test("the docs page lists every operation in openapi.json with its refusal codes", async () => {
