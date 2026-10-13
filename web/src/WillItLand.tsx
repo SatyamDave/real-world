@@ -72,7 +72,7 @@ export function WillItLand({ countries, signedIn }: { countries: Country[]; sign
           placeholder="Paste a tweet, a caption, a headline or a hook"
           onChange={(e) => setText(e.target.value)}
         />
-        <p className="muted small counter">
+        <p className="muted small land-counter">
           {text.length} of {MAX} characters
         </p>
         <fieldset className="land-audience">
