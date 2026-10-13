@@ -91,7 +91,7 @@ Every sentence restates a claim on the allowed list in [messaging](../gtm/messag
 - Not the launch. It never links to a waitlist from Show HN; Show HN links the live daily page ([launch plan](../gtm/launch-plan.md)). It is deleted on Oct 27.
 - Not a place that shows a forecast number, a hash, a probability or an accuracy claim. The record does not exist yet, and inventing one is forbidden ([messaging](../gtm/messaging.md), [CLAUDE.md](../CLAUDE.md)).
 - Not the app. No account, no daily question answered here, no fork. The teaser forecast is collected by Typeform for the waitlist only.
-- Not targeted outside the US until a consent banner exists ([101](../research/product/101-prelaunch-landing-waitlist-ads.md)).
+- A cookie notice asks before any analytics: until the visitor accepts, Amplitude and the ad pixels do not load and nothing is sent ([TRACKING_PLAN](../landing/analytics/TRACKING_PLAN.md)).
 - Not built in `web/`; it is a separate app so it cannot break the launch ([0003](../research/decisions/0003-prelaunch-landing-and-waitlist.md)).
 
 ## Where the code lives

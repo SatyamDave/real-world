@@ -5,6 +5,7 @@ const ev = {
   event_type: "waitlist_email_saved" as const,
   insert_id: "i1",
   signup_id: "s1",
+  device_id: "d1",
 };
 
 function makeFetch() {
@@ -20,6 +21,12 @@ test("staging and production events carry their environment", async () => {
     await sendEvent("k", ev, f as unknown as typeof fetch, new Date(0), environment);
     expect(sent(f).events[0].event_properties.environment).toBe(environment);
   }
+});
+
+test("without a device id, that is without cookie consent, nothing is sent", async () => {
+  const f = makeFetch();
+  await sendEvent("k", { ...ev, device_id: null }, f as unknown as typeof fetch, new Date(0));
+  expect(f).not.toHaveBeenCalled();
 });
 
 test("an unset environment is tagged production, never test", async () => {

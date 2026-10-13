@@ -43,17 +43,17 @@ export function Privacy() {
           signup. Typeform may also set its own cookies.
         </li>
         <li>
-          <strong>How you use this page,</strong> through Amplitude: page views, clicks, scroll
-          sections and form steps, tied to a random device id that Amplitude keeps in your browser
-          (a cookie or local storage). When you join, our server also sends Amplitude that a signup
-          happened, with the same device id and a random signup id, never your email. For a sample
-          of visits Amplitude also records a replay of the session. Text you type, including your
-          email, is masked in the replay.
+          <strong>How you use this page,</strong> only if you accept the cookie notice, through
+          Amplitude: page views and the clicks, sections and form steps we name, tied to a random
+          device id that Amplitude keeps in your browser (a cookie or local storage). When you join,
+          our server also sends Amplitude that a signup happened, with the same device id and a
+          random signup id, never your email. For a sample of visits Amplitude also records a replay
+          of the session with all text on the page and everything you type masked.
         </li>
         <li>
-          <strong>Ad measurement,</strong> only when we are running ads: the Reddit and X pixels
-          tell those networks that a visit or a signup happened. We send the random id of the signup
-          and never your email address.
+          <strong>Ad measurement,</strong> only when we are running ads and you accept the cookie
+          notice: the Reddit and X pixels tell those networks that a visit or a signup happened. We
+          send the random id of the signup and never your email address.
         </li>
       </ul>
 
