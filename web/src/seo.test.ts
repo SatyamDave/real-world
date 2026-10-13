@@ -40,11 +40,11 @@ test("sitemap and robots list the static routes at the origin, and no parameter 
 
 test("every route has a description; a parameter route shares one; an unknown path has none", () => {
   for (const r of ROUTES) expect(descriptionFor(r.path)).toBe(r.description);
-  expect(descriptionFor("/call/")).toBe(descriptionFor("/call"));
+  expect(descriptionFor("/how-it-works/")).toBe(descriptionFor("/how-it-works"));
   expect(descriptionFor("/questions/abc")).toMatch(/committed/);
   expect(descriptionFor("/questions/abc")).toBeDefined();
   expect(descriptionFor("/nope")).toBeUndefined();
-  expect(descriptionFor("/simulate")).toMatch(/simulated populations of 16 countries/);
+  expect(descriptionFor("/simulate")).toMatch(/simulated consumers/);
   expect(descriptionFor("/playground")).toBeUndefined();
 });
 

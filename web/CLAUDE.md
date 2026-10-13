@@ -1,6 +1,6 @@
 # web/
 
-The Vite + React + TypeScript web app: message testing for founders and companies (a message test on the simulated public of 16 countries), "Your tests", sign-in, the receipts and scores pages as proof, and "Call it" (the daily question against the AI) as a secondary page (decision 0015, [decision 0012](../research/decisions/0012-will-it-land-and-call-it.md)). `web/README.md` maps each file.
+The Vite + React + TypeScript web app: message testing for consumer founders (a message test on simulated consumers), "Your tests", "How it works", sign-in, and the public record (receipts and scores) as proof (founder ruling 2026-10-13: B2C only, enterprise on request). `web/README.md` maps each file.
 
 ## Specs and research
 
@@ -16,7 +16,7 @@ The Vite + React + TypeScript web app: message testing for founders and companie
 - One implementation per UI pattern, named in [product/design.md](../product/design.md): the button, card, receipt, stamp, `TierBadge`, `Disclosure`, `Loading`, `LoadError` and the formatting helpers in `src/App.tsx`. Extend the one that exists; a parallel one is a defect `check_design.py` catches when the name repeats and a reviewer catches otherwise.
 - Styles live in `src/styles.css` under a class; an inline style needs a `/* design: reason */` on its line. Spacing in 4px steps, borders 1.5px, `var(--radius)`, weights 400 to 600.
 - Screenshots in the PR sit beside the reference shots named in `product/design.md`; the `consistency-reviewer` agent compares them.
-- Sign-in is the only account surface; no onboarding, popups, tours or server-rendered images. No globe, world or developer surface; the fork appears only as the simulator's Event ([0014](../research/decisions/0014-ledger-desk.md)).
+- Sign-in is the only account surface; no onboarding, popups, tours or server-rendered images. No globe, world or developer surface.
 - Lint and format with Biome; type check with `tsc --noEmit`; test with Vitest.
 
 ## Test

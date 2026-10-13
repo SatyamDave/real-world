@@ -1,4 +1,4 @@
-import { ApiError, type SystemStatus } from "@real-world/sdk";
+import { ApiError } from "@real-world/sdk";
 import { type ComponentType, lazy, type ReactNode, Suspense, useEffect, useState } from "react";
 import { AcceptableUse } from "./AcceptableUse";
 import { rw } from "./api";
@@ -23,9 +23,8 @@ const PAGES: Record<string, ComponentType<{ param?: string }>> = Object.fromEntr
 const NAV = [
   ["Simulate", "/simulate"],
   ["Your tests", "/record"],
-  ["Receipts", "/receipts"],
-  ["Scores", "/scores"],
-  ["Call it", "/call"],
+  ["How it works", "/how-it-works"],
+  ["Public record", "/receipts"],
 ] as const;
 
 export const DISCLOSURE = "AI-simulated. Not a poll or a prediction of a real person";
@@ -181,22 +180,6 @@ function Header({ path }: { path: string }) {
   );
 }
 
-/** The ledger tape: one mono line under the top bar, the live ledger every page sits under. */
-function Tape() {
-  const r = useLoad(() => rw.status());
-  return (
-    <div className="tape">
-      {r.error ? (
-        <LoadError what="system status" error={r.error} retry={r.retry} />
-      ) : !r.data ? (
-        <Loading what="system status" />
-      ) : (
-        <p role="status">{statusLine(r.data)}</p>
-      )}
-    </div>
-  );
-}
-
 /** A SHA-256 drawn as 64 cells, one per hex digit, in four shades; empty and dashed when there is no hash. */
 export function SealGrid({ hash, large = false }: { hash?: string | null; large?: boolean }) {
   const cells = hash
@@ -254,29 +237,11 @@ export function NotFound() {
   );
 }
 
-const SPENT_NOTHING = "fake (nothing spent)";
-const head = (hash: string) => `${hash.slice(0, 4)}…${hash.slice(-4)}`;
-
-/** One mono line from GET /v1/status: the cycle, the latest receipt, the model and today's spend. */
-export function statusLine(s: SystemStatus): string {
-  if (!s.date) return "No cycle has run yet";
-  const fake = s.provider === "fake";
-  const anchor =
-    s.anchor === "anchored" ? `anchored ${s.anchored_at}` : (s.anchor ?? "").replace("_", " ");
-  return [
-    `Last cycle ${s.date} ${s.cycle_status.replace("_", " ")}`,
-    `latest receipt ${s.record_hash ? head(s.record_hash) : "none"}`,
-    `anchor: ${anchor || "none"}`,
-    `model: ${fake ? SPENT_NOTHING : s.model}`,
-    `spend today $${(fake ? 0 : s.spent_today_usd).toFixed(2)} of $${s.nightly_budget_usd.toFixed(2)}`,
-  ].join(" · ");
-}
-
 function Footer() {
   return (
     <footer className="site-footer">
       <nav aria-label="Footer">
-        <a href="/receipts">Receipts</a>
+        <a href="/receipts">Public record</a>
         <a href="/acceptable-use">Acceptable use</a>
         <a href="/privacy">Privacy</a>
         <a href="/terms">Terms</a>
@@ -292,7 +257,7 @@ function Footer() {
 }
 
 const TITLES: Record<string, string> = {
-  "/": "Test your launch before you ship it · Real World",
+  "/": "Test your message before you ship it · Real World",
   "/receipts": "Receipts · Real World",
   "/acceptable-use": "Acceptable use · Real World",
 };
@@ -310,7 +275,6 @@ export function App({ path = location.pathname }: { path?: string }) {
   return (
     <div className="site">
       <Header path={path} />
-      {path !== "/" && <Tape />}
       <main id="main" tabIndex={-1} className="page">
         {error && known && <LoadError what="today's world" error={error} retry={retry} />}
         {path === "/receipts" ? (
@@ -327,8 +291,6 @@ export function App({ path = location.pathname }: { path?: string }) {
           <NotFound />
         )}
       </main>
-      {/* The home leads with who it is for; the ledger tape follows the page there. */}
-      {path === "/" && <Tape />}
       <Footer />
     </div>
   );

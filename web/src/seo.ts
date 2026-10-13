@@ -8,17 +8,17 @@ export const ROUTES: Route[] = [
   {
     path: "/",
     description:
-      "Test a launch post, a price change, a headline or an announcement on simulated people in 16 countries before you ship it. AI-simulated.",
+      "Test a launch message, a price change or a headline on simulated consumers before you ship it. AI-simulated.",
   },
   {
     path: "/simulate",
     description:
-      "Test a message or one event on simulated populations of 16 countries, from prepared company decisions. AI-simulated.",
+      "Test a message on simulated consumers, starting from a prepared decision. AI-simulated.",
   },
   {
-    path: "/call",
+    path: "/how-it-works",
     description:
-      "Call today's question against an AI whose call is sealed before you answer, then see who was closer.",
+      "How Real World tests a message on simulated consumers, and what the results are and are not. AI-simulated.",
   },
   {
     path: "/scores",
