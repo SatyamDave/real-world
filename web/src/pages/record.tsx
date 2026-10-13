@@ -98,9 +98,6 @@ function Signed({ person }: { person: Person }) {
           <Rows title="Marked" tests={r.data.tests.filter((t) => t.outcome)} onMarked={r.retry} />
         </>
       )}
-      <p className="muted small">
-        Your calls against the AI show under each <a href="/call">Call it</a> question.
-      </p>
       <Account person={person} />
     </div>
   );

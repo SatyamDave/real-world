@@ -1,170 +1,122 @@
-// Prepared inputs, one company decision each (product/playground.md,
-// research/decisions/0015-founders-and-companies.md). Reaction texts are example messages and
-// event texts are hypothetical events, not news. Nothing here tests election messaging or names a
-// private person (product/acceptable-use.md).
-
-export type Primitive = "reaction" | "event";
-
-export type Who = "founders" | "growth" | "pricing" | "comms" | "entry";
-
-export const WHO: [Who, string][] = [
-  ["founders", "Founders"],
-  ["growth", "Growth and marketing"],
-  ["pricing", "Pricing and product"],
-  ["comms", "Comms and PR"],
-  ["entry", "Market entry"],
-];
+// Prepared inputs for the "Start from a real decision" list: a consumer founder's idea, the ideal
+// consumer in plain words, and the message to test. The messages are examples, not shipped copy.
+// Nothing here tests election messaging or names a private person (product/acceptable-use.md).
 
 export type UseCase = {
   id: string;
-  who: Who;
-  title: string;
-  blurb: string;
-  primitive: Primitive;
-  text: string;
-  /** Shown on the card, literal. */
-  audience: string;
-  countries?: string[];
-  ages?: ("18-34" | "35-54" | "55+")[];
+  category: string;
+  idea: string;
+  /** The ideal consumer, in plain words. */
+  icp: string;
+  message: string;
 };
 
 export const USE_CASES: UseCase[] = [
   {
-    id: "launch-post",
-    who: "founders",
-    primitive: "reaction",
-    title: "Launch post",
-    blurb: "Will the post announcing your product land, and with whom?",
-    text: "Today we launch a calendar that books a meeting only when everyone has a free hour. Free for teams under ten.",
-    audience: "Every simulated country",
+    id: "habit-app",
+    category: "Consumer app",
+    idea: "A habit tracker that texts you instead of sending push notifications",
+    icp: "Adults 22 to 35 who have downloaded and deleted three habit apps",
+    message: "Habits stick when they find you. Reply to one text a day and keep your streak. Free.",
   },
   {
-    id: "launch-india",
-    who: "founders",
-    primitive: "reaction",
-    title: "Launch in India",
-    blurb: "Test a launch post on the young adults you want first.",
-    text: "Our budgeting app is live in India today. See every rupee you spend in one place, free for students.",
-    audience: "Adults 18-34 in India",
-    countries: ["IND"],
-    ages: ["18-34"],
+    id: "dtc-sheets",
+    category: "E-commerce and DTC",
+    idea: "Bamboo bed sheets sold direct, with a 100-night trial",
+    icp: "Hot sleepers aged 28 to 45 who read sheet reviews before buying",
+    message: "Sleep cool or send them back. 100 nights to decide, and we pay the return shipping.",
   },
   {
-    id: "waitlist-brazil",
-    who: "founders",
-    primitive: "reaction",
-    title: "Waitlist launch in Brazil",
-    blurb: "Check whether a waitlist offer makes people sign up or scroll past.",
-    text: "Join the waitlist: the first 10,000 people in Brazil get a year of our language app free.",
-    audience: "Brazil",
-    countries: ["BRA"],
+    id: "marketplace-tools",
+    category: "Marketplace",
+    idea: "A neighbourhood marketplace for renting power tools by the day",
+    icp: "Homeowners who need a tool once a year and hate buying it",
+    message: "Why buy a $200 drill for one shelf? Rent one from a neighbour for $12 a day.",
   },
   {
-    id: "ad-line",
-    who: "growth",
-    primitive: "reaction",
-    title: "Ad line",
-    blurb: "Compare how an ad line reads in two English-speaking markets.",
-    text: "Stop paying for software your team forgot it has. We find unused seats in five minutes.",
-    audience: "The United States and the United Kingdom",
-    countries: ["USA", "GBR"],
+    id: "fintech-savings",
+    category: "Consumer fintech",
+    idea: "A savings app that rounds up purchases and moves the change into a high-yield account",
+    icp: "Hourly and gig workers who want to save but never remember to move money",
+    message: "Save without noticing. We round up every purchase and move the change to 4.2% APY.",
   },
   {
-    id: "landing-headline",
-    who: "growth",
-    primitive: "reaction",
-    title: "Landing page headline",
-    blurb: "See which age bands a headline reaches before you spend on traffic.",
-    text: "Customer support that answers in under a minute, in 40 languages.",
-    audience: "Every simulated country",
+    id: "health-sleep",
+    category: "Health",
+    idea: "A coached sleep program for shift workers, delivered by text",
+    icp: "Nurses, drivers and warehouse staff on rotating shifts who sleep badly",
+    message: "Your schedule changes every week. Your sleep plan should too. Start a 14-day trial.",
   },
   {
-    id: "price-rise",
-    who: "pricing",
-    primitive: "reaction",
-    title: "Price rise from $8 to $10",
-    blurb: "Read the reaction to a price rise before customers see it.",
-    text: "From March 1 our Plus plan goes from $8 to $10 a month. Everything you have today stays included.",
-    audience: "The United States",
-    countries: ["USA"],
+    id: "hardware-bottle",
+    category: "Hardware",
+    idea: "A water bottle that glows when you are behind on drinking water",
+    icp: "Desk workers who forget to drink and already own an expensive bottle",
+    message: "The bottle that nags you kindly. It glows when you are behind. $39, no app required.",
   },
   {
-    id: "free-tier",
-    who: "pricing",
-    primitive: "reaction",
-    title: "Ending the free plan",
-    blurb: "Check how removing a free tier lands before you announce it.",
-    text: "We are ending our free plan on June 30. Free accounts can export their data or move to Starter at $5 a month.",
-    audience: "The United States, the United Kingdom and Germany",
-    countries: ["USA", "GBR", "DEU"],
+    id: "local-cleaning",
+    category: "Local services",
+    idea: "Same-week house cleaning with one flat price for any home under 2,000 sq ft",
+    icp: "Dual-income households in suburbs who want one price with no quote calls",
+    message: "One price, $129. Any home under 2,000 sq ft. Book in two minutes, cleaned this week.",
   },
   {
-    id: "ai-personal-data",
-    who: "pricing",
-    primitive: "reaction",
-    title: "A feature that uses AI on personal data",
-    blurb: "See who welcomes it and who pulls back before it ships.",
-    text: "Our new assistant reads your inbox to draft replies for you. You can turn it off at any time.",
-    audience: "Every simulated country",
+    id: "creator-clips",
+    category: "Creator tools",
+    idea: "A tool that cuts a podcast episode into captioned short clips",
+    icp: "Independent podcasters with under 5,000 listeners who post on social video",
+    message: "Upload one episode, get ten captioned clips in ten minutes. First five clips free.",
   },
   {
-    id: "chip-shortage",
-    who: "pricing",
-    primitive: "event",
-    title: "Phone prices double before your launch",
-    blurb: "How a chip shortage that doubles phone prices shifts spending intent.",
-    text: "A chip shortage doubles phone prices worldwide.",
-    audience: "Every simulated country",
+    id: "ai-tutor",
+    category: "Consumer AI",
+    idea: "An AI companion that helps you rehearse hard conversations",
+    icp: "Adults 25 to 40 who avoid difficult talks with a boss, landlord or family member",
+    message:
+      "Practice the conversation you are dreading before you have it. Private, and free to try.",
   },
   {
-    id: "outage-apology",
-    who: "comms",
-    primitive: "reaction",
-    title: "Outage apology",
-    blurb: "Check whether an apology after an incident reads as sincere.",
-    text: "Yesterday our service was down for six hours. That is on us. Every customer gets a free month.",
-    audience: "Every simulated country",
+    id: "game-cozy",
+    category: "Games",
+    idea: "A cozy mobile game where you run a tiny bakery, with no timers or energy bars",
+    icp: "Casual mobile players, mostly women 25 to 45, tired of pay-to-wait games",
+    message: "A bakery game with no timers. Play five minutes or five hours. One price, no ads.",
   },
   {
-    id: "return-to-office",
-    who: "comms",
-    primitive: "reaction",
-    title: "Return-to-office announcement",
-    blurb: "Read how a policy change lands with the public before it is reported.",
-    text: "From September everyone at our company works from the office three days a week.",
-    audience: "The United States, the United Kingdom and India",
-    countries: ["USA", "GBR", "IND"],
+    id: "food-meal-kit",
+    category: "Food",
+    idea: "A weekly box of fresh pasta and sauce from one regional chef",
+    icp: "Couples 28 to 45 who cook on weeknights and care where food comes from",
+    message: "Fresh pasta from one chef, at your door Thursday. $34 a box, skip any week.",
   },
   {
-    id: "sustainability-germany",
-    who: "entry",
-    primitive: "reaction",
-    title: "Sustainability claim in Germany",
-    blurb: "Test a green claim in a market that reads them closely.",
-    text: "Every order now ships carbon neutral, at no extra cost to you.",
-    audience: "Germany",
-    countries: ["DEU"],
+    id: "travel-weekend",
+    category: "Travel",
+    idea: "Weekend trips planned for you within a three-hour drive, with the stay booked",
+    icp: "City couples 27 to 40 who want a getaway but dread planning one",
+    message: "Tell us your budget and we plan the weekend. Stay, dinner and a hike, booked.",
   },
   {
-    id: "student-offer",
-    who: "entry",
-    primitive: "reaction",
-    title: "Student offer in Mexico",
-    blurb: "Test the offer you plan to enter a new country with.",
-    text: "Now in Mexico: students get half price on every plan this month.",
-    audience: "Adults 18-34 in Mexico",
-    countries: ["MEX"],
-    ages: ["18-34"],
+    id: "edu-language",
+    category: "Education",
+    idea: "A conversation-first Spanish course with a live tutor in every lesson",
+    icp: "Adults 30 to 50 who stalled on a language app and want to speak on a trip",
+    message: "Speak Spanish by your trip. Every lesson is a real conversation with a live tutor.",
   },
   {
-    id: "rate-cut",
-    who: "entry",
-    primitive: "event",
-    title: "A surprise rate cut",
-    blurb: "How spending intent and optimism move in a market you are about to enter.",
-    text: "The central bank surprises markets with a large interest rate cut.",
-    audience: "The United States",
-    countries: ["USA"],
+    id: "consumer-pets",
+    category: "Consumer app",
+    idea: "A shared app for splitting pet care between roommates and partners",
+    icp: "Young couples and roommates who share a dog or cat and argue about chores",
+    message: "Who fed the dog? Now you will know. Shared pet care for two, free.",
+  },
+  {
+    id: "marketplace-secondhand",
+    category: "Marketplace",
+    idea: "A resale marketplace for kids' clothing with prepaid shipping labels",
+    icp: "Parents of children under 8 who outgrow clothes every few months",
+    message: "Sell outgrown kids' clothes in a bag. We label, ship and pay you. No listing photos.",
   },
 ];
 

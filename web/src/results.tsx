@@ -1,4 +1,4 @@
-import type { PostTestOut, SegmentReaction, SimulateResult } from "@real-world/sdk";
+import type { PostTestOut, SegmentReaction } from "@real-world/sdk";
 import { useState } from "react";
 import { Disclosure, pct, pts, SealRow, sentence, TierBadge, topicLabel, usd } from "./App";
 import { Trajectory } from "./Chart";
@@ -192,52 +192,6 @@ export function SegmentMatrix({ rows }: { rows: SegmentReaction[] }) {
   );
 }
 
-/** Each topic's share before and after a fork: the p10-p90 band, a tick at before, a dot at p50. */
-export function BeliefShifts({ result }: { result: SimulateResult }) {
-  const rows = Object.entries(result.outputs).sort(
-    ([, a], [, b]) =>
-      Math.abs(b.final.p50 - b.baseline_share) - Math.abs(a.final.p50 - a.baseline_share),
-  );
-  const at = (v: number) => `${(Math.min(1, Math.max(0, v)) * 100).toFixed(1)}%`;
-  return (
-    <>
-      <h3>Beliefs before and after</h3>
-      <p className="muted small">
-        Median after {result.days} days, with p10 to p90 across {result.members} members. Tick:
-        before.
-      </p>
-      <ul className="shifts">
-        {rows.map(([t, o]) => (
-          <li key={t}>
-            <span className="shift-label">{topicLabel(t)}</span>
-            <span className="shift-track" aria-hidden="true">
-              <span
-                className="shift-band"
-                style={{
-                  /* design: computed position */ left: at(o.final.p10),
-                  width: at(o.final.p90 - o.final.p10),
-                }}
-              />
-              <span
-                className="shift-tick"
-                style={{ /* design: computed position */ left: at(o.baseline_share) }}
-              />
-              <span
-                className="shift-dot"
-                style={{ /* design: computed position */ left: at(o.final.p50) }}
-              />
-            </span>
-            <span className="mono shift-text">
-              {pct(o.baseline_share)} → {pct(o.final.p50)} ({pts(o.final.p50 - o.baseline_share)}) ·
-              p10–p90 {pct(o.final.p10)}–{pct(o.final.p90)}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </>
-  );
-}
-
 const utc = (iso: string) => `${new Date(iso).toISOString().slice(0, 16).replace("T", " ")} UTC`;
 
 /** The slip's foot: the seal drawn and written out, or an empty grid and how to get one. */
@@ -374,68 +328,6 @@ export function ReactionResult({
         {r.model_calls} model calls · {fake ? "fake model, nothing spent" : usd(r.cost_usd)}
       </p>
       <Disclosure tiers={r.audiences.map((s) => s.coverage_tier)} />
-    </section>
-  );
-}
-
-export function EventResult({ result, text }: { result: SimulateResult; text: string }) {
-  const topics = Object.entries(result.outputs);
-  const moved = topics
-    .map(([t, o]) => [t, o.final.p50 - o.baseline_share] as const)
-    .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
-  const [lead] = moved;
-  const leadOut = lead ? result.outputs[lead[0]] : undefined;
-  const fake = result.provider === "fake";
-  return (
-    <section className="card receipt event-result" aria-live="polite">
-      <div className="receipt-top">
-        <span className="slip-kind">
-          Event · {result.days} simulated days from the world of {result.world_snapshot_id}
-        </span>
-        <span className="stamp">{result.note}</span>
-      </div>
-      <blockquote className="slip-quote">{text}</blockquote>
-      {lead && (
-        <p className="land-chance">
-          <span className="big">{pts(lead[1])}</span>
-          <span>
-            {topicLabel(lead[0])}, the largest move after {result.days} simulated days
-          </span>
-        </p>
-      )}
-      <BeliefShifts result={result} />
-      {lead && leadOut && (
-        <Trajectory
-          title={`${topicLabel(lead[0])} by simulated day`}
-          domain={[0, 1]}
-          format={pct}
-          yLabel="Share"
-          reference={leadOut.baseline_share}
-          points={leadOut.by_day.map((d) => ({
-            x: `Day ${d.day}`,
-            y: d.p50,
-            low: d.p10,
-            high: d.p90,
-          }))}
-        />
-      )}
-      <h3>Largest segment shifts</h3>
-      <ul className="segments">
-        {result.top_shifts.map((s) => (
-          <li key={`${s.segment}-${s.topic}`}>
-            <span>
-              {topicLabel(s.topic)} · {s.segment.replaceAll("|", " · ")} · n = {s.n_agents}
-            </span>
-            <span className="mono">{pts(s.shift_p50)}</span>
-            <TierBadge tier={s.tier} />
-          </li>
-        ))}
-      </ul>
-      <p className="muted small">
-        {result.members} members · {result.agents_sampled} agents · {result.days} days ·{" "}
-        {fake ? "fake model, nothing spent" : usd(result.cost.actual_usd)}
-      </p>
-      <Disclosure tiers={result.coverage.map((c) => c.tier)} />
     </section>
   );
 }
