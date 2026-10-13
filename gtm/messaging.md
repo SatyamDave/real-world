@@ -57,7 +57,7 @@ Surface specs: [product/README.md](../product/README.md).
 | "100,000 agents" as the headline | Agent count is not what sets us apart, and the LLM is called per archetype, not per agent ([CTO lens](../research/lenses/cto.md), [red team](../research/lenses/red-team.md)) |
 | "The whole world" without tiers | Rich data exists for a minority of countries; show tiers ([coverage tiers](../research/data/099-country-coverage-tiers.md), [cross-cultural bias](../research/science/027-cross-cultural-llm-bias.md)) |
 | "Replaces surveys", "a poll" | Simulated respondents fail on spread, subgroups and change over time ([failure modes](../research/science/018-failure-modes.md), [policy ICP](../research/product/081-icp-policy-research.md)) |
-| "Deterministic", "reproducible with a seed" | The Anthropic Messages API documents no seed parameter; replay means re-running our engine on recorded model outputs ([replay](../research/engineering/072-replay-and-caching.md), [red team](../research/lenses/red-team.md)) |
+| "Deterministic", "reproducible with a seed" | Neither Jev nor the open text model is documented to take a seed; replay means re-running our engine on recorded model outputs ([replay](../research/engineering/072-replay-and-caching.md), [red team](../research/lenses/red-team.md)) |
 | "Bet on our forecast", any trading offer | We use markets as a benchmark only ([regulation](../research/business/091-regulation.md), [CRO lens](../research/lenses/cro.md)) |
 | Any backtest number in public copy | Models have seen the past; backtests are retrospective only ([forecast scoring](../research/science/030-forecast-scoring.md)) |
 

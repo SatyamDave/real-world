@@ -151,7 +151,7 @@ def replay_day(conn: sqlite3.Connection, date: str) -> dict[str, Any]:
         qid = e["question_id"]
         if qid not in cache:
             q = _find_question(qid)
-            provider = "fake" if e["model"] == "fake" else "anthropic"
+            provider = llm.provider_for(e["model"])
             texts[qid] = None if q is None else q["text"]
             cache[qid] = None if q is None else replay_forecast(conn, date, q, agents, provider)
         r = cache[qid]
