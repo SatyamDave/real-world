@@ -1370,14 +1370,6 @@ main :is(p, li, dd, h3) a {
   font-size: 14px;
 }
 
-.docs pre {
-  margin: 12px 0;
-  padding: 12px;
-  overflow-x: auto;
-  border: 1.5px dashed var(--line);
-  line-height: 1.5;
-}
-
 .first-call {
   display: flex;
   flex-direction: column;
@@ -1699,17 +1691,6 @@ main :is(p, li, dd, h3) a {
   margin-top: 8px;
 }
 
-.api-snippet pre {
-  overflow-x: auto;
-  margin: 4px 0 12px;
-  padding: 12px;
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  font-family: var(--font-mono);
-  font-size: 12px;
-}
-
 .api-downloads {
   display: flex;
   flex-wrap: wrap;
@@ -1851,4 +1832,74 @@ main :is(p, li, dd, h3) a {
 .scores .skills {
   grid-template-columns: minmax(0, 1fr);
   gap: 24px;
+}
+
+/* ---- Tabs and CodeBlock: one code display for every surface ---- */
+
+.codeblock {
+  margin: 4px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+}
+
+.tabs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tabs [role="tablist"] {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+}
+
+.tabs [role="tab"] {
+  min-height: 44px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.tabs [role="tab"]:hover:not(:disabled) {
+  background: none;
+  color: var(--ink);
+}
+
+.tabs [role="tab"][aria-selected="true"] {
+  border-bottom-color: var(--ink);
+  color: var(--ink);
+}
+
+.codeblock pre {
+  margin: 0;
+  padding: 16px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.codeblock-copy {
+  font-size: 14px;
+}
+
+.tok-punct,
+.tok-comment {
+  color: var(--muted);
+}
+
+.tok-string {
+  color: var(--accent);
+}
+
+.tok-keyword {
+  font-weight: 600;
 }

@@ -3,6 +3,7 @@ import readme from "../../README.md?raw";
 import pyReadme from "../../sdk/python/README.md?raw";
 import tsReadme from "../../sdk/typescript/README.md?raw";
 import { API_URL } from "./api";
+import { CodeBlock } from "./CodeBlock";
 
 type Schema = {
   $ref?: string;
@@ -110,7 +111,7 @@ export function Docs() {
 
       <section className="card first-call">
         <h2>First call</h2>
-        <pre>{atApi(block(readme, "curl"))}</pre>
+        <CodeBlock label="First call" code={{ curl: atApi(block(readme, "curl")) }} />
         <p className="small">
           It returns <code>202</code> with a simulation id. Poll{" "}
           <code>GET /v1/simulations/{"{id}"}</code> until <code>status</code> is{" "}
@@ -136,14 +137,17 @@ export function Docs() {
 
       <h2>SDK quickstarts</h2>
       <section className="card">
-        <h3>
-          Python: <a href={`${REPO}/sdk/python/README.md`}>sdk/python/README.md</a>
-        </h3>
-        <pre>{atApi(block(pyReadme, "from realworld"))}</pre>
-        <h3>
-          TypeScript: <a href={`${REPO}/sdk/typescript/README.md`}>sdk/typescript/README.md</a>
-        </h3>
-        <pre>{atApi(block(tsReadme, "@real-world/sdk"))}</pre>
+        <p className="small">
+          Sources: <a href={`${REPO}/sdk/python/README.md`}>sdk/python/README.md</a>,{" "}
+          <a href={`${REPO}/sdk/typescript/README.md`}>sdk/typescript/README.md</a>
+        </p>
+        <CodeBlock
+          label="SDK quickstart"
+          code={{
+            python: atApi(block(pyReadme, "from realworld")),
+            typescript: atApi(block(tsReadme, "@real-world/sdk")),
+          }}
+        />
       </section>
     </div>
   );
