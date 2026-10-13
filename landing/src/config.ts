@@ -12,9 +12,17 @@ export const config = {
   turnstileSiteKey: (env.VITE_TURNSTILE_SITE_KEY ?? "").trim(),
   // Typeform form id (landing/typeform/form.json, created by scripts/typeform-sync.mjs).
   typeformFormId: (env.VITE_TYPEFORM_FORM_ID ?? "").trim(),
-  // Ad pixels: each loads only when its id is set (PR4).
+  // Amplitude browser key (public) and the session-replay sample rate, 0..1.
+  amplitudeKey: (env.VITE_AMPLITUDE_API_KEY ?? "").trim(),
+  replaySampleRate: Math.min(
+    1,
+    Math.max(0, Number(env.VITE_AMPLITUDE_REPLAY_SAMPLE_RATE ?? "0.1") || 0),
+  ),
+  // Ad pixels: each loads only when its id is set.
   redditPixelId: (env.VITE_REDDIT_PIXEL_ID ?? "").trim(),
   xPixelId: (env.VITE_X_PIXEL_ID ?? "").trim(),
+  // The X event id for a Lead, created in X Ads Manager (looks like tw-<pixel>-<event>).
+  xLeadEventId: (env.VITE_X_LEAD_EVENT_ID ?? "").trim(),
   metaPixelId: (env.VITE_META_PIXEL_ID ?? "").trim(),
   enableMetaPixel: (env.VITE_ENABLE_META_PIXEL ?? "false").trim() === "true",
 } as const;

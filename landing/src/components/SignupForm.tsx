@@ -114,6 +114,11 @@ export function SignupForm({
       });
       turnstile.dispose(); // the form is about to be replaced; remove the widget first
       setState(result.duplicate ? { kind: "duplicate", result } : { kind: "success", result });
+      // A new signup is the one conversion (the pixels' Lead). A duplicate is not.
+      track(result.duplicate ? "signup_duplicate" : "signup_saved", {
+        location,
+        signup_id: result.signupId,
+      });
     } catch (err) {
       turnstile.reset();
       const reason = err instanceof SignupError ? err.reason : "request_failed";
@@ -157,6 +162,7 @@ export function SignupForm({
       <div className="row">
         <input
           id="email"
+          className="amp-mask"
           type="email"
           inputMode="email"
           autoComplete="email"

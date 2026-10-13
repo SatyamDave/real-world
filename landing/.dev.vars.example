@@ -41,6 +41,8 @@ VITE_AMPLITUDE_REPLAY_SAMPLE_RATE=0.1
 # Ad pixels. Each loads only when its id is set; leave empty to disable that channel.
 VITE_REDDIT_PIXEL_ID=
 VITE_X_PIXEL_ID=
+# The X Ads Manager event id for a Lead on the X pixel (tw-<pixel>-<event>). Empty = no X Lead event.
+VITE_X_LEAD_EVENT_ID=
 # Meta stays behind a flag until the policy review clears; off by default.
 VITE_ENABLE_META_PIXEL=false
 VITE_META_PIXEL_ID=

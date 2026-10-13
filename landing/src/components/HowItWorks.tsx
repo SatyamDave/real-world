@@ -1,4 +1,6 @@
+import { useRef } from "react";
 import { BRAND } from "../brand";
+import { useViewed } from "../useViewed";
 
 // Three steps, a real sequence (simulate -> hash -> score), written only from
 // claims allowed in gtm/messaging.md.
@@ -21,8 +23,10 @@ const STEPS = [
 ];
 
 export function HowItWorks() {
+  const viewRef = useRef<HTMLElement>(null);
+  useViewed(viewRef, "how_it_works");
   return (
-    <section className="section wrap" aria-labelledby="how-title">
+    <section ref={viewRef} className="section wrap" aria-labelledby="how-title">
       <h2 className="section-title" id="how-title">
         How it works
       </h2>
