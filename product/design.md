@@ -78,77 +78,23 @@ One implementation per pattern; a second button, card, badge, disclaimer, loader
 | Card | `--surface`, 1px `--line` border, `--radius`, 20px padding, no shadow; whole-card links show the hover border `--line-strong` |
 | Receipt | unchanged: 1.5px `--ink` border, `--card-shadow`, torn edge, dashed header rule; the only card that is heavy |
 | Stamp | unchanged |
-| Input | 16px, 12px 14px padding, 1px `--line-strong` border, `--surface`; focus is the 2px `--focus` outline; the fork input placeholder is "What if …" |
+| Input | 16px, 12px 14px padding, 1px `--line-strong` border, `--surface`; focus is the 2px `--focus` outline; the post box placeholder is "Paste a tweet, a caption, a headline or a hook" |
 | Tabs | underline tabs, not pills: 14px 500, 2px `--ink` underline on the active tab, `role="tablist"`, arrow-key navigation, 44px height; the chosen tab persists per surface in `localStorage` |
 | Inline code | Mono 14px, `--paper-2` fill, `--radius`, 2px 6px padding |
 | Table | full width, no vertical rules, 1px `--line` between rows, header row 12px `--muted` on `--paper-2`, 48px row height at 1024px and up, mono right-aligned numerals, sticky header when the body scrolls; at 390px a row becomes a stacked card list or the table scrolls inside its block with the first column sticky |
 | Nav item (docs, settings) | 14px, 36px row; active has `--accent-wash` fill and 2px `--accent` left rule |
 | Callout | `--paper-2` fill, 1px `--line` border, 14px text; the only coloured variant is clay for a refusal or an error; no icon, no emoji |
 | Header | `.topbar`: 56px high, 1px bottom `--line`, brand, nav with `aria-current="page"`, then Sign in or the account button; sticky |
-| Footer | links in columns (Product, Proof, Developers, Legal), the disclosure, copyright; 44px targets |
-
-### Code blocks and language tabs
-
-One `CodeBlock` component renders every snippet on the landing page, docs, the keys page and the fork card's "Get this via API".
-
-- Frame: `--paper-2` fill, 1px `--line` border, `--radius`; header row 40px with the language tabs at the left and a "Copy" text action at the right; Mono 14px / 1.6; 16px padding; horizontal scroll inside the block, no wrapping, no line numbers unless a prose step cites a line.
-- Tabs are `curl`, `Python`, `TypeScript`, in that order, on every endpoint, with the same request in each. The Python and TypeScript tabs are the SDK quickstarts' own snippets, as `Docs.tsx` already reads them; the `curl` tab is generated from `api/openapi.json`. `check_sdk_parity.py` keeps them aligned.
-- Highlighting uses four tones only: `--ink` for names, `--muted` for punctuation and comments, `--accent` for strings, `--accent-2` never. No rainbow theme.
-- "Copy" changes to "Copied" for 1.5s and announces it to screen readers. A response block sits under the request with a "Response" label and the status code; a response example is the API's real shape from a fixture, never invented fields.
-- The key in a snippet is read from the environment variable `REAL_WORLD_API_KEY` or shown as `rw_...`; a real key is never rendered into a snippet.
-
-### Docs
-
-- Page header: breadcrumb (12px), page title, lead sentence, one meta row: "Last updated <ISO date>", "Copy as Markdown". No other chrome.
-- Left nav groups: Get started, Concepts, API reference (one entry per operation, in `openapi.json` order), SDKs, Changelog. Active item per Nav item rule.
-- Right TOC lists `h2` and `h3`, highlights the one in view, and uses plain anchor links.
-- Each operation page: one-sentence summary, the `curl`/`Python`/`TypeScript` block, a parameter table (name, type, required, description), a response table, a refusal-codes table, the error shape. Every page ends with "Was this page useful?" (Yes, No) only if its answer is stored; otherwise omit it.
-- Search is a 14px input in the header opened with `/`; results show page title and the matching line. A search with no results says "No pages match <query>."
-
-### Keys page (`/developers`)
-
-- Top: the one-line spend rule ("A key cannot spend more than its daily cap; when the cap cannot be checked the call is refused."), then "Create key".
-- Create: a name field and a daily dollar cap field, one primary button. On success the full key shows once in a callout with "Copy" and the line "This key is shown once. Store it now."; leaving the page removes it, and the list shows only the prefix.
-- List is a table: name, key prefix (Mono), created (ISO date), last used (ISO date or "Never"), daily cap, spent today, and a "Revoke" text action. Revoke asks for confirmation in a dialog with focus on "Cancel".
-- Under the table: "Use your key" with the code block and the three tabs, pre-filled with `REAL_WORLD_API_KEY`.
-- Empty: "No keys yet. Create one to call the API." with the primary button. Loading, error, signed-out: States below.
-
-### Charts and data visualisation
-
-- One `Chart` component family, each with its data table (existing rule). Marks are `--ink` for the main series, `--accent` for the highlighted one (ours against the baseline), `--muted` for the rest. No fills except the spread band (`--accent-wash`, the p10 to p90 range) and bars.
-- Axes: 1px `--line`, tick labels 12px Mono `--muted`; gridlines dashed 1px `--line`, horizontal only; zero line `--line-strong`. The y axis starts at zero for bars; a zoomed axis says so in the caption.
-- Label series directly at the line end; a legend only for more than three series. No 3D, no dual axis, no pie, no gradient, no animation on load.
-- Always shown with the chart: n, the interval, the coverage tier, and the line "AI-simulated". Hover and focus show a tooltip (14px, `--surface`, 1px `--line`) and a focus ring on each point; keyboard arrows move between points.
-- A score with fewer than 10 resolved questions shows no interval; fewer than 100 shows "No claim yet" (existing rule).
-
-## States
-
-Every view shows one of: loading, empty, result, refused, error. No state exists for something that only happens when the product is broken; fix the cause.
-
-| State | Rule |
-| --- | --- |
-| Loading | A skeleton in the exact shape and height of the result (`.skeleton`, `--paper-2`, `--radius`), shown only after 200ms so fast loads show nothing; no spinner except inside a button that has been pressed; a status line "Loading <what>" for screen readers (`aria-live="polite"`); layout does not shift when the result arrives |
-| Empty | One sentence saying there is nothing yet and when there will be, in `--muted`, plus the one next action as a button; no illustration |
-| Result | Always with tier, spread and "AI-simulated" where they apply |
-| Refused | The API's `detail` sentence as sent, in a clay callout, with the one link that helps (for example acceptable use) |
-| Error | `LoadError`: what did not load, why in one clause, "Try again"; the response body is never shown; the failed region keeps its size |
-| Signed out | The one-line reason and "Sign in"; the page returns here after sign-in |
-
-Copy for each state is written in the surface's spec, literally.
+| Footer | links (Receipts, Acceptable use, Privacy, Terms, Source), the disclosure, copyright; 44px targets |
 
 ## Landing narrative
 
-One page, `/` signed out, in this order. Each block is a headline (section title), one lead sentence, and one artefact read from committed data; no stock imagery, no decoration.
+Since [decision 0012](../research/decisions/0012-will-it-land-and-call-it.md) the landing page and the app's home tell one story, in this order; [landing-page.md](landing-page.md) holds the positioning rules. Each block is a headline, one lead sentence, and one artefact from real data; no stock imagery, no decoration.
 
-1. Hero: display headline "Simulations with receipts.", the sub-line from [messaging](../gtm/messaging.md), one primary action ("Fork today's world") and one text action ("Read the record"). The still globe poster beside it at 1024px and up.
-2. How it works, four numbered blocks (`1`, `2`, `3`, `4` in Mono, not "Fig"), each the same anatomy: title, two sentences of mechanism, one artefact, a link to the proof page.
-   - Population: agents are rows of traits with a belief per topic; the artefact is a real agent row and the coverage-tier legend ([coverage tiers](../research/data/099-country-coverage-tiers.md)).
-   - Daily cycle: the eight steps of the [glossary](glossary.md) as a horizontal list with today's run status from `GET /v1/status`.
-   - Receipts: the forecast sealed before it resolves; the artefact is a real leaf hash, salt-free, and its inclusion proof, with "Verify in your browser" opening `/receipts`.
-   - Scoring: forecasts against the market price at commit time, misses included; the artefact is the real score card with its n, and "No claim yet" until the rule allows one.
-3. Live proof: the latest three receipts and today's question, from the API; if none exist, the empty state, not a placeholder.
-4. For developers: the first call as the three-tab code block, the key line, a link to `/docs`.
-5. Closing band: one sentence and one action; the footer with the disclosure.
+1. Hero: "Will this land?", the sub-line from [messaging](../gtm/messaging.md), and the post box itself as the one primary action ("Test it"). The still globe poster may sit beside it as decoration, never as the action.
+2. The result: a real post test card (landing chance with its range, best and worst audiences with tiers, two simulated accounts, the rewrite) and the seal line.
+3. Call it: today's question with "The AI's call is sealed" and its leaf hash.
+4. Proof: the latest receipts and the score card with its n, "No claim yet" until the rule allows one, linking `/receipts` and `/scores`.
 
 Never on this page: customer or investor mentions, a "trusted by" or logo row, testimonials, user counts, a speed, cost or accuracy comparison, "world model", "beats the market", any backtest number.
 

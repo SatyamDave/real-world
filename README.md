@@ -2,20 +2,19 @@
 
 **Simulations with receipts.**
 
-AI simulates how the world reacts to the news. Every forecast is sealed before the outcome and scored in public.
+Know how a post will land before you post it, and call the news against an AI that seals its calls first ([decision 0012](research/decisions/0012-will-it-land-and-call-it.md)).
 
-Every morning Real World simulates how the populations of the countries we cover react to the day's news, polls and markets, corrects its simulated agents against what was observed, and publishes hashed forecasts that are scored in public against the prediction markets, misses included. A coverage tier is shown on every country and result, and every output is labelled AI-simulated. Category: a forecast and simulation API with a public score.
+Under both runs the engine: simulated populations of 16 countries that take in each morning's news, polls and markets, a typed decision per segment, and a ledger that seals every forecast before its outcome and scores it in public, misses included. Every result carries a coverage tier and the label AI-simulated.
 
-## Four ways people use it
+## How people use it
 
 | Who | Starts at | What they get |
 | --- | --- | --- |
-| Daily-question visitor | `/` | Today's question, how simulated agents and the market answered, and a fork card to reuse. |
-| Receipts and forecasting skeptic | `/receipts` | Every forecast hash, an in-browser check of each, then the public score (`/scores`) and the papers (`/research`). |
-| Analyst forking events | The fork box on `/` | A fork with its top segment shifts, spread across ensemble members, cost and trace. |
-| Developer on the API with a capped key | `/docs` | A key with a dollar cap, one-sentence refusals, and the same data from the Python or TypeScript SDK. |
+| Person about to post | `/` Will this land? | Paste a post, pick an audience, record your gut, and get the landing chance, the reaction mix, the best and worst audiences, two simulated accounts and a rewrite. Signed in, the test is sealed and marked "Landed" or "Flopped" later on `/record`. |
+| Person calling the news | `/call` Call it | Today's question against the AI, whose call is sealed before you answer; then you, visitors, the AI and the market side by side, and your record against the AI. |
+| Skeptic | `/scores`, `/receipts` | The AI's public record: every forecast hashed before its outcome, verified in the browser, and its skill with n and an interval. |
 
-Surfaces, by route: `/` today's question and the fork box; `/world` the latest world snapshot by country and coverage tier; `/cycle` the daily cycle's run log; `/questions/{id}` one question with how it was answered; `/scores` skill against the market and the plain-LLM baseline, with n and an interval; `/receipts` every committed forecast and its check; `/research` papers and registered experiments; `/docs` the API reference. Specs: [product/README.md](product/README.md).
+Routes: `/` post tests and the retrospective check; `/call` the daily question; `/record` your sealed tests (sign-in); `/sign-in`; `/scores`; `/receipts`; `/questions/{id}`; `/acceptable-use`, `/privacy`, `/terms`. The engine's forks API (`POST /v1/simulate`) stays for builders but is not an app surface. Specs: [product/README.md](product/README.md).
 
 ## Run it
 
@@ -31,12 +30,19 @@ What you see at each step:
 
 1. `make daily-fixtures` prints one block per day: the steps that ran, model calls and the dollars a real model would have cost (a keyless run spends nothing), forecasts committed, the day's root hash, questions scored, countries marked experimental, and the anchor status (`not anchored: fixture days are not sent to public timestamp servers` for every fixture day). The first run makes about 180-210 fake model calls per day; a second run prints `ran: nothing (all steps ok)` with `model calls 0` for every day. `make dev` seeds these days on its own when `var/` is empty.
 2. `make dev` prints the web URL (Vite moves to the next port when 5173 is taken) and the API docs are at http://localhost:8000/docs. `curl localhost:8000/healthz` returns `{"ok":true}`. To run a second stack beside the first, pick other ports and another state folder: `RW_HOME=var2 make dev API_PORT=8001 WEB_PORT=5174`.
-3. The web app opens on today's question. Move the slider, submit, and the reveal shows you, visitors, the simulated world and the market, with your streak. A second visit shows the reveal straight away. On fixtures the page stays answerable until 2026-10-28, the last fixture question's `closes`; after that the daily cycle must run on a later day.
-4. "Verify all receipts" opens the day records with their receipts; "Verify in this browser" recomputes every leaf, root and chain link with WebCrypto and reports `Verified 5 days and N receipts back to the first day`. The same check from the terminal: `uv run python -m rw.ledger verify --date 2026-10-05` prints `OK`.
-5. "Fork today's world": pick a prefilled event, read the estimate, run it. On the fake model the card appears within a second: top shifts, the p10-p90 band per topic, coverage tiers, cost, and a `/fork/{id}` link that reopens the card.
-6. Click a country on the globe for one simulated agent: "What moved this agent" (the trace) and "In its own words" (labelled "Simulated account, not the cause").
+3. The web app opens on "Will this land?". Paste a post, pick your gut and click "Test it": on the fake model the result appears within a second, with 12 audience segments, the reaction mix, the best and worst audiences, and placeholder text (`fake-…`) where a real model writes the two accounts and the rewrite. "Check it on posts you already published" runs the retrospective check.
+4. To seal tests, open "Sign in", type any email, and read the six-digit code from the API's log (`sign-in email written to …: link …, code 123456`) or `$RW_HOME/outbox/`; no email key is needed on localhost. Each test you run is then sealed; `/record` lists them with "Landed" and "Flopped", the engine-against-gut Brier and "Check seal".
+5. "Call it" shows today's question with "The AI's call is sealed" and its leaf hash. Move the slider and click "Call it": the reveal shows you, visitors, the AI and the market, your streak and your record against the AI. On fixtures the page stays answerable until 2026-10-28, the last fixture question's `closes`; after that the daily cycle must run on a later day.
+6. "Receipts" opens the day records with their receipts; "Verify in this browser" recomputes every leaf, root and chain link with WebCrypto and reports `Verified 5 days and N receipts back to the first day`. The same check from the terminal: `uv run python -m rw.ledger verify --date 2026-10-05` prints `OK`.
+From the terminal, a post test is one call from an allowed origin:
 
-From the terminal, a fork is one call with an idempotency key:
+```
+curl -s -X POST localhost:8000/v1/tests -H 'Content-Type: application/json' \
+  -H 'Origin: http://localhost:5173' \
+  -d '{"text": "We cut our prices in half for students this week.", "gut": "lands"}'
+```
+
+The engine's fork is one call with an idempotency key:
 
 ```
 curl -s -X POST localhost:8000/v1/simulate -H 'Content-Type: application/json' \
@@ -62,12 +68,13 @@ Everything above runs with no secret. Each of these switches one thing on:
 
 | Secret | Where | What it switches on |
 | --- | --- | --- |
-| `TYPESAFE_API_KEY` | environment | Forecasts and news signals go to Jev (`settings.JEV_MODEL`) instead of the fake model, within `NIGHTLY_BUDGET_USD` and the fork caps in `engine/rw/settings.py`. |
-| `OPENROUTER_API_KEY` | environment | The screen and agent accounts go to `settings.TEXT_MODEL` on OpenRouter; without `TYPESAFE_API_KEY`, Jev calls also go through OpenRouter (`settings.JEV_OPENROUTER_MODEL`). `RW_TEXT_BASE_URL` sends the text calls to a local OpenAI-compatible server such as Ollama instead. |
+| `TYPESAFE_API_KEY` | environment | Forecasts and news signals go to Jev (`settings.JEV_MODEL`) instead of the fake model, within `NIGHTLY_BUDGET_USD`, the fork caps and the post-test caps (`TEST_*`) in `engine/rw/settings.py`. |
+| `OPENROUTER_API_KEY` | environment | The screen, agent accounts, post-test accounts and rewrites go to `settings.TEXT_MODEL` on OpenRouter; without `TYPESAFE_API_KEY`, Jev calls also go through OpenRouter (`settings.JEV_OPENROUTER_MODEL`). `RW_TEXT_BASE_URL` sends the text calls to a local OpenAI-compatible server such as Ollama instead. |
 | `ANTHROPIC_API_KEY` | repository secret | `.github/workflows/papers.yml` opens a PR updating the affected papers after a PR outside `papers/` merges; `claude-review.yml` reviews each non-draft PR against the `CLAUDE.md` files and posts one comment; `learn-rules.yml` opens a daily PR that turns mistakes in recently merged PRs into rules and checks. Each skips itself with a warning when the secret is unset. |
 | `RECEIPTS_MIRROR_REMOTE` | environment | `make mirror` pushes `var/receipts/*.json` to this git URL (token included); unset, it says the mirror is off ([receipts](product/receipts.md)). |
 | `RW_ALLOWED_ORIGINS` | API environment | Comma-separated origins, like `https://host`, that may call the API from a browser besides localhost. A malformed entry stops the API at startup. |
-| `RW_TRUSTED_PROXIES` | API environment | Comma-separated proxy addresses whose last `X-Forwarded-For` hop is taken as the caller for the anonymous fork limit; otherwise the peer address is used. |
+| `RW_TRUSTED_PROXIES` | API environment | Comma-separated proxy addresses whose last `X-Forwarded-For` hop is taken as the caller for the signed-out fork and post-test limits; otherwise the peer address is used. |
+| `RW_EMAIL_API_KEY`, `RW_EMAIL_FROM` | API environment | Sign-in emails go through the email provider instead of `$RW_HOME/outbox/`. Required when any allowed origin is not localhost; the API refuses to start without them ([accounts](product/accounts.md)). |
 
 ## Where things live
 
@@ -77,13 +84,13 @@ Everything above runs with no secret. Each of these switches one thing on:
 | [`papers/`](papers/README.md) | Our public research papers. Every number in them comes from an artifact in this repo, and they are updated after every merged PR. | n/a |
 | [`product/`](product/README.md) | One plain-language spec per product surface: what it does, who it is for, how we know it works, and which code owns it. | n/a |
 | [`experiments/`](experiments/README.md) | Pre-registered experiments, hashed into a registry before they run, and their committed results, misses included. Papers cite only these. | n/a |
-| [`gtm/`](gtm/README.md) | Who we sell to, pricing, the launch plan, the builders program, and the claims we may and may not make. | n/a |
+| [`gtm/`](gtm/README.md) | Who uses Real World first, pricing, the launch plan, and the claims we may and may not make; B2B material marked paused. | n/a |
 | [`company/`](company/README.md) | The north-star metric, the plan to Nov 2 with its gates, the risk register, the operating cadence, and decisions only the founder can make. | n/a |
-| [`engine/`](engine/README.md) | The Python package `rw`: settings, the model gateway, the licence gate, the population, beliefs, news, forecasts, the ledger, scoring, forks and the daily cycle. | [world](product/world.md), [benchmark](product/benchmark.md), [receipts](product/receipts.md) |
-| [`api/`](api/README.md) | The FastAPI app `rw_api`: every `/v1` endpoint, fork jobs, idempotency, server-sent events and the committed `openapi.json`. | [simulate API](product/simulate-api.md), [daily question](product/daily-question.md) |
+| [`engine/`](engine/README.md) | The Python package `rw`: settings, the model gateway, the licence gate, the population, beliefs, news, forecasts, the ledger, scoring, forks, post tests (`reaction.py`) and the daily cycle. | [will it land](product/will-it-land.md), [world](product/world.md), [benchmark](product/benchmark.md), [receipts](product/receipts.md) |
+| [`api/`](api/README.md) | The FastAPI app `rw_api`: every `/v1` endpoint, sign-in, sealed post tests, fork jobs, idempotency, server-sent events and the committed `openapi.json`. | [will it land](product/will-it-land.md), [call it](product/daily-question.md), [accounts](product/accounts.md), [simulate API](product/simulate-api.md) |
 | [`sdk/`](sdk/CLAUDE.md) | The [Python](sdk/python/README.md) and [TypeScript](sdk/typescript/README.md) clients, generated from `api/openapi.json`, each README opening with its quickstart. | [SDKs](product/sdks.md) |
 | [`data/`](data/README.md) | The licence table, the country and topic vocabularies, bundled sample data and fixtures. | [world](product/world.md) |
-| [`web/`](web/README.md) | The Vite + React web app. | [web app](product/web-app.md) |
+| [`web/`](web/README.md) | The Vite + React web app: Will this land?, Call it, your record and the proof pages. | [web app](product/web-app.md) |
 
 The layout and module boundaries come from [decision 0001](research/decisions/0001-architecture.md).
 
