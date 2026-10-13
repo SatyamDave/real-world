@@ -2,17 +2,10 @@ import type { PostTestOut } from "@real-world/sdk";
 import { expect, test } from "vitest";
 import { postShareText } from "./share";
 
-test("the post share line quotes the post, the landing chance, coverage and the seal", () => {
-  const seg = (country: string, coverage_tier: string) => ({ country, coverage_tier });
-  const out = {
-    result: {
-      landing_chance: 0.394,
-      audiences: [seg("USA", "A"), seg("MEX", "B"), seg("USA", "A")],
-    },
-    seal: null,
-  } as unknown as PostTestOut;
+test("the post share line quotes the message, the intent and the seal", () => {
+  const out = { result: { intent: 0.394 }, seal: null } as unknown as PostTestOut;
   expect(postShareText(out, "Half off", "https://rw.test")).toBe(
-    '"Half off" lands with 39% of a simulated audience in 2 countries. AI-simulated, coverage A, B. Not sealed https://rw.test/simulate',
+    '"Half off" would get 39% of simulated ideal customers to sign up, try or buy. AI-simulated, simulated from a description, not real customers. Not sealed https://rw.test/simulate',
   );
   const sealed = {
     ...out,

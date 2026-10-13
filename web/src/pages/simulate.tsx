@@ -1,4 +1,4 @@
-import type { PostTestOut, RetroResult } from "@real-world/sdk";
+import type { BacktestResult, PostTestOut } from "@real-world/sdk";
 import { useState } from "react";
 import { failure, pct } from "../App";
 import { UseCaseList } from "../Home";
@@ -9,8 +9,6 @@ import { findUseCase } from "../usecases";
 export const title = "Simulate";
 
 const MAX = 500;
-const AGES = ["18-34", "35-54", "55+"] as const;
-type Age = (typeof AGES)[number];
 
 export default function Simulate() {
   const params = new URLSearchParams(location.search);
@@ -19,7 +17,8 @@ export default function Simulate() {
   const [text, setText] = useState(
     start?.message ?? (params.get("text") ?? "").trim().slice(0, MAX),
   );
-  const [ages, setAges] = useState<Age[]>([...AGES]);
+  const [idea, setIdea] = useState(start?.idea ?? "");
+  const [icp, setIcp] = useState(start?.icp ?? "");
   const [gut, setGut] = useState<"lands" | "flops" | null>(null);
   const [reaction, setReaction] = useState<PostTestOut | null>(null);
   const [status, setStatus] = useState("");
@@ -35,9 +34,9 @@ export default function Simulate() {
       setReaction(
         await account.test({
           text: input,
+          idea: idea.trim(),
+          icp: icp.trim(),
           gut,
-          countries: null,
-          age_bands: ages.length === AGES.length ? null : ages,
         }),
       );
     } catch (e) {
@@ -50,8 +49,8 @@ export default function Simulate() {
     <div className="simulate">
       <h1>Simulate</h1>
       <p className="lead muted">
-        Test a message on simulated consumers. Every result is AI-simulated and shows its coverage
-        tier.
+        Test a message on simulated consumers. Every result is AI-simulated and is labelled as
+        simulated.
       </p>
       <form
         className="card bench"
@@ -75,23 +74,24 @@ export default function Simulate() {
           {text.length} of {MAX} characters
         </p>
         <div className="bench-controls">
-          <fieldset>
-            <legend className="bench-label">Age</legend>
-            <span className="chips">
-              {AGES.map((age) => (
-                <label key={age} className="chip">
-                  <input
-                    type="checkbox"
-                    checked={ages.includes(age)}
-                    onChange={() =>
-                      setAges((a) => (a.includes(age) ? a.filter((x) => x !== age) : [...a, age]))
-                    }
-                  />
-                  {age}
-                </label>
-              ))}
-            </span>
-          </fieldset>
+          <label className="bench-days">
+            <span className="bench-label">What are you building?</span>
+            <input
+              type="text"
+              maxLength={200}
+              value={idea}
+              onChange={(e) => setIdea(e.target.value)}
+            />
+          </label>
+          <label className="bench-days">
+            <span className="bench-label">Your ideal customer</span>
+            <input
+              type="text"
+              maxLength={300}
+              value={icp}
+              onChange={(e) => setIcp(e.target.value)}
+            />
+          </label>
           <fieldset>
             <legend className="bench-label">Your gut, before you see the result</legend>
             {(["lands", "flops"] as const).map((g) => (
@@ -104,7 +104,7 @@ export default function Simulate() {
           <button
             type="submit"
             className="primary"
-            disabled={busy || !text.trim() || ages.length === 0}
+            disabled={busy || !text.trim() || idea.trim().length < 3 || icp.trim().length < 3}
           >
             Test my message
           </button>
@@ -120,7 +120,7 @@ export default function Simulate() {
             {status}
           </p>
         )}
-        <Retrospective />
+        <Backtest idea={idea.trim()} icp={icp.trim()} />
       </form>
       {reaction ? (
         <ReactionResult
@@ -146,9 +146,9 @@ export default function Simulate() {
 
 type Past = { text: string; outcome: "landed" | "flopped" };
 
-function Retrospective() {
+function Backtest({ idea, icp }: { idea: string; icp: string }) {
   const [posts, setPosts] = useState<Past[]>([{ text: "", outcome: "landed" }]);
-  const [out, setOut] = useState<RetroResult | null>(null);
+  const [out, setOut] = useState<BacktestResult | null>(null);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const filled = posts.filter((p) => p.text.trim());
@@ -160,18 +160,19 @@ function Retrospective() {
     setStatus("");
     setOut(null);
     try {
-      setOut(await account.retrospective({ posts: filled, countries: null, age_bands: null }));
+      setOut(await account.backtest({ idea, icp, messages: filled }));
     } catch (e) {
-      setStatus(failure(e, "Could not run the check. The server did not respond"));
+      setStatus(failure(e, "Could not run the backtest. The server did not respond"));
     }
     setBusy(false);
   }
 
   return (
     <details className="retro">
-      <summary>Check it on messages you already published</summary>
+      <summary>Backtest on messages you already published</summary>
       <p className="muted small">
-        Paste up to five messages and say how each did. The engine calls each one without knowing.
+        Fill in the two fields above, then paste up to ten messages and say how each did. The engine
+        calls each one without knowing.
       </p>
       {posts.map((p, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: rows have no id and are only appended
@@ -194,7 +195,7 @@ function Retrospective() {
         </div>
       ))}
       <p>
-        {posts.length < 5 && (
+        {posts.length < 10 && (
           <button
             type="button"
             onClick={() => setPosts((all) => [...all, { text: "", outcome: "landed" }])}
@@ -202,8 +203,12 @@ function Retrospective() {
             Add a message
           </button>
         )}{" "}
-        <button type="button" disabled={busy || !filled.length} onClick={run}>
-          Run the check
+        <button
+          type="button"
+          disabled={busy || !filled.length || idea.length < 3 || icp.length < 3}
+          onClick={run}
+        >
+          Run the backtest
         </button>
       </p>
       {status && (
@@ -217,16 +222,15 @@ function Retrospective() {
             <span className="stamp">{out.label}</span>
           </p>
           <p>
-            The engine would have called {out.hits} of {out.posts.length}.
+            The engine called {out.hits} of {out.marked}, the plain baseline {out.baseline_hits} of{" "}
+            {out.marked}.
           </p>
           <ul className="segments">
-            {out.posts.map((p) => (
-              <li key={p.text}>
-                <span>{p.text}</span>
-                <span className="mono">{pct(p.landing_chance)}</span>
-                <span>
-                  {p.outcome}, {p.hit ? "called" : "missed"}
-                </span>
+            {out.messages.map((m) => (
+              <li key={m.text}>
+                <span>{m.text}</span>
+                <span className="mono">{pct(m.intent)}</span>
+                <span>{m.outcome}</span>
               </li>
             ))}
           </ul>

@@ -1,6 +1,7 @@
-"""Post tests (product/will-it-land.md) and the signed-in record of them (product/track-record.md).
+"""Message tests (product/will-it-land.md, decision 0016) and the signed-in record of them
+(product/track-record.md).
 
-Routes: POST /v1/tests, POST /v1/tests/retrospective, GET /v1/me/tests and
+Routes: POST /v1/tests, POST /v1/tests/backtest, GET /v1/me/tests and
 POST /v1/me/tests/{test_id}/outcome."""
 
 import hashlib
@@ -43,26 +44,46 @@ class SealedTest(BaseModel):
     seal: Seal
     body: str = Field(description="The canonical JSON the seal hashes, byte for byte.")
     text: str
+    idea: str
+    icp: str
     gut: reaction.Gut | None
-    landing_chance: float
+    intent: float
+    baseline_intent: float
     outcome: reaction.Outcome | None
+    metric: reaction.Metric | None = Field(description="The real number given with the mark.")
+    note: str | None
     marked_at: str | None
     brier: float | None = Field(description="The engine's Brier once marked.")
+    baseline_brier: float | None = Field(description="The baseline's Brier once marked.")
     gut_brier: float | None = Field(description="The gut's Brier once marked, if a gut was given.")
+
+
+class BrierScore(BaseModel):
+    brier: float | None = Field(description="Mean Brier; null with no marked test.")
+    n: int
+
+
+class TestScores(BaseModel):
+    engine: BrierScore
+    baseline: BrierScore
+    gut: BrierScore = Field(description="Over marked tests that had a gut call.")
+    engine_beats_baseline: bool | None = Field(
+        description="Whether the engine's Brier is below the baseline's; null with none marked."
+    )
 
 
 class TestRecord(BaseModel):
     tests: list[SealedTest]
     marked: int
     hits: int = Field(description="Marked tests where the engine's side of 50% matched.")
-    brier: float | None
-    gut_brier: float | None = Field(description="Over marked tests that had a gut call.")
-    gut_marked: int
+    scores: TestScores
 
 
 class Mark(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     outcome: reaction.Outcome
+    metric: reaction.Metric | None = None
+    note: str | None = Field(default=None, min_length=1, max_length=280)
 
 
 def canonical(body: dict) -> str:
@@ -130,7 +151,7 @@ def _session(conn: sqlite3.Connection, request: Request):
 
 @router.post(
     "/v1/tests",
-    summary="Test a post on a simulated audience; sealed when signed in",
+    summary="Test a message on simulated ideal customers; sealed when signed in",
     response_model=PostTestOut,
     dependencies=[Depends(auth.same_origin)],
     responses={**SPEND, 401: SIGNED_OUT, 403: auth.ACCOUNT_ERRORS[403]},
@@ -164,7 +185,8 @@ def test_post(body: reaction.PostTestRequest, request: Request) -> PostTestOut |
         {
             "id": test_id,
             "text": body.text,
-            "audience": {"countries": body.countries, "age_bands": body.age_bands},
+            "idea": body.idea,
+            "icp": body.icp,
             "gut": body.gut,
             "result": result.model_dump(),
             "sealed_at": sealed_at,
@@ -174,32 +196,43 @@ def test_post(body: reaction.PostTestRequest, request: Request) -> PostTestOut |
     with conn:
         conn.execute(
             "INSERT INTO post_tests (id, user_id, body_json, seal_sha256, sealed_at,"
-            " landing_chance, gut) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (test_id, user["id"], stored, sha, sealed_at, result.landing_chance, body.gut),
+            " intent, baseline_intent, gut) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                test_id,
+                user["id"],
+                stored,
+                sha,
+                sealed_at,
+                result.intent,
+                result.baseline_intent,
+                body.gut,
+            ),
         )
     return PostTestOut(result=result, seal=Seal(id=test_id, sha256=sha, sealed_at=sealed_at))
 
 
 @router.post(
-    "/v1/tests/retrospective",
-    summary="Score the engine on posts already published; stores nothing",
-    response_model=reaction.RetroResult,
+    "/v1/tests/backtest",
+    summary="Score the engine and the baseline on messages already shipped; stores nothing",
+    response_model=reaction.BacktestResult,
     dependencies=[Depends(auth.same_origin)],
     responses={**SPEND, 401: SIGNED_OUT, 403: auth.ACCOUNT_ERRORS[403]},
 )
-def retrospective(body: reaction.RetroRequest, request: Request):
+def backtest(body: reaction.BacktestRequest, request: Request):
     conn = api.connect()
     user = _session(conn, request)
     if isinstance(user, JSONResponse):
         return user
-    client = _guard(conn, request, "\n".join(p.text for p in body.posts), user is not None)
+    client = _guard(conn, request, "\n".join(m.text for m in body.messages), user is not None)
     if isinstance(client, JSONResponse):
         return client
     try:
-        out = reaction.retrospective(body, conn, llm.Budget(settings.TEST_MAX_COST_USD))
+        out = reaction.backtest(body, conn, llm.Budget(settings.TEST_MAX_COST_USD))
     except llm.BudgetExceeded:
         return api._refuse(
-            402, "over_max_cost", f"this check would pass the ${settings.TEST_MAX_COST_USD:g} cap"
+            402,
+            "over_max_cost",
+            f"this backtest would pass the ${settings.TEST_MAX_COST_USD:g} cap",
         )
     except ValueError as e:
         return api._refuse(422, "invalid_request", str(e))
@@ -216,22 +249,38 @@ def _row(r: sqlite3.Row) -> SealedTest:
     body = json.loads(r["body_json"])
     landed = None if r["outcome"] is None else int(r["outcome"] == "landed")
     gut = None if r["gut"] is None else float(r["gut"] == "lands")
+    metric = (
+        None
+        if r["metric_name"] is None
+        else reaction.Metric(name=r["metric_name"], value=r["metric_value"], unit=r["metric_unit"])
+    )
     return SealedTest(
         seal=Seal(id=r["id"], sha256=r["seal_sha256"], sealed_at=r["sealed_at"]),
         body=r["body_json"],
         text=body["text"],
+        idea=body["idea"],
+        icp=body["icp"],
         gut=r["gut"],
-        landing_chance=r["landing_chance"],
+        intent=r["intent"],
+        baseline_intent=r["baseline_intent"],
         outcome=r["outcome"],
+        metric=metric,
+        note=r["note"],
         marked_at=r["marked_at"],
-        brier=None if landed is None else score.brier(r["landing_chance"], landed),
+        brier=None if landed is None else score.brier(r["intent"], landed),
+        baseline_brier=None if landed is None else score.brier(r["baseline_intent"], landed),
         gut_brier=None if landed is None or gut is None else score.brier(gut, landed),
     )
 
 
+def _score(briers: list[float | None]) -> BrierScore:
+    got = [b for b in briers if b is not None]
+    return BrierScore(brier=sum(got) / len(got) if got else None, n=len(got))
+
+
 @router.get(
     "/v1/me/tests",
-    summary="The signed-in person's sealed post tests and how they scored",
+    summary="The signed-in person's sealed message tests and how engine, baseline and gut scored",
     response_model=TestRecord,
     responses={401: SIGNED_OUT, 503: auth.UNREADABLE},
 )
@@ -245,20 +294,25 @@ def my_tests(request: Request) -> TestRecord | JSONResponse:
     ).fetchall()
     tests = [_row(r) for r in rows]
     marked = [t for t in tests if t.brier is not None]
-    guts = [t.gut_brier for t in marked if t.gut_brier is not None]
+    engine, baseline = _score([t.brier for t in marked]), _score([t.baseline_brier for t in marked])
     return TestRecord(
         tests=tests,
         marked=len(marked),
-        hits=sum((t.landing_chance >= 0.5) == (t.outcome == "landed") for t in marked),
-        brier=sum(t.brier for t in marked) / len(marked) if marked else None,  # type: ignore[misc]
-        gut_brier=sum(guts) / len(guts) if guts else None,
-        gut_marked=len(guts),
+        hits=sum((t.intent >= 0.5) == (t.outcome == "landed") for t in marked),
+        scores=TestScores(
+            engine=engine,
+            baseline=baseline,
+            gut=_score([t.gut_brier for t in marked]),
+            engine_beats_baseline=None
+            if engine.brier is None or baseline.brier is None
+            else engine.brier < baseline.brier,
+        ),
     )
 
 
 @router.post(
     "/v1/me/tests/{test_id}/outcome",
-    summary="Mark a sealed post test landed or flopped, once",
+    summary="Mark a sealed message test landed or flopped, with an optional real metric, once",
     response_model=SealedTest,
     dependencies=[Depends(auth.same_origin)],
     responses={
@@ -276,9 +330,18 @@ def mark(test_id: str, body: Mark, request: Request) -> SealedTest | JSONRespons
         return user
     with conn:
         done = conn.execute(
-            "UPDATE post_tests SET outcome = ?, marked_at = ?"
-            " WHERE id = ? AND user_id = ? AND outcome IS NULL",
-            (body.outcome, api._now(), test_id, user["id"]),
+            "UPDATE post_tests SET outcome = ?, marked_at = ?, metric_name = ?, metric_value = ?,"
+            " metric_unit = ?, note = ? WHERE id = ? AND user_id = ? AND outcome IS NULL",
+            (
+                body.outcome,
+                api._now(),
+                body.metric and body.metric.name,
+                body.metric and body.metric.value,
+                body.metric and body.metric.unit,
+                body.note,
+                test_id,
+                user["id"],
+            ),
         )
     row = conn.execute(
         "SELECT * FROM post_tests WHERE id = ? AND user_id = ?", (test_id, user["id"])

@@ -74,6 +74,11 @@ class Audit(BaseModel):
     in_band: bool = Field(..., title="In Band")
 
 
+class Outcome(StrEnum):
+    landed = "landed"
+    flopped = "flopped"
+
+
 class Band(BaseModel):
     p10: float = Field(..., title="P10")
     p50: float = Field(..., title="P50")
@@ -92,9 +97,33 @@ class Bootstrap(BaseModel):
     interval: float = Field(..., title="Interval")
 
 
+class BrierScore(BaseModel):
+    brier: float | None = Field(
+        ..., description="Mean Brier; null with no marked test.", title="Brier"
+    )
+    n: int = Field(..., title="N")
+
+
 class Budget(BaseModel):
     nightly_budget_usd: float = Field(..., title="Nightly Budget Usd")
     spent_usd: float = Field(..., title="Spent Usd")
+
+
+class Forecaster(StrEnum):
+    engine = "engine"
+    baseline = "baseline"
+
+
+class CalibrationRow(BaseModel):
+    forecaster: Forecaster = Field(..., title="Forecaster")
+    bucket: str = Field(..., description='Predicted intent range, e.g. "20-40%".', title="Bucket")
+    n: int = Field(..., title="N")
+    predicted: float = Field(
+        ..., description="Mean predicted intent in the bucket.", title="Predicted"
+    )
+    landed: float = Field(
+        ..., description="Share of the bucket's messages that landed.", title="Landed"
+    )
 
 
 class Cost(BaseModel):
@@ -186,6 +215,11 @@ class DaySummary(BaseModel):
     anchored_at: str | None = Field(..., title="Anchored At")
 
 
+class Dimension(BaseModel):
+    name: str = Field(..., title="Name")
+    levels: list[str] = Field(..., title="Levels")
+
+
 class EmailRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -230,16 +264,21 @@ class Links(BaseModel):
     events: str = Field(..., title="Events")
 
 
-class Outcome(StrEnum):
-    landed = "landed"
-    flopped = "flopped"
+class Note(RootModel[str]):
+    root: str = Field(..., max_length=280, min_length=1, title="Note")
 
 
-class Mark(BaseModel):
+class Metric(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    outcome: Outcome = Field(..., title="Outcome")
+    name: str = Field(
+        ..., description='e.g. "signup rate"', max_length=60, min_length=1, title="Name"
+    )
+    value: float = Field(..., title="Value")
+    unit: str = Field(
+        ..., description='e.g. "%" or "replies"', max_length=20, min_length=1, title="Unit"
+    )
 
 
 class Miss(BaseModel):
@@ -253,7 +292,7 @@ class Miss(BaseModel):
 
 
 class Mix(BaseModel):
-    scroll_past: float = Field(..., title="Scroll Past")
+    ignore: float = Field(..., title="Ignore")
     read: float = Field(..., title="Read")
     like: float = Field(..., title="Like")
     share: float = Field(..., title="Share")
@@ -268,12 +307,18 @@ class NotFound(BaseModel):
     detail: str = Field(..., title="Detail")
 
 
-class PastPost(BaseModel):
+class ObjectionShare(BaseModel):
+    objection: str = Field(..., title="Objection")
+    share: float = Field(..., title="Share")
+
+
+class PastMessage(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
     text: str = Field(..., max_length=500, min_length=1, title="Text")
-    outcome: Outcome = Field(..., title="Outcome")
+    outcome: Outcome | None = Field(None, title="Outcome")
+    metric: Metric | None = None
 
 
 class Person(BaseModel):
@@ -322,12 +367,6 @@ class PopulationTopic(BaseModel):
     in_band: bool | None = Field(..., title="In Band")
 
 
-class AgeBand(StrEnum):
-    field_18_34 = "18-34"
-    field_35_54 = "35-54"
-    field_55_ = "55+"
-
-
 class Gut(StrEnum):
     lands = "lands"
     flops = "flops"
@@ -337,13 +376,21 @@ class PostTestRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    countries: list[str] | None = Field(
-        None, description="ISO3 codes; null means every simulated country.", title="Countries"
-    )
-    age_bands: list[AgeBand] | None = Field(
-        None, description="Null means every age.", title="Age Bands"
-    )
     text: str = Field(..., max_length=500, min_length=1, title="Text")
+    idea: str = Field(
+        ...,
+        description="What you are building, one line.",
+        max_length=200,
+        min_length=3,
+        title="Idea",
+    )
+    icp: str = Field(
+        ...,
+        description="The ideal customer, in your words.",
+        max_length=300,
+        min_length=3,
+        title="Icp",
+    )
     gut: Gut | None = Field(
         None, description="The person's own call before the result.", title="Gut"
     )
@@ -421,6 +468,15 @@ class QuestionOutcome(BaseModel):
     read_on: str = Field(..., title="Read On")
 
 
+class RankAgreement(BaseModel):
+    metric: str = Field(..., title="Metric")
+    n: int = Field(..., title="N")
+    engine: float | None = Field(
+        ..., description="Spearman correlation; null if undefined.", title="Engine"
+    )
+    baseline: float | None = Field(..., title="Baseline")
+
+
 class ReceiptQuestion(BaseModel):
     text: str = Field(..., title="Text")
     resolution_source: str = Field(..., title="Resolution Source")
@@ -479,7 +535,7 @@ class ReliabilityBin(BaseModel):
     observed_rate: float = Field(..., title="Observed Rate")
 
 
-class Forecaster(StrEnum):
+class Forecaster1(StrEnum):
     sim = "sim"
     plain_llm = "plain_llm"
 
@@ -487,45 +543,13 @@ class Forecaster(StrEnum):
 class ReplayRow(BaseModel):
     question_id: str = Field(..., title="Question Id")
     question: str | None = Field(..., title="Question")
-    forecaster: Forecaster = Field(..., title="Forecaster")
+    forecaster: Forecaster1 = Field(..., title="Forecaster")
     committed: float = Field(..., title="Committed")
     replayed: float | None = Field(..., title="Replayed")
     low: float | None = Field(..., title="Low")
     high: float | None = Field(..., title="High")
     diff: float | None = Field(..., title="Diff")
     matches: bool = Field(..., title="Matches")
-
-
-class RetroPost(BaseModel):
-    text: str = Field(..., title="Text")
-    outcome: Outcome = Field(..., title="Outcome")
-    landing_chance: float = Field(..., title="Landing Chance")
-    hit: bool = Field(..., title="Hit")
-
-
-class RetroRequest(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    countries: list[str] | None = Field(
-        None, description="ISO3 codes; null means every simulated country.", title="Countries"
-    )
-    age_bands: list[AgeBand] | None = Field(
-        None, description="Null means every age.", title="Age Bands"
-    )
-    posts: list[PastPost] = Field(..., max_length=5, min_length=1, title="Posts")
-
-
-class RetroResult(BaseModel):
-    posts: list[RetroPost] = Field(..., title="Posts")
-    hits: int = Field(..., title="Hits")
-    brier: float = Field(..., title="Brier")
-    label: Literal["Retrospective: not on your record"] = Field(
-        "Retrospective: not on your record", title="Label"
-    )
-    disclosure: str = Field(
-        "AI-simulated. Not a poll or a prediction of a real person", title="Disclosure"
-    )
 
 
 class Rubric(BaseModel):
@@ -565,11 +589,19 @@ class SealedTest(BaseModel):
         ..., description="The canonical JSON the seal hashes, byte for byte.", title="Body"
     )
     text: str = Field(..., title="Text")
+    idea: str = Field(..., title="Idea")
+    icp: str = Field(..., title="Icp")
     gut: Gut | None = Field(..., title="Gut")
-    landing_chance: float = Field(..., title="Landing Chance")
+    intent: float = Field(..., title="Intent")
+    baseline_intent: float = Field(..., title="Baseline Intent")
     outcome: Outcome | None = Field(..., title="Outcome")
+    metric: Metric | None = Field(..., description="The real number given with the mark.")
+    note: str | None = Field(..., title="Note")
     marked_at: str | None = Field(..., title="Marked At")
     brier: float | None = Field(..., description="The engine's Brier once marked.", title="Brier")
+    baseline_brier: float | None = Field(
+        ..., description="The baseline's Brier once marked.", title="Baseline Brier"
+    )
     gut_brier: float | None = Field(
         ..., description="The gut's Brier once marked, if a gut was given.", title="Gut Brier"
     )
@@ -586,15 +618,24 @@ class SegmentAnswer(BaseModel):
     yes_share: float = Field(..., title="Yes Share")
 
 
-class SegmentReaction(BaseModel):
-    segment: str = Field(..., title="Segment")
-    label: str = Field(..., description="The segment in words.", title="Label")
-    country: str = Field(..., title="Country")
-    coverage_tier: str = Field(..., title="Coverage Tier")
-    weight: float = Field(
-        ..., description="Share of the audience's agents in this segment.", title="Weight"
+class SegmentResult(BaseModel):
+    segment: str = Field(
+        ..., description='Stable id: the level numbers, e.g. "012".', title="Segment"
     )
-    landing: float = Field(..., description="Share who would like or share it.", title="Landing")
+    cell: list[int] = Field(
+        ..., description="Level number on each of the three dimensions.", title="Cell"
+    )
+    label: str = Field(..., description="The segment in words.", title="Label")
+    interest: float = Field(
+        ..., description="Chance this kind of customer likes or shares it.", title="Interest"
+    )
+    intent: float = Field(
+        ..., description="Chance this kind of customer signs up, tries or buys.", title="Intent"
+    )
+    agents: int = Field(
+        ..., description="Simulated consumers asked in this segment.", title="Agents"
+    )
+    objection: str = Field(..., description="What most likely stops them.", title="Objection")
 
 
 class SegmentShift(BaseModel):
@@ -693,17 +734,15 @@ class SystemStatus(BaseModel):
     engine_version: str = Field(..., title="Engine Version")
 
 
-class TestRecord(BaseModel):
-    tests: list[SealedTest] = Field(..., title="Tests")
-    marked: int = Field(..., title="Marked")
-    hits: int = Field(
-        ..., description="Marked tests where the engine's side of 50% matched.", title="Hits"
+class TestScores(BaseModel):
+    engine: BrierScore
+    baseline: BrierScore
+    gut: BrierScore = Field(..., description="Over marked tests that had a gut call.")
+    engine_beats_baseline: bool | None = Field(
+        ...,
+        description="Whether the engine's Brier is below the baseline's; null with none marked.",
+        title="Engine Beats Baseline",
     )
-    brier: float | None = Field(..., title="Brier")
-    gut_brier: float | None = Field(
-        ..., description="Over marked tests that had a gut call.", title="Gut Brier"
-    )
-    gut_marked: int = Field(..., title="Gut Marked")
 
 
 class TopItem(BaseModel):
@@ -752,7 +791,7 @@ class VerifyRequest(BaseModel):
 class Voice(BaseModel):
     label: str = Field(..., title="Label")
     text: str = Field(..., title="Text")
-    simulated: Literal["Simulated account"] = Field("Simulated account", title="Simulated")
+    simulated: Literal["Simulated customer"] = Field("Simulated customer", title="Simulated")
 
 
 class VsAi(BaseModel):
@@ -850,6 +889,52 @@ class Agent(BaseModel):
     moved: list[AgentStep] = Field(..., title="Moved")
 
 
+class BacktestMessage(BaseModel):
+    text: str = Field(..., title="Text")
+    outcome: Outcome | None = Field(..., title="Outcome")
+    metric: Metric | None
+    intent: float = Field(..., title="Intent")
+    baseline_intent: float = Field(..., title="Baseline Intent")
+    hit: bool | None = Field(..., description="Null without an outcome.", title="Hit")
+    baseline_hit: bool | None = Field(..., title="Baseline Hit")
+
+
+class BacktestRequest(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    idea: str = Field(..., max_length=200, min_length=3, title="Idea")
+    icp: str = Field(..., max_length=300, min_length=3, title="Icp")
+    messages: list[PastMessage] = Field(..., max_length=10, min_length=1, title="Messages")
+
+
+class BacktestResult(BaseModel):
+    messages: list[BacktestMessage] = Field(..., title="Messages")
+    marked: int = Field(
+        ...,
+        description="Messages with Landed or Flopped, which hits and Brier use.",
+        title="Marked",
+    )
+    hits: int = Field(..., title="Hits")
+    baseline_hits: int = Field(..., title="Baseline Hits")
+    brier: float | None = Field(..., title="Brier")
+    baseline_brier: float | None = Field(..., title="Baseline Brier")
+    calibration: list[CalibrationRow] = Field(..., title="Calibration")
+    rank: list[RankAgreement] = Field(
+        ..., description="Per metric name given on 3 or more messages.", title="Rank"
+    )
+    agents: int = Field(..., description="Simulated consumers asked per message.", title="Agents")
+    model_calls: int = Field(..., title="Model Calls")
+    cost_usd: float = Field(..., title="Cost Usd")
+    provider: str = Field(..., title="Provider")
+    label: Literal["Backtest: not on your record"] = Field(
+        "Backtest: not on your record", title="Label"
+    )
+    disclosure: str = Field(
+        "AI-simulated. Simulated from your description, not real customers.", title="Disclosure"
+    )
+
+
 class BaselineSkill(BaseModel):
     n: int = Field(..., title="N")
     n_pairs: int = Field(..., title="N Pairs")
@@ -882,6 +967,15 @@ class LeafReceipt(BaseModel):
     anchored_at: str | None = Field(..., title="Anchored At")
 
 
+class Mark(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    outcome: Outcome = Field(..., title="Outcome")
+    metric: Metric | None = None
+    note: Note | None = Field(None, title="Note")
+
+
 class News(BaseModel):
     source: Source | None = Field(..., title="Source")
     articles: int | None = Field(..., title="Articles")
@@ -904,27 +998,48 @@ class PopulationCountry(BaseModel):
 
 
 class PostTestResult(BaseModel):
-    landing_chance: float = Field(
-        ..., description="Audience share who would like or share it.", title="Landing Chance"
+    intent: float = Field(
+        ...,
+        description="Mean over segments of the chance a customer signs up, tries or buys; the number a seal and the Brier score use.",
+        title="Intent",
+    )
+    intent_band: list[float] = Field(
+        ..., description="p10 and p90 of intent across segments.", title="Intent Band"
+    )
+    interest: float = Field(
+        ..., description="Mean over segments of the share who like or share it.", title="Interest"
     )
     band: list[float] = Field(
-        ..., description="p10 and p90 of landing across segments.", title="Band"
+        ..., description="p10 and p90 of interest across segments.", title="Band"
+    )
+    baseline_intent: float = Field(
+        ..., description="One call with no segments: the plain baseline.", title="Baseline Intent"
     )
     mix: Mix
-    best: list[SegmentReaction] = Field(..., title="Best")
-    worst: list[SegmentReaction] = Field(..., title="Worst")
-    audiences: list[SegmentReaction] = Field(
-        ..., description="Every segment asked, most likely first.", title="Audiences"
+    objections: list[ObjectionShare] = Field(
+        ..., description="Mean shares, largest first; sum to 1.", title="Objections"
     )
+    dimensions: list[Dimension] = Field(
+        ..., description="The three dimensions of the grid.", title="Dimensions"
+    )
+    segments: list[SegmentResult] = Field(
+        ..., description="All 27, in grid order.", title="Segments"
+    )
+    best: list[SegmentResult] = Field(..., title="Best")
+    worst: list[SegmentResult] = Field(..., title="Worst")
     voices: list[Voice] = Field(..., title="Voices")
     rewrite: str = Field(..., title="Rewrite")
-    segments: int = Field(..., title="Segments")
+    agents: int = Field(
+        ..., description="Simulated consumers asked, over all segments.", title="Agents"
+    )
     model_calls: int = Field(..., title="Model Calls")
     cost_usd: float = Field(..., title="Cost Usd")
     provider: str = Field(..., title="Provider")
-    calibration: str = Field("Uncalibrated until 100 marked tests", title="Calibration")
+    calibration: str = Field(
+        "Uncalibrated: simulated from your description, not real customers", title="Calibration"
+    )
     disclosure: str = Field(
-        "AI-simulated. Not a poll or a prediction of a real person", title="Disclosure"
+        "AI-simulated. Simulated from your description, not real customers.", title="Disclosure"
     )
 
 
@@ -1019,6 +1134,15 @@ class Scoreboard(BaseModel):
     reliability: dict[str, list[ReliabilityBin]] = Field(..., title="Reliability")
     resolved: list[ResolvedQuestion] = Field(..., title="Resolved")
     misses: list[Miss] = Field(..., title="Misses")
+
+
+class TestRecord(BaseModel):
+    tests: list[SealedTest] = Field(..., title="Tests")
+    marked: int = Field(..., title="Marked")
+    hits: int = Field(
+        ..., description="Marked tests where the engine's side of 50% matched.", title="Hits"
+    )
+    scores: TestScores
 
 
 class TraceAgent(BaseModel):

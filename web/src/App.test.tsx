@@ -9,7 +9,6 @@ import vector from "../../data/fixtures/receipts_test_vector.json";
 import { App, DISCLOSURE, Disclosure } from "./App";
 import { rw } from "./api";
 import worldFixture from "./fixtures/world.json";
-import { PopulationField, SegmentMatrix } from "./results";
 import { caseHref, USE_CASES } from "./usecases";
 
 const world = worldFixture as World;
@@ -237,29 +236,35 @@ function serve(routes: Record<string, [number, unknown]>) {
   return calls;
 }
 
-const segment = (label: string, landing: number, tier = "A") => ({
-  segment: `USA|18-34|${label}`,
+const segment = (label: string, intent: number) => ({
+  segment: label,
+  cell: [0, 0, 0],
   label,
-  country: "USA",
-  coverage_tier: tier,
-  weight: 0.1,
-  landing,
+  interest: 0.5,
+  intent,
+  agents: 5,
+  objection: "too pricey",
 });
 
 const tested = {
   result: {
-    landing_chance: 0.42,
-    band: [0.3, 0.55],
-    mix: { scroll_past: 0.4, read: 0.18, like: 0.3, share: 0.12 },
+    intent: 0.42,
+    intent_band: [0.3, 0.55],
+    interest: 0.5,
+    band: [0.4, 0.6],
+    baseline_intent: 0.35,
+    mix: { ignore: 0.4, read: 0.18, like: 0.3, share: 0.12 },
+    objections: [{ objection: "too expensive", share: 0.6 }],
+    dimensions: [],
+    segments: [segment("young urban", 0.6), segment("older rural", 0.2)],
     best: [segment("young urban", 0.6)],
-    worst: [segment("older rural", 0.2, "C")],
-    audiences: [segment("young urban", 0.6), segment("older rural", 0.2, "C")],
+    worst: [segment("older rural", 0.2)],
     voices: [
       { label: "young urban", text: "I would share this.", simulated: "Simulated account" },
       { label: "older rural", text: "Not for me.", simulated: "Simulated account" },
     ],
     rewrite: "Half price for students, this week only.",
-    segments: 12,
+    agents: 135,
     model_calls: 15,
     cost_usd: 0.0004,
     provider: "fake",
@@ -267,6 +272,12 @@ const tested = {
     disclosure: DISCLOSURE,
   },
   seal: null,
+};
+
+const fillIdea = async (el: HTMLElement) => {
+  const inputs = el.querySelectorAll<HTMLInputElement>(".bench input[type=text]");
+  await act(async () => typeInto(inputs[0], "A calendar app"));
+  await act(async () => typeInto(inputs[1], "Team leads at small startups"));
 };
 
 const typeInto = (el: HTMLTextAreaElement | HTMLInputElement, value: string) => {
@@ -281,16 +292,27 @@ test("a post test shows the landing chance, both sides, the accounts and a sign-
   const el = await render(<App path="/simulate" />);
   await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
   expect(button("Test my message").disabled).toBe(true);
+  await fillIdea(el);
   await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "Half off"));
   await act(async () => (el.querySelector("input[name=gut]") as HTMLInputElement).click());
   await act(async () => button("Test my message").click());
   await until(() => expect(el.querySelector(".land-result")).not.toBeNull());
   const sent = calls.find((c) => c.path === "/v1/tests")?.body;
-  expect(sent).toEqual({ text: "Half off", gut: "lands", countries: null, age_bands: null });
+  expect(sent).toEqual({
+    text: "Half off",
+    gut: "lands",
+    idea: "A calendar app",
+    icp: "Team leads at small startups",
+  });
   const text = el.querySelector(".land-result")?.textContent ?? "";
   for (const s of [
     "42%",
-    "30% to 55% across 12 audiences",
+    "would sign up, try or buy",
+    "30% to 55% across 2 segments",
+    "A plain single prompt says 35%",
+    "135 simulated consumers",
+    "Ignore 40%",
+    "too expensive",
     "Uncalibrated until 100 marked tests",
     "Young urban",
     "Older rural",
@@ -311,29 +333,42 @@ test("a refused post test shows the API's sentence", async () => {
   });
   const el = await render(<App path="/simulate" />);
   await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
+  await fillIdea(el);
   await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "x"));
   await act(async () => button("Test my message").click());
   await until(() => expect(el.textContent).toContain("this address has run 20 tests today."));
 });
 
-test("a signed-in test shows its seal and the retrospective check is labelled", async () => {
+test("a signed-in test shows its seal and the backtest is labelled", async () => {
   const seal = { id: "pt_1", sha256: "ab".repeat(32), sealed_at: "2026-10-06T12:00:00Z" };
   serve({
     "/v1/me": [200, { id: "usr_1", email: "ada@example.org", created_at: "2026-10-06" }],
     "/v1/tests": [200, { ...tested, seal }],
-    "/v1/tests/retrospective": [
+    "/v1/tests/backtest": [
       200,
       {
-        posts: [{ text: "old post", outcome: "landed", landing_chance: 0.7, hit: true }],
+        messages: [
+          {
+            text: "old post",
+            outcome: "landed",
+            metric: null,
+            intent: 0.7,
+            baseline_intent: 0.5,
+            hit: true,
+            baseline_hit: false,
+          },
+        ],
+        marked: 1,
         hits: 1,
-        brier: 0.09,
-        label: "Retrospective: not on your record",
+        baseline_hits: 0,
+        label: "Backtest: not on your record",
         disclosure: DISCLOSURE,
       },
     ],
   });
   const el = await render(<App path="/simulate" />);
   await until(() => expect(el.textContent).toContain("ada@example.org"));
+  await fillIdea(el);
   await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "Half off"));
   await act(async () => button("Test my message").click());
   await until(() => expect(el.querySelector(".seal")?.textContent).toContain("abababababab"));
@@ -347,9 +382,11 @@ test("a signed-in test shows its seal and the retrospective check is labelled", 
   await act(async () =>
     typeInto(el.querySelector("[aria-label='Past message 1']") as HTMLTextAreaElement, "old post"),
   );
-  await act(async () => button("Run the check").click());
-  await until(() => expect(el.textContent).toContain("The engine would have called 1 of 1."));
-  expect(el.textContent).toContain("Retrospective: not on your record");
+  await act(async () => button("Run the backtest").click());
+  await until(() =>
+    expect(el.textContent).toContain("The engine called 1 of 1, the plain baseline 0 of 1."),
+  );
+  expect(el.textContent).toContain("Backtest: not on your record");
 });
 
 test("the record signed out shows an empty engine-vs-gut slip and no numbers", async () => {
@@ -373,17 +410,33 @@ test("the record lists sealed tests, marks one and checks its seal", async () =>
     body,
     text: "Half off",
     gut: "lands",
-    landing_chance: 0.42,
+    idea: "A calendar app",
+    icp: "Team leads",
+    intent: 0.42,
+    baseline_intent: 0.35,
     outcome: null,
+    metric: null,
+    note: null,
     marked_at: null,
     brier: null,
+    baseline_brier: null,
     gut_brier: null,
   };
   const calls = serve({
     "/v1/me": [200, { id: "usr_1", email: "ada@example.org", created_at: "2026-10-06" }],
     "/v1/me/tests": [
       200,
-      { tests: [test1], marked: 0, hits: 0, brier: null, gut_brier: null, gut_marked: 0 },
+      {
+        tests: [test1],
+        marked: 0,
+        hits: 0,
+        scores: {
+          engine: { brier: null, n: 0 },
+          baseline: { brier: null, n: 0 },
+          gut: { brier: null, n: 0 },
+          engine_beats_baseline: null,
+        },
+      },
     ],
     "/v1/me/tests/pt_1/outcome": [200, { ...test1, outcome: "landed" }],
   });
@@ -492,77 +545,6 @@ test("?text= starts the simulator with that post", async () => {
 test("/playground is not a page", async () => {
   const el = await render(<App path="/playground" />);
   expect(el.textContent).toContain("Page not found");
-});
-
-test("the reaction slip draws 100 dots and a segment matrix", async () => {
-  const countries = ["USA", "IND", "BRA"];
-  const audiences = countries.flatMap((c, i) =>
-    ["low", "high"].map((e, j) => ({
-      segment: `${c}|18-34|${e}`,
-      label: `${c} ${e}`,
-      country: c,
-      coverage_tier: "B",
-      weight: 1 / 6,
-      landing: 0.2 * (i + j + 1),
-    })),
-  );
-  serve({
-    "/v1/me": [401, {}],
-    "/v1/tests": [200, { ...tested, result: { ...tested.result, audiences } }],
-  });
-  const el = await render(<App path="/simulate" />);
-  await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
-  await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "Half off"));
-  await act(async () => button("Test my message").click());
-  await until(() => expect(el.querySelector(".land-result")).not.toBeNull());
-  expect(el.querySelector(".slip-quote")?.textContent).toBe("Half off");
-  expect(el.querySelectorAll(".field span")).toHaveLength(100);
-  const filled = el.querySelectorAll(".field span.on").length;
-  expect(el.textContent).toContain(`Filled dots would like or share it: ${filled} of 100.`);
-  const rows = [...el.querySelectorAll(".matrix tbody tr")];
-  expect(rows).toHaveLength(countries.length);
-  expect(rows[0].querySelectorAll("td")).toHaveLength(2);
-  expect(el.querySelector(".matrix caption")?.textContent).toContain("6 segments asked");
-  expect(el.querySelector(".seal-line .seal-grid.empty")).not.toBeNull();
-});
-
-test("the dot field fills exactly the headline's share of 100 dots", async () => {
-  const ages = ["18-34", "35-54", "55+"];
-  const synthetic = Array.from({ length: 24 }, (_, i) => ({
-    segment: `C${i % 8}|${ages[i % 3]}|${["low", "mid", "high"][i % 3]}`,
-    label: `segment ${i}`,
-    country: `C${i % 8}`,
-    coverage_tier: "B",
-    weight: 1 + (i % 5),
-    landing: ((i * 37) % 100) / 100,
-  }));
-  for (const [rows, chance] of [
-    [tested.result.audiences, tested.result.landing_chance],
-    [synthetic, 0.39],
-    [synthetic, 0.985],
-    [synthetic, 0.004],
-  ] as const) {
-    const el = await render(<PopulationField rows={[...rows]} landingChance={chance} />);
-    expect(el.querySelectorAll(".field span")).toHaveLength(100);
-    expect(el.querySelectorAll(".field span.on")).toHaveLength(Math.round(chance * 100));
-    container.remove();
-    container = document.body.appendChild(document.createElement("div"));
-  }
-});
-
-test("the segment matrix keeps only the asked age band and education columns", async () => {
-  const at = (country: string, age: string, edu: string) => ({
-    ...segment(`${country} ${age} ${edu}`, 0.3),
-    segment: `${country}|${age}|${edu}`,
-    country,
-  });
-  const rows = [at("USA", "18-34", "low"), at("USA", "55+", "high"), at("MEX", "18-34", "high")];
-  const el = await render(<SegmentMatrix rows={rows} />);
-  const cells = (r: number) =>
-    [...el.querySelectorAll(`thead tr:nth-child(${r}) th`)].map((t) => t.textContent);
-  expect(cells(1)).toEqual(["Country", "18-34", "55+"]);
-  expect(cells(2)).toEqual(["low", "high", "high"]);
-  expect(el.querySelector("caption")?.textContent).toContain("3 segments asked");
 });
 
 test("a use case opens the simulator filled in", async () => {

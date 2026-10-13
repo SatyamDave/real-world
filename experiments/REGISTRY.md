@@ -15,3 +15,4 @@ Check every hash with `shasum -a 256 experiments/E*/PREREG.md`.
 | [E007](E007/PREREG.md) | Jev forecasts are no worse calibrated than the Haiku baseline | 2026-10-12 | CTO | `cb68d107d9da5824e53b0d0dad2aaf7528f2cc0554ada13b7a334693f6033cc5` | registered | none |
 | [E008](E008/PREREG.md) | The self-improving loop on a synthetic question stream | 2026-10-12 | CTO | `ebc8593d8389a247d9a1e494a88bb4bbc69f89c8a1ff970da8375ce86e99440d` | registered | none |
 | [E009](E009/PREREG.md) | LoRA-tuned opinion model vs its base model vs Jev on survey questions fielded after registration | 2026-10-12 | CTO | `a83836b9b9fb03ff62854c15bbcd721437804d0edf4a0ca10590176b091c34c5` | registered | none |
+| [E010](E010/PREREG.md) | The ICP engine beats a plain-prompt baseline and the founder's gut on marked message tests | 2026-10-13 | CTO | `cf9e4ebd65122eb4eb95504438a78d162d7a527caafe417c92c9a03d6422b9d2` | registered | none |
