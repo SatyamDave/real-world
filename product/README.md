@@ -12,6 +12,8 @@ A PR that changes what a surface does updates its spec in the same PR.
 
 ## How people use it
 
+Since [decision 0013](../research/decisions/0013-console-and-playground.md) the app is a console: Home teaches three primitives (Reaction, Event, Call) and lists use cases; the [playground](playground.md) runs them.
+
 Real World tells you how a post will land before you publish it, and lets you call today's question against an AI whose call is sealed first ([decision 0012](../research/decisions/0012-will-it-land-and-call-it.md)). Under both runs the engine: simulated populations of 16 countries, a typed decision per segment, and a ledger that seals forecasts before outcomes exist.
 
 - **Person about to post.** Opens `/`, pastes a post, picks an audience, records their gut and taps "Test it"; reads the landing chance, the best and worst audiences, two simulated accounts and a rewrite; signed in, the test is sealed and later marked "Landed" or "Flopped" on `/record`. Specs: [will-it-land.md](will-it-land.md), [track-record.md](track-record.md), [accounts.md](accounts.md).

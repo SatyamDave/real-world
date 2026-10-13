@@ -7,7 +7,7 @@
 1. **Lead with "Will this land?"**: the headline promises knowing how a post lands before posting it, and the first action is pasting a post (or joining the waitlist for it). A live demo box that runs a post test, when the API is reachable, beats any explanation.
 2. **Then "Call it"**: today's question against the AI, whose call is sealed before anyone answers.
 3. **Proof, not claims**: sealed calls and the public record are the reason to believe. No accuracy number, no "beats", no "world model" ([messaging](../gtm/messaging.md)).
-4. **No forks, globe-first hero or developer pitch** above the fold: the globe may stay as decoration; forks and the API are the engine, not the product.
+4. **No globe-first hero or developer pitch** above the fold: the globe may stay as decoration. The three primitives and the use cases of [decision 0013](../research/decisions/0013-console-and-playground.md) may follow the two jobs.
 5. **Same words as the app**: post test, landing chance, seal, gut, mark, call ([glossary](glossary.md)).
 
 The sections below describe the page as first built; where they conflict with this list, this list wins until the page is rebuilt.

@@ -1,7 +1,7 @@
 # 0012: Real World is two consumer jobs, "Will this land?" and "Call it", on the existing engine
 
 - Date: 2026-10-13
-- Status: accepted (founder decision, Satyam, in chat on 2026-10-13)
+- Status: superseded by 0013
 - Rests on: [product/108-consumer-wedge](../product/108-consumer-wedge.md), [product/076-viral-simulations](../product/076-viral-simulations.md), [product/077-daily-question-mechanics](../product/077-daily-question-mechanics.md), [product/087-trust-and-explainability](../product/087-trust-and-explainability.md), [market/004-jev-typesafe](../market/004-jev-typesafe.md), [0011](0011-consumer-product-and-api.md)
 
 ## Decision
