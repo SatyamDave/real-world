@@ -1,0 +1,41 @@
+# Copy to landing/.dev.vars and fill in. NEVER commit .dev.vars (it is git-ignored).
+# For Cloudflare Pages preview, load each with: wrangler pages secret put <NAME>
+
+# Neon Postgres connection strings (pooled). Created by the Neon project real-world-landing.
+# DATABASE_URL points at the `main` branch; DATABASE_URL_DEV at the `dev` branch used by tests.
+DATABASE_URL=
+DATABASE_URL_DEV=
+
+# Amplitude — server-side HTTP API key (same project as the browser SDK).
+AMPLITUDE_API_KEY=
+
+# Cloudflare Turnstile (bot check on the signup form).
+TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=
+
+# Typeform — personal access token (form create/update) and webhook signing secret.
+TYPEFORM_TOKEN=
+TYPEFORM_WEBHOOK_SECRET=
+
+# The v1 app base URL (Satyam hosts web/ separately). While empty, all "Try it" links are hidden.
+# APP_URL is the canonical server value; VITE_APP_URL (below) mirrors it into the client bundle,
+# because the "Try today's question" link is rendered in the browser. Keep the two the same.
+APP_URL=
+
+# --- Build-time public vars (VITE_*, safe to expose in the client bundle) ---
+# Base URL of the landing deployment, used for canonical/OG tags. A *.pages.dev preview tonight.
+VITE_PUBLIC_BASE_URL=
+# The v1 app URL exposed to the client (mirror of APP_URL). Empty hides all "Try it" links.
+VITE_APP_URL=
+# Amplitude browser API key (public client key). May equal AMPLITUDE_API_KEY on the free plan.
+VITE_AMPLITUDE_API_KEY=
+# Turnstile site key again, exposed to the browser widget.
+VITE_TURNSTILE_SITE_KEY=
+# Session-replay sample rate, 0..1.
+VITE_AMPLITUDE_REPLAY_SAMPLE_RATE=0.1
+# Ad pixels. Each loads only when its id is set; leave empty to disable that channel.
+VITE_REDDIT_PIXEL_ID=
+VITE_X_PIXEL_ID=
+# Meta stays behind a flag until the policy review clears; off by default.
+VITE_ENABLE_META_PIXEL=false
+VITE_META_PIXEL_ID=

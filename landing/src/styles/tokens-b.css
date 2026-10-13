@@ -1,0 +1,25 @@
+/*
+ * Design tokens — Direction B, "Observatory" (alternate; not chosen).
+ * Swap in by changing the tokens import in src/main.tsx to this file.
+ * Dark, layered navy with an amber signal and a cyan dot-globe.
+ */
+:root {
+  --paper: #0e1726;
+  --paper-2: #0a1120;
+  --surface: #16213b;
+  --ink: #e7ecf2;
+  --muted: #93a3b8;
+  --accent: #e8b23a; /* amber */
+  --accent-2: #e27d6b; /* soft clay for pending, on dark */
+  --line: #2a3a57;
+  --focus: #e8b23a;
+  --on-accent: #1a1406;
+
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+
+  --radius: 8px;
+  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --globe-dot: #6fa8c7;
+  --globe-glow: 232, 178, 58;
+}

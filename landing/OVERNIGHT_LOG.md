@@ -1,0 +1,30 @@
+# Overnight log — pre-launch landing page
+
+Running unattended from ~02:55 PT on 2026-10-12. One line per decision: time (PT), decision, why, how to reverse. Blocked items at the bottom.
+
+## Preflight (Step 0)
+
+- 02:56 — Tooling: node 23.7.0, pnpm 11.2.2, wrangler 4.149.0, gh 2.102.0. No `zeroshot` and no `neonctl` on PATH. Why: measured with `--version`. Reverse: n/a.
+- 02:56 — Ignoring the Zeroshot section of CLAUDE.md. Why: `zeroshot --version` is "command not found", and CLAUDE.md gates it on that. Reverse: install Zeroshot and re-read that section.
+- 02:57 — Neon connector authenticated; `list_projects` returns `[]` (no projects yet). Amplitude connector authenticated (org `old-tooth-895556`, plan `starter_v4`, one project appId `877388` "default"). Cloudflare: `wrangler whoami` shows a logged-in token with `pages (write)`. Playwright MCP present. Why: called one read-only check on each. Reverse: n/a.
+- 02:58 — `landing/.dev.vars` keys present: AMPLITUDE_API_KEY, TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY, TYPEFORM_TOKEN, TYPEFORM_WEBHOOK_SECRET are SET; DATABASE_URL, DATABASE_URL_DEV, APP_URL are EMPTY. Values never printed. Reverse: n/a.
+- 02:58 — `.dev.vars` is already git-ignored via `.git/info/exclude:8`. Added a committed `landing/.gitignore` with `.dev.vars` as a durable, shared guard. Why: the local exclude is not shared and not visible in the tree. Reverse: delete `landing/.gitignore`.
+- 03:00 — Teaser question = the US Fed rate decision on 2026-10-28. Why: `data/fixtures/questions.json` holds only `FIXTURE:`/example.com illustrative questions (not a real committed list), so the brief's default applies. Date verified on federalreserve.gov (FOMC meets Oct 27-28, decision on the 28th). Reverse: swap the question in `landing/src/brand.ts` / teaser config once Satyam commits a real question list.
+- 03:00 — APP_URL is empty, so every "Try it / Try today's question" link is hidden until it is set. Why: brief + the v1 app URL is unknown tonight. Reverse: set APP_URL in `.dev.vars` and the Pages env.
+
+## Decisions
+
+- 03:15 — PR1 docs: used decision numbers 0003 (landing/waitlist) and 0004 (launch name); both free on origin/main. Why: 0001/0002 taken, Satyam had not claimed 0003. Reverse: renumber before merge if Satyam pushes a 0003.
+- 03:16 — Removed item 1 from `company/decisions-needed.md` without renumbering the rest. Why: `company/risks.md` and `plan-to-nov-2.md` cite items by number (elections = item 2); renumbering would break them. Reverse: re-add item 1 text.
+- 03:16 — Branch strategy: stacked branches. PR1 base=main; PR2 base=landing/1-docs; PR3 base=landing/2-page; etc. Why: PRs 2-5 all build on the same `landing/` app and nothing merges to main tonight, so each must inherit the previous. Reverse: Rohit can merge them in order, or I can squash to one branch on request.
+- 03:17 — PR1 pushed, draft PR #19 opened (base main). Why: docs-only, independent of the app. Reverse: `gh pr close 19`.
+- 03:17 — Left `landing/` scaffolding (PLAN, OVERNIGHT_LOG, .gitignore, .dev.vars.example) untracked during PR1; commits with the app in PR2. Why: keep PR1 one concern (docs). Reverse: n/a.
+- 03:30 — Built 3 design directions (A Commit Slip, B Observatory, C Almanac) in `landing/design/direction-{a,b,c}/`, screenshot at 390×844 and 1440×900. Scores (distinct/phone/receipt/LCP): A 4/5/5/5=19, B 5/3/5/3=16, C 4/5/3/4=16. Winner: A. Why: ad traffic is phones, where A wins on legibility and LCP (CPO lens, note 071) while carrying the receipt idea most directly. The built page uses A's tokens but keeps the brief's turning-globe + anchored-receipt-cards concept. Reverse: switch tokens by changing one import line in `landing/src/main.tsx` to `tokens-b.css` or `tokens-c.css`. Full table goes in MORNING.md.
+- 03:50 — cobe 2.0.1 dropped the v1 `onRender` option; it animates via `globe.update(state)`. Implemented a RAF loop calling update() and advancing phi; pause via IntersectionObserver + visibilitychange (destroy/recreate). Reverse: n/a.
+- 03:52 — Pinned exact dep versions for landing (react/react-dom 19.3.0, vite 8.3.4, vitest 5.0.3, typescript 7.0.2, jsdom 30.1.2 to match web; cobe 2.0.1). Why: decision 0001 says pin exact after checking npm, and matching web dedupes the lockfile. Reverse: edit landing/package.json.
+- 03:55 — Did NOT add @testing-library/react or axe-core as deps. Why: web/ convention uses raw createRoot/act with `// @vitest-environment jsdom`; the axe pass runs in Playwright e2e (PR5) instead. Reverse: add them if desired.
+- 04:00 — Built and smoke-tested the production bundle in headless Chromium: hero/message-match/globe/receipts all render, 0 console errors; critical JS 74.6KB gz (<120 budget), cobe a separate 5.9KB gz chunk. Reverse: n/a.
+
+## Blocked
+
+(appended as work proceeds)

@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help setup dev test lint typecheck check experiment daily daily-fixtures mirror openapi sdk e2e web-build-refuses-fixtures
+.PHONY: help setup dev landing-dev test lint typecheck check experiment daily daily-fixtures mirror openapi sdk e2e web-build-refuses-fixtures
 
 help: ## list every target
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-15s %s\n", $$1, $$2}'
@@ -15,6 +15,9 @@ dev: ## seed the fixture days if var/ is empty, then run the API on $(API_PORT) 
 	@test -d "$${RW_HOME:-var}/snapshots" || uv run python -m rw.daily --fixtures
 	trap 'kill 0' EXIT; uv run uvicorn rw_api.app:app --port $(API_PORT) & \
 		VITE_API_URL=http://localhost:$(API_PORT) pnpm --filter web dev --port $(WEB_PORT)
+
+landing-dev: ## run the pre-launch landing page dev server (Vite, separate app)
+	pnpm --filter landing dev
 
 test: ## run pytest and every package's Vitest suite
 	uv run pytest -q
