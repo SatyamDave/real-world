@@ -27,7 +27,7 @@ make e2e
 make check
 ```
 
-Unit tests run over a fake transport (`httpx.MockTransport`, a fake `fetch`). `make e2e` seeds the fixture days into a temporary `RW_HOME`, starts the API on a free port with `ANTHROPIC_API_KEY` unset, and runs each README quickstart as written against it; outside `make e2e` those two tests skip.
+Unit tests run over a fake transport (`httpx.MockTransport`, a fake `fetch`). `make e2e` seeds the fixture days into a temporary `RW_HOME`, starts the API on a free port with `TYPESAFE_API_KEY`, `OPENROUTER_API_KEY` and `RW_TEXT_BASE_URL` unset, and runs each README quickstart as written against it; outside `make e2e` those two tests skip.
 
 ## A reviewer rejects
 

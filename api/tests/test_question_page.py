@@ -12,7 +12,8 @@ def home(tmp_path_factory):
     path = tmp_path_factory.mktemp("rw") / "var"
     with pytest.MonkeyPatch.context() as mp:
         mp.setenv("RW_HOME", str(path))
-        mp.delenv("ANTHROPIC_API_KEY", raising=False)
+        for var in ("TYPESAFE_API_KEY", "OPENROUTER_API_KEY", "RW_TEXT_BASE_URL"):
+            mp.delenv(var, raising=False)
         for day in daily.FIXTURE_DAYS:
             daily.run(day, world_agents=2000)
     return path
@@ -21,7 +22,8 @@ def home(tmp_path_factory):
 @pytest.fixture
 def client(home, monkeypatch):
     monkeypatch.setenv("RW_HOME", str(home))
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    for var in ("TYPESAFE_API_KEY", "OPENROUTER_API_KEY", "RW_TEXT_BASE_URL"):
+        monkeypatch.delenv(var, raising=False)
     with TestClient(api.app) as c:
         yield c
 

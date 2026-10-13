@@ -11,7 +11,8 @@ DAY = daily.FIXTURE_DAYS[1]
 def conn(tmp_path_factory):
     with pytest.MonkeyPatch.context() as mp:
         mp.setenv("RW_HOME", str(tmp_path_factory.mktemp("rw") / "var"))
-        mp.delenv("ANTHROPIC_API_KEY", raising=False)
+        for var in ("TYPESAFE_API_KEY", "OPENROUTER_API_KEY", "RW_TEXT_BASE_URL"):
+            mp.delenv(var, raising=False)
         for day in daily.FIXTURE_DAYS[:2]:
             daily.run(day, world_agents=2000)
         yield db.connect()

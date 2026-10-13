@@ -293,6 +293,11 @@ def decider() -> Decider:
     return FakeLLM()
 
 
+def provider_for(model: str) -> str:
+    """The llm_calls provider that answered a recorded forecast model: decisions come from Jev."""
+    return "fake" if model == "fake" else JevLLM.name
+
+
 def model_name() -> str:
     """The model that answers this process's forecasts and signals, as results and the ledger
     record it."""

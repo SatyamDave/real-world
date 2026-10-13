@@ -314,7 +314,7 @@ def _provider(conn: sqlite3.Connection, date: str, steps: list[Step]) -> tuple[s
         "SELECT model FROM forecasts WHERE date = ? AND model IS NOT NULL LIMIT 1", (date,)
     ).fetchone()
     name = row["model"] if row else llm.model_name()
-    return ("fake" if name == "fake" else "anthropic"), name
+    return llm.provider_for(name), name
 
 
 def _cycle(conn: sqlite3.Connection, date: str) -> Cycle:

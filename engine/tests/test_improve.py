@@ -15,7 +15,8 @@ BASELINE = {"version": "", "effective_from": "", "params": improve.IDENTITY}
 @pytest.fixture(autouse=True)
 def isolated(tmp_path, monkeypatch):
     monkeypatch.setenv("RW_HOME", str(tmp_path / "var"))
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    for var in ("TYPESAFE_API_KEY", "OPENROUTER_API_KEY", "RW_TEXT_BASE_URL"):
+        monkeypatch.delenv(var, raising=False)
 
 
 def stream(n_questions, slope=1.0, seed=0, start="2026-01-01"):
