@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from rw.beliefs import logit, nudge, spread_audit, update_beliefs
+from rw.beliefs import kalman_update, logit, nudge, spread_audit, update_beliefs
 from rw.settings import ANCHOR_PULL, NUDGE_CAP_LOGIT, SPREAD_BAND, STEP_CAP_LOGIT
 
 SEEDS = range(25)
@@ -161,3 +161,74 @@ def test_spread_audit_passes_matching_spread_and_flags_both_band_edges():
         assert row.in_band is expected
     with pytest.raises(ValueError):
         spread_audit(B, countries, {("KEN", 0): 0.0})
+
+
+def kalman_world(rng, n=300, groups=4):
+    B = rng.normal(0, 1, (n, N_TOPICS))
+    return B, np.zeros_like(B), np.full_like(B, 0.3), rng.integers(0, groups, n)
+
+
+def sigmoid(x):
+    return float(1 / (1 + np.exp(-x)))
+
+
+def test_kalman_matches_the_scalar_textbook_update():
+    for seed in SEEDS:
+        rng = np.random.default_rng(seed)
+        B, C, P, g = kalman_world(rng)
+        y, obs_sd, walk = float(rng.normal()), 0.4, 0.05
+        mean = B[g == 1, 2].mean()
+        p = 0.3 + walk**2
+        if (y - mean) ** 2 - obs_sd**2 > p:
+            continue
+        k = p / (p + obs_sd**2)
+        B2, C2, P2, recs = kalman_update(B, C, P, g, {(1, 2): (sigmoid(y), obs_sd)}, walk)
+        assert B2[g == 1, 2].mean() == pytest.approx(mean + k * (y - mean))
+        np.testing.assert_allclose(C2[g == 1, 2], k * (y - mean))
+        np.testing.assert_allclose(P2[g == 1, 2], (1 - k) * p)
+        assert recs == [(1, 2, pytest.approx(y - mean), pytest.approx(k * (y - mean)))]
+
+
+def test_kalman_shifts_whole_groups_and_leaves_inputs_alone():
+    rng = np.random.default_rng(0)
+    B, C, P, g = kalman_world(rng)
+    before = B.copy(), C.copy(), P.copy()
+    B2, C2, P2, recs = kalman_update(B, C, P, g, {(0, 1): (0.9, 0.2), (9, 1): (0.5, 0.2)})
+    for a, b in zip((B, C, P), before, strict=True):
+        np.testing.assert_array_equal(a, b)
+    moved = B2 - B
+    assert np.ptp(moved[g == 0, 1]) < 1e-12 and moved[g == 0, 1][0] != 0
+    np.testing.assert_allclose(moved[g == 0, 1], (C2 - C)[g == 0, 1])
+    moved[g == 0, 1] = 0.0
+    np.testing.assert_array_equal(moved, 0.0)
+    assert [r.group_id for r in recs] == [0]
+
+
+def test_kalman_with_no_polls_only_grows_the_variance():
+    rng = np.random.default_rng(1)
+    B, C, P, g = kalman_world(rng)
+    B2, C2, P2, recs = kalman_update(B, C, P, g, {}, walk_sd=0.1)
+    np.testing.assert_array_equal(B2, B)
+    np.testing.assert_array_equal(C2, C)
+    np.testing.assert_allclose(P2, P + 0.01)
+    assert recs == []
+
+
+def test_kalman_absorbs_a_shock_in_one_poll():
+    B = np.zeros((50, N_TOPICS))
+    P = np.full_like(B, 0.001)
+    B2, _, _, _ = kalman_update(B, B.copy(), P, np.zeros(50), {(0, 0): (sigmoid(1.5), 0.2)}, 0.0)
+    assert B2[:, 0].mean() == pytest.approx(1.5, abs=0.05)
+
+
+def test_kalman_averages_repeated_polls_below_one_polls_noise():
+    rng = np.random.default_rng(2)
+    groups, obs_sd = 2000, 0.3
+    truth = rng.normal(0, 1, groups)
+    g = np.arange(groups)
+    B = np.zeros((groups, N_TOPICS))
+    C, P = np.zeros_like(B), np.ones_like(B)
+    for _ in range(30):
+        polls = {(i, 0): (sigmoid(truth[i] + rng.normal(0, obs_sd)), obs_sd) for i in range(groups)}
+        B, C, P, _ = kalman_update(B, C, P, g, polls, walk_sd=0.0)
+    assert np.sqrt(np.mean((B[:, 0] - truth) ** 2)) < 0.8 * obs_sd

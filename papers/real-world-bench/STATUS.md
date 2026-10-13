@@ -88,3 +88,10 @@ Three further reviews (methods/statistics 5/10, citation audit 7/10, adversarial
 ## Portfolio edit (2026-10-11)
 
 Cross-paper consistency pass (see `../INDEX.md`): System description corrected (no census microdata, no "LLM agents"); RW-full renamed RW-aware; feed-only LLM renamed same-feed LLM; relationship to *Receipts* stated (different market reference, benchmark rules govern benchmark scores); confirmatory market test pointed to *Receipts* H6; companion titles. Compiles with tectonic: no errors, no undefined references, no overfull boxes.
+
+## Update for PRs #6-#38 (2026-10-12)
+
+- "The organizer's simulator does not exist" was no longer true. Hypothesis blindness now says a first engine (0.1.0) exists, has forecast no live question and has not been scored on any Track A or B item; its only results are the synthetic E003/E006 checks of its assimilation operator, which touch no poll, survey or market data.
+- The organizer's entry notes that engine 0.1.0 is simpler than the design (10,000 agents from illustrative marginals, a per-country scalar Kalman update, one backbone call per segment for every item) and that the round-1 system card describes whichever version is entered.
+- "Not yet a dataset" now says no benchmark code exists; the engine has only its own daily same-feed baseline.
+- Every pending artifact and what produces it is unchanged.

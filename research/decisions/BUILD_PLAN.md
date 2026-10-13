@@ -51,7 +51,7 @@ Critical path: S01 → S04 → S07 → S08 → S10 → S11 → S12, seven runs. 
 3. **Real data**: GDELT GKG loader and Kalshi/Polymarket price snapshots in the fixture shapes; GLOPOP-S loader once its licence row clears.
 4. **Cost measurement**: 1,000 real Haiku 5.5 calls through `llm_calls` to replace every estimate in the research.
 5. **Guardrails**: the acceptable-use policy check on fork events and election-window mode, by Oct 20.
-6. **Accounts and keys**: API keys, per-key quotas, the free-fork allowance once 3/day vs 3/month is decided.
+6. **Accounts and keys**: planned as slices P1-P7 in [0011](0011-consumer-product-and-api.md#build-plan).
 
 ## Slices
 

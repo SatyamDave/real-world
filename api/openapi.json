@@ -2,13 +2,13 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Real World API",
-    "description": "Every simulation result is labelled simulated. See product/simulate-api.md.",
+    "description": "Simulations with receipts. AI simulates how the world reacts to the news. Every forecast is sealed before the outcome and scored in public. A forecast and simulation API with a public score: fork today's simulated world, read its agents, answer the daily question and check the hashed receipts. Get a key with a dollar cap; every refusal is one sentence in `detail`, and every output is labelled AI-simulated.",
     "version": "2026-10-27"
   },
   "paths": {
     "/v1/simulate": {
       "post": {
-        "summary": "Create Simulation",
+        "summary": "Start a fork: add one event to today's world and run it forward. Returns an id.",
         "operationId": "create_simulation_v1_simulate_post",
         "parameters": [
           {
@@ -37,6 +37,24 @@
               ],
               "title": "Real-World-Version"
             }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer rw_... API key. Without one the caller is anonymous and max_cost_usd is clamped.",
+              "title": "Authorization"
+            },
+            "description": "Bearer rw_... API key. Without one the caller is anonymous and max_cost_usd is clamped."
           }
         ],
         "requestBody": {
@@ -60,11 +78,18 @@
               }
             }
           },
-          "400": {
-            "description": "Real-World-Version is not the current version"
+          "401": {
+            "description": "The API key is unknown or revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
           },
           "402": {
-            "description": "The estimate exceeds max_cost_usd",
+            "description": "The estimate exceeds max_cost_usd, the key's cap or today's fork budget is spent",
             "content": {
               "application/json": {
                 "schema": {
@@ -74,21 +99,41 @@
             }
           },
           "409": {
-            "description": "A job with this Idempotency-Key is running",
+            "description": "This Idempotency-Key is running a fork, or was used with another body",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Conflict"
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
           },
           "422": {
-            "description": "Validation Error",
+            "description": "The request is invalid, Real-World-Version is not the current version, or the event breaks the acceptable-use policy",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/PolicyRefused"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "This address has used today's anonymous forks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A spend, address or acceptable-use check could not run; nothing was started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -98,17 +143,37 @@
     },
     "/v1/simulate/estimate": {
       "post": {
-        "summary": "Estimate",
+        "summary": "Estimate a fork's cost and model calls without running it",
         "operationId": "estimate_v1_simulate_estimate_post",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer rw_... API key. Without one the caller is anonymous and max_cost_usd is clamped.",
+              "title": "Authorization"
+            },
+            "description": "Bearer rw_... API key. Without one the caller is anonymous and max_cost_usd is clamped."
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SimulateRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -121,12 +186,32 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "401": {
+            "description": "The API key is unknown or revoked",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The API key could not be checked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -136,7 +221,7 @@
     },
     "/v1/simulations/{job_id}": {
       "get": {
-        "summary": "Get Simulation",
+        "summary": "A fork's status, and its result when done",
         "operationId": "get_simulation_v1_simulations__job_id__get",
         "parameters": [
           {
@@ -160,12 +245,22 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "No such fork",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -175,7 +270,7 @@
     },
     "/v1/simulations/{job_id}/events": {
       "get": {
-        "summary": "Simulation Events",
+        "summary": "Stream a fork's progress as server-sent events; resumes from Last-Event-ID",
         "operationId": "simulation_events_v1_simulations__job_id__events_get",
         "parameters": [
           {
@@ -211,12 +306,22 @@
               "text/event-stream": {}
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "No such fork",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -226,7 +331,7 @@
     },
     "/v1/world": {
       "get": {
-        "summary": "World",
+        "summary": "Today's world: countries, tiers, topic shares and prefilled fork events",
         "operationId": "world_v1_world_get",
         "responses": {
           "200": {
@@ -238,13 +343,23 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "No such world snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
           }
         }
       }
     },
     "/v1/agents/{agent_id}": {
       "get": {
-        "summary": "Agent",
+        "summary": "One simulated agent: traits, beliefs and what moved them",
         "operationId": "agent_v1_agents__agent_id__get",
         "parameters": [
           {
@@ -268,12 +383,22 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "No such agent",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -283,7 +408,7 @@
     },
     "/v1/agents/{agent_id}/why": {
       "get": {
-        "summary": "Agent Why",
+        "summary": "A short model-written account of what moved one agent, labelled simulated",
         "operationId": "agent_why_v1_agents__agent_id__why_get",
         "parameters": [
           {
@@ -308,14 +433,31 @@
             }
           },
           "402": {
-            "description": "The model call would exceed its cost cap"
-          },
-          "422": {
-            "description": "Validation Error",
+            "description": "The model call would exceed its cost cap",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such agent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -325,7 +467,7 @@
     },
     "/v1/daily": {
       "get": {
-        "summary": "Daily",
+        "summary": "Today's question, and the reveal once this visitor answered",
         "operationId": "daily_v1_daily_get",
         "parameters": [
           {
@@ -357,12 +499,22 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "No such daily question",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -372,7 +524,7 @@
     },
     "/v1/daily/answers": {
       "post": {
-        "summary": "Answer Daily",
+        "summary": "Answer today's question once; returns the reveal",
         "operationId": "answer_daily_v1_daily_answers_post",
         "requestBody": {
           "content": {
@@ -395,15 +547,32 @@
               }
             }
           },
-          "409": {
-            "description": "This player already answered this question"
-          },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "No such daily question",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This visitor already answered, or answers closed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid or not today's question",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -413,7 +582,7 @@
     },
     "/v1/receipts": {
       "get": {
-        "summary": "Receipts",
+        "summary": "Every day record, newest first, with its root, record hash and anchor status",
         "operationId": "receipts_v1_receipts_get",
         "responses": {
           "200": {
@@ -431,7 +600,7 @@
     },
     "/v1/receipts/{day}": {
       "get": {
-        "summary": "Receipt Day",
+        "summary": "One day record with every receipt in it: entry, salt and leaf hash",
         "operationId": "receipt_day_v1_receipts__day__get",
         "parameters": [
           {
@@ -455,12 +624,22 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "No such day record",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -470,8 +649,8 @@
     },
     "/v1/scores": {
       "get": {
-        "summary": "Scores",
-        "description": "score.summarize over every committed forecast whose question has resolved. A question\nacross several countries takes its lowest-coverage tier, and \"multiple\" as its region when\nthey differ.",
+        "summary": "How our simulation's forecasts score against each baseline",
+        "description": "Mean Brier difference of the sim forecaster against the plain LLM and the market over resolved questions, with n, an interval and whether the sample is large enough to report, overall and by coverage tier and region.",
         "operationId": "scores_v1_scores_get",
         "responses": {
           "200": {
@@ -493,7 +672,7 @@
     },
     "/healthz": {
       "get": {
-        "summary": "Healthz",
+        "summary": "Liveness check",
         "operationId": "healthz_healthz_get",
         "responses": {
           "200": {
@@ -506,6 +685,625 @@
                   },
                   "type": "object",
                   "title": "Response Healthz Healthz Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/status": {
+      "get": {
+        "summary": "Live system status",
+        "operationId": "status_v1_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/world/population": {
+      "get": {
+        "summary": "The simulated population: every country, segment and topic with its calibration and spread",
+        "operationId": "world_population_v1_world_population_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Population"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such world snapshot"
+          }
+        }
+      }
+    },
+    "/v1/research": {
+      "get": {
+        "summary": "The experiment registry with its pre-registration hashes and results, and the papers",
+        "operationId": "research_v1_research_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Research"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/receipts/{day}/leaves/{leaf_hash}": {
+      "get": {
+        "summary": "One receipt with its inclusion proof up to the day's root",
+        "operationId": "receipt_leaf_v1_receipts__day__leaves__leaf_hash__get",
+        "parameters": [
+          {
+            "name": "day",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Day"
+            }
+          },
+          {
+            "name": "leaf_hash",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Leaf Hash"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeafReceipt"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such receipt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cycle": {
+      "get": {
+        "summary": "One daily cycle as a run log: steps, model calls, news, assimilation, spread audit",
+        "operationId": "latest_cycle_v1_cycle_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cycle"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such cycle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cycle/{date}": {
+      "get": {
+        "summary": "One daily cycle as a run log: steps, model calls, news, assimilation, spread audit",
+        "operationId": "cycle_v1_cycle__date__get",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cycle"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such cycle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/cycle/{date}/replay": {
+      "get": {
+        "summary": "Replay the day's forecasts from the recorded model outputs and diff them against the committed values",
+        "operationId": "cycle_replay_v1_cycle__date__replay_get",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Replay"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such cycle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/questions/{question_id}": {
+      "get": {
+        "summary": "One question: every committed forecast by day and forecaster, its spread, its receipt and its score",
+        "operationId": "question_v1_questions__question_id__get",
+        "parameters": [
+          {
+            "name": "question_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Question Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionPage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such question",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/scoreboard": {
+      "get": {
+        "summary": "The scoreboard: Brier per forecaster, skill against each baseline, reliability bins and every resolved question",
+        "operationId": "scoreboard_v1_scoreboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Scoreboard"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/email": {
+      "post": {
+        "tags": ["account"],
+        "summary": "Email a sign-in link and a six-digit code",
+        "operationId": "email_sign_in_v1_auth_email_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignInSent"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not JSON, or not from an allowed origin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many sign-in emails this hour",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The email could not be sent, or a throttle could not be read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/verify": {
+      "post": {
+        "tags": ["account"],
+        "summary": "Redeem a sign-in link token or an email and code; sets the session cookie",
+        "operationId": "verify_v1_auth_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Person"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not JSON, or not from an allowed origin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The token or code is wrong, used or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many wrong codes from this address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The sign-in state could not be read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/sign-out": {
+      "post": {
+        "tags": ["account"],
+        "summary": "End this session, or every session of the account with everywhere=true",
+        "operationId": "sign_out_v1_auth_sign_out_post",
+        "parameters": [
+          {
+            "name": "everywhere",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Everywhere"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Not JSON, or not from an allowed origin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out already",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The sign-in state could not be read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "tags": ["account"],
+        "summary": "The signed-in account",
+        "operationId": "me_v1_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Person"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No live session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The sign-in state could not be read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["account"],
+        "summary": "Delete the account: its email, sessions and sign-in tokens are removed",
+        "operationId": "delete_me_v1_me_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Not JSON, or not from an allowed origin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No live session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The sign-in state could not be read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
                 }
               }
             }
@@ -594,6 +1392,11 @@
             "type": "string",
             "title": "Text"
           },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Who wrote the text: \"openai_compatible\", or \"fake\" (no model ran)."
+          },
           "label": {
             "type": "string",
             "const": "Simulated account, not the cause",
@@ -608,8 +1411,32 @@
           }
         },
         "type": "object",
-        "required": ["agent_id", "text"],
+        "required": ["agent_id", "text", "provider"],
         "title": "AgentWhy"
+      },
+      "Anchor": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["rfc3161", "opentimestamps"],
+            "title": "Kind"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service"
+          },
+          "requested_at": {
+            "type": "string",
+            "title": "Requested At"
+          },
+          "proof_base64": {
+            "type": "string",
+            "title": "Proof Base64"
+          }
+        },
+        "type": "object",
+        "required": ["kind", "service", "requested_at", "proof_base64"],
+        "title": "Anchor"
       },
       "Answer": {
         "properties": {
@@ -634,6 +1461,149 @@
         "type": "object",
         "required": ["question_id", "player_id", "probability"],
         "title": "Answer"
+      },
+      "Assimilation": {
+        "properties": {
+          "iso3": {
+            "type": "string",
+            "title": "Iso3"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before"
+          },
+          "after_news": {
+            "type": "number",
+            "title": "After News"
+          },
+          "observed": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed"
+          },
+          "observed_n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed N"
+          },
+          "observed_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed Source"
+          },
+          "innovation": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Innovation"
+          },
+          "applied": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied"
+          },
+          "gain": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gain"
+          },
+          "after": {
+            "type": "number",
+            "title": "After"
+          }
+        },
+        "type": "object",
+        "required": [
+          "iso3",
+          "topic",
+          "before",
+          "after_news",
+          "observed",
+          "observed_n",
+          "observed_source",
+          "innovation",
+          "applied",
+          "gain",
+          "after"
+        ],
+        "title": "Assimilation"
+      },
+      "Audit": {
+        "properties": {
+          "iso3": {
+            "type": "string",
+            "title": "Iso3"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "sim_sd": {
+            "type": "number",
+            "title": "Sim Sd"
+          },
+          "survey_sd": {
+            "type": "number",
+            "title": "Survey Sd"
+          },
+          "ratio": {
+            "type": "number",
+            "title": "Ratio"
+          },
+          "in_band": {
+            "type": "boolean",
+            "title": "In Band"
+          }
+        },
+        "type": "object",
+        "required": ["iso3", "topic", "sim_sd", "survey_sd", "ratio", "in_band"],
+        "title": "Audit"
       },
       "Band": {
         "properties": {
@@ -721,30 +1691,55 @@
         "required": ["n", "n_pairs", "mean_diff", "low", "high", "claim", "by_tier", "by_region"],
         "title": "BaselineSkill"
       },
-      "Conflict": {
+      "Bootstrap": {
         "properties": {
-          "detail": {
+          "block": {
             "type": "string",
-            "title": "Detail"
+            "title": "Block"
           },
-          "id": {
-            "type": "string",
-            "title": "Id"
+          "resamples": {
+            "type": "integer",
+            "title": "Resamples"
+          },
+          "seed": {
+            "type": "integer",
+            "title": "Seed"
+          },
+          "interval": {
+            "type": "number",
+            "title": "Interval"
           }
         },
         "type": "object",
-        "required": ["detail", "id"],
-        "title": "Conflict"
+        "required": ["block", "resamples", "seed", "interval"],
+        "title": "Bootstrap"
+      },
+      "Budget": {
+        "properties": {
+          "nightly_budget_usd": {
+            "type": "number",
+            "title": "Nightly Budget Usd"
+          },
+          "spent_usd": {
+            "type": "number",
+            "title": "Spent Usd"
+          }
+        },
+        "type": "object",
+        "required": ["nightly_budget_usd", "spent_usd"],
+        "title": "Budget"
       },
       "Cost": {
         "properties": {
           "estimated_usd": {
             "type": "number",
-            "title": "Estimated Usd"
+            "title": "Estimated Usd",
+            "description": "An estimate made before the run, at the configured model's prices."
           },
           "actual_usd": {
             "type": "number",
-            "title": "Actual Usd"
+            "title": "Actual Usd",
+            "description": "Dollars the provider charged; 0 with the fake model."
           }
         },
         "type": "object",
@@ -833,16 +1828,149 @@
                 "type": "null"
               }
             ],
-            "title": "Mean"
+            "title": "Mean",
+            "description": "Mean of other visitors' answers; null if there are none."
           },
           "count": {
             "type": "integer",
-            "title": "Count"
+            "title": "Count",
+            "description": "Other visitors' answers; the caller's own is never counted."
           }
         },
         "type": "object",
         "required": ["mean", "count"],
         "title": "Crowd"
+      },
+      "Cycle": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "dates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dates"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "engine_version": {
+            "type": "string",
+            "title": "Engine Version"
+          },
+          "config_hash": {
+            "type": "string",
+            "title": "Config Hash"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/rw_api__routes_cycle__Step"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "news": {
+            "$ref": "#/components/schemas/News"
+          },
+          "assimilation": {
+            "items": {
+              "$ref": "#/components/schemas/Assimilation"
+            },
+            "type": "array",
+            "title": "Assimilation"
+          },
+          "audit": {
+            "items": {
+              "$ref": "#/components/schemas/Audit"
+            },
+            "type": "array",
+            "title": "Audit"
+          },
+          "experimental": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Experimental"
+          },
+          "ledger": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CycleLedger"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "budget": {
+            "$ref": "#/components/schemas/Budget"
+          },
+          "settings_used": {
+            "$ref": "#/components/schemas/rw_api__routes_cycle__SettingsUsed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "dates",
+          "model",
+          "provider",
+          "engine_version",
+          "config_hash",
+          "steps",
+          "news",
+          "assimilation",
+          "audit",
+          "experimental",
+          "ledger",
+          "budget",
+          "settings_used"
+        ],
+        "title": "Cycle"
+      },
+      "CycleLedger": {
+        "properties": {
+          "root": {
+            "type": "string",
+            "title": "Root"
+          },
+          "leaf_count": {
+            "type": "integer",
+            "title": "Leaf Count"
+          },
+          "record_hash": {
+            "type": "string",
+            "title": "Record Hash"
+          },
+          "anchor": {
+            "type": "string",
+            "enum": ["not_anchored", "pending", "anchored"],
+            "title": "Anchor"
+          },
+          "anchored_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchored At"
+          }
+        },
+        "type": "object",
+        "required": ["root", "leaf_count", "record_hash", "anchor", "anchored_at"],
+        "title": "CycleLedger"
       },
       "Daily": {
         "properties": {
@@ -979,9 +2107,21 @@
             "type": "string",
             "title": "Record Hash"
           },
-          "anchored": {
-            "type": "boolean",
-            "title": "Anchored"
+          "anchor": {
+            "type": "string",
+            "enum": ["not_anchored", "pending", "anchored"],
+            "title": "Anchor"
+          },
+          "anchored_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchored At"
           }
         },
         "type": "object",
@@ -993,9 +2133,24 @@
           "protocol_hash",
           "engine_version",
           "record_hash",
-          "anchored"
+          "anchor",
+          "anchored_at"
         ],
         "title": "DaySummary"
+      },
+      "EmailRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+            "title": "Email"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["email"],
+        "title": "EmailRequest"
       },
       "Estimate": {
         "properties": {
@@ -1048,18 +2203,192 @@
         "required": ["text"],
         "title": "Event"
       },
-      "HTTPValidationError": {
+      "Experiment": {
         "properties": {
-          "detail": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "registered": {
+            "type": "string",
+            "title": "Registered"
+          },
+          "owner": {
+            "type": "string",
+            "title": "Owner"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "registry_sha256": {
+            "type": "string",
+            "title": "Registry Sha256"
+          },
+          "prereg_sha256": {
+            "type": "string",
+            "title": "Prereg Sha256"
+          },
+          "hash_matches": {
+            "type": "boolean",
+            "title": "Hash Matches"
+          },
+          "prereg_url": {
+            "type": "string",
+            "title": "Prereg Url"
+          },
+          "hypothesis": {
+            "type": "string",
+            "title": "Hypothesis"
+          },
+          "primary_metric": {
+            "type": "string",
+            "title": "Primary Metric"
+          },
+          "kill_criterion": {
+            "type": "string",
+            "title": "Kill Criterion"
+          },
+          "results": {
             "items": {
-              "$ref": "#/components/schemas/ValidationError"
+              "$ref": "#/components/schemas/ExperimentResult"
             },
             "type": "array",
-            "title": "Detail"
+            "title": "Results"
           }
         },
         "type": "object",
-        "title": "HTTPValidationError"
+        "required": [
+          "id",
+          "title",
+          "registered",
+          "owner",
+          "status",
+          "registry_sha256",
+          "prereg_sha256",
+          "hash_matches",
+          "prereg_url",
+          "hypothesis",
+          "primary_metric",
+          "kill_criterion",
+          "results"
+        ],
+        "title": "Experiment"
+      },
+      "ExperimentResult": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "command": {
+            "type": "string",
+            "title": "Command"
+          },
+          "commit": {
+            "type": "string",
+            "title": "Commit"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "primary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Primary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "type": "string",
+            "title": "Outcome"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "date",
+          "command",
+          "commit",
+          "provider",
+          "model",
+          "primary",
+          "outcome"
+        ],
+        "title": "ExperimentResult"
+      },
+      "ForecasterScore": {
+        "properties": {
+          "forecaster": {
+            "type": "string",
+            "title": "Forecaster"
+          },
+          "n_questions": {
+            "type": "integer",
+            "title": "N Questions"
+          },
+          "n_forecasts": {
+            "type": "integer",
+            "title": "N Forecasts"
+          },
+          "mean_brier": {
+            "type": "number",
+            "title": "Mean Brier"
+          },
+          "mean_log_score": {
+            "type": "number",
+            "title": "Mean Log Score"
+          },
+          "brier_low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier Low"
+          },
+          "brier_high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier High"
+          }
+        },
+        "type": "object",
+        "required": [
+          "forecaster",
+          "n_questions",
+          "n_forecasts",
+          "mean_brier",
+          "mean_log_score",
+          "brier_low",
+          "brier_high"
+        ],
+        "title": "ForecasterScore"
       },
       "Job": {
         "properties": {
@@ -1135,6 +2464,105 @@
         "required": ["id", "status", "links"],
         "title": "JobCreated"
       },
+      "LeafReceipt": {
+        "properties": {
+          "day": {
+            "$ref": "#/components/schemas/DayRecord"
+          },
+          "record_hash": {
+            "type": "string",
+            "title": "Record Hash"
+          },
+          "entry": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Entry"
+          },
+          "salt": {
+            "type": "string",
+            "title": "Salt"
+          },
+          "leaf_hash": {
+            "type": "string",
+            "title": "Leaf Hash"
+          },
+          "proof": {
+            "items": {
+              "$ref": "#/components/schemas/ProofStep"
+            },
+            "type": "array",
+            "title": "Proof"
+          },
+          "root": {
+            "type": "string",
+            "title": "Root"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReceiptQuestion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier"
+          },
+          "anchor": {
+            "type": "string",
+            "enum": ["not_anchored", "pending", "anchored"],
+            "title": "Anchor"
+          },
+          "anchored_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchored At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "record_hash",
+          "entry",
+          "salt",
+          "leaf_hash",
+          "proof",
+          "root",
+          "question",
+          "outcome",
+          "brier",
+          "anchor",
+          "anchored_at"
+        ],
+        "title": "LeafReceipt"
+      },
       "Links": {
         "properties": {
           "self": {
@@ -1149,6 +2577,461 @@
         "type": "object",
         "required": ["self", "events"],
         "title": "Links"
+      },
+      "Miss": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "forecaster": {
+            "type": "string",
+            "title": "Forecaster"
+          },
+          "probability": {
+            "type": "number",
+            "title": "Probability"
+          },
+          "outcome": {
+            "type": "integer",
+            "title": "Outcome"
+          },
+          "brier": {
+            "type": "number",
+            "title": "Brier"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question_id",
+          "text",
+          "date",
+          "forecaster",
+          "probability",
+          "outcome",
+          "brier"
+        ],
+        "title": "Miss"
+      },
+      "News": {
+        "properties": {
+          "source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["fixtures", "gdelt"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "articles": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Articles"
+          },
+          "clusters": {
+            "type": "integer",
+            "title": "Clusters"
+          },
+          "countries": {
+            "type": "integer",
+            "title": "Countries"
+          },
+          "by_topic": {
+            "items": {
+              "$ref": "#/components/schemas/TopicNews"
+            },
+            "type": "array",
+            "title": "By Topic"
+          }
+        },
+        "type": "object",
+        "required": ["source", "articles", "clusters", "countries", "by_topic"],
+        "title": "News"
+      },
+      "NotFound": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": ["detail"],
+        "title": "NotFound"
+      },
+      "Paper": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "short_title": {
+            "type": "string",
+            "title": "Short Title"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "claim": {
+            "type": "string",
+            "title": "Claim"
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "venue": {
+            "type": "string",
+            "title": "Venue"
+          },
+          "pending": {
+            "type": "string",
+            "title": "Pending"
+          },
+          "tex_url": {
+            "type": "string",
+            "title": "Tex Url"
+          },
+          "status_url": {
+            "type": "string",
+            "title": "Status Url"
+          },
+          "pdf": {
+            "$ref": "#/components/schemas/PaperPdf"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "short_title",
+          "title",
+          "claim",
+          "stage",
+          "venue",
+          "pending",
+          "tex_url",
+          "status_url",
+          "pdf"
+        ],
+        "title": "Paper"
+      },
+      "PaperPdf": {
+        "properties": {
+          "how": {
+            "type": "string",
+            "title": "How"
+          },
+          "ci": {
+            "type": "string",
+            "title": "Ci"
+          }
+        },
+        "type": "object",
+        "required": ["how", "ci"],
+        "title": "PaperPdf"
+      },
+      "Person": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": ["id", "email", "created_at"],
+        "title": "Person"
+      },
+      "PolicyRefused": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["private_person", "election_persuasion", "election_window"],
+            "title": "Code"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": ["code", "detail"],
+        "title": "PolicyRefused"
+      },
+      "Population": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "agents": {
+            "type": "integer",
+            "title": "Agents"
+          },
+          "segments": {
+            "type": "integer",
+            "title": "Segments"
+          },
+          "tier_floors": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Tier Floors"
+          },
+          "settings_used": {
+            "$ref": "#/components/schemas/rw_api__routes_world__SettingsUsed"
+          },
+          "countries": {
+            "items": {
+              "$ref": "#/components/schemas/PopulationCountry"
+            },
+            "type": "array",
+            "title": "Countries"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/PopulationSource"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "agents",
+          "segments",
+          "tier_floors",
+          "settings_used",
+          "countries",
+          "sources"
+        ],
+        "title": "Population"
+      },
+      "PopulationCountry": {
+        "properties": {
+          "iso3": {
+            "type": "string",
+            "title": "Iso3"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "region": {
+            "type": "string",
+            "title": "Region"
+          },
+          "population_millions": {
+            "type": "number",
+            "title": "Population Millions"
+          },
+          "tier": {
+            "type": "string",
+            "title": "Tier"
+          },
+          "experimental": {
+            "type": "boolean",
+            "title": "Experimental"
+          },
+          "rubric": {
+            "$ref": "#/components/schemas/Rubric"
+          },
+          "agent_count": {
+            "type": "integer",
+            "title": "Agent Count"
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/PopulationSegment"
+            },
+            "type": "array",
+            "title": "Segments"
+          },
+          "topics": {
+            "items": {
+              "$ref": "#/components/schemas/PopulationTopic"
+            },
+            "type": "array",
+            "title": "Topics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "iso3",
+          "name",
+          "region",
+          "population_millions",
+          "tier",
+          "experimental",
+          "rubric",
+          "agent_count",
+          "segments",
+          "topics"
+        ],
+        "title": "PopulationCountry"
+      },
+      "PopulationSegment": {
+        "properties": {
+          "segment": {
+            "type": "string",
+            "title": "Segment"
+          },
+          "age_band": {
+            "type": "string",
+            "title": "Age Band"
+          },
+          "education": {
+            "type": "string",
+            "title": "Education"
+          },
+          "agent_count": {
+            "type": "integer",
+            "title": "Agent Count"
+          }
+        },
+        "type": "object",
+        "required": ["segment", "age_band", "education", "agent_count"],
+        "title": "PopulationSegment"
+      },
+      "PopulationSource": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "commercial_use": {
+            "type": "string",
+            "title": "Commercial Use"
+          },
+          "checked_on": {
+            "type": "string",
+            "title": "Checked On"
+          }
+        },
+        "type": "object",
+        "required": ["source_id", "kind", "commercial_use", "checked_on"],
+        "title": "PopulationSource"
+      },
+      "PopulationTopic": {
+        "properties": {
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "calibrated_share": {
+            "type": "number",
+            "title": "Calibrated Share"
+          },
+          "survey_sd_logit": {
+            "type": "number",
+            "title": "Survey Sd Logit"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          },
+          "p10": {
+            "type": "number",
+            "title": "P10"
+          },
+          "p50": {
+            "type": "number",
+            "title": "P50"
+          },
+          "p90": {
+            "type": "number",
+            "title": "P90"
+          },
+          "sim_sd_logit": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sim Sd Logit"
+          },
+          "ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ratio"
+          },
+          "in_band": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "In Band"
+          }
+        },
+        "type": "object",
+        "required": [
+          "topic",
+          "label",
+          "source_id",
+          "calibrated_share",
+          "survey_sd_logit",
+          "share",
+          "p10",
+          "p50",
+          "p90",
+          "sim_sd_logit",
+          "ratio",
+          "in_band"
+        ],
+        "title": "PopulationTopic"
       },
       "PrefilledEvent": {
         "properties": {
@@ -1179,6 +3062,448 @@
         "required": ["id", "text", "countries"],
         "title": "PrefilledEvent"
       },
+      "Primary": {
+        "properties": {
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "low": {
+            "type": "number",
+            "title": "Low"
+          },
+          "high": {
+            "type": "number",
+            "title": "High"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          }
+        },
+        "type": "object",
+        "required": ["metric", "value", "low", "high", "n"],
+        "title": "Primary"
+      },
+      "ProofStep": {
+        "properties": {
+          "position": {
+            "type": "string",
+            "title": "Position"
+          },
+          "hash": {
+            "type": "string",
+            "title": "Hash"
+          }
+        },
+        "type": "object",
+        "required": ["position", "hash"],
+        "title": "ProofStep"
+      },
+      "Protocol": {
+        "properties": {
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "hash": {
+            "type": "string",
+            "title": "Hash"
+          },
+          "headline": {
+            "type": "string",
+            "title": "Headline"
+          },
+          "log_clip": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Log Clip"
+          },
+          "coin_reference": {
+            "type": "number",
+            "title": "Coin Reference"
+          },
+          "min_resolved_for_claims": {
+            "type": "integer",
+            "title": "Min Resolved For Claims"
+          },
+          "bootstrap": {
+            "$ref": "#/components/schemas/Bootstrap"
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "hash",
+          "headline",
+          "log_clip",
+          "coin_reference",
+          "min_resolved_for_claims",
+          "bootstrap"
+        ],
+        "title": "Protocol"
+      },
+      "QuestionCountry": {
+        "properties": {
+          "iso3": {
+            "type": "string",
+            "title": "Iso3"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "tier": {
+            "type": "string",
+            "title": "Tier"
+          }
+        },
+        "type": "object",
+        "required": ["iso3", "name", "tier"],
+        "title": "QuestionCountry"
+      },
+      "QuestionDay": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "snapshot_sha256": {
+            "type": "string",
+            "title": "Snapshot Sha256"
+          },
+          "forecasts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/QuestionForecast"
+            },
+            "type": "object",
+            "title": "Forecasts",
+            "description": "By forecaster."
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/SegmentAnswer"
+            },
+            "type": "array",
+            "title": "Segments",
+            "description": "The model's answer per segment behind the sim forecast; empty if not recorded."
+          },
+          "plain_samples": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Plain Samples",
+            "description": "Each plain LLM sample's yes share."
+          },
+          "headlines": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Headlines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "snapshot_sha256",
+          "forecasts",
+          "segments",
+          "plain_samples",
+          "headlines"
+        ],
+        "title": "QuestionDay"
+      },
+      "QuestionForecast": {
+        "properties": {
+          "probability": {
+            "type": "number",
+            "title": "Probability"
+          },
+          "p10": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P10",
+            "description": "Only the sim forecaster has a spread."
+          },
+          "p90": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P90"
+          },
+          "brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier",
+            "description": "Null until the question resolves."
+          },
+          "log_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Log Score"
+          },
+          "leaf_hash": {
+            "type": "string",
+            "title": "Leaf Hash"
+          },
+          "salt": {
+            "type": "string",
+            "title": "Salt"
+          },
+          "committed_at": {
+            "type": "string",
+            "title": "Committed At"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "market_price_at_commit": {
+            "type": "number",
+            "title": "Market Price At Commit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "probability",
+          "p10",
+          "p90",
+          "brier",
+          "log_score",
+          "leaf_hash",
+          "salt",
+          "committed_at",
+          "model",
+          "market_price_at_commit"
+        ],
+        "title": "QuestionForecast"
+      },
+      "QuestionInfo": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "topic_label": {
+            "type": "string",
+            "title": "Topic Label"
+          },
+          "countries": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionCountry"
+            },
+            "type": "array",
+            "title": "Countries"
+          },
+          "opens": {
+            "type": "string",
+            "title": "Opens"
+          },
+          "closes": {
+            "type": "string",
+            "title": "Closes"
+          },
+          "resolves_by": {
+            "type": "string",
+            "title": "Resolves By"
+          },
+          "resolution_source": {
+            "type": "string",
+            "title": "Resolution Source"
+          },
+          "tie_break": {
+            "type": "string",
+            "title": "Tie Break"
+          },
+          "market_source": {
+            "type": "string",
+            "title": "Market Source"
+          },
+          "question_hash": {
+            "type": "string",
+            "title": "Question Hash",
+            "description": "sha256 of the question as committed in each forecast."
+          },
+          "question_set_hash": {
+            "type": "string",
+            "title": "Question Set Hash",
+            "description": "sha256 of the question list this question is in."
+          },
+          "daily_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daily On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "topic",
+          "topic_label",
+          "countries",
+          "opens",
+          "closes",
+          "resolves_by",
+          "resolution_source",
+          "tie_break",
+          "market_source",
+          "question_hash",
+          "question_set_hash",
+          "daily_on"
+        ],
+        "title": "QuestionInfo"
+      },
+      "QuestionOutcome": {
+        "properties": {
+          "outcome": {
+            "type": "integer",
+            "title": "Outcome"
+          },
+          "resolved_on": {
+            "type": "string",
+            "title": "Resolved On"
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url"
+          },
+          "read_on": {
+            "type": "string",
+            "title": "Read On"
+          }
+        },
+        "type": "object",
+        "required": ["outcome", "resolved_on", "source_url", "read_on"],
+        "title": "QuestionOutcome"
+      },
+      "QuestionPage": {
+        "properties": {
+          "question": {
+            "$ref": "#/components/schemas/QuestionInfo"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QuestionOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "members": {
+            "type": "integer",
+            "title": "Members",
+            "description": "Bootstrap resamples behind each sim spread."
+          },
+          "plain_llm_samples": {
+            "type": "integer",
+            "title": "Plain Llm Samples"
+          },
+          "log_clip": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Log Clip",
+            "description": "Low and high clip on p before the log score."
+          },
+          "min_resolved": {
+            "type": "integer",
+            "title": "Min Resolved",
+            "description": "Resolved questions before a skill claim is reported."
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionDay"
+            },
+            "type": "array",
+            "title": "Days",
+            "description": "Oldest first."
+          }
+        },
+        "type": "object",
+        "required": [
+          "question",
+          "outcome",
+          "members",
+          "plain_llm_samples",
+          "log_clip",
+          "min_resolved",
+          "model",
+          "provider",
+          "days"
+        ],
+        "title": "QuestionPage"
+      },
       "ReceiptDay": {
         "properties": {
           "day": {
@@ -1188,9 +3513,28 @@
             "type": "string",
             "title": "Record Hash"
           },
-          "anchored": {
-            "type": "boolean",
-            "title": "Anchored"
+          "anchor": {
+            "type": "string",
+            "enum": ["not_anchored", "pending", "anchored"],
+            "title": "Anchor"
+          },
+          "anchored_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchored At"
+          },
+          "anchors": {
+            "items": {
+              "$ref": "#/components/schemas/Anchor"
+            },
+            "type": "array",
+            "title": "Anchors"
           },
           "entries": {
             "items": {
@@ -1201,7 +3545,7 @@
           }
         },
         "type": "object",
-        "required": ["day", "record_hash", "anchored", "entries"],
+        "required": ["day", "record_hash", "anchor", "anchored_at", "anchors", "entries"],
         "title": "ReceiptDay"
       },
       "ReceiptEntry": {
@@ -1218,6 +3562,17 @@
           "leaf_hash": {
             "type": "string",
             "title": "Leaf Hash"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReceiptQuestion"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The forecast's question from its committed question set; null on other leaves."
           },
           "outcome": {
             "anyOf": [
@@ -1243,8 +3598,27 @@
           }
         },
         "type": "object",
-        "required": ["entry", "salt", "leaf_hash", "outcome", "brier"],
+        "required": ["entry", "salt", "leaf_hash", "question", "outcome", "brier"],
         "title": "ReceiptEntry"
+      },
+      "ReceiptQuestion": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "resolution_source": {
+            "type": "string",
+            "title": "Resolution Source"
+          },
+          "resolves_by": {
+            "type": "string",
+            "title": "Resolves By"
+          }
+        },
+        "type": "object",
+        "required": ["text", "resolution_source", "resolves_by"],
+        "title": "ReceiptQuestion"
       },
       "Receipts": {
         "properties": {
@@ -1262,17 +3636,293 @@
       },
       "Refused": {
         "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "over_max_cost",
+              "fork_budget_spent",
+              "anon_daily_limit",
+              "client_unknown",
+              "spend_unreadable",
+              "invalid_api_key",
+              "key_cap_spent",
+              "idempotency_key_running",
+              "invalid_request",
+              "unsupported_version",
+              "acceptable_use_unreadable",
+              "idempotency_key_reused",
+              "why_over_cap",
+              "wrong_question",
+              "answers_closed",
+              "already_answered",
+              "sign_in_throttled",
+              "email_unavailable",
+              "sign_in_invalid",
+              "signed_out",
+              "cross_origin",
+              "account_unreadable"
+            ],
+            "title": "Code"
+          },
           "detail": {
             "type": "string",
-            "title": "Detail"
+            "title": "Detail",
+            "description": "One sentence saying what was refused and why, for display."
           },
           "estimate": {
-            "$ref": "#/components/schemas/Estimate"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Estimate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "The fork already running under this Idempotency-Key."
           }
         },
         "type": "object",
-        "required": ["detail", "estimate"],
+        "required": ["code", "detail"],
         "title": "Refused"
+      },
+      "ReliabilityBin": {
+        "properties": {
+          "bin_low": {
+            "type": "number",
+            "title": "Bin Low"
+          },
+          "bin_high": {
+            "type": "number",
+            "title": "Bin High"
+          },
+          "n": {
+            "type": "integer",
+            "title": "N"
+          },
+          "mean_probability": {
+            "type": "number",
+            "title": "Mean Probability"
+          },
+          "observed_rate": {
+            "type": "number",
+            "title": "Observed Rate"
+          }
+        },
+        "type": "object",
+        "required": ["bin_low", "bin_high", "n", "mean_probability", "observed_rate"],
+        "title": "ReliabilityBin"
+      },
+      "Replay": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "forecasts": {
+            "items": {
+              "$ref": "#/components/schemas/ReplayRow"
+            },
+            "type": "array",
+            "title": "Forecasts"
+          },
+          "calls_used": {
+            "type": "integer",
+            "title": "Calls Used"
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing"
+          }
+        },
+        "type": "object",
+        "required": ["date", "forecasts", "calls_used", "missing"],
+        "title": "Replay"
+      },
+      "ReplayRow": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          },
+          "forecaster": {
+            "type": "string",
+            "enum": ["sim", "plain_llm"],
+            "title": "Forecaster"
+          },
+          "committed": {
+            "type": "number",
+            "title": "Committed"
+          },
+          "replayed": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replayed"
+          },
+          "low": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Low"
+          },
+          "high": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High"
+          },
+          "diff": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diff"
+          },
+          "matches": {
+            "type": "boolean",
+            "title": "Matches"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question_id",
+          "question",
+          "forecaster",
+          "committed",
+          "replayed",
+          "low",
+          "high",
+          "diff",
+          "matches"
+        ],
+        "title": "ReplayRow"
+      },
+      "Research": {
+        "properties": {
+          "experiments": {
+            "items": {
+              "$ref": "#/components/schemas/Experiment"
+            },
+            "type": "array",
+            "title": "Experiments"
+          },
+          "papers": {
+            "items": {
+              "$ref": "#/components/schemas/Paper"
+            },
+            "type": "array",
+            "title": "Papers"
+          },
+          "repo": {
+            "type": "string",
+            "title": "Repo"
+          },
+          "commit": {
+            "type": "string",
+            "title": "Commit"
+          }
+        },
+        "type": "object",
+        "required": ["experiments", "papers", "repo", "commit"],
+        "title": "Research"
+      },
+      "ResolvedQuestion": {
+        "properties": {
+          "question_id": {
+            "type": "string",
+            "title": "Question Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "outcome": {
+            "type": "integer",
+            "title": "Outcome"
+          },
+          "resolved_on": {
+            "type": "string",
+            "title": "Resolved On"
+          },
+          "tiers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tiers"
+          },
+          "region": {
+            "type": "string",
+            "title": "Region"
+          },
+          "forecasts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Scored"
+            },
+            "type": "object",
+            "title": "Forecasts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question_id",
+          "text",
+          "date",
+          "outcome",
+          "resolved_on",
+          "tiers",
+          "region",
+          "forecasts"
+        ],
+        "title": "ResolvedQuestion"
       },
       "Reveal": {
         "properties": {
@@ -1330,11 +3980,166 @@
           "streak": {
             "type": "integer",
             "title": "Streak"
+          },
+          "week": {
+            "items": {
+              "$ref": "#/components/schemas/WeekDay"
+            },
+            "type": "array",
+            "title": "Week",
+            "description": "The seven days ending today, oldest first."
           }
         },
         "type": "object",
-        "required": ["you", "crowd", "sim", "market", "outcome", "brier", "streak"],
+        "required": ["you", "crowd", "sim", "market", "outcome", "brier", "streak", "week"],
         "title": "Reveal"
+      },
+      "Rubric": {
+        "properties": {
+          "population": {
+            "type": "integer",
+            "title": "Population"
+          },
+          "attitudes": {
+            "type": "integer",
+            "title": "Attitudes"
+          },
+          "markets": {
+            "type": "integer",
+            "title": "Markets"
+          },
+          "news": {
+            "type": "integer",
+            "title": "News"
+          },
+          "ground_truth": {
+            "type": "integer",
+            "title": "Ground Truth"
+          },
+          "score": {
+            "type": "integer",
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": ["population", "attitudes", "markets", "news", "ground_truth", "score"],
+        "title": "Rubric"
+      },
+      "Scoreboard": {
+        "properties": {
+          "protocol": {
+            "$ref": "#/components/schemas/Protocol"
+          },
+          "resolved_questions": {
+            "type": "integer",
+            "title": "Resolved Questions"
+          },
+          "open_questions": {
+            "type": "integer",
+            "title": "Open Questions"
+          },
+          "first_commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Commit"
+          },
+          "forecasters": {
+            "items": {
+              "$ref": "#/components/schemas/ForecasterScore"
+            },
+            "type": "array",
+            "title": "Forecasters"
+          },
+          "skill": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BaselineSkill"
+            },
+            "type": "object",
+            "title": "Skill"
+          },
+          "reliability": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/ReliabilityBin"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Reliability"
+          },
+          "resolved": {
+            "items": {
+              "$ref": "#/components/schemas/ResolvedQuestion"
+            },
+            "type": "array",
+            "title": "Resolved"
+          },
+          "misses": {
+            "items": {
+              "$ref": "#/components/schemas/Miss"
+            },
+            "type": "array",
+            "title": "Misses"
+          }
+        },
+        "type": "object",
+        "required": [
+          "protocol",
+          "resolved_questions",
+          "open_questions",
+          "first_commit",
+          "forecasters",
+          "skill",
+          "reliability",
+          "resolved",
+          "misses"
+        ],
+        "title": "Scoreboard"
+      },
+      "Scored": {
+        "properties": {
+          "probability": {
+            "type": "number",
+            "title": "Probability"
+          },
+          "brier": {
+            "type": "number",
+            "title": "Brier"
+          }
+        },
+        "type": "object",
+        "required": ["probability", "brier"],
+        "title": "Scored"
+      },
+      "SegmentAnswer": {
+        "properties": {
+          "segment": {
+            "type": "string",
+            "title": "Segment"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "prior_share": {
+            "type": "number",
+            "title": "Prior Share",
+            "description": "The segment's share saying yes before the model call."
+          },
+          "yes_share": {
+            "type": "number",
+            "title": "Yes Share"
+          }
+        },
+        "type": "object",
+        "required": ["segment", "description", "prior_share", "yes_share"],
+        "title": "SegmentAnswer"
       },
       "SegmentShift": {
         "properties": {
@@ -1371,22 +4176,41 @@
         "required": ["segment", "topic", "shift_p10", "shift_p50", "shift_p90", "n_agents", "tier"],
         "title": "SegmentShift"
       },
+      "SignInSent": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "ttl_minutes": {
+            "type": "integer",
+            "title": "Ttl Minutes",
+            "description": "How long the link and the code work."
+          }
+        },
+        "type": "object",
+        "required": ["email", "ttl_minutes"],
+        "title": "SignInSent"
+      },
       "SimulateRequest": {
         "properties": {
           "world": {
             "type": "string",
             "pattern": "^(today|\\d{4}-\\d{2}-\\d{2})$",
             "title": "World",
+            "description": "The snapshot to fork: today's world, or a committed day as YYYY-MM-DD.",
             "default": "today"
           },
           "event": {
-            "$ref": "#/components/schemas/Event"
+            "$ref": "#/components/schemas/Event",
+            "description": "The one event to add, in plain words."
           },
           "days": {
             "type": "integer",
             "maximum": 14.0,
             "minimum": 1.0,
             "title": "Days",
+            "description": "Simulated days to run after the event.",
             "default": 7
           },
           "members": {
@@ -1394,6 +4218,7 @@
             "maximum": 20.0,
             "minimum": 1.0,
             "title": "Members",
+            "description": "Ensemble members: independent runs of the fork, each with its own agent subsample and noise. Their p10-p90 range is the spread.",
             "default": 5
           },
           "agents": {
@@ -1401,6 +4226,7 @@
             "maximum": 5000.0,
             "minimum": 50.0,
             "title": "Agents",
+            "description": "Agents sampled from the world snapshot, in proportion to country population.",
             "default": 200
           },
           "topics": {
@@ -1415,19 +4241,22 @@
                 "type": "null"
               }
             ],
-            "title": "Topics"
+            "title": "Topics",
+            "description": "Topics to report; null means every topic the world tracks."
           },
           "max_cost_usd": {
             "type": "number",
             "maximum": 5.0,
             "exclusiveMinimum": 0.0,
             "title": "Max Cost Usd",
+            "description": "Cost cap in dollars. A fork whose estimate is above it is refused with 402. The estimate counts one model call per segment.",
             "default": 0.5
           },
           "seed": {
             "type": "integer",
             "minimum": 0.0,
             "title": "Seed",
+            "description": "Fixes the agent subsample and each member's noise. The model's answers can still differ between runs.",
             "default": 0
           }
         },
@@ -1447,7 +4276,7 @@
           "disclosure": {
             "type": "string",
             "title": "Disclosure",
-            "default": "AI-simulated. A fork of a synthetic population under an event you described: not a poll, not a forecast of real people, and not scored."
+            "default": "AI-simulated. Not a poll or a prediction of a real person"
           },
           "world_snapshot_id": {
             "type": "string",
@@ -1460,6 +4289,11 @@
           "model": {
             "type": "string",
             "title": "Model"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Who answered the model calls: \"jev\", or \"fake\" when no model ran."
           },
           "seed": {
             "type": "integer",
@@ -1506,7 +4340,12 @@
               "$ref": "#/components/schemas/SegmentShift"
             },
             "type": "array",
-            "title": "Top Shifts"
+            "title": "Top Shifts",
+            "description": "The largest median shifts among segments of at least top_shift_min_agents."
+          },
+          "top_shift_min_agents": {
+            "type": "integer",
+            "title": "Top Shift Min Agents"
           },
           "trace": {
             "$ref": "#/components/schemas/Trace"
@@ -1528,6 +4367,7 @@
           "world_snapshot_id",
           "engine_version",
           "model",
+          "provider",
           "seed",
           "members",
           "agents_sampled",
@@ -1537,6 +4377,7 @@
           "outputs",
           "segments",
           "top_shifts",
+          "top_shift_min_agents",
           "trace"
         ],
         "title": "SimulateResult"
@@ -1594,29 +4435,181 @@
         "required": ["n", "n_pairs", "mean_diff", "low", "high", "claim"],
         "title": "Skill"
       },
-      "Step": {
+      "SystemStatus": {
         "properties": {
-          "day": {
-            "type": "integer",
-            "title": "Day"
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
           },
+          "cycle_finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cycle Finished At"
+          },
+          "cycle_status": {
+            "type": "string",
+            "enum": ["ok", "failed", "running", "not_run"],
+            "title": "Cycle Status"
+          },
+          "root": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Root"
+          },
+          "record_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Hash"
+          },
+          "anchor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["not_anchored", "pending", "anchored"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor"
+          },
+          "anchored_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchored At"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "spent_today_usd": {
+            "type": "number",
+            "title": "Spent Today Usd"
+          },
+          "nightly_budget_usd": {
+            "type": "number",
+            "title": "Nightly Budget Usd"
+          },
+          "engine_version": {
+            "type": "string",
+            "title": "Engine Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "cycle_finished_at",
+          "cycle_status",
+          "root",
+          "record_hash",
+          "anchor",
+          "anchored_at",
+          "model",
+          "provider",
+          "spent_today_usd",
+          "nightly_budget_usd",
+          "engine_version"
+        ],
+        "title": "SystemStatus"
+      },
+      "TopItem": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "iso3": {
+            "type": "string",
+            "title": "Iso3"
+          },
+          "tier": {
+            "type": "string",
+            "title": "Tier"
+          },
+          "salience": {
+            "type": "number",
+            "title": "Salience"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": ["title", "iso3", "tier", "salience", "value"],
+        "title": "TopItem"
+      },
+      "TopicNews": {
+        "properties": {
           "topic": {
             "type": "string",
             "title": "Topic"
           },
-          "delta": {
-            "type": "number",
-            "title": "Delta"
-          },
-          "cause": {
+          "label": {
             "type": "string",
-            "enum": ["event", "anchor_pull"],
-            "title": "Cause"
+            "title": "Label"
+          },
+          "signals": {
+            "type": "integer",
+            "title": "Signals"
+          },
+          "mean_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Value"
+          },
+          "top": {
+            "items": {
+              "$ref": "#/components/schemas/TopItem"
+            },
+            "type": "array",
+            "title": "Top"
           }
         },
         "type": "object",
-        "required": ["day", "topic", "delta", "cause"],
-        "title": "Step"
+        "required": ["topic", "label", "signals", "mean_value", "top"],
+        "title": "TopicNews"
       },
       "TopicOutput": {
         "properties": {
@@ -1693,7 +4686,7 @@
           },
           "steps": {
             "items": {
-              "$ref": "#/components/schemas/Step"
+              "$ref": "#/components/schemas/rw__simulate__Step"
             },
             "type": "array",
             "title": "Steps"
@@ -1703,41 +4696,85 @@
         "required": ["agent_id", "iso3", "segment", "belief_start", "belief_end", "steps"],
         "title": "TraceAgent"
       },
-      "ValidationError": {
+      "VerifyRequest": {
         "properties": {
-          "loc": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "integer"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Location"
+          "token": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token",
+            "description": "From the link's #token=."
           },
-          "msg": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 254,
+                "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{6}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "VerifyRequest"
+      },
+      "WeekDay": {
+        "properties": {
+          "date": {
             "type": "string",
-            "title": "Message"
+            "title": "Date"
           },
-          "type": {
-            "type": "string",
-            "title": "Error Type"
+          "probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probability",
+            "description": "The visitor's answer that day; null if none."
           },
-          "input": {
-            "title": "Input"
-          },
-          "ctx": {
-            "type": "object",
-            "title": "Context"
+          "brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier",
+            "description": "Its Brier score once the question resolved."
           }
         },
         "type": "object",
-        "required": ["loc", "msg", "type"],
-        "title": "ValidationError"
+        "required": ["date", "probability", "brier"],
+        "title": "WeekDay"
       },
       "World": {
         "properties": {
@@ -1774,6 +4811,231 @@
         "type": "object",
         "required": ["date", "countries", "daily_question_id", "prefilled_events"],
         "title": "World"
+      },
+      "rw__simulate__Step": {
+        "properties": {
+          "day": {
+            "type": "integer",
+            "title": "Day"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "delta": {
+            "type": "number",
+            "title": "Delta"
+          },
+          "cause": {
+            "type": "string",
+            "enum": ["event", "anchor_pull"],
+            "title": "Cause"
+          }
+        },
+        "type": "object",
+        "required": ["day", "topic", "delta", "cause"],
+        "title": "Step"
+      },
+      "rw_api__routes_cycle__SettingsUsed": {
+        "properties": {
+          "assimilation": {
+            "type": "string",
+            "title": "Assimilation"
+          },
+          "kalman_walk_sd_logit": {
+            "type": "number",
+            "title": "Kalman Walk Sd Logit"
+          },
+          "kalman_prior_sd_logit": {
+            "type": "number",
+            "title": "Kalman Prior Sd Logit"
+          },
+          "poll_error_factor": {
+            "type": "number",
+            "title": "Poll Error Factor"
+          },
+          "step_cap_logit": {
+            "type": "number",
+            "title": "Step Cap Logit"
+          },
+          "anchor_pull": {
+            "type": "number",
+            "title": "Anchor Pull"
+          },
+          "spread_band": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Spread Band"
+          },
+          "daily_forecast_members": {
+            "type": "integer",
+            "title": "Daily Forecast Members"
+          },
+          "plain_llm_samples": {
+            "type": "integer",
+            "title": "Plain Llm Samples"
+          },
+          "headlines_per_question": {
+            "type": "integer",
+            "title": "Headlines Per Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "assimilation",
+          "kalman_walk_sd_logit",
+          "kalman_prior_sd_logit",
+          "poll_error_factor",
+          "step_cap_logit",
+          "anchor_pull",
+          "spread_band",
+          "daily_forecast_members",
+          "plain_llm_samples",
+          "headlines_per_question"
+        ],
+        "title": "SettingsUsed"
+      },
+      "rw_api__routes_cycle__Step": {
+        "properties": {
+          "step": {
+            "type": "string",
+            "title": "Step"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ok", "failed", "running", "not_run"],
+            "title": "Status"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seconds"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "model_calls": {
+            "type": "integer",
+            "title": "Model Calls"
+          },
+          "in_tokens": {
+            "type": "integer",
+            "title": "In Tokens"
+          },
+          "out_tokens": {
+            "type": "integer",
+            "title": "Out Tokens"
+          },
+          "cost_usd": {
+            "type": "number",
+            "title": "Cost Usd"
+          },
+          "by_purpose": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "By Purpose"
+          }
+        },
+        "type": "object",
+        "required": [
+          "step",
+          "status",
+          "started_at",
+          "finished_at",
+          "seconds",
+          "detail",
+          "model_calls",
+          "in_tokens",
+          "out_tokens",
+          "cost_usd",
+          "by_purpose"
+        ],
+        "title": "Step"
+      },
+      "rw_api__routes_world__SettingsUsed": {
+        "properties": {
+          "world_agents": {
+            "type": "integer",
+            "title": "World Agents"
+          },
+          "world_seed": {
+            "type": "integer",
+            "title": "World Seed"
+          },
+          "spread_band": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Spread Band"
+          },
+          "country_floor_share": {
+            "type": "number",
+            "title": "Country Floor Share"
+          },
+          "stubbornness_beta": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Stubbornness Beta"
+          },
+          "offset_sd_logit": {
+            "type": "number",
+            "title": "Offset Sd Logit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "world_agents",
+          "world_seed",
+          "spread_band",
+          "country_floor_share",
+          "stubbornness_beta",
+          "offset_sd_logit"
+        ],
+        "title": "SettingsUsed"
       }
     }
   }

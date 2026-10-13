@@ -4,18 +4,21 @@ The FastAPI app `rw_api`: HTTP, fork jobs, idempotency, server-sent events, the 
 
 ## Specs and research
 
-- Product: [simulate-api](../product/simulate-api.md), [daily-question](../product/daily-question.md), [receipts](../product/receipts.md), [benchmark](../product/benchmark.md)
-- Decisions: [0001-architecture](../research/decisions/0001-architecture.md), [0002-benchmark-and-receipts](../research/decisions/0002-benchmark-and-receipts.md)
+- Product: [research](../product/research.md), [simulate-api](../product/simulate-api.md), [daily-question](../product/daily-question.md), [receipts](../product/receipts.md), [benchmark](../product/benchmark.md)
+- Decisions: [0001-architecture](../research/decisions/0001-architecture.md), [0002-benchmark-and-receipts](../research/decisions/0002-benchmark-and-receipts.md), [0011-consumer-product-and-api](../research/decisions/0011-consumer-product-and-api.md)
 - Research: [engineering/069](../research/engineering/069-api-design.md), [engineering/074](../research/engineering/074-abuse-and-safety.md), [product/077](../research/product/077-daily-question-mechanics.md), [engineering/070](../research/engineering/070-commit-reveal-timestamping.md)
 
 ## Boundaries
 
 - Only `api/` speaks HTTP. It calls engine functions; simulation, forecasting, scoring and ledger logic stay in `engine/rw/`.
-- `rw_api/schema.sql` owns `jobs`, `job_events`, `idempotency_keys` and `daily_answers`. The API never writes engine tables.
-- Model calls go through `llm.complete_json` with a `Budget`; a cost that cannot be checked refuses.
+- `rw_api/schema.sql` owns `jobs`, `job_events`, `idempotency_keys` and `daily_answers`; `rw_api/sql/accounts.sql` owns the account tables. The API never writes engine tables.
+- Model calls go through `llm.decide` or `llm.complete_json` with a `Budget`; a cost that cannot be checked refuses.
 - Every simulate result carries `simulated: true`; every agent account carries its simulated label.
 - Numbers shown for a forecast (`sim`, `market`) come from committed ledger entries, never recomputed.
+- Fixture questions (`fx-` ids, `FIXTURE:` text, `example.com` sources) are for local runs and tests. Nothing served to a person may show one: `web/src/liveCheck.ts` fails a production `vite build` against an API that serves one, and `make e2e` proves it against the fixture API [#31, #33, #35].
 - `api/openapi.json` is the contract the SDKs are generated from. Change it only with `make openapi`, in the same PR as the code.
+- One error shape on every route: a JSON object with a one-sentence `detail`, plus `code` and `estimate` when refused and `id` on a conflict; `api/tests/test_error_shape.py` asserts it, and the `RequestValidationError` handler keeps validation errors in it. Status codes mean one thing each: 404 not found, 409 closed or already done, 422 refused or invalid, 402 over a cost cap, 503 a check could not run.
+- Fields, headers and query parameters are snake_case; ids keep their prefix (`fx-` fixtures). Summaries and `detail` sentences use the terms in `product/glossary.md`; `scripts/check_glossary.py` scans `app.py`, `openapi.json` and `README.md`.
 
 ## Test
 
@@ -25,7 +28,7 @@ make openapi && git diff --exit-code api/openapi.json
 make check
 ```
 
-Tests seed a temporary `RW_HOME` with `rw.daily` over the fixture days and run with `ANTHROPIC_API_KEY` unset.
+Tests seed a temporary `RW_HOME` with `rw.daily` over the fixture days and run with every model key unset (the root `conftest.py` clears them).
 
 ## A reviewer rejects
 
