@@ -1,7 +1,8 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { initAfterPaint, setHeadlineVariant, track } from "./analytics";
+import { initAfterPaint, setConsented, setHeadlineVariant, track } from "./analytics";
+import { CookieNotice, storedConsent } from "./components/CookieNotice";
 import { resolveHeadline } from "./copy/headlines";
 import "./styles/fonts.css";
 import "./styles/tokens.css";
@@ -11,6 +12,7 @@ import "./styles/global.css";
 const params = new URLSearchParams(window.location.search);
 const headline = resolveHeadline(params.get("utm_content"));
 setHeadlineVariant(headline.id);
+setConsented(storedConsent() === "accepted");
 
 const root = document.getElementById("root");
 if (!root) throw new Error("index.html has no #root element");
@@ -18,6 +20,7 @@ if (!root) throw new Error("index.html has no #root element");
 createRoot(root).render(
   <StrictMode>
     <App headline={headline} path={window.location.pathname} />
+    <CookieNotice />
   </StrictMode>,
 );
 

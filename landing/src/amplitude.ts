@@ -1,7 +1,7 @@
 // Loaded on demand by analytics.ts after first paint, so the SDK stays out of
-// the critical bundle. Browser SDK 2 with autocapture (page views, sessions,
-// element and form interactions, UTM and referrer attribution) and optional
-// session replay at a sample rate. See landing/analytics/TRACKING_PLAN.md.
+// the critical bundle. Browser SDK 2 with autocapture of page views, sessions
+// and UTM and referrer attribution only (element and form autocapture would
+// send on-page text), and optional session replay with all text masked. See landing/analytics/TRACKING_PLAN.md.
 import * as amp from "@amplitude/analytics-browser";
 
 export interface StartOptions {
@@ -25,8 +25,8 @@ export async function start(opts: StartOptions): Promise<Started> {
     autocapture: {
       pageViews: true,
       sessions: true,
-      elementInteractions: true,
-      formInteractions: true,
+      elementInteractions: false,
+      formInteractions: false,
       attribution: true,
       fileDownloads: false,
       frustrationInteractions: false,
@@ -41,12 +41,11 @@ export async function start(opts: StartOptions): Promise<Started> {
 
   if (opts.replaySampleRate > 0) {
     // Session replay is the heavy part, so it is a second dynamic import.
-    // Text inputs (the email field) are masked by default and by the amp-mask class.
     const { sessionReplayPlugin } = await import("@amplitude/plugin-session-replay-browser");
     await amp.add(
       sessionReplayPlugin({
         sampleRate: opts.replaySampleRate,
-        privacyConfig: { defaultMaskLevel: "medium" },
+        privacyConfig: { defaultMaskLevel: "conservative" },
       }),
     ).promise;
   }

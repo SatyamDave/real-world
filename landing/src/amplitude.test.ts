@@ -30,8 +30,8 @@ test("the SDK is started without IP collection and with the autocapture we docum
   expect(options.autocapture).toMatchObject({
     pageViews: true,
     sessions: true,
-    elementInteractions: true,
-    formInteractions: true,
+    elementInteractions: false,
+    formInteractions: false,
     attribution: true,
     fileDownloads: false,
     networkTracking: false,
@@ -44,7 +44,7 @@ test("session replay loads only when the sample rate is above zero, with inputs 
   await start({ apiKey: "k", replaySampleRate: 0.25, headlineVariant: "x" });
   expect(replay.sessionReplayPlugin).toHaveBeenCalledWith({
     sampleRate: 0.25,
-    privacyConfig: { defaultMaskLevel: "medium" },
+    privacyConfig: { defaultMaskLevel: "conservative" },
   });
 });
 
