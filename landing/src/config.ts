@@ -10,6 +10,8 @@ export const config = {
   baseUrl: (env.VITE_PUBLIC_BASE_URL ?? "").trim(),
   // Turnstile public site key for the bot-check widget.
   turnstileSiteKey: (env.VITE_TURNSTILE_SITE_KEY ?? "").trim(),
+  // Typeform form id (landing/typeform/form.json, created by scripts/typeform-sync.mjs).
+  typeformFormId: (env.VITE_TYPEFORM_FORM_ID ?? "").trim(),
   // Ad pixels: each loads only when its id is set (PR4).
   redditPixelId: (env.VITE_REDDIT_PIXEL_ID ?? "").trim(),
   xPixelId: (env.VITE_X_PIXEL_ID ?? "").trim(),

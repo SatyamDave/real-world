@@ -6,6 +6,9 @@
 DATABASE_URL=
 DATABASE_URL_DEV=
 
+# Optional salt for the rate-limit IP hash; falls back to TURNSTILE_SECRET_KEY.
+RATE_LIMIT_SALT=
+
 # Amplitude — server-side HTTP API key (same project as the browser SDK).
 AMPLITUDE_API_KEY=
 
@@ -29,6 +32,8 @@ VITE_PUBLIC_BASE_URL=
 VITE_APP_URL=
 # Amplitude browser API key (public client key). May equal AMPLITUDE_API_KEY on the free plan.
 VITE_AMPLITUDE_API_KEY=
+# Typeform form id (printed by `node scripts/typeform-sync.mjs`, stored in typeform/form-id.txt).
+VITE_TYPEFORM_FORM_ID=
 # Turnstile site key again, exposed to the browser widget.
 VITE_TURNSTILE_SITE_KEY=
 # Session-replay sample rate, 0..1.
