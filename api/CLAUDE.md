@@ -4,8 +4,8 @@ The FastAPI app `rw_api`: HTTP, fork jobs, idempotency, server-sent events, the 
 
 ## Specs and research
 
-- Product: [research](../product/research.md), [simulate-api](../product/simulate-api.md), [daily-question](../product/daily-question.md), [receipts](../product/receipts.md), [benchmark](../product/benchmark.md)
-- Decisions: [0001-architecture](../research/decisions/0001-architecture.md), [0002-benchmark-and-receipts](../research/decisions/0002-benchmark-and-receipts.md), [0011-consumer-product-and-api](../research/decisions/0011-consumer-product-and-api.md)
+- Product: [will-it-land](../product/will-it-land.md), [track-record](../product/track-record.md), [accounts](../product/accounts.md), [simulate-api](../product/simulate-api.md), [daily-question](../product/daily-question.md), [receipts](../product/receipts.md), [benchmark](../product/benchmark.md)
+- Decisions: [0001-architecture](../research/decisions/0001-architecture.md), [0002-benchmark-and-receipts](../research/decisions/0002-benchmark-and-receipts.md), [0011-consumer-product-and-api](../research/decisions/0011-consumer-product-and-api.md), [0012-will-it-land-and-call-it](../research/decisions/0012-will-it-land-and-call-it.md)
 - Research: [engineering/069](../research/engineering/069-api-design.md), [engineering/074](../research/engineering/074-abuse-and-safety.md), [product/077](../research/product/077-daily-question-mechanics.md), [engineering/070](../research/engineering/070-commit-reveal-timestamping.md)
 
 ## Boundaries

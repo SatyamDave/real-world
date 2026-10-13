@@ -1,6 +1,6 @@
 # gtm/
 
-Go-to-market: who we sell to, at what price, how we launch, and what we may say. Everything here is public-facing in the end, so an overclaim here becomes a public miss.
+Go-to-market: who uses Real World first, at what price, how we launch, and what we may say. Since [0012](../research/decisions/0012-will-it-land-and-call-it.md) everything here sells two consumer jobs, "Will this land?" and "Call it"; B2B material is marked paused, never silently deleted. Everything here is public-facing in the end, so an overclaim here becomes a public miss.
 
 ## A great contribution
 

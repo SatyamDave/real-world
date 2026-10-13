@@ -1,38 +1,38 @@
-# Track record
+# Your record
 
 ## What it does
 
-`/track-record` shows a signed-in person how their daily-question answers scored against the simulation on the same questions. The top line reads "Your Brier <yours> · simulation <sim> on the same <n> questions" (lower is better, as the line under it says), then a chart of both running means over time (`Chart.tsx` trajectory, with its data table), then every question they answered: the question, their answer, the simulation's committed forecast, the market at commit where shown, the outcome and their Brier, newest first; unresolved ones read "Resolves <date>". With 10 or more resolved answers, the difference gets a 95% interval from the day-block bootstrap the receipts page uses. The streak from [daily question](daily-question.md) shows here too, counted across every browser linked to the account.
+`/record` shows a signed-in person their sealed calls and how they scored.
 
-When a person signs in, the browser's `player_id` is linked to their account, so answers given before signing in, and on any other signed-in browser, count. Answering stays open to everyone.
+**Post tests.** Every sealed post test, newest first: the post, the audience, their gut, the landing chance, "Sealed <time> · <hash prefix>", and two buttons, "Landed" and "Flopped", until they mark it. A marked test shows its outcome and both Briers (engine and gut). The top line reads "Engine <brier> · your gut <brier> on <n> marked tests (lower is better)", and "Hits <k> of <n>" counts tests where the engine's side of 50% matched the outcome.
+
+**Call it.** Their daily calls against the AI on resolved questions: "You <brier> · AI <brier> on <n> questions", and "You beat the AI on <k>".
+
+Each seal can be checked: "Check seal" recomputes the SHA-256 of the stored test in the browser and shows "Seal matches" or "Seal does not match".
 
 States, written out:
 
-- Loading: "Loading your track record". Error: `LoadError` "Could not load your track record. The server did not respond." with "Try again".
-- No answers: "No answers yet. Answer today's question to start your track record." with a link to today's question.
-- Answers but none resolved: "None of your answers has resolved yet. The first resolves <date>."
-- Fewer than 10 resolved: the numbers with "n = <n>; no interval below 10 resolved answers."
-- Signed out: "Sign in to keep your track record across devices." and "Sign in".
+- Loading: "Loading your record". Error: "Could not load your record. The server did not respond." with "Try again".
+- No tests: "No sealed tests yet. Test a post to start your record." with a link to `/`.
+- No marked tests: "Mark a test Landed or Flopped once you know how it did."
+- Signed out: "Sign in to keep your record." and "Sign in".
 
 ## Who it is for
 
-The returning daily player who wants the slow reward: a score that grows with time and that they can compare with the simulation's.
+A person who has tested posts or called questions and wants to know whether the engine, or their gut, is worth listening to.
 
 ## How we know it works
 
-- `POST /v1/me/players` links `{player_id}` to the signed-in person; a `player_id` already linked to another person returns `409 player_linked` and changes nothing. `GET /v1/me/track-record` returns the answers, Briers, the simulation's Briers on the same questions, n, the running means and, from n = 10, the interval. Both tag `account`; fields in `api/openapi.json`.
-- Briers come from the same rows and the same function as the reveal in [daily question](daily-question.md) (`engine/rw/score.py`), and the interval from its `block_bootstrap` with `data/protocol.json`'s settings, so the numbers match the question page and receipts. Tests in `api/tests/test_track_record.py`: `test_the_track_record_brier_equals_the_reveal_brier`, `test_the_simulation_is_scored_only_on_questions_the_person_answered`, `test_no_interval_below_ten_resolved_answers`, `test_a_player_id_links_to_one_person_only`.
-- The streak is computed from answer rows across linked player ids, never stored. Test: `test_the_streak_counts_days_across_linked_browsers`.
-- Component tests for every state above.
-- Measured after launch: day-7 return of signed-in daily players against signed-out ones ([CPO lens](../research/lenses/cpo.md)).
+- `GET /v1/me/tests` returns the person's sealed tests and the summary; `POST /v1/me/tests/{id}/outcome` takes `{outcome: "landed" | "flopped"}` once, and a second mark returns `409 already_marked`. `GET /v1/daily` returns the Call it record in its reveal. Fields in `api/openapi.json`.
+- Briers come from `engine/rw/score.py`, the function the receipts use. Tests in `api/tests/test_tests.py`: `test_an_outcome_is_marked_once`, `test_the_record_scores_engine_and_gut_on_marked_tests_only`.
+- Measured after launch: day-7 return of people with a marked test ([0012](../research/decisions/0012-will-it-land-and-call-it.md)).
 
 ## What it is not
 
-- No leaderboard, ranking among people, badges or public profile.
-- Not a claim about the simulation's skill: that is the receipts and scores pages, with their own n. The page says "Your record against the simulation on the questions you answered."
-- No scoring of forks; they have no real outcome.
+- No leaderboard, public profile or badges.
+- Not a claim about the engine in general: that is the public record on `/scores` and `/receipts`.
 
 ## Where the code lives
 
-- `web/src/pages/track-record.tsx`; `api/rw_api/routes_record.py` over `daily_answers` and the score tables.
-- Decision: [0011](../research/decisions/0011-consumer-product-and-api.md). Research: [product/077](../research/product/077-daily-question-mechanics.md), [science/030](../research/science/030-forecast-scoring.md).
+- `web/src/pages/record.tsx`; `api/rw_api/routes_tests.py`; the Call it record in `api/rw_api/app.py`.
+- Decision: [0012](../research/decisions/0012-will-it-land-and-call-it.md). Research: [product/108](../research/product/108-consumer-wedge.md), [science/030](../research/science/030-forecast-scoring.md).
