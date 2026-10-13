@@ -24,4 +24,9 @@ One definition per term. Specs, code comments and UI copy use these words with t
 | Inclusion proof | The sibling hashes from one leaf up to the day's Merkle root; verifying it shows the leaf is in the day record. | |
 | Reliability diagram | Forecasts binned by stated probability against the share that resolved yes; the diagonal is perfect calibration. | |
 | Run log | The recorded steps, model calls, tokens and cost of one daily cycle, from `stage_runs` and `llm_calls`. | |
+| Account | A person's free sign-in, made by email, holding their profile, forks, linked player ids and API keys ([accounts](accounts.md)). | |
+| Profile | The four onboarding answers on an account: use, countries, topics and own country ([onboarding](onboarding.md)). | |
+| Briefing | The signed-in home's list of how simulated shares moved in the last daily cycle on the profile's countries and topics ([home and briefing](home-and-briefing.md)). | |
+| Track record | One account's Brier on the daily questions it answered, against the `sim` forecaster's Brier on the same questions, with n ([track record](track-record.md)). | |
+| Anonymous allowance | Forks a visitor without an account may start per address per UTC day (`FORK_ANON_PER_DAY`). | |
 | Replay | Re-running a step on the recorded model outputs in `llm_calls`; a differing result is shown as a diff. | |

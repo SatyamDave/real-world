@@ -21,7 +21,7 @@ First-time visitors from Show HN and X, who need something to do in under a minu
 
 ## What it is not
 
-- No sign-in in the base build; the streak lives with the browser's player id. Sign-in to keep a streak comes with accounts.
+- No sign-in to answer. The streak lives with the browser's player id; signing in links that id to the account, which carries the streak and the [track record](track-record.md) across browsers.
 - No leagues, friend streaks, notifications or prizes.
 - No questions without a fixed, free resolution source and tie-break rule.
 - Player answers are not shown individually and are labelled "self-selected visitors", never "a poll".

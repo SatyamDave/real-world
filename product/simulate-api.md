@@ -54,7 +54,7 @@ Checks, all automated in `api/tests/`:
 
 ## What it is not
 
-- No accounts, sign-up or self-serve keys: the operator makes each key by hand for the [builders program](../gtm/builders-program.md). Without a key, the day's fork budget, the per-address daily count and the clamped `max_cost_usd` are the guard. A key pays for its own acceptable-use screen calls, refused or not, so a key cannot spend the shared fork budget on refused events past its cap.
+- Accounts and self-serve keys are specified in [forks](forks.md) (the per-person daily count for signed-in callers) and [developer](developer.md) (keys with a daily cap), per [decision 0011](../research/decisions/0011-consumer-product-and-api.md); until they are built, the operator makes each key by hand for the [builders program](../gtm/builders-program.md). Without a key, the day's fork budget, the per-address daily count and the clamped `max_cost_usd` are the guard. A key pays for its own acceptable-use screen calls, refused or not, so a key cannot spend the shared fork budget on refused events past its cap.
 - No webhooks, batch endpoint, cancel endpoint or WebSockets.
 - No named private people and no persuasion testing on elections or candidates ([acceptable-use](acceptable-use.md), [research/engineering/074](../research/engineering/074-abuse-and-safety.md)). Length is enforced by the request schema (`422` validation error), not by the screen.
 - The screen is not a moderation system: a fixed rule pass and one classification call on the event text, nothing per agent.
