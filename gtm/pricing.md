@@ -1,5 +1,7 @@
 # Pricing
 
+**Since [0015](../research/decisions/0015-founders-and-companies.md):** free to start for founders (a daily count of message tests per person, provisional `TEST_*` caps); the first price to test is a team plan for companies that test often, set only after real-model cost per test is measured. The insights-team pilot below is the later, larger offer.
+
 **Since [0012](../research/decisions/0012-will-it-land-and-call-it.md):** post tests and calls are free within a per-address daily count and a per-test cost cap (`TEST_ANON_PER_DAY`, `TEST_MAX_COST_USD`, provisional until [decisions-needed](../company/decisions-needed.md) item 7). A paid plan for people who test many posts is the first consumer price to test; no price is set. The agent-step meter below stays the engine's unit for builders later.
 
 Status: proposed. The lenses agree on the shape and disagree on three numbers; those are open in [`company/decisions-needed.md`](../company/decisions-needed.md). Every dollar figure below is an estimate built on token counts nobody has measured yet ([CFO lens](../research/lenses/cfo.md)). No price is published until the cost ledger has measured real calls.

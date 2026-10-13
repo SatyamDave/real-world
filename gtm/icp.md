@@ -1,5 +1,7 @@
 # Ideal customer profiles
 
+**Since [0015](../research/decisions/0015-founders-and-companies.md):** the first users and first buyers are startup founders and company teams testing messages before they ship them: founders (launch posts and announcements), growth and marketing (ad lines, landing headlines), pricing and product (price changes, plans), comms and PR (incidents, policy changes) and market entry (the same message in a new country). Self-serve first; profile 1 below (insights teams) is the larger buyer once marked tests show the engine's error. Profiles 2-4 stay paused.
+
 **Since [0012](../research/decisions/0012-will-it-land-and-call-it.md):** the first users are people about to post (creators, founders, people who post for work) and people who like calling the news against an AI, reached by the product itself, not by sales ([consumer wedge](../research/product/108-consumer-wedge.md)). The buyer profiles below are paused: no pilot is sold until the consumer product has a record. They stay as the later B2B path for the engine.
 
 Ranked by who can pay us first, not by who is most interesting. No buyer calls have happened yet; every rank below rests on desk research and must be re-checked against the ten calls in [`launch-plan.md`](launch-plan.md).
