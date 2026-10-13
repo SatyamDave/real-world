@@ -8,8 +8,9 @@ For the founders. Everything here is a step you run; nothing below has been done
 | --- | --- |
 | Production domain | `tryrealworld.com`, bought on Namecheap. DNS is not configured and nothing is deployed to it (founder instruction, 2026-10-12). |
 | Cloudflare Pages project | `real-world-landing`. Only preview deploys so far (`*.pages.dev`). |
-| Database | Neon project `real-world-landing` (id `frosty-river-82145431`), database `landing`, branches `main` and `dev`. |
-| Analytics | Amplitude project `877388`. Plan: [analytics/TRACKING_PLAN.md](analytics/TRACKING_PLAN.md). |
+| Environments | dev (your laptop), staging (the Pages preview), prod (the Pages production branch, never deployed to). Table in section 4. Every Amplitude event carries `environment`. |
+| Database | Neon project `real-world-landing` (id `frosty-river-82145431`), database `landing`. Branches: `main` (prod, schema only, no rows), `staging` (the preview), `dev` (local and tests). |
+| Analytics | Two Amplitude projects (the plan allows two): `877388` Real World - Staging and `878019` Real World - Prod. Plan: [analytics/TRACKING_PLAN.md](analytics/TRACKING_PLAN.md); how to read it: [analytics/AMPLITUDE_GUIDE.md](analytics/AMPLITUDE_GUIDE.md). |
 | Sending email | Not set up. Cloudflare Email Routing only receives. Sending the launch email needs an email provider with SPF and DKIM on `tryrealworld.com`; decide before Oct 27. |
 
 ## 1. Connect tryrealworld.com to Cloudflare Pages
@@ -22,15 +23,15 @@ Why Cloudflare nameservers: on a Free plan the only zone setup Cloudflare offers
 2. **Point Namecheap at them.** Namecheap, Domain List, Manage next to `tryrealworld.com`, Nameservers, choose Custom DNS, paste the two Cloudflare nameservers, save. Propagation can take hours; Cloudflare emails when the zone is active.
 3. **Turn off Namecheap's own redirects and email forwarding** for the domain if any are set, so they do not fight the new records.
 4. **Attach the domain to the Pages project.** Workers & Pages, `real-world-landing`, Custom domains, Set up a custom domain, enter `tryrealworld.com`, confirm. Cloudflare creates the DNS record and issues the certificate. Repeat for `www.tryrealworld.com`, then add a redirect from `www` to the apex (Rules, Redirect Rules).
-5. **Only now deploy to production.** The production branch is whichever branch Pages settings name (Settings, Builds, Production branch; check it). Build with the production values in section 4, then `pnpm --filter landing build && pnpm exec wrangler pages deploy landing/dist --project-name real-world-landing --branch <production branch>`. Never run this from a session that has not been told to.
+5. **Only now deploy to production.** The production branch is whichever branch Pages settings name (Settings, Builds, Production branch; check it). Run `pnpm --filter landing build:prod` (it takes the production values from `.dev.vars` and refuses test keys), then `pnpm exec wrangler pages deploy landing/dist --project-name real-world-landing --branch <production branch>`. Never run this from a session that has not been told to.
 6. **SSL/TLS.** Set encryption mode to Full (strict) and turn on Always Use HTTPS.
 7. **Check.** `https://tryrealworld.com/` loads the page; `/privacy` and `/terms` load; a POST of `{}` to `https://tryrealworld.com/api/signup` answers `400` with `{"error":"invalid_email"}` (it is rejected before anything is saved). A GET is not a useful check: the function only handles POST, so a GET falls through and returns the page with a `200`.
 
 After step 4 also update, then redeploy:
 
-- `VITE_PUBLIC_BASE_URL=https://tryrealworld.com` (canonical and social tags).
+- `VITE_PUBLIC_BASE_URL` is `https://tryrealworld.com` in `pnpm build:prod` already; nothing to set.
 - Turnstile: add `tryrealworld.com` to the widget's allowed hostnames (Cloudflare dashboard, Turnstile). Without it the bot check fails on the new domain and every signup shows "We couldn't confirm you're human."
-- Typeform webhook: `node landing/scripts/typeform-sync.mjs --webhook-url https://tryrealworld.com/api/typeform` (section 6).
+- Typeform webhook: `node landing/scripts/typeform-sync.mjs --env production --webhook-url https://tryrealworld.com/api/typeform` (section 6).
 - Reddit and X ad accounts: add the domain where they ask for a verified or allowed site.
 
 Rollback: remove the custom domain from the Pages project (Custom domains, remove). The page stays on `real-world-landing.pages.dev`. Nameservers can stay on Cloudflare.
@@ -52,23 +53,26 @@ Never commit a secret. Local values live in `landing/.dev.vars` (git-ignored); `
 
 | Name | Kind | Where it is set |
 | --- | --- | --- |
-| `DATABASE_URL` | secret | Pages secret. Neon pooled string for the `main` branch. |
-| `DATABASE_URL_DEV` | local only | `.dev.vars`; used by the integration tests on the Neon `dev` branch. Never a Pages secret. |
-| `AMPLITUDE_API_KEY` | secret | Pages secret. The project API key (server events). |
-| `TURNSTILE_SECRET_KEY` | secret | Pages secret. |
+| `ENVIRONMENT` | variable | `wrangler.toml`: `staging` under `[env.preview.vars]`, `production` under `[env.production.vars]`. Pages ignores plain-text variables set in the dashboard when a `wrangler.toml` exists, so do not set it there. |
+| `DATABASE_URL` | secret | Pages secret, one per environment. Preview: Neon `staging` branch (`scripts/set-staging-env.mjs`). Production: Neon `main` (`scripts/set-prod-secrets.sh`). Locally in `.dev.vars` it is the `dev` branch, so a local run cannot touch real signups. |
+| `DATABASE_URL_DEV`, `DATABASE_URL_STAGING`, `DATABASE_URL_PROD` | local only | `.dev.vars`. `_DEV` is used by the integration tests; `_STAGING` and `_PROD` are read by the two scripts above. Never Pages secrets under these names. |
+| `AMPLITUDE_API_KEY` | secret | Pages secret, one per environment: the Staging project key on preview, the Prod project key on production. |
+| `AMPLITUDE_API_KEY_STAGING`, `AMPLITUDE_API_KEY_PROD` | local only | `.dev.vars`; the source for the scripts and for `pnpm build:staging` and `pnpm build:prod`. |
+| `TURNSTILE_SECRET_KEY` | secret | Pages secret. Preview: Cloudflare's always-pass test secret. Production: the real one, kept as `TURNSTILE_SECRET_KEY_PROD` in `.dev.vars`. |
 | `TYPEFORM_WEBHOOK_SECRET` | secret | Pages secret; the same value `typeform-sync.mjs` sends to Typeform. |
 | `TYPEFORM_TOKEN` | local only | `.dev.vars`; used only by `typeform-sync.mjs`. |
-| `RATE_LIMIT_SALT` | optional secret | Pages secret. Falls back to `TURNSTILE_SECRET_KEY`. |
-| `APP_URL` | variable | Pages variable; mirror in `VITE_APP_URL`. |
-| `VITE_AMPLITUDE_API_KEY`, `VITE_AMPLITUDE_REPLAY_SAMPLE_RATE`, `VITE_TURNSTILE_SITE_KEY`, `VITE_TYPEFORM_FORM_ID`, `VITE_PUBLIC_BASE_URL`, `VITE_APP_URL`, `VITE_REDDIT_PIXEL_ID`, `VITE_X_PIXEL_ID`, `VITE_X_LEAD_EVENT_ID` | build-time | Set in the shell that runs `pnpm --filter landing build`. They end up in the public bundle, so none may be a secret. |
+| `RATE_LIMIT_SALT` | optional secret | Pages secret. Falls back to `TURNSTILE_SECRET_KEY`. `set-prod-secrets.sh` generates one for production. |
+| `APP_URL` | variable | Pages variable; mirror in `VITE_APP_URL`. Empty for now. |
+| `VITE_*` (Amplitude key, replay rate, Turnstile site key, Typeform form id, base URL, pixel ids, `VITE_ENVIRONMENT`) | build-time | Set by `scripts/build.mjs` from `.dev.vars` (`pnpm build:staging`, `pnpm build:prod`). They end up in the public bundle, so none may be a secret. |
 
-Set a **production** secret with `pnpm exec wrangler pages secret put <NAME> --project-name real-world-landing`. Wrangler 4.149 has no flag for the preview environment, and a preview deployment does not see production secrets (tested on 2026-10-12 with a dummy secret, since removed). Preview values are set in the dashboard (Workers & Pages, `real-world-landing`, Settings, Variables and Secrets, Preview) or with the Pages API (`PATCH /accounts/<id>/pages/projects/real-world-landing` with `deployment_configs.preview.env_vars`, each secret as `{"type": "secret_text", "value": ...}`).
+**Preview (staging)** variables are set with `node landing/scripts/set-staging-env.mjs`. It uses wrangler's own login, writes only the preview environment, prints variable names and never values, and removes nothing else. **Production** secrets are set with `bash landing/scripts/set-prod-secrets.sh`, which you run yourself at go-live (section 10). It reads `.dev.vars`, refuses test keys and a shared Amplitude key, asks you to type `production`, and prints names only. Wrangler 4.149 has no flag for the preview environment, and a preview deployment does not see production secrets (tested on 2026-10-12 with a dummy secret, since removed). The production environment has no variables set today (checked 2026-10-13).
 
-The preview environment as set up on 2026-10-12 deliberately differs from production: `DATABASE_URL` is the Neon **`dev`** branch (so test signups never touch the real waitlist), and `TURNSTILE_SECRET_KEY` is Cloudflare's always-pass test secret, paired with the test site key `1x00000000000000000000AA` at build time (so automated checks can sign up). The real Turnstile keys are therefore not yet tested on a `*.pages.dev` or `tryrealworld.com` host: add the host to the widget's allowed hostnames and check one real signup before go-live. The production environment has no variables set.
+The staging environment deliberately differs from production: its database is the Neon `staging` branch, so test signups never touch the real waitlist, and its Turnstile secret is Cloudflare's always-pass test secret, paired with the test site key `1x00000000000000000000AA` at build time, so automated checks can sign up. The real Turnstile keys are therefore not yet tested on a `*.pages.dev` or `tryrealworld.com` host: add the host to the widget's allowed hostnames and check one real signup before go-live.
 
 ## 5. Deploy and roll back
 
-- **Preview** (safe, any time): `pnpm --filter landing build`, then `pnpm exec wrangler pages deploy landing/dist --project-name real-world-landing --branch landing-preview`. The URL is `https://landing-preview.real-world-landing.pages.dev` (the exact URL is printed).
+- **Preview** (safe, any time): `pnpm --filter landing build:staging`, then `pnpm exec wrangler pages deploy landing/dist --project-name real-world-landing --branch landing-preview`. The URL is `https://landing-preview.real-world-landing.pages.dev` (the exact URL is printed). Plain `pnpm build` makes a production-tagged build with no keys; do not deploy it.
+- **Production** (only at go-live, by a person): `pnpm --filter landing build:prod`, then the deploy command with `--branch main` (section 1 step 5 and section 10). `build:prod` refuses test Turnstile keys, a shared Amplitude key and a missing production Typeform id.
 - **Functions** deploy with the same command; they come from `landing/functions/`.
 - **Roll back:** Workers & Pages, `real-world-landing`, Deployments, pick the last good deployment, Rollback. Or check out the last good commit and deploy it again.
 - **Budgets before any production deploy:** `pnpm --filter landing check:bundle` (first-load JS under 120 KB gzipped) and a Lighthouse mobile run with LCP under 2.0 s and CLS under 0.05.
@@ -76,19 +80,19 @@ The preview environment as set up on 2026-10-12 deliberately differs from produc
 
 ## 6. The Typeform and its webhook
 
-The form is code: `landing/typeform/form.json`. `node landing/scripts/typeform-sync.mjs` creates it the first time (it writes the id to `typeform/form-id.txt`) and updates it after that; add `--webhook-url https://<host>/api/typeform` to point the webhook at a deployment. It reads `TYPEFORM_TOKEN` and `TYPEFORM_WEBHOOK_SECRET` from `.dev.vars`. Set `VITE_TYPEFORM_FORM_ID` to the id and rebuild. The webhook is signed; a request with a missing or wrong `Typeform-Signature` gets `401` and is logged with no payload in `typeform_events`.
+The form is code: `landing/typeform/form.json`. `node landing/scripts/typeform-sync.mjs` creates it the first time (it writes the id to `typeform/form-id.txt`) and updates it after that; add `--webhook-url https://<host>/api/typeform` to point the webhook at a deployment. A Typeform webhook is one URL per form, so staging and production need two forms: the default run manages the staging form (`typeform/form-id.txt`) and `--env production` creates and manages a separate production form (`typeform/form-id.production.txt`). Point the production form's webhook at `https://tryrealworld.com/api/typeform` and leave the staging form on the preview. It reads `TYPEFORM_TOKEN` and `TYPEFORM_WEBHOOK_SECRET` from `.dev.vars`. Set `VITE_TYPEFORM_FORM_ID` to the id and rebuild. The webhook is signed; a request with a missing or wrong `Typeform-Signature` gets `401` and is logged with no payload in `typeform_events`.
 
 ## 7. Export the waitlist (CSV)
 
 ```
-psql "$DATABASE_URL" -c "\copy (select email, created_at, headline_variant, utm_source, utm_medium, utm_campaign, utm_content, country, role, forecast_question_id, forecast_probability, completed_at from waitlist_signups order by created_at) to 'waitlist.csv' csv header"
+psql "$DATABASE_URL_PROD" -c "\copy (select email, created_at, headline_variant, utm_source, utm_medium, utm_campaign, utm_content, country, role, forecast_question_id, forecast_probability, completed_at from waitlist_signups order by created_at) to 'waitlist.csv' csv header"
 ```
 
-`DATABASE_URL` is the Neon `main` branch string from `.dev.vars`. The file contains email addresses: keep it out of the repo and delete it after use.
+Use the production connection string (`DATABASE_URL_PROD` in `.dev.vars`, the Neon `main` branch). The file contains email addresses: keep it out of the repo and delete it after use.
 
 ## 8. Verify tracking after a deploy
 
-Follow "Verify after a deploy" in [analytics/TRACKING_PLAN.md](analytics/TRACKING_PLAN.md). Delete the rows the check created, by id, never by pattern:
+Follow "Verify after a deploy" in [analytics/TRACKING_PLAN.md](analytics/TRACKING_PLAN.md). On staging, `node landing/scripts/verify-staging.mjs --typeform` does it for you: it signs up on the preview, completes the real Typeform embed, and prints the signup id. Expect `environment = staging` on every event, browser and server. Then check the Prod project is empty (filter `environment = production`, or open User Look-Up for the device). Delete the rows the check created, by id, never by pattern (run it on the branch you tested: staging for a preview, `main` only for a production check):
 
 ```
 delete from waitlist_signups where id = '<signup id>';
@@ -106,16 +110,20 @@ Rules and caps are in [gtm/prelaunch-ads.md](../gtm/prelaunch-ads.md): $50 a day
 
 ## 10. Go-live checklist
 
-1. Founders read `/privacy` and `/terms` and remove the draft banner (`src/pages/DraftBanner.tsx`), or decide what changes.
-2. Section 1 steps 1 to 7 done; `https://tryrealworld.com/` loads over HTTPS.
-3. Section 4: every secret set on the Pages project, every build variable set, one production build deployed.
-4. Section 3: `hello@tryrealworld.com` forwards; `contactEmail` set.
-5. Section 6: Typeform webhook pointed at the production URL; a test signup completes the form and fills the row.
-6. Section 8: a test signup shows in Neon and in Amplitude; test rows deleted.
-7. Sections 2 and 9: app URL and pixel ids set, or deliberately left empty.
-8. Lighthouse and `check:bundle` pass on the production URL.
-9. The question list on the page is the one the founders want public. It holds three central-bank decisions (US Fed, ECB, Bank of Japan); the election question was removed ([decisions-needed item 2](../company/decisions-needed.md) stays open).
-10. Ads submitted with the first flight's caps.
+Each step is yours to run. Nothing here has been done.
+
+1. **Read the legal pages.** Founders read `/privacy` and `/terms` with [LEGAL_REVIEW.md](LEGAL_REVIEW.md), ideally with a lawyer, then remove the draft banner (`src/pages/DraftBanner.tsx`) or decide what changes.
+2. **Real Turnstile keys.** Cloudflare dashboard, Turnstile, add a widget with hostnames `tryrealworld.com` and `www.tryrealworld.com` (and the `*.pages.dev` host if you want to test the real keys there first). Put the site key in `.dev.vars` as `TURNSTILE_SITE_KEY_PROD` and the secret as `TURNSTILE_SECRET_KEY_PROD`.
+3. **Rotate the Typeform token.** Create a new personal token in Typeform, replace `TYPEFORM_TOKEN` in `.dev.vars`, revoke the old one. Run `node landing/scripts/typeform-sync.mjs --env production --webhook-url https://tryrealworld.com/api/typeform` to create the production form (see MORNING.md on the Typeform plan).
+4. **Connect the domain.** Section 1, steps 1 to 4 and 6. Do not deploy yet.
+5. **Set the production secrets.** Check `.dev.vars` has `DATABASE_URL_PROD`, `AMPLITUDE_API_KEY_PROD`, `TURNSTILE_SECRET_KEY_PROD`, `TYPEFORM_WEBHOOK_SECRET`, then run `bash landing/scripts/set-prod-secrets.sh`. Check the names with `pnpm exec wrangler pages secret list --project-name real-world-landing`.
+6. **Pixels and email.** Section 9 step 3 (pixel ids, or leave them empty on purpose) and section 3 (`hello@tryrealworld.com`, `contactEmail`). Sections 2 and 9: app URL left empty unless the app is ready.
+7. **Build and deploy production.** `pnpm --filter landing check:bundle`, `pnpm --filter landing build:prod`, then section 1 step 5.
+8. **Test production once.** Section 1 step 7 and section 8: sign up with a `test+<time>@example.com` address, complete the Typeform, confirm the row in Neon `main` and the events in the **Prod** Amplitude project with `environment = production`, confirm the Staging project got nothing new, then delete the rows by id.
+9. **Amplitude.** The Prod project's dashboard: [AMPLITUDE_GUIDE.md](analytics/AMPLITUDE_GUIDE.md), "Go-live checklist for Amplitude". Check the replay count after the first ad day.
+10. **Lighthouse** on the production URL, mobile, and judge LCP on real-user numbers once ads run ([perf/LIGHTHOUSE.md](perf/LIGHTHOUSE.md)).
+11. **The question list** on the page is the one the founders want public: three central-bank decisions (US Fed, ECB, Bank of Japan); the election question was removed ([decisions-needed item 2](../company/decisions-needed.md) stays open).
+12. **Ads.** Submit with the first flight's caps (section 9).
 
 ## 11. Retire on Oct 27
 

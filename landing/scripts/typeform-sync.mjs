@@ -4,6 +4,8 @@
 //
 //   node scripts/typeform-sync.mjs                         create or update the form
 //   node scripts/typeform-sync.mjs --webhook-url <url>     also set the webhook (the /api/typeform URL)
+//   add --env production to work on the production form, a second form kept in
+//   typeform/form-id.production.txt, so staging submissions never reach the production webhook
 //
 // Reads TYPEFORM_TOKEN and TYPEFORM_WEBHOOK_SECRET from the environment or .dev.vars.
 // The form id is stored in typeform/form-id.txt (not a secret). Secrets are never printed.
@@ -46,7 +48,16 @@ async function call(method, path, body) {
 }
 
 const form = JSON.parse(readFileSync(join(root, "typeform/form.json"), "utf8"));
-const idFile = join(root, "typeform/form-id.txt");
+const envFlag = process.argv.indexOf("--env");
+const target = envFlag > 0 ? process.argv[envFlag + 1] : "staging";
+if (!["staging", "production"].includes(target)) {
+  console.error("--env must be staging or production");
+  process.exit(1);
+}
+const idFile = join(
+  root,
+  target === "production" ? "typeform/form-id.production.txt" : "typeform/form-id.txt",
+);
 let id = existsSync(idFile) ? readFileSync(idFile, "utf8").trim() : "";
 
 if (id) {
@@ -56,7 +67,7 @@ if (id) {
   const created = await call("POST", "/forms", form);
   id = created.id;
   writeFileSync(idFile, `${id}\n`);
-  console.log(`created form ${id} (saved to typeform/form-id.txt)`);
+  console.log(`created form ${id} (saved to ${idFile.replace(`${root}/`, "")})`);
 }
 
 const i = process.argv.indexOf("--webhook-url");

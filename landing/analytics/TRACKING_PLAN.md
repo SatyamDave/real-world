@@ -4,10 +4,11 @@ The one list of what the page sends and why. The code is `src/analytics.ts` (the
 
 ## Rules
 
+- Every event, browser and server, carries `environment` (`development`, `staging` or `production`) as well as `headline_variant`. The build sets it for the browser and `wrangler.toml` for the server; an unset server value reads as `production`, never as a test environment. Staging sends to the Real World - Staging project (877388), production to Real World - Prod (878019), and `pnpm dev` only logs to the console. See [AMPLITUDE_GUIDE.md](AMPLITUDE_GUIDE.md).
 - Every event, browser and server, carries `headline_variant` (`receipts`, `hashed`, `public-score`, `your-call`, or `unknown`). It is also set as a user property.
 - No email address, hash, probability or score is ever an event property. The email goes only to our own database.
 - Nothing loads, and nothing is sent, when the browser sends Global Privacy Control or Do Not Track. The SDKs load after the page has loaded, on the visitor's first interaction or 1.5 seconds later, whichever is first; events fired before that wait in a queue. A visitor who leaves within 1.5 seconds without touching anything is therefore not counted in Amplitude (the pixels and the server events are unaffected). The bot check loads only when the visitor focuses the form or submits.
-- With no `VITE_AMPLITUDE_API_KEY` the SDK is not loaded. With no pixel id that pixel is not loaded.
+- With no `VITE_AMPLITUDE_API_KEY` the SDK is not loaded. In development it is not loaded either, unless `VITE_AMPLITUDE_DEV_SEND=true`. With no pixel id that pixel is not loaded.
 - The browser SDK is started with `trackingOptions: { ipAddress: false }`, so it does not send the visitor's IP address. What Amplitude then stores for location is checked on a deploy (see "Verify after a deploy"); the country we need is saved with the signup from the request header.
 - US-only until a consent banner exists ([product/101](../../research/product/101-prelaunch-landing-waitlist-ads.md)).
 
@@ -58,6 +59,7 @@ The signup id as the conversion id lets a later server-side conversion call dedu
 
 ## Verify after a deploy
 
+0. On staging, `node scripts/verify-staging.mjs --typeform` runs steps 1 to 3 and the Typeform for you and prints the ids.
 1. Open the preview with `?utm_source=test&utm_content=hashed`, accept nothing, wait 5 seconds.
 2. In Amplitude, find the device in the user lookup. Expect `landing_viewed` with `headline_variant = hashed`, the autocapture page view with the UTM properties, and `section_viewed` for `hero`.
 3. Submit a `test+<timestamp>@example.com` address. Expect `email_submitted`, `signup_saved` and the server `waitlist_email_saved` with the same `signup_id`.

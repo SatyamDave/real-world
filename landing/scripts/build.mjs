@@ -26,7 +26,14 @@ const need = (k) => {
 };
 
 const TURNSTILE_TEST_SITE_KEY = "1x00000000000000000000AA";
-const formId = readFileSync(new URL("../typeform/form-id.txt", import.meta.url), "utf8").trim();
+const formFile = target === "production" ? "form-id.production.txt" : "form-id.txt";
+let formId = "";
+try {
+  formId = readFileSync(new URL(`../typeform/${formFile}`, import.meta.url), "utf8").trim();
+} catch {
+  console.error(`typeform/${formFile} is missing; run typeform-sync.mjs --env ${target}`);
+  process.exit(1);
+}
 const env = { ...process.env, VITE_ENVIRONMENT: target, VITE_TYPEFORM_FORM_ID: formId };
 
 if (target === "staging") {

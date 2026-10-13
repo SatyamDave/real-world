@@ -72,4 +72,31 @@ Legend: [ ] todo · [x] done · [~] in progress · [B] blocked (see OVERNIGHT_LO
 - [x] Verified on the preview: browser signup -> Neon row -> Amplitude events (browser and server, same device and signup id); signed Typeform webhook valid, replay, tampered, unsigned
 - [x] Deleted only the test rows created, by id (dev and main Neon branches both at 0 rows)
 - [x] `landing/MORNING.md`
-- [ ] Open: LCP budget not reliably met on the live preview (3 of 6 runs); see landing/perf/LIGHTHOUSE.md
+- [x] LCP budget not reliably met on the live preview (3 of 6 runs); decided ship as-is by Rohit, judged on real-user numbers once ads run (MORNING.md). Milestone B may revisit with proof; see landing/perf/LIGHTHOUSE.md
+
+## Revised priorities (2026-10-13): best landing page, working waitlist, ads-ready fast
+
+Waitlist is the only call to action; v1 is not connected before ads. Decisions follow the protocol in [DECISIONS.md](DECISIONS.md).
+
+### Milestone A: ads-ready (`landing/6-envs`, off `landing/5-readiness`)
+- [x] Environments: dev logs to the console, staging is the Pages preview, prod is the Pages production branch. Every event carries `environment`. Two Amplitude keys in `.dev.vars`.
+- [x] Neon `staging` branch; preview uses staging values only (`scripts/set-staging-env.mjs`); schema on `main` verified (3 tables, 0 rows)
+- [x] `scripts/set-prod-secrets.sh` written, not run; `scripts/build.mjs` refuses test keys for production
+- [x] Amplitude: autocapture and sampled session replay (100% staging, 10% prod), funnel plus five charts (6 of the 10-chart limit), guide for a beginner, one experiment proposed and not launched
+- [x] Retested on staging; events carry `environment = staging`; the Prod project has zero events
+- [x] Real Typeform submission through the embed on staging with Playwright; the signed webhook filled the row; test data deleted by id
+- [x] Legal drafts tightened to the code; `LEGAL_REVIEW.md` for a lawyer
+- [x] RUNBOOK go-live checklist; stale "4 devices" notes fixed
+- [ ] draft PR, CI green
+
+### Milestone B: design and content (`landing/7-sections`, separate draft PR)
+- [ ] frontend-design: thesis and research, how it works, use cases, collaboration CTA (contact only)
+- [ ] No live demo, no v1 link, nothing that depends on APP_URL; waitlist stays the single dominant call to action
+- [ ] Screenshot critique loop at least twice at 390x844 and 1440x900; Lighthouse and a11y; LCP and CLS reported honestly
+- [ ] Preact or pre-rendering only if it proves LCP under 2.0 s without breaking tests
+
+### Later
+- [ ] `landing/SYNC.md`: a manual prompt to sync landing copy to product changes as a draft PR (one file, no watcher)
+
+### Finish
+- [ ] MORNING.md: evidence per milestone, what still needs Rohit, mistakes. Stop servers and browsers, clean tree.

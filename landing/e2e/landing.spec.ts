@@ -181,6 +181,11 @@ test.describe("legal pages", () => {
       expect(text).toContain(name);
     }
     expect(text).toContain("We do not sell your data.");
+    // What the code really stores and sends, so the page cannot drift from it.
+    expect(text).toContain("random device id");
+    expect(text).toContain("local storage");
+    expect(text).toContain("Typeform keeps them");
+    expect(text).toContain("not meant for children under 13");
   });
 
   test("terms say AI-simulated and no betting", async ({ page }) => {
