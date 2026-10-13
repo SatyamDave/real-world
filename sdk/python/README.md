@@ -45,6 +45,9 @@ The method names and what they do match the TypeScript client.
 | `receipt_day(date)` | Returns one day record with each receipt's entry, salt and leaf hash. |
 | `question(id)` | Returns one question with every committed forecast by day and forecaster. |
 | `scores()` | Returns the skill of the simulation against each baseline. |
+| `cycle(date=None)` | Returns one daily cycle as a run log; the latest cycle when no date is given. |
+| `cycle_replay(date)` | Replays the day's forecasts from recorded model outputs; diffs them with the ledger. |
+| `research()` | Returns the experiment registry with its hashes and results, and the papers. |
 
 ## Errors
 

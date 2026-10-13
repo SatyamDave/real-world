@@ -1,0 +1,3104 @@
+{
+  "date": "2026-10-05",
+  "dates": ["2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05"],
+  "model": "fake",
+  "provider": "fake",
+  "engine_version": "0.1.0",
+  "config_hash": "e31c4eef36fa3ad02504e01c2b9cf1ebcb8837d34005acaa51456c73a2ab648a",
+  "steps": [
+    {
+      "step": "ingest",
+      "status": "ok",
+      "started_at": "2026-10-13T01:57:36.044+00:00",
+      "finished_at": "2026-10-13T01:57:36.075+00:00",
+      "seconds": 0.031,
+      "detail": { "clusters": 38, "news": "fixtures" },
+      "model_calls": 38,
+      "in_tokens": 31730,
+      "out_tokens": 0,
+      "cost_usd": 0.0013326599999999994,
+      "by_purpose": { "signal": 38 }
+    },
+    {
+      "step": "assimilate",
+      "status": "ok",
+      "started_at": "2026-10-13T01:57:36.076+00:00",
+      "finished_at": "2026-10-13T01:57:36.102+00:00",
+      "seconds": 0.026,
+      "detail": {
+        "from": "2026-10-04",
+        "agents": 10000,
+        "exposed": 4991,
+        "nudges": 0,
+        "snapshot_sha256": "600cf635c19b790343dab852c99d899362d7779807b9835eaf75d4f737913bd7"
+      },
+      "model_calls": 0,
+      "in_tokens": 0,
+      "out_tokens": 0,
+      "cost_usd": 0.0,
+      "by_purpose": {}
+    },
+    {
+      "step": "forecast",
+      "status": "ok",
+      "started_at": "2026-10-13T01:57:36.102+00:00",
+      "finished_at": "2026-10-13T01:57:36.166+00:00",
+      "seconds": 0.064,
+      "detail": { "forecasts": 15 },
+      "model_calls": 124,
+      "in_tokens": 27849,
+      "out_tokens": 0,
+      "cost_usd": 0.0011696579999999986,
+      "by_purpose": { "forecast_sim": 99, "forecast_plain": 25 }
+    },
+    {
+      "step": "publish",
+      "status": "ok",
+      "started_at": "2026-10-13T01:57:36.167+00:00",
+      "finished_at": "2026-10-13T01:57:36.171+00:00",
+      "seconds": 0.004,
+      "detail": {
+        "leaves": 15,
+        "root": "212a1e623734c7f330be988c4f9a6193d21411ff5436e648303fa9db26c11973",
+        "receipt": "var/receipts/2026-10-05.json"
+      },
+      "model_calls": 0,
+      "in_tokens": 0,
+      "out_tokens": 0,
+      "cost_usd": 0.0,
+      "by_purpose": {}
+    },
+    {
+      "step": "anchor",
+      "status": "ok",
+      "started_at": "2026-10-13T01:57:36.171+00:00",
+      "finished_at": "2026-10-13T01:57:36.172+00:00",
+      "seconds": 0.001,
+      "detail": { "skipped": "fixture days are not sent to public timestamp servers" },
+      "model_calls": 0,
+      "in_tokens": 0,
+      "out_tokens": 0,
+      "cost_usd": 0.0,
+      "by_purpose": {}
+    },
+    {
+      "step": "score",
+      "status": "ok",
+      "started_at": "2026-10-13T01:57:36.172+00:00",
+      "finished_at": "2026-10-13T01:57:36.173+00:00",
+      "seconds": 0.001,
+      "detail": { "resolved": 5, "scored_rows": 39 },
+      "model_calls": 0,
+      "in_tokens": 0,
+      "out_tokens": 0,
+      "cost_usd": 0.0,
+      "by_purpose": {}
+    },
+    {
+      "step": "learn",
+      "status": "ok",
+      "started_at": "2026-10-13T01:57:36.174+00:00",
+      "finished_at": "2026-10-13T01:57:36.182+00:00",
+      "seconds": 0.008,
+      "detail": {
+        "experimental": [],
+        "biggest_misses": [
+          {
+            "date": "2026-10-04",
+            "question_id": "fx-jpn-ai-guidelines",
+            "brier": 0.3876307600000001
+          },
+          {
+            "date": "2026-10-03",
+            "question_id": "fx-deu-climate-bill",
+            "brier": 0.37417689000000004
+          },
+          { "date": "2026-10-02", "question_id": "fx-jpn-ai-guidelines", "brier": 0.367236 },
+          {
+            "date": "2026-10-04",
+            "question_id": "fx-deu-climate-bill",
+            "brier": 0.36638808999999994
+          },
+          { "date": "2026-10-03", "question_id": "fx-jpn-ai-guidelines", "brier": 0.29528356 }
+        ]
+      },
+      "model_calls": 0,
+      "in_tokens": 0,
+      "out_tokens": 0,
+      "cost_usd": 0.0,
+      "by_purpose": {}
+    },
+    {
+      "step": "improve",
+      "status": "ok",
+      "started_at": "2026-10-13T01:57:36.182+00:00",
+      "finished_at": "2026-10-13T01:57:36.183+00:00",
+      "seconds": 0.001,
+      "detail": {
+        "n_train": 0,
+        "n_holdout": 4,
+        "promote": false,
+        "reason": "insufficient_n: too few questions resolved since the incumbent",
+        "incumbent": "identity"
+      },
+      "model_calls": 0,
+      "in_tokens": 0,
+      "out_tokens": 0,
+      "cost_usd": 0.0,
+      "by_purpose": {}
+    }
+  ],
+  "news": {
+    "source": "fixtures",
+    "articles": 40,
+    "clusters": 38,
+    "countries": 16,
+    "by_topic": [
+      {
+        "topic": "inflation_worry",
+        "label": "Inflation worry",
+        "signals": 38,
+        "mean_value": 0.029956394564012334,
+        "top": [
+          {
+            "title": "FIXTURE: Israel defence ministry reports border incident",
+            "iso3": "ISR",
+            "tier": "B",
+            "salience": 0.7153100394770538,
+            "value": -0.3959963952116143
+          },
+          {
+            "title": "FIXTURE: Japan startups announce new AI funding rounds",
+            "iso3": "JPN",
+            "tier": "A",
+            "salience": 0.5395652651794312,
+            "value": 0.45613796831463843
+          },
+          {
+            "title": "FIXTURE: Campaign in China turns to the cost of living",
+            "iso3": "CHN",
+            "tier": "D",
+            "salience": 0.841052431949134,
+            "value": 0.24370986925792915
+          }
+        ]
+      },
+      {
+        "topic": "economy_optimism",
+        "label": "Economic optimism",
+        "signals": 38,
+        "mean_value": 0.043425319739690466,
+        "top": [
+          {
+            "title": "FIXTURE: Nigeria approves a temporary fuel subsidy",
+            "iso3": "NGA",
+            "tier": "C",
+            "salience": 0.9748729862249237,
+            "value": -0.3069031214853608
+          },
+          {
+            "title": "FIXTURE: Mexico startups announce new AI funding rounds",
+            "iso3": "MEX",
+            "tier": "B",
+            "salience": 0.8740459565590578,
+            "value": 0.28960124969050044
+          },
+          {
+            "title": "FIXTURE: Critics in Indonesia question the cost of fuel relief",
+            "iso3": "IDN",
+            "tier": "B",
+            "salience": 0.9777733964456519,
+            "value": 0.25317953942335314
+          }
+        ]
+      },
+      {
+        "topic": "spending_intent",
+        "label": "Spending intent",
+        "signals": 38,
+        "mean_value": -0.013930905405756524,
+        "top": [
+          {
+            "title": "FIXTURE: Mexico startups announce new AI funding rounds",
+            "iso3": "MEX",
+            "tier": "B",
+            "salience": 0.8740459565590578,
+            "value": -0.5083425981785826
+          },
+          {
+            "title": "FIXTURE: Campaign in China turns to the cost of living",
+            "iso3": "CHN",
+            "tier": "D",
+            "salience": 0.841052431949134,
+            "value": 0.32207590506217726
+          },
+          {
+            "title": "FIXTURE: Brazil electoral commission publishes candidate list",
+            "iso3": "BRA",
+            "tier": "B",
+            "salience": 0.9192572069477764,
+            "value": 0.18830905538631432
+          }
+        ]
+      },
+      {
+        "topic": "trust_government",
+        "label": "Trust in government",
+        "signals": 38,
+        "mean_value": 0.0012014699880892072,
+        "top": [
+          {
+            "title": "FIXTURE: Fuel shock revives electric vehicle debate in South Africa",
+            "iso3": "ZAF",
+            "tier": "B",
+            "salience": 0.768708455676868,
+            "value": 0.41939423772630713
+          },
+          {
+            "title": "FIXTURE: Campaign in China turns to the cost of living",
+            "iso3": "CHN",
+            "tier": "D",
+            "salience": 0.841052431949134,
+            "value": 0.3034497624260869
+          },
+          {
+            "title": "FIXTURE: Brazil electoral commission publishes candidate list",
+            "iso3": "BRA",
+            "tier": "B",
+            "salience": 0.9192572069477764,
+            "value": -0.26333041509638766
+          }
+        ]
+      },
+      {
+        "topic": "climate_concern",
+        "label": "Climate concern",
+        "signals": 38,
+        "mean_value": 0.01898057089995889,
+        "top": [
+          {
+            "title": "FIXTURE: Crude eases as the export terminal restarts; Nigeria pump prices lag",
+            "iso3": "NGA",
+            "tier": "C",
+            "salience": 0.8213795197421441,
+            "value": 0.3857729812401981
+          },
+          {
+            "title": "FIXTURE: Mexico startups announce new AI funding rounds",
+            "iso3": "MEX",
+            "tier": "B",
+            "salience": 0.8740459565590578,
+            "value": 0.358263093382606
+          },
+          {
+            "title": "FIXTURE: Fuel shock revives electric vehicle debate in South Africa",
+            "iso3": "ZAF",
+            "tier": "B",
+            "salience": 0.768708455676868,
+            "value": 0.3561195320130113
+          }
+        ]
+      },
+      {
+        "topic": "tech_optimism",
+        "label": "Tech optimism",
+        "signals": 38,
+        "mean_value": -0.009257049644100759,
+        "top": [
+          {
+            "title": "FIXTURE: Critics in Indonesia question the cost of fuel relief",
+            "iso3": "IDN",
+            "tier": "B",
+            "salience": 0.9777733964456519,
+            "value": -0.26733049996176844
+          },
+          {
+            "title": "FIXTURE: Japan startups announce new AI funding rounds",
+            "iso3": "JPN",
+            "tier": "A",
+            "salience": 0.5395652651794312,
+            "value": -0.3851295644206618
+          },
+          {
+            "title": "FIXTURE: Indonesia regulator opens consultation on AI rules",
+            "iso3": "IDN",
+            "tier": "B",
+            "salience": 0.9561131455236516,
+            "value": 0.21517068663327257
+          }
+        ]
+      },
+      {
+        "topic": "migration_openness",
+        "label": "Openness to migration",
+        "signals": 38,
+        "mean_value": 0.006118128575709711,
+        "top": [
+          {
+            "title": "FIXTURE: Prices in Brazil stay elevated despite lower crude",
+            "iso3": "BRA",
+            "tier": "B",
+            "salience": 0.7699793820818889,
+            "value": 0.7376268268790747
+          },
+          {
+            "title": "FIXTURE: Fuel shock revives electric vehicle debate in Germany",
+            "iso3": "DEU",
+            "tier": "A",
+            "salience": 0.9699868906622181,
+            "value": -0.2817332756671539
+          },
+          {
+            "title": "FIXTURE: United Kingdom opposition leads in regional election race",
+            "iso3": "GBR",
+            "tier": "A",
+            "salience": 0.526727518550676,
+            "value": -0.4720969713237059
+          }
+        ]
+      },
+      {
+        "topic": "conflict_worry",
+        "label": "Conflict worry",
+        "signals": 38,
+        "mean_value": -0.017498260638064134,
+        "top": [
+          {
+            "title": "FIXTURE: Nigeria approves a temporary fuel subsidy",
+            "iso3": "NGA",
+            "tier": "C",
+            "salience": 0.9748729862249237,
+            "value": 0.41572458533114276
+          },
+          {
+            "title": "FIXTURE: Fuel shock revives electric vehicle debate in South Africa",
+            "iso3": "ZAF",
+            "tier": "B",
+            "salience": 0.768708455676868,
+            "value": 0.32452399961723466
+          },
+          {
+            "title": "FIXTURE: Mexico startups announce new AI funding rounds",
+            "iso3": "MEX",
+            "tier": "B",
+            "salience": 0.8740459565590578,
+            "value": -0.24383615169611028
+          }
+        ]
+      }
+    ]
+  },
+  "assimilation": [
+    {
+      "iso3": "USA",
+      "topic": "inflation_worry",
+      "before": 0.6425,
+      "after_news": 0.6394,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.6394
+    },
+    {
+      "iso3": "USA",
+      "topic": "economy_optimism",
+      "before": 0.4286,
+      "after_news": 0.4269,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4269
+    },
+    {
+      "iso3": "USA",
+      "topic": "spending_intent",
+      "before": 0.446,
+      "after_news": 0.4359,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4359
+    },
+    {
+      "iso3": "USA",
+      "topic": "trust_government",
+      "before": 0.311,
+      "after_news": 0.3253,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3253
+    },
+    {
+      "iso3": "USA",
+      "topic": "climate_concern",
+      "before": 0.5241,
+      "after_news": 0.5326,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5326
+    },
+    {
+      "iso3": "USA",
+      "topic": "tech_optimism",
+      "before": 0.4207,
+      "after_news": 0.4181,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4181
+    },
+    {
+      "iso3": "USA",
+      "topic": "migration_openness",
+      "before": 0.3474,
+      "after_news": 0.3642,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3642
+    },
+    {
+      "iso3": "USA",
+      "topic": "conflict_worry",
+      "before": 0.5011,
+      "after_news": 0.4978,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4978
+    },
+    {
+      "iso3": "GBR",
+      "topic": "inflation_worry",
+      "before": 0.5688,
+      "after_news": 0.5509,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5509
+    },
+    {
+      "iso3": "GBR",
+      "topic": "economy_optimism",
+      "before": 0.2745,
+      "after_news": 0.2941,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2941
+    },
+    {
+      "iso3": "GBR",
+      "topic": "spending_intent",
+      "before": 0.3293,
+      "after_news": 0.3252,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3252
+    },
+    {
+      "iso3": "GBR",
+      "topic": "trust_government",
+      "before": 0.31,
+      "after_news": 0.3327,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3327
+    },
+    {
+      "iso3": "GBR",
+      "topic": "climate_concern",
+      "before": 0.5898,
+      "after_news": 0.5977,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5977
+    },
+    {
+      "iso3": "GBR",
+      "topic": "tech_optimism",
+      "before": 0.3605,
+      "after_news": 0.3552,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3552
+    },
+    {
+      "iso3": "GBR",
+      "topic": "migration_openness",
+      "before": 0.3707,
+      "after_news": 0.3579,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3579
+    },
+    {
+      "iso3": "GBR",
+      "topic": "conflict_worry",
+      "before": 0.4462,
+      "after_news": 0.4345,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4345
+    },
+    {
+      "iso3": "DEU",
+      "topic": "inflation_worry",
+      "before": 0.5521,
+      "after_news": 0.5598,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5598
+    },
+    {
+      "iso3": "DEU",
+      "topic": "economy_optimism",
+      "before": 0.2988,
+      "after_news": 0.2884,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2884
+    },
+    {
+      "iso3": "DEU",
+      "topic": "spending_intent",
+      "before": 0.2948,
+      "after_news": 0.2994,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2994
+    },
+    {
+      "iso3": "DEU",
+      "topic": "trust_government",
+      "before": 0.4304,
+      "after_news": 0.4335,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4335
+    },
+    {
+      "iso3": "DEU",
+      "topic": "climate_concern",
+      "before": 0.631,
+      "after_news": 0.6385,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.6385
+    },
+    {
+      "iso3": "DEU",
+      "topic": "tech_optimism",
+      "before": 0.3613,
+      "after_news": 0.3693,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3693
+    },
+    {
+      "iso3": "DEU",
+      "topic": "migration_openness",
+      "before": 0.3065,
+      "after_news": 0.2776,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2776
+    },
+    {
+      "iso3": "DEU",
+      "topic": "conflict_worry",
+      "before": 0.474,
+      "after_news": 0.4704,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4704
+    },
+    {
+      "iso3": "FRA",
+      "topic": "inflation_worry",
+      "before": 0.6297,
+      "after_news": 0.6181,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.6181
+    },
+    {
+      "iso3": "FRA",
+      "topic": "economy_optimism",
+      "before": 0.2557,
+      "after_news": 0.261,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.261
+    },
+    {
+      "iso3": "FRA",
+      "topic": "spending_intent",
+      "before": 0.3018,
+      "after_news": 0.3004,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3004
+    },
+    {
+      "iso3": "FRA",
+      "topic": "trust_government",
+      "before": 0.3418,
+      "after_news": 0.3379,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3379
+    },
+    {
+      "iso3": "FRA",
+      "topic": "climate_concern",
+      "before": 0.6336,
+      "after_news": 0.6306,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.6306
+    },
+    {
+      "iso3": "FRA",
+      "topic": "tech_optimism",
+      "before": 0.3538,
+      "after_news": 0.3441,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3441
+    },
+    {
+      "iso3": "FRA",
+      "topic": "migration_openness",
+      "before": 0.3491,
+      "after_news": 0.3663,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3663
+    },
+    {
+      "iso3": "FRA",
+      "topic": "conflict_worry",
+      "before": 0.4099,
+      "after_news": 0.4054,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4054
+    },
+    {
+      "iso3": "JPN",
+      "topic": "inflation_worry",
+      "before": 0.5712,
+      "after_news": 0.5928,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5928
+    },
+    {
+      "iso3": "JPN",
+      "topic": "economy_optimism",
+      "before": 0.2485,
+      "after_news": 0.2441,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2441
+    },
+    {
+      "iso3": "JPN",
+      "topic": "spending_intent",
+      "before": 0.3334,
+      "after_news": 0.3381,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3381
+    },
+    {
+      "iso3": "JPN",
+      "topic": "trust_government",
+      "before": 0.4193,
+      "after_news": 0.4315,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4315
+    },
+    {
+      "iso3": "JPN",
+      "topic": "climate_concern",
+      "before": 0.5716,
+      "after_news": 0.5788,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5788
+    },
+    {
+      "iso3": "JPN",
+      "topic": "tech_optimism",
+      "before": 0.4239,
+      "after_news": 0.3924,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3924
+    },
+    {
+      "iso3": "JPN",
+      "topic": "migration_openness",
+      "before": 0.2696,
+      "after_news": 0.2619,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2619
+    },
+    {
+      "iso3": "JPN",
+      "topic": "conflict_worry",
+      "before": 0.4662,
+      "after_news": 0.4672,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4672
+    },
+    {
+      "iso3": "BRA",
+      "topic": "inflation_worry",
+      "before": 0.6699,
+      "after_news": 0.6817,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.6817
+    },
+    {
+      "iso3": "BRA",
+      "topic": "economy_optimism",
+      "before": 0.5174,
+      "after_news": 0.5584,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5584
+    },
+    {
+      "iso3": "BRA",
+      "topic": "spending_intent",
+      "before": 0.3851,
+      "after_news": 0.4134,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4134
+    },
+    {
+      "iso3": "BRA",
+      "topic": "trust_government",
+      "before": 0.3558,
+      "after_news": 0.3483,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3483
+    },
+    {
+      "iso3": "BRA",
+      "topic": "climate_concern",
+      "before": 0.6913,
+      "after_news": 0.6968,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.6968
+    },
+    {
+      "iso3": "BRA",
+      "topic": "tech_optimism",
+      "before": 0.5665,
+      "after_news": 0.5789,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5789
+    },
+    {
+      "iso3": "BRA",
+      "topic": "migration_openness",
+      "before": 0.3546,
+      "after_news": 0.4011,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4011
+    },
+    {
+      "iso3": "BRA",
+      "topic": "conflict_worry",
+      "before": 0.2164,
+      "after_news": 0.2224,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2224
+    },
+    {
+      "iso3": "MEX",
+      "topic": "inflation_worry",
+      "before": 0.709,
+      "after_news": 0.721,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.721
+    },
+    {
+      "iso3": "MEX",
+      "topic": "economy_optimism",
+      "before": 0.4777,
+      "after_news": 0.5045,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5045
+    },
+    {
+      "iso3": "MEX",
+      "topic": "spending_intent",
+      "before": 0.3828,
+      "after_news": 0.3413,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3413
+    },
+    {
+      "iso3": "MEX",
+      "topic": "trust_government",
+      "before": 0.36,
+      "after_news": 0.3615,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3615
+    },
+    {
+      "iso3": "MEX",
+      "topic": "climate_concern",
+      "before": 0.6856,
+      "after_news": 0.7032,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.7032
+    },
+    {
+      "iso3": "MEX",
+      "topic": "tech_optimism",
+      "before": 0.5602,
+      "after_news": 0.5763,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5763
+    },
+    {
+      "iso3": "MEX",
+      "topic": "migration_openness",
+      "before": 0.3396,
+      "after_news": 0.3465,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3465
+    },
+    {
+      "iso3": "MEX",
+      "topic": "conflict_worry",
+      "before": 0.271,
+      "after_news": 0.2571,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2571
+    },
+    {
+      "iso3": "IDN",
+      "topic": "inflation_worry",
+      "before": 0.5543,
+      "after_news": 0.5499,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5499
+    },
+    {
+      "iso3": "IDN",
+      "topic": "economy_optimism",
+      "before": 0.6533,
+      "after_news": 0.6749,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.6749
+    },
+    {
+      "iso3": "IDN",
+      "topic": "spending_intent",
+      "before": 0.4176,
+      "after_news": 0.4214,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4214
+    },
+    {
+      "iso3": "IDN",
+      "topic": "trust_government",
+      "before": 0.687,
+      "after_news": 0.6701,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.6701
+    },
+    {
+      "iso3": "IDN",
+      "topic": "climate_concern",
+      "before": 0.5729,
+      "after_news": 0.596,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.596
+    },
+    {
+      "iso3": "IDN",
+      "topic": "tech_optimism",
+      "before": 0.7031,
+      "after_news": 0.6941,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.6941
+    },
+    {
+      "iso3": "IDN",
+      "topic": "migration_openness",
+      "before": 0.2902,
+      "after_news": 0.2834,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2834
+    },
+    {
+      "iso3": "IDN",
+      "topic": "conflict_worry",
+      "before": 0.3252,
+      "after_news": 0.3448,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3448
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "inflation_worry",
+      "before": 0.7317,
+      "after_news": 0.7404,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.7404
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "economy_optimism",
+      "before": 0.2803,
+      "after_news": 0.2848,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2848
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "spending_intent",
+      "before": 0.29,
+      "after_news": 0.2911,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2911
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "trust_government",
+      "before": 0.2484,
+      "after_news": 0.2721,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2721
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "climate_concern",
+      "before": 0.5741,
+      "after_news": 0.5963,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5963
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "tech_optimism",
+      "before": 0.5803,
+      "after_news": 0.5829,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5829
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "migration_openness",
+      "before": 0.2378,
+      "after_news": 0.2458,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2458
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "conflict_worry",
+      "before": 0.3363,
+      "after_news": 0.3549,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3549
+    },
+    {
+      "iso3": "TUR",
+      "topic": "inflation_worry",
+      "before": 0.8418,
+      "after_news": 0.8403,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.8403
+    },
+    {
+      "iso3": "TUR",
+      "topic": "economy_optimism",
+      "before": 0.3342,
+      "after_news": 0.3281,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3281
+    },
+    {
+      "iso3": "TUR",
+      "topic": "spending_intent",
+      "before": 0.3193,
+      "after_news": 0.316,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.316
+    },
+    {
+      "iso3": "TUR",
+      "topic": "trust_government",
+      "before": 0.3935,
+      "after_news": 0.3959,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3959
+    },
+    {
+      "iso3": "TUR",
+      "topic": "climate_concern",
+      "before": 0.5899,
+      "after_news": 0.5891,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5891
+    },
+    {
+      "iso3": "TUR",
+      "topic": "tech_optimism",
+      "before": 0.552,
+      "after_news": 0.5573,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5573
+    },
+    {
+      "iso3": "TUR",
+      "topic": "migration_openness",
+      "before": 0.1767,
+      "after_news": 0.1765,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.1765
+    },
+    {
+      "iso3": "TUR",
+      "topic": "conflict_worry",
+      "before": 0.5133,
+      "after_news": 0.5152,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5152
+    },
+    {
+      "iso3": "ISR",
+      "topic": "inflation_worry",
+      "before": 0.5996,
+      "after_news": 0.5595,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5595
+    },
+    {
+      "iso3": "ISR",
+      "topic": "economy_optimism",
+      "before": 0.3302,
+      "after_news": 0.3458,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3458
+    },
+    {
+      "iso3": "ISR",
+      "topic": "spending_intent",
+      "before": 0.279,
+      "after_news": 0.2692,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2692
+    },
+    {
+      "iso3": "ISR",
+      "topic": "trust_government",
+      "before": 0.3921,
+      "after_news": 0.3974,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3974
+    },
+    {
+      "iso3": "ISR",
+      "topic": "climate_concern",
+      "before": 0.4861,
+      "after_news": 0.453,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.453
+    },
+    {
+      "iso3": "ISR",
+      "topic": "tech_optimism",
+      "before": 0.5238,
+      "after_news": 0.548,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.548
+    },
+    {
+      "iso3": "ISR",
+      "topic": "migration_openness",
+      "before": 0.2904,
+      "after_news": 0.2935,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2935
+    },
+    {
+      "iso3": "ISR",
+      "topic": "conflict_worry",
+      "before": 0.7882,
+      "after_news": 0.7807,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.7807
+    },
+    {
+      "iso3": "IND",
+      "topic": "inflation_worry",
+      "before": 0.6284,
+      "after_news": 0.6289,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.6289
+    },
+    {
+      "iso3": "IND",
+      "topic": "economy_optimism",
+      "before": 0.6539,
+      "after_news": 0.6513,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.6513
+    },
+    {
+      "iso3": "IND",
+      "topic": "spending_intent",
+      "before": 0.4963,
+      "after_news": 0.5026,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5026
+    },
+    {
+      "iso3": "IND",
+      "topic": "trust_government",
+      "before": 0.7126,
+      "after_news": 0.7074,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.7074
+    },
+    {
+      "iso3": "IND",
+      "topic": "climate_concern",
+      "before": 0.6513,
+      "after_news": 0.6391,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.6391
+    },
+    {
+      "iso3": "IND",
+      "topic": "tech_optimism",
+      "before": 0.7223,
+      "after_news": 0.7206,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.7206
+    },
+    {
+      "iso3": "IND",
+      "topic": "migration_openness",
+      "before": 0.3268,
+      "after_news": 0.3149,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3149
+    },
+    {
+      "iso3": "IND",
+      "topic": "conflict_worry",
+      "before": 0.4237,
+      "after_news": 0.4197,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4197
+    },
+    {
+      "iso3": "NGA",
+      "topic": "inflation_worry",
+      "before": 0.8094,
+      "after_news": 0.8027,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.8027
+    },
+    {
+      "iso3": "NGA",
+      "topic": "economy_optimism",
+      "before": 0.5112,
+      "after_news": 0.4918,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4918
+    },
+    {
+      "iso3": "NGA",
+      "topic": "spending_intent",
+      "before": 0.4425,
+      "after_news": 0.4384,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4384
+    },
+    {
+      "iso3": "NGA",
+      "topic": "trust_government",
+      "before": 0.2936,
+      "after_news": 0.2879,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2879
+    },
+    {
+      "iso3": "NGA",
+      "topic": "climate_concern",
+      "before": 0.5088,
+      "after_news": 0.5145,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5145
+    },
+    {
+      "iso3": "NGA",
+      "topic": "tech_optimism",
+      "before": 0.6825,
+      "after_news": 0.6746,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.6746
+    },
+    {
+      "iso3": "NGA",
+      "topic": "migration_openness",
+      "before": 0.2817,
+      "after_news": 0.2838,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2838
+    },
+    {
+      "iso3": "NGA",
+      "topic": "conflict_worry",
+      "before": 0.4999,
+      "after_news": 0.5254,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5254
+    },
+    {
+      "iso3": "KEN",
+      "topic": "inflation_worry",
+      "before": 0.7473,
+      "after_news": 0.7537,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.7537
+    },
+    {
+      "iso3": "KEN",
+      "topic": "economy_optimism",
+      "before": 0.4681,
+      "after_news": 0.4653,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4653
+    },
+    {
+      "iso3": "KEN",
+      "topic": "spending_intent",
+      "before": 0.3889,
+      "after_news": 0.3768,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3768
+    },
+    {
+      "iso3": "KEN",
+      "topic": "trust_government",
+      "before": 0.3359,
+      "after_news": 0.3247,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3247
+    },
+    {
+      "iso3": "KEN",
+      "topic": "climate_concern",
+      "before": 0.6481,
+      "after_news": 0.652,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.652
+    },
+    {
+      "iso3": "KEN",
+      "topic": "tech_optimism",
+      "before": 0.7094,
+      "after_news": 0.7106,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.7106
+    },
+    {
+      "iso3": "KEN",
+      "topic": "migration_openness",
+      "before": 0.2816,
+      "after_news": 0.281,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.281
+    },
+    {
+      "iso3": "KEN",
+      "topic": "conflict_worry",
+      "before": 0.3698,
+      "after_news": 0.3607,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3607
+    },
+    {
+      "iso3": "EGY",
+      "topic": "inflation_worry",
+      "before": 0.8199,
+      "after_news": 0.8183,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.8183
+    },
+    {
+      "iso3": "EGY",
+      "topic": "economy_optimism",
+      "before": 0.4208,
+      "after_news": 0.4121,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4121
+    },
+    {
+      "iso3": "EGY",
+      "topic": "spending_intent",
+      "before": 0.3445,
+      "after_news": 0.3398,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3398
+    },
+    {
+      "iso3": "EGY",
+      "topic": "trust_government",
+      "before": 0.523,
+      "after_news": 0.526,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.526
+    },
+    {
+      "iso3": "EGY",
+      "topic": "climate_concern",
+      "before": 0.4993,
+      "after_news": 0.5043,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5043
+    },
+    {
+      "iso3": "EGY",
+      "topic": "tech_optimism",
+      "before": 0.6159,
+      "after_news": 0.616,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.616
+    },
+    {
+      "iso3": "EGY",
+      "topic": "migration_openness",
+      "before": 0.21,
+      "after_news": 0.2107,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.2107
+    },
+    {
+      "iso3": "EGY",
+      "topic": "conflict_worry",
+      "before": 0.5026,
+      "after_news": 0.5006,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5006
+    },
+    {
+      "iso3": "CHN",
+      "topic": "inflation_worry",
+      "before": 0.5098,
+      "after_news": 0.5271,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5271
+    },
+    {
+      "iso3": "CHN",
+      "topic": "economy_optimism",
+      "before": 0.5702,
+      "after_news": 0.5758,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.5758
+    },
+    {
+      "iso3": "CHN",
+      "topic": "spending_intent",
+      "before": 0.382,
+      "after_news": 0.4059,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.4059
+    },
+    {
+      "iso3": "CHN",
+      "topic": "trust_government",
+      "before": 0.7044,
+      "after_news": 0.7188,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.7188
+    },
+    {
+      "iso3": "CHN",
+      "topic": "climate_concern",
+      "before": 0.5265,
+      "after_news": 0.522,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.522
+    },
+    {
+      "iso3": "CHN",
+      "topic": "tech_optimism",
+      "before": 0.7623,
+      "after_news": 0.7649,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.7649
+    },
+    {
+      "iso3": "CHN",
+      "topic": "migration_openness",
+      "before": 0.1851,
+      "after_news": 0.1962,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.1962
+    },
+    {
+      "iso3": "CHN",
+      "topic": "conflict_worry",
+      "before": 0.3827,
+      "after_news": 0.3693,
+      "observed": null,
+      "observed_n": null,
+      "observed_source": null,
+      "innovation": null,
+      "applied": null,
+      "gain": null,
+      "after": 0.3693
+    }
+  ],
+  "audit": [
+    {
+      "iso3": "BRA",
+      "topic": "climate_concern",
+      "sim_sd": 1.0948456014721222,
+      "survey_sd": 1.1,
+      "ratio": 0.9953141831564746,
+      "in_band": true
+    },
+    {
+      "iso3": "BRA",
+      "topic": "conflict_worry",
+      "sim_sd": 0.9901604313674549,
+      "survey_sd": 1.0,
+      "ratio": 0.9901604313674549,
+      "in_band": true
+    },
+    {
+      "iso3": "BRA",
+      "topic": "economy_optimism",
+      "sim_sd": 1.058082954098873,
+      "survey_sd": 1.0,
+      "ratio": 1.058082954098873,
+      "in_band": true
+    },
+    {
+      "iso3": "BRA",
+      "topic": "inflation_worry",
+      "sim_sd": 1.083447205996805,
+      "survey_sd": 1.1,
+      "ratio": 0.9849520054516409,
+      "in_band": true
+    },
+    {
+      "iso3": "BRA",
+      "topic": "migration_openness",
+      "sim_sd": 1.3478800122640766,
+      "survey_sd": 1.3,
+      "ratio": 1.0368307786646742,
+      "in_band": true
+    },
+    {
+      "iso3": "BRA",
+      "topic": "spending_intent",
+      "sim_sd": 0.9011670191693947,
+      "survey_sd": 0.9,
+      "ratio": 1.0012966879659941,
+      "in_band": true
+    },
+    {
+      "iso3": "BRA",
+      "topic": "tech_optimism",
+      "sim_sd": 1.0362109436021951,
+      "survey_sd": 1.0,
+      "ratio": 1.0362109436021951,
+      "in_band": true
+    },
+    {
+      "iso3": "BRA",
+      "topic": "trust_government",
+      "sim_sd": 1.3012198738421312,
+      "survey_sd": 1.2,
+      "ratio": 1.0843498948684427,
+      "in_band": true
+    },
+    {
+      "iso3": "CHN",
+      "topic": "climate_concern",
+      "sim_sd": 1.214427049680411,
+      "survey_sd": 1.2,
+      "ratio": 1.0120225414003425,
+      "in_band": true
+    },
+    {
+      "iso3": "CHN",
+      "topic": "conflict_worry",
+      "sim_sd": 1.1021236869528253,
+      "survey_sd": 1.1,
+      "ratio": 1.0019306245025683,
+      "in_band": true
+    },
+    {
+      "iso3": "CHN",
+      "topic": "economy_optimism",
+      "sim_sd": 1.1281624576120786,
+      "survey_sd": 1.1,
+      "ratio": 1.0256022341927986,
+      "in_band": true
+    },
+    {
+      "iso3": "CHN",
+      "topic": "inflation_worry",
+      "sim_sd": 1.220927489102565,
+      "survey_sd": 1.2,
+      "ratio": 1.0174395742521376,
+      "in_band": true
+    },
+    {
+      "iso3": "CHN",
+      "topic": "migration_openness",
+      "sim_sd": 1.457659770073414,
+      "survey_sd": 1.4,
+      "ratio": 1.0411855500524385,
+      "in_band": true
+    },
+    {
+      "iso3": "CHN",
+      "topic": "spending_intent",
+      "sim_sd": 1.0364659943433194,
+      "survey_sd": 1.0,
+      "ratio": 1.0364659943433194,
+      "in_band": true
+    },
+    {
+      "iso3": "CHN",
+      "topic": "tech_optimism",
+      "sim_sd": 1.1229600953915109,
+      "survey_sd": 1.1,
+      "ratio": 1.0208728139922825,
+      "in_band": true
+    },
+    {
+      "iso3": "CHN",
+      "topic": "trust_government",
+      "sim_sd": 1.2661925183396487,
+      "survey_sd": 1.3,
+      "ratio": 0.9739942448766529,
+      "in_band": true
+    },
+    {
+      "iso3": "DEU",
+      "topic": "climate_concern",
+      "sim_sd": 1.1900664047908742,
+      "survey_sd": 1.1,
+      "ratio": 1.0818785498098855,
+      "in_band": true
+    },
+    {
+      "iso3": "DEU",
+      "topic": "conflict_worry",
+      "sim_sd": 1.0455994900350725,
+      "survey_sd": 1.0,
+      "ratio": 1.0455994900350725,
+      "in_band": true
+    },
+    {
+      "iso3": "DEU",
+      "topic": "economy_optimism",
+      "sim_sd": 0.9345202465353681,
+      "survey_sd": 1.0,
+      "ratio": 0.9345202465353681,
+      "in_band": true
+    },
+    {
+      "iso3": "DEU",
+      "topic": "inflation_worry",
+      "sim_sd": 1.1171591599433826,
+      "survey_sd": 1.1,
+      "ratio": 1.015599236312166,
+      "in_band": true
+    },
+    {
+      "iso3": "DEU",
+      "topic": "migration_openness",
+      "sim_sd": 1.3481628784668944,
+      "survey_sd": 1.3,
+      "ratio": 1.0370483680514573,
+      "in_band": true
+    },
+    {
+      "iso3": "DEU",
+      "topic": "spending_intent",
+      "sim_sd": 0.993843668684125,
+      "survey_sd": 0.9,
+      "ratio": 1.104270742982361,
+      "in_band": true
+    },
+    {
+      "iso3": "DEU",
+      "topic": "tech_optimism",
+      "sim_sd": 1.084071680253158,
+      "survey_sd": 1.0,
+      "ratio": 1.084071680253158,
+      "in_band": true
+    },
+    {
+      "iso3": "DEU",
+      "topic": "trust_government",
+      "sim_sd": 1.221051507002647,
+      "survey_sd": 1.2,
+      "ratio": 1.017542922502206,
+      "in_band": true
+    },
+    {
+      "iso3": "EGY",
+      "topic": "climate_concern",
+      "sim_sd": 1.1303590262074028,
+      "survey_sd": 1.1,
+      "ratio": 1.0275991147340025,
+      "in_band": true
+    },
+    {
+      "iso3": "EGY",
+      "topic": "conflict_worry",
+      "sim_sd": 1.0630236213681725,
+      "survey_sd": 1.0,
+      "ratio": 1.0630236213681725,
+      "in_band": true
+    },
+    {
+      "iso3": "EGY",
+      "topic": "economy_optimism",
+      "sim_sd": 0.9614335376148035,
+      "survey_sd": 1.0,
+      "ratio": 0.9614335376148035,
+      "in_band": true
+    },
+    {
+      "iso3": "EGY",
+      "topic": "inflation_worry",
+      "sim_sd": 1.0916968600237498,
+      "survey_sd": 1.1,
+      "ratio": 0.9924516909306815,
+      "in_band": true
+    },
+    {
+      "iso3": "EGY",
+      "topic": "migration_openness",
+      "sim_sd": 1.309593563587442,
+      "survey_sd": 1.3,
+      "ratio": 1.0073796642980324,
+      "in_band": true
+    },
+    {
+      "iso3": "EGY",
+      "topic": "spending_intent",
+      "sim_sd": 0.8654681347494467,
+      "survey_sd": 0.9,
+      "ratio": 0.9616312608327185,
+      "in_band": true
+    },
+    {
+      "iso3": "EGY",
+      "topic": "tech_optimism",
+      "sim_sd": 1.1099294969260436,
+      "survey_sd": 1.0,
+      "ratio": 1.1099294969260436,
+      "in_band": true
+    },
+    {
+      "iso3": "EGY",
+      "topic": "trust_government",
+      "sim_sd": 1.2479177134706665,
+      "survey_sd": 1.2,
+      "ratio": 1.039931427892222,
+      "in_band": true
+    },
+    {
+      "iso3": "FRA",
+      "topic": "climate_concern",
+      "sim_sd": 1.356019472863512,
+      "survey_sd": 1.2,
+      "ratio": 1.13001622738626,
+      "in_band": true
+    },
+    {
+      "iso3": "FRA",
+      "topic": "conflict_worry",
+      "sim_sd": 1.1660228263779493,
+      "survey_sd": 1.1,
+      "ratio": 1.0600207512526811,
+      "in_band": true
+    },
+    {
+      "iso3": "FRA",
+      "topic": "economy_optimism",
+      "sim_sd": 1.068811024854284,
+      "survey_sd": 1.1,
+      "ratio": 0.9716463862311672,
+      "in_band": true
+    },
+    {
+      "iso3": "FRA",
+      "topic": "inflation_worry",
+      "sim_sd": 1.2242067285455298,
+      "survey_sd": 1.2,
+      "ratio": 1.0201722737879415,
+      "in_band": true
+    },
+    {
+      "iso3": "FRA",
+      "topic": "migration_openness",
+      "sim_sd": 1.3969223111711118,
+      "survey_sd": 1.4,
+      "ratio": 0.9978016508365085,
+      "in_band": true
+    },
+    {
+      "iso3": "FRA",
+      "topic": "spending_intent",
+      "sim_sd": 1.042048201893326,
+      "survey_sd": 1.0,
+      "ratio": 1.042048201893326,
+      "in_band": true
+    },
+    {
+      "iso3": "FRA",
+      "topic": "tech_optimism",
+      "sim_sd": 1.2782889936783226,
+      "survey_sd": 1.1,
+      "ratio": 1.1620809033439294,
+      "in_band": true
+    },
+    {
+      "iso3": "FRA",
+      "topic": "trust_government",
+      "sim_sd": 1.333711405402804,
+      "survey_sd": 1.3,
+      "ratio": 1.0259318503098493,
+      "in_band": true
+    },
+    {
+      "iso3": "GBR",
+      "topic": "climate_concern",
+      "sim_sd": 1.0473404034340488,
+      "survey_sd": 1.0,
+      "ratio": 1.0473404034340488,
+      "in_band": true
+    },
+    {
+      "iso3": "GBR",
+      "topic": "conflict_worry",
+      "sim_sd": 1.0060623758713387,
+      "survey_sd": 0.9,
+      "ratio": 1.1178470843014874,
+      "in_band": true
+    },
+    {
+      "iso3": "GBR",
+      "topic": "economy_optimism",
+      "sim_sd": 0.8752946416058731,
+      "survey_sd": 0.9,
+      "ratio": 0.9725496017843034,
+      "in_band": true
+    },
+    {
+      "iso3": "GBR",
+      "topic": "inflation_worry",
+      "sim_sd": 1.0153940715617915,
+      "survey_sd": 1.0,
+      "ratio": 1.0153940715617915,
+      "in_band": true
+    },
+    {
+      "iso3": "GBR",
+      "topic": "migration_openness",
+      "sim_sd": 1.2544146708323844,
+      "survey_sd": 1.2,
+      "ratio": 1.0453455590269871,
+      "in_band": true
+    },
+    {
+      "iso3": "GBR",
+      "topic": "spending_intent",
+      "sim_sd": 0.8508313882254908,
+      "survey_sd": 0.8,
+      "ratio": 1.0635392352818633,
+      "in_band": true
+    },
+    {
+      "iso3": "GBR",
+      "topic": "tech_optimism",
+      "sim_sd": 0.9495286572899382,
+      "survey_sd": 0.9,
+      "ratio": 1.0550318414332647,
+      "in_band": true
+    },
+    {
+      "iso3": "GBR",
+      "topic": "trust_government",
+      "sim_sd": 1.1389334543493606,
+      "survey_sd": 1.1,
+      "ratio": 1.0353940494085094,
+      "in_band": true
+    },
+    {
+      "iso3": "IDN",
+      "topic": "climate_concern",
+      "sim_sd": 1.0305596356834472,
+      "survey_sd": 1.0,
+      "ratio": 1.0305596356834472,
+      "in_band": true
+    },
+    {
+      "iso3": "IDN",
+      "topic": "conflict_worry",
+      "sim_sd": 0.9007867464018221,
+      "survey_sd": 0.9,
+      "ratio": 1.0008741626686912,
+      "in_band": true
+    },
+    {
+      "iso3": "IDN",
+      "topic": "economy_optimism",
+      "sim_sd": 0.9719013133995819,
+      "survey_sd": 0.9,
+      "ratio": 1.0798903482217577,
+      "in_band": true
+    },
+    {
+      "iso3": "IDN",
+      "topic": "inflation_worry",
+      "sim_sd": 1.0090286199921257,
+      "survey_sd": 1.0,
+      "ratio": 1.0090286199921257,
+      "in_band": true
+    },
+    {
+      "iso3": "IDN",
+      "topic": "migration_openness",
+      "sim_sd": 1.2028906863403201,
+      "survey_sd": 1.2,
+      "ratio": 1.0024089052836003,
+      "in_band": true
+    },
+    {
+      "iso3": "IDN",
+      "topic": "spending_intent",
+      "sim_sd": 0.7808545263553971,
+      "survey_sd": 0.8,
+      "ratio": 0.9760681579442463,
+      "in_band": true
+    },
+    {
+      "iso3": "IDN",
+      "topic": "tech_optimism",
+      "sim_sd": 0.9774803965599042,
+      "survey_sd": 0.9,
+      "ratio": 1.0860893295110046,
+      "in_band": true
+    },
+    {
+      "iso3": "IDN",
+      "topic": "trust_government",
+      "sim_sd": 1.0738945688682588,
+      "survey_sd": 1.1,
+      "ratio": 0.9762677898802352,
+      "in_band": true
+    },
+    {
+      "iso3": "IND",
+      "topic": "climate_concern",
+      "sim_sd": 1.1411545114698323,
+      "survey_sd": 1.1,
+      "ratio": 1.037413192245302,
+      "in_band": true
+    },
+    {
+      "iso3": "IND",
+      "topic": "conflict_worry",
+      "sim_sd": 1.0170289836650952,
+      "survey_sd": 1.0,
+      "ratio": 1.0170289836650952,
+      "in_band": true
+    },
+    {
+      "iso3": "IND",
+      "topic": "economy_optimism",
+      "sim_sd": 1.0302395720973183,
+      "survey_sd": 1.0,
+      "ratio": 1.0302395720973183,
+      "in_band": true
+    },
+    {
+      "iso3": "IND",
+      "topic": "inflation_worry",
+      "sim_sd": 1.1387399039285586,
+      "survey_sd": 1.1,
+      "ratio": 1.0352180944805078,
+      "in_band": true
+    },
+    {
+      "iso3": "IND",
+      "topic": "migration_openness",
+      "sim_sd": 1.3311381227236958,
+      "survey_sd": 1.3,
+      "ratio": 1.0239524020951505,
+      "in_band": true
+    },
+    {
+      "iso3": "IND",
+      "topic": "spending_intent",
+      "sim_sd": 0.9142936658833545,
+      "survey_sd": 0.9,
+      "ratio": 1.0158818509815049,
+      "in_band": true
+    },
+    {
+      "iso3": "IND",
+      "topic": "tech_optimism",
+      "sim_sd": 1.036578197848655,
+      "survey_sd": 1.0,
+      "ratio": 1.036578197848655,
+      "in_band": true
+    },
+    {
+      "iso3": "IND",
+      "topic": "trust_government",
+      "sim_sd": 1.2395005071030585,
+      "survey_sd": 1.2,
+      "ratio": 1.0329170892525488,
+      "in_band": true
+    },
+    {
+      "iso3": "ISR",
+      "topic": "climate_concern",
+      "sim_sd": 1.026598909703732,
+      "survey_sd": 1.0,
+      "ratio": 1.026598909703732,
+      "in_band": true
+    },
+    {
+      "iso3": "ISR",
+      "topic": "conflict_worry",
+      "sim_sd": 0.8586677390498723,
+      "survey_sd": 0.9,
+      "ratio": 0.9540752656109691,
+      "in_band": true
+    },
+    {
+      "iso3": "ISR",
+      "topic": "economy_optimism",
+      "sim_sd": 0.9161885364321463,
+      "survey_sd": 0.9,
+      "ratio": 1.0179872627023847,
+      "in_band": true
+    },
+    {
+      "iso3": "ISR",
+      "topic": "inflation_worry",
+      "sim_sd": 1.1017195124618908,
+      "survey_sd": 1.0,
+      "ratio": 1.1017195124618908,
+      "in_band": true
+    },
+    {
+      "iso3": "ISR",
+      "topic": "migration_openness",
+      "sim_sd": 1.3597918007450147,
+      "survey_sd": 1.2,
+      "ratio": 1.133159833954179,
+      "in_band": true
+    },
+    {
+      "iso3": "ISR",
+      "topic": "spending_intent",
+      "sim_sd": 0.8104201126449815,
+      "survey_sd": 0.8,
+      "ratio": 1.0130251408062267,
+      "in_band": true
+    },
+    {
+      "iso3": "ISR",
+      "topic": "tech_optimism",
+      "sim_sd": 0.9559517935902379,
+      "survey_sd": 0.9,
+      "ratio": 1.0621686595447086,
+      "in_band": true
+    },
+    {
+      "iso3": "ISR",
+      "topic": "trust_government",
+      "sim_sd": 1.0470989040574377,
+      "survey_sd": 1.1,
+      "ratio": 0.9519080945976706,
+      "in_band": true
+    },
+    {
+      "iso3": "JPN",
+      "topic": "climate_concern",
+      "sim_sd": 1.0265058091053523,
+      "survey_sd": 1.0,
+      "ratio": 1.0265058091053523,
+      "in_band": true
+    },
+    {
+      "iso3": "JPN",
+      "topic": "conflict_worry",
+      "sim_sd": 0.9260836523591424,
+      "survey_sd": 0.9,
+      "ratio": 1.0289818359546026,
+      "in_band": true
+    },
+    {
+      "iso3": "JPN",
+      "topic": "economy_optimism",
+      "sim_sd": 0.9700537152136433,
+      "survey_sd": 0.9,
+      "ratio": 1.0778374613484925,
+      "in_band": true
+    },
+    {
+      "iso3": "JPN",
+      "topic": "inflation_worry",
+      "sim_sd": 0.9986170234035212,
+      "survey_sd": 1.0,
+      "ratio": 0.9986170234035212,
+      "in_band": true
+    },
+    {
+      "iso3": "JPN",
+      "topic": "migration_openness",
+      "sim_sd": 1.2362250859201602,
+      "survey_sd": 1.2,
+      "ratio": 1.0301875716001336,
+      "in_band": true
+    },
+    {
+      "iso3": "JPN",
+      "topic": "spending_intent",
+      "sim_sd": 0.8484235869294715,
+      "survey_sd": 0.8,
+      "ratio": 1.0605294836618393,
+      "in_band": true
+    },
+    {
+      "iso3": "JPN",
+      "topic": "tech_optimism",
+      "sim_sd": 0.9315382794236045,
+      "survey_sd": 0.9,
+      "ratio": 1.0350425326928938,
+      "in_band": true
+    },
+    {
+      "iso3": "JPN",
+      "topic": "trust_government",
+      "sim_sd": 1.1373769211957097,
+      "survey_sd": 1.1,
+      "ratio": 1.033979019268827,
+      "in_band": true
+    },
+    {
+      "iso3": "KEN",
+      "topic": "climate_concern",
+      "sim_sd": 1.0091397801230757,
+      "survey_sd": 1.0,
+      "ratio": 1.0091397801230757,
+      "in_band": true
+    },
+    {
+      "iso3": "KEN",
+      "topic": "conflict_worry",
+      "sim_sd": 0.9479202639451868,
+      "survey_sd": 0.9,
+      "ratio": 1.053244737716874,
+      "in_band": true
+    },
+    {
+      "iso3": "KEN",
+      "topic": "economy_optimism",
+      "sim_sd": 0.749523535470567,
+      "survey_sd": 0.9,
+      "ratio": 0.83280392830063,
+      "in_band": true
+    },
+    {
+      "iso3": "KEN",
+      "topic": "inflation_worry",
+      "sim_sd": 1.0380322200537972,
+      "survey_sd": 1.0,
+      "ratio": 1.0380322200537972,
+      "in_band": true
+    },
+    {
+      "iso3": "KEN",
+      "topic": "migration_openness",
+      "sim_sd": 1.0639367927504695,
+      "survey_sd": 1.2,
+      "ratio": 0.8866139939587246,
+      "in_band": true
+    },
+    {
+      "iso3": "KEN",
+      "topic": "spending_intent",
+      "sim_sd": 0.792570420862227,
+      "survey_sd": 0.8,
+      "ratio": 0.9907130260777837,
+      "in_band": true
+    },
+    {
+      "iso3": "KEN",
+      "topic": "tech_optimism",
+      "sim_sd": 0.8817281475553043,
+      "survey_sd": 0.9,
+      "ratio": 0.9796979417281159,
+      "in_band": true
+    },
+    {
+      "iso3": "KEN",
+      "topic": "trust_government",
+      "sim_sd": 1.0049945613467857,
+      "survey_sd": 1.1,
+      "ratio": 0.9136314194061688,
+      "in_band": true
+    },
+    {
+      "iso3": "MEX",
+      "topic": "climate_concern",
+      "sim_sd": 1.2325437421893959,
+      "survey_sd": 1.2,
+      "ratio": 1.02711978515783,
+      "in_band": true
+    },
+    {
+      "iso3": "MEX",
+      "topic": "conflict_worry",
+      "sim_sd": 1.0576909283387124,
+      "survey_sd": 1.1,
+      "ratio": 0.9615372075806475,
+      "in_band": true
+    },
+    {
+      "iso3": "MEX",
+      "topic": "economy_optimism",
+      "sim_sd": 1.1295981046620338,
+      "survey_sd": 1.1,
+      "ratio": 1.0269073678745761,
+      "in_band": true
+    },
+    {
+      "iso3": "MEX",
+      "topic": "inflation_worry",
+      "sim_sd": 1.1763971721043418,
+      "survey_sd": 1.2,
+      "ratio": 0.9803309767536182,
+      "in_band": true
+    },
+    {
+      "iso3": "MEX",
+      "topic": "migration_openness",
+      "sim_sd": 1.373333742900647,
+      "survey_sd": 1.4,
+      "ratio": 0.9809526735004621,
+      "in_band": true
+    },
+    {
+      "iso3": "MEX",
+      "topic": "spending_intent",
+      "sim_sd": 1.0093246839070058,
+      "survey_sd": 1.0,
+      "ratio": 1.0093246839070058,
+      "in_band": true
+    },
+    {
+      "iso3": "MEX",
+      "topic": "tech_optimism",
+      "sim_sd": 1.1756963195615677,
+      "survey_sd": 1.1,
+      "ratio": 1.0688148359650615,
+      "in_band": true
+    },
+    {
+      "iso3": "MEX",
+      "topic": "trust_government",
+      "sim_sd": 1.2710967908605881,
+      "survey_sd": 1.3,
+      "ratio": 0.9777667622004523,
+      "in_band": true
+    },
+    {
+      "iso3": "NGA",
+      "topic": "climate_concern",
+      "sim_sd": 1.1673543058845925,
+      "survey_sd": 1.2,
+      "ratio": 0.9727952549038271,
+      "in_band": true
+    },
+    {
+      "iso3": "NGA",
+      "topic": "conflict_worry",
+      "sim_sd": 1.148206615569319,
+      "survey_sd": 1.1,
+      "ratio": 1.043824195972108,
+      "in_band": true
+    },
+    {
+      "iso3": "NGA",
+      "topic": "economy_optimism",
+      "sim_sd": 1.1382887323500963,
+      "survey_sd": 1.1,
+      "ratio": 1.0348079385000875,
+      "in_band": true
+    },
+    {
+      "iso3": "NGA",
+      "topic": "inflation_worry",
+      "sim_sd": 1.207121712042836,
+      "survey_sd": 1.2,
+      "ratio": 1.0059347600356967,
+      "in_band": true
+    },
+    {
+      "iso3": "NGA",
+      "topic": "migration_openness",
+      "sim_sd": 1.4287334177513857,
+      "survey_sd": 1.4,
+      "ratio": 1.0205238698224184,
+      "in_band": true
+    },
+    {
+      "iso3": "NGA",
+      "topic": "spending_intent",
+      "sim_sd": 1.0543639917240102,
+      "survey_sd": 1.0,
+      "ratio": 1.0543639917240102,
+      "in_band": true
+    },
+    {
+      "iso3": "NGA",
+      "topic": "tech_optimism",
+      "sim_sd": 1.1664963835831794,
+      "survey_sd": 1.1,
+      "ratio": 1.0604512578028904,
+      "in_band": true
+    },
+    {
+      "iso3": "NGA",
+      "topic": "trust_government",
+      "sim_sd": 1.2743998968370778,
+      "survey_sd": 1.3,
+      "ratio": 0.9803076129515983,
+      "in_band": true
+    },
+    {
+      "iso3": "TUR",
+      "topic": "climate_concern",
+      "sim_sd": 1.1216580271098127,
+      "survey_sd": 1.2,
+      "ratio": 0.9347150225915106,
+      "in_band": true
+    },
+    {
+      "iso3": "TUR",
+      "topic": "conflict_worry",
+      "sim_sd": 1.0377913507409264,
+      "survey_sd": 1.1,
+      "ratio": 0.9434466824917512,
+      "in_band": true
+    },
+    {
+      "iso3": "TUR",
+      "topic": "economy_optimism",
+      "sim_sd": 1.0975928480656176,
+      "survey_sd": 1.1,
+      "ratio": 0.9978116800596523,
+      "in_band": true
+    },
+    {
+      "iso3": "TUR",
+      "topic": "inflation_worry",
+      "sim_sd": 1.3807732812246918,
+      "survey_sd": 1.2,
+      "ratio": 1.1506444010205765,
+      "in_band": true
+    },
+    {
+      "iso3": "TUR",
+      "topic": "migration_openness",
+      "sim_sd": 1.4318861242518948,
+      "survey_sd": 1.4,
+      "ratio": 1.0227758030370677,
+      "in_band": true
+    },
+    {
+      "iso3": "TUR",
+      "topic": "spending_intent",
+      "sim_sd": 1.0052758115754408,
+      "survey_sd": 1.0,
+      "ratio": 1.0052758115754408,
+      "in_band": true
+    },
+    {
+      "iso3": "TUR",
+      "topic": "tech_optimism",
+      "sim_sd": 1.1242038245346384,
+      "survey_sd": 1.1,
+      "ratio": 1.0220034768496713,
+      "in_band": true
+    },
+    {
+      "iso3": "TUR",
+      "topic": "trust_government",
+      "sim_sd": 1.2995931949878003,
+      "survey_sd": 1.3,
+      "ratio": 0.9996870730675387,
+      "in_band": true
+    },
+    {
+      "iso3": "USA",
+      "topic": "climate_concern",
+      "sim_sd": 1.1446385369335714,
+      "survey_sd": 1.2,
+      "ratio": 0.9538654474446429,
+      "in_band": true
+    },
+    {
+      "iso3": "USA",
+      "topic": "conflict_worry",
+      "sim_sd": 1.1552921985107611,
+      "survey_sd": 1.1,
+      "ratio": 1.0502656350097828,
+      "in_band": true
+    },
+    {
+      "iso3": "USA",
+      "topic": "economy_optimism",
+      "sim_sd": 1.1292405313188059,
+      "survey_sd": 1.1,
+      "ratio": 1.0265823011989144,
+      "in_band": true
+    },
+    {
+      "iso3": "USA",
+      "topic": "inflation_worry",
+      "sim_sd": 1.1784852174784637,
+      "survey_sd": 1.2,
+      "ratio": 0.9820710145653865,
+      "in_band": true
+    },
+    {
+      "iso3": "USA",
+      "topic": "migration_openness",
+      "sim_sd": 1.4671789888118094,
+      "survey_sd": 1.4,
+      "ratio": 1.0479849920084354,
+      "in_band": true
+    },
+    {
+      "iso3": "USA",
+      "topic": "spending_intent",
+      "sim_sd": 1.0413245496455896,
+      "survey_sd": 1.0,
+      "ratio": 1.0413245496455896,
+      "in_band": true
+    },
+    {
+      "iso3": "USA",
+      "topic": "tech_optimism",
+      "sim_sd": 1.1541623729551609,
+      "survey_sd": 1.1,
+      "ratio": 1.049238520868328,
+      "in_band": true
+    },
+    {
+      "iso3": "USA",
+      "topic": "trust_government",
+      "sim_sd": 1.313946334736621,
+      "survey_sd": 1.3,
+      "ratio": 1.0107279497974007,
+      "in_band": true
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "climate_concern",
+      "sim_sd": 1.0663614182396575,
+      "survey_sd": 1.1,
+      "ratio": 0.9694194711269613,
+      "in_band": true
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "conflict_worry",
+      "sim_sd": 1.0793319374425379,
+      "survey_sd": 1.0,
+      "ratio": 1.0793319374425379,
+      "in_band": true
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "economy_optimism",
+      "sim_sd": 0.8965489329009908,
+      "survey_sd": 1.0,
+      "ratio": 0.8965489329009908,
+      "in_band": true
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "inflation_worry",
+      "sim_sd": 1.2111595346970185,
+      "survey_sd": 1.1,
+      "ratio": 1.1010541224518349,
+      "in_band": true
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "migration_openness",
+      "sim_sd": 1.464257720334222,
+      "survey_sd": 1.3,
+      "ratio": 1.126352092564786,
+      "in_band": true
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "spending_intent",
+      "sim_sd": 0.7562414853852343,
+      "survey_sd": 0.9,
+      "ratio": 0.8402683170947047,
+      "in_band": true
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "tech_optimism",
+      "sim_sd": 0.9230710723500571,
+      "survey_sd": 1.0,
+      "ratio": 0.9230710723500571,
+      "in_band": true
+    },
+    {
+      "iso3": "ZAF",
+      "topic": "trust_government",
+      "sim_sd": 1.1990721853873303,
+      "survey_sd": 1.2,
+      "ratio": 0.9992268211561086,
+      "in_band": true
+    }
+  ],
+  "experimental": [],
+  "ledger": {
+    "root": "212a1e623734c7f330be988c4f9a6193d21411ff5436e648303fa9db26c11973",
+    "leaf_count": 15,
+    "record_hash": "4dc2a50d0203673a4f3ecd2a24c704ce3fa4f040f8856f4f62a34cf3ec8586c9",
+    "anchor": "not_anchored",
+    "anchored_at": null
+  },
+  "budget": { "nightly_budget_usd": 25.0, "spent_usd": 0.002502317999999998 },
+  "settings_used": {
+    "assimilation": "kalman",
+    "kalman_walk_sd_logit": 0.05,
+    "kalman_prior_sd_logit": 1.0,
+    "poll_error_factor": 2.0,
+    "step_cap_logit": 0.5,
+    "anchor_pull": 0.05,
+    "spread_band": [0.8, 1.2],
+    "daily_forecast_members": 5,
+    "plain_llm_samples": 5,
+    "headlines_per_question": 8
+  }
+}

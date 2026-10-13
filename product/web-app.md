@@ -23,7 +23,7 @@ Product and proof layer ([decision 0011](../research/decisions/0011-consumer-pro
 | `/track-record` | product | yes | [track record](track-record.md) |
 | `/developers` | product | yes, to make keys | [developer](developer.md) |
 | `/welcome`, `/settings`, `/sign-in` | account | `/sign-in` no; others yes | [onboarding](onboarding.md), [accounts](accounts.md) |
-| `/world`, `/cycle`, `/scores`, `/receipts`, `/research`, `/questions/{id}`, `/docs`, `/acceptable-use` | proof | no | [world page](world-page.md), [receipts](receipts.md), [research](research.md), [question](question.md), this spec |
+| `/world`, `/cycle`, `/scores`, `/receipts`, `/research`, `/questions/{id}`, `/docs`, `/acceptable-use` | proof | no | [world page](world-page.md), [cycle page](cycle.md), [receipts](receipts.md), [research](research.md), [question](question.md), this spec |
 
 A page that needs sign-in shows its own one-line reason and "Sign in" to a signed-out visitor, never a redirect to a wall; after sign-in the visitor returns to that page.
 

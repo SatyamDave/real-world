@@ -1,0 +1,117 @@
+{
+  "date": "2026-10-05",
+  "forecasts": [
+    {
+      "question_id": "fx-afr-migration-quota",
+      "question": "FIXTURE: Will South Africa, Kenya or Nigeria announce an illustrative increase in skilled-migration visas by 2026-10-26?",
+      "forecaster": "plain_llm",
+      "committed": 0.4133,
+      "replayed": 0.4133,
+      "low": null,
+      "high": null,
+      "diff": 0.0,
+      "matches": true
+    },
+    {
+      "question_id": "fx-afr-migration-quota",
+      "question": "FIXTURE: Will South Africa, Kenya or Nigeria announce an illustrative increase in skilled-migration visas by 2026-10-26?",
+      "forecaster": "sim",
+      "committed": 0.4642,
+      "replayed": 0.4642,
+      "low": 0.4574540489608236,
+      "high": 0.46887135268898644,
+      "diff": 0.0,
+      "matches": true
+    },
+    {
+      "question_id": "fx-bra-mex-retail",
+      "question": "FIXTURE: Will illustrative September retail sales rise month on month in both Brazil and Mexico, as reported by 2026-10-12?",
+      "forecaster": "plain_llm",
+      "committed": 0.6668,
+      "replayed": 0.6668,
+      "low": null,
+      "high": null,
+      "diff": 0.0,
+      "matches": true
+    },
+    {
+      "question_id": "fx-bra-mex-retail",
+      "question": "FIXTURE: Will illustrative September retail sales rise month on month in both Brazil and Mexico, as reported by 2026-10-12?",
+      "forecaster": "sim",
+      "committed": 0.5151,
+      "replayed": 0.5151,
+      "low": 0.5150998264908717,
+      "high": 0.5249578066230675,
+      "diff": 0.0,
+      "matches": true
+    },
+    {
+      "question_id": "fx-ind-idn-fuel-price",
+      "question": "FIXTURE: Will the illustrative regulated petrol price rise in India or Indonesia by 2026-10-16?",
+      "forecaster": "plain_llm",
+      "committed": 0.8441,
+      "replayed": 0.8441,
+      "low": null,
+      "high": null,
+      "diff": 0.0,
+      "matches": true
+    },
+    {
+      "question_id": "fx-ind-idn-fuel-price",
+      "question": "FIXTURE: Will the illustrative regulated petrol price rise in India or Indonesia by 2026-10-16?",
+      "forecaster": "sim",
+      "committed": 0.4565,
+      "replayed": 0.4565,
+      "low": 0.4558850772036785,
+      "high": 0.45949402140286577,
+      "diff": 0.0,
+      "matches": true
+    },
+    {
+      "question_id": "fx-mena-ceasefire",
+      "question": "FIXTURE: Will the illustrative regional ceasefire announced in September still hold on 2026-10-29?",
+      "forecaster": "plain_llm",
+      "committed": 0.6397,
+      "replayed": 0.6397,
+      "low": null,
+      "high": null,
+      "diff": 0.0,
+      "matches": true
+    },
+    {
+      "question_id": "fx-mena-ceasefire",
+      "question": "FIXTURE: Will the illustrative regional ceasefire announced in September still hold on 2026-10-29?",
+      "forecaster": "sim",
+      "committed": 0.4544,
+      "replayed": 0.4544,
+      "low": 0.45365708862094334,
+      "high": 0.46954141000810523,
+      "diff": 0.0,
+      "matches": true
+    },
+    {
+      "question_id": "fx-tur-confidence-vote",
+      "question": "FIXTURE: Will the illustrative Turkish government survive a parliamentary confidence vote held by 2026-10-21?",
+      "forecaster": "plain_llm",
+      "committed": 0.6931,
+      "replayed": 0.6931,
+      "low": null,
+      "high": null,
+      "diff": 0.0,
+      "matches": true
+    },
+    {
+      "question_id": "fx-tur-confidence-vote",
+      "question": "FIXTURE: Will the illustrative Turkish government survive a parliamentary confidence vote held by 2026-10-21?",
+      "forecaster": "sim",
+      "committed": 0.4405,
+      "replayed": 0.4405,
+      "low": 0.4236037200050262,
+      "high": 0.4693255395999741,
+      "diff": 0.0,
+      "matches": true
+    }
+  ],
+  "calls_used": 124,
+  "missing": []
+}

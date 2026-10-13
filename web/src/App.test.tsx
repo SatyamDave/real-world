@@ -449,6 +449,21 @@ test("an unknown path renders not found, not the home page", async () => {
   expect(el.textContent).not.toContain("Don't ask a model");
 });
 
+test("every internal header and footer link opens a page", async () => {
+  const el = await render(<App path="/" />);
+  const hrefs = [...el.querySelectorAll("header nav a, footer nav a")]
+    .map((a) => a.getAttribute("href") ?? "")
+    .filter((h) => h.startsWith("/"));
+  expect(hrefs).toEqual(expect.arrayContaining(["/cycle", "/research", "/world", "/scores"]));
+  for (const href of hrefs) {
+    el.replaceChildren();
+    container.remove();
+    container = document.body.appendChild(document.createElement("div"));
+    const page = await render(<App path={href} />);
+    expect(page.textContent, href).not.toContain("Page not found");
+  }
+});
+
 test.each(["/", "/receipts", "/fork/x", "/nothing-here"])("%s has the footer", async (path) => {
   const el = await render(<App path={path} />);
   const links = [...el.querySelectorAll("footer nav a")].map((a) => a.textContent);
