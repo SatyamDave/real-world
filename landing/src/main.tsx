@@ -1,5 +1,5 @@
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 import { App } from "./App";
 import { initAfterPaint, setHeadlineVariant, track } from "./analytics";
 import { resolveHeadline } from "./copy/headlines";
@@ -15,11 +15,15 @@ setHeadlineVariant(headline.id);
 const root = document.getElementById("root");
 if (!root) throw new Error("index.html has no #root element");
 
-createRoot(root).render(
+const app = (
   <StrictMode>
     <App headline={headline} path={window.location.pathname} />
-  </StrictMode>,
+  </StrictMode>
 );
+// The build pre-renders the home page into index.html (scripts/prerender.mjs); hydrate it when
+// it is there, and render from scratch on the other routes and in dev.
+if (root.hasChildNodes()) hydrateRoot(root, app);
+else createRoot(root).render(app);
 
 track("landing_viewed", {
   path: window.location.pathname,
