@@ -11,7 +11,9 @@
     "gen:poster": "python3 scripts/gen_globe_poster.py",
     "e2e": "playwright test",
     "check:bundle": "node scripts/check-bundle.mjs",
-    "ads": "node scripts/make-ads.mjs"
+    "ads": "node scripts/make-ads.mjs",
+    "build:staging": "node scripts/build.mjs staging",
+    "build:prod": "node scripts/build.mjs production"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "2.47.2",

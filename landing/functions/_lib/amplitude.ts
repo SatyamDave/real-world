@@ -16,7 +16,13 @@ export async function sendEvent(
   e: ServerEvent,
   doFetch: typeof fetch,
   now: Date,
+  environment = "production",
 ): Promise<void> {
+  // Local dev logs to the console and never sends, so dev cannot pollute a project.
+  if (environment === "development") {
+    console.debug("[amplitude:dev]", e.event_type, { signup_id: e.signup_id, ...e.props });
+    return;
+  }
   if (!apiKey) return;
   try {
     await doFetch(URL_V2, {
@@ -33,6 +39,7 @@ export async function sendEvent(
             device_id: e.device_id ?? undefined,
             time: now.getTime(),
             event_properties: {
+              environment,
               signup_id: e.signup_id,
               headline_variant: e.headline_variant ?? "unknown",
               ...e.props,

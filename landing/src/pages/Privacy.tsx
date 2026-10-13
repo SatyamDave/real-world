@@ -1,5 +1,5 @@
 import { BRAND } from "../brand";
-import { CONSENT_VERSION } from "../copy/consent";
+import { CONSENT_VERSION, PRIVACY_UPDATED } from "../copy/consent";
 import { DraftBanner } from "./DraftBanner";
 
 // Written from what the code does (landing/functions, landing/analytics/TRACKING_PLAN.md).
@@ -10,7 +10,8 @@ export function Privacy() {
       <DraftBanner />
       <h1>Privacy</h1>
       <p className="legal-meta">
-        Version {CONSENT_VERSION}. This page is for people in the United States.
+        Updated {PRIVACY_UPDATED}. Consent line version {CONSENT_VERSION}. This page is for people
+        in the United States and is not meant for children under 13.
       </p>
       <p>
         {BRAND.name} is a daily, public, scored forecast of the world. This page is the waitlist for
@@ -22,7 +23,8 @@ export function Privacy() {
       <ul>
         <li>
           <strong>Your email address</strong>, when you join the waitlist, and the version of the
-          consent line you saw ({CONSENT_VERSION}).
+          consent line you saw ({CONSENT_VERSION}). We save it with the time, the page you joined
+          from, the random device id described below, and your country.
         </li>
         <li>
           <strong>Where you came from:</strong> the ad or link you clicked (the utm values in the
@@ -37,13 +39,16 @@ export function Privacy() {
         </li>
         <li>
           <strong>Your answers</strong> to the forecast question and the role question in the form
-          that follows signup.
+          that follows signup. Typeform keeps them and sends them to us, and we save them with your
+          signup. Typeform may also set its own cookies.
         </li>
         <li>
           <strong>How you use this page,</strong> through Amplitude: page views, clicks, scroll
-          sections and form steps, tied to a random device id. For a sample of visits Amplitude also
-          records a replay of the session. Text you type, including your email, is masked in the
-          replay.
+          sections and form steps, tied to a random device id that Amplitude keeps in your browser
+          (a cookie or local storage). When you join, our server also sends Amplitude that a signup
+          happened, with the same device id and a random signup id, never your email. For a sample
+          of visits Amplitude also records a replay of the session. Text you type, including your
+          email, is masked in the replay.
         </li>
         <li>
           <strong>Ad measurement,</strong> only when we are running ads: the Reddit and X pixels
@@ -54,8 +59,11 @@ export function Privacy() {
 
       <h2>Who handles it</h2>
       <ul>
-        <li>Cloudflare serves the page, checks for bots and runs the signup code.</li>
-        <li>Neon stores the waitlist.</li>
+        <li>
+          Cloudflare serves the page, checks for bots (Turnstile, which loads when you click into
+          the email field) and runs the signup code.
+        </li>
+        <li>Neon, a database provider in the United States, stores the waitlist.</li>
         <li>Amplitude records usage and session replays.</li>
         <li>Typeform runs the form with the forecast and role questions.</li>
         <li>Reddit and X receive pixel events when their pixels are on.</li>

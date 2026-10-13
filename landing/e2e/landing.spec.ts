@@ -181,6 +181,11 @@ test.describe("legal pages", () => {
       expect(text).toContain(name);
     }
     expect(text).toContain("We do not sell your data.");
+    // What the code really stores and sends, so the page cannot drift from it.
+    expect(text).toContain("random device id");
+    expect(text).toContain("local storage");
+    expect(text).toContain("Typeform keeps them");
+    expect(text).toContain("not meant for children under 13");
   });
 
   test("terms say AI-simulated and no betting", async ({ page }) => {
@@ -196,6 +201,15 @@ test.describe("accessibility (axe, WCAG 2.1 A and AA)", () => {
     test(`${path} has no violations`, async ({ page }) => {
       await page.goto(path);
       await page.waitForTimeout(500);
+      // The anchored chips fade in on a timer; axe must not measure contrast mid-fade.
+      await page.evaluate(() =>
+        Promise.all(
+          document
+            .getAnimations()
+            .filter((a) => a.effect?.getComputedTiming().iterations !== Number.POSITIVE_INFINITY)
+            .map((a) => a.finished.catch(() => undefined)),
+        ),
+      );
       const results = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
         .analyze();
