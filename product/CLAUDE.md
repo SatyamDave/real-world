@@ -7,6 +7,8 @@
 - One spec per surface: `product/<surface>.md`. The launch surfaces are the daily question, the receipts page, the fork card and `POST /v1/simulate`; see `research/lenses/cpo.md`. A new surface needs a decision record first.
 - A field, endpoint or event is defined once, in the JSON Schema the code generates from. Specs link it; they never restate it in prose.
 - A term is defined once. Before using a word like agent-step, world snapshot, fork, ensemble member, receipt, skill or coverage tier, check how the existing specs define it, and reuse that definition.
+- `glossary.md` is the one list of terms; its `Do not write` column names the synonyms `scripts/check_glossary.py` refuses on every user-facing surface. Add a synonym there when a surface used it, with the PR in the rules log.
+- `design.md` is the one look; a spec's copy and states follow it and do not restate it.
 
 ## A great spec
 

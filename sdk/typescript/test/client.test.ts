@@ -12,7 +12,7 @@ function recording(responses: (() => Response)[]) {
     seen.push(new Request(input, init));
     return responses[seen.length - 1]();
   };
-  return { client: new Client("http://test", fetcher), seen };
+  return { client: new Client("http://test", { fetch: fetcher }), seen };
 }
 
 const json = (status: number, body: unknown) => () =>
@@ -45,6 +45,18 @@ describe("simulate", () => {
     expect(await first.json()).toEqual(EVENT);
   });
 
+  it("sends an api key as a bearer token, and none without one", async () => {
+    const seen: Request[] = [];
+    const fetcher = async (input: RequestInfo | URL, init?: RequestInit) => {
+      seen.push(new Request(input, init));
+      return json(202, CREATED)();
+    };
+    await new Client("http://test", { fetch: fetcher, apiKey: "rw_abc" }).simulate(EVENT);
+    await new Client("http://test", { fetch: fetcher }).simulate(EVENT);
+    expect(seen[0].headers.get("Authorization")).toBe("Bearer rw_abc");
+    expect(seen[1].headers.get("Authorization")).toBeNull();
+  });
+
   it("sends the given idempotency key", async () => {
     const { client, seen } = recording([json(202, CREATED)]);
     await client.simulate(EVENT, "k-1");
@@ -61,7 +73,29 @@ describe("simulate", () => {
     expect(err).toBeInstanceOf(ApiError);
     expect(err.status).toBe(402);
     expect(err.body).toEqual({ detail: "over cap" });
-    expect(err.message).toMatch(/402.*over cap/);
+    expect(err.detail).toBe("over cap");
+    expect(err.code).toBeUndefined();
+    expect(err.message).toBe('402: {"detail":"over cap"}');
+  });
+
+  it("keeps a body that is not JSON as text", async () => {
+    const { client } = recording([() => new Response("bad gateway", { status: 502 })]);
+    const err = await client.world().catch((e) => e);
+    expect(err.body).toBe("bad gateway");
+    expect(err.message).toBe("502: bad gateway");
+  });
+
+  it("retries a connection error once and no more", async () => {
+    const drop = () => {
+      throw new TypeError("refused");
+    };
+    const ok = json(200, {});
+    const first = recording([drop, ok]);
+    await first.client.scores();
+    expect(first.seen).toHaveLength(2);
+    const second = recording([drop, drop, drop]);
+    await expect(second.client.scores()).rejects.toThrow("refused");
+    expect(second.seen).toHaveLength(2);
   });
 });
 
@@ -88,5 +122,24 @@ describe("events", () => {
       for await (const _ of client.events("job_1"));
     };
     await expect(drain()).rejects.toThrow("connection dropped");
+  });
+});
+
+describe("events errors", () => {
+  it("sends the key and version and rejects with the parsed body", async () => {
+    const seen: Request[] = [];
+    const fetcher = async (input: RequestInfo | URL, init?: RequestInit) => {
+      seen.push(new Request(input, init));
+      return json(404, { detail: "no fork job_1" })();
+    };
+    const client = new Client("http://test", { fetch: fetcher, apiKey: "rw_abc" });
+    const err = await client
+      .events("job_1")
+      .next()
+      .catch((e) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err.body).toEqual({ detail: "no fork job_1" });
+    expect(seen[0].headers.get("Authorization")).toBe("Bearer rw_abc");
+    expect(seen[0].headers.get("Real-World-Version")).toBe(API_VERSION);
   });
 });

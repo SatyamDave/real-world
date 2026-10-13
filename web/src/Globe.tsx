@@ -1,21 +1,40 @@
 import type { Country } from "@real-world/sdk";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactGlobe, { type GlobeMethods } from "react-globe.gl";
-import { pct, topicLabel } from "./App";
+import { pct, prefersReducedMotion, topicLabel } from "./App";
 
 interface Feature {
   properties: { iso3: string; name: string };
 }
 
-const dark = () => matchMedia("(prefers-color-scheme: dark)").matches;
+type Palette = Record<"paper2" | "accent" | "clay" | "line" | "ink", string>;
 
-const LOW = { light: [199, 210, 254], dark: [58, 50, 150] };
-const HIGH = { light: [49, 40, 160], dark: [199, 210, 254] };
-
-function shade(share: number, theme: "light" | "dark") {
-  const [lo, hi] = [LOW[theme], HIGH[theme]];
-  return `rgb(${lo.map((c, i) => Math.round(c + (hi[i] - c) * share)).join(",")})`;
+// The globe draws in WebGL, so it reads the colour tokens instead of inheriting them.
+function palette(): Palette {
+  const css = getComputedStyle(document.documentElement);
+  const v = (name: string) => css.getPropertyValue(name).trim();
+  return {
+    paper2: v("--paper-2"),
+    accent: v("--accent"),
+    clay: v("--accent-2"),
+    line: v("--line"),
+    ink: v("--ink"),
+  };
 }
+
+const rgb = (hex: string) => [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
+
+/** A share from 0 to 1 on a ramp towards verify green; 0 is still a visible green on paper. */
+function shade(share: number, p: Palette) {
+  const [lo, hi] = [rgb(p.paper2), rgb(p.accent)];
+  const t = 0.5 + 0.5 * share;
+  return `rgb(${lo.map((c, i) => Math.round(c + (hi[i] - c) * t)).join(",")})`;
+}
+
+const alpha = (hex: string, a: number) => `rgba(${rgb(hex).join(",")},${a})`;
+
+// One pulse when the globe appears: each simulated country rings once, then the rings clear.
+const PULSE_MS = 2400;
 
 // A one-colour texture, since the default globe is black and a custom material needs three.js.
 const ocean = (color: string) =>
@@ -38,7 +57,10 @@ export default function Globe({
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [shapes, setShapes] = useState<Feature[]>([]);
   const [hover, setHover] = useState<Feature | null>(null);
-  const [theme, setTheme] = useState<"light" | "dark">(dark() ? "dark" : "light");
+  const [colors, setColors] = useState(palette);
+  const [ready, setReady] = useState(false);
+  const [rings, setRings] = useState<Country[]>([]);
+  const [still] = useState(prefersReducedMotion);
   const topics = Object.keys(countries[0]?.shares ?? {});
   const [topic, setTopic] = useState(topics[0] ?? "");
   const byIso = useMemo(() => new Map(countries.map((c) => [c.iso3, c])), [countries]);
@@ -49,7 +71,7 @@ export default function Globe({
       .then((r) => r.json())
       .then((g: { features: Feature[] }) => setShapes(g.features));
     const mq = matchMedia("(prefers-color-scheme: dark)");
-    const onTheme = () => setTheme(mq.matches ? "dark" : "light");
+    const onTheme = () => setColors(palette());
     mq.addEventListener("change", onTheme);
     const ro = new ResizeObserver(([e]) =>
       setSize({ width: e.contentRect.width, height: e.contentRect.height }),
@@ -63,23 +85,31 @@ export default function Globe({
 
   useEffect(() => {
     const controls = globe.current?.controls();
-    if (controls) controls.autoRotate = !paused;
-  }, [paused]);
+    if (controls) controls.autoRotate = !paused && !still;
+  }, [paused, still]);
+
+  useEffect(() => {
+    if (!rings.length) return;
+    const t = setTimeout(() => setRings([]), PULSE_MS);
+    return () => clearTimeout(t);
+  }, [rings]);
 
   function onReady() {
     const g = globe.current;
     if (!g) return;
     const controls = g.controls();
-    controls.autoRotate = !paused;
+    controls.autoRotate = !paused && !still;
     controls.autoRotateSpeed = 0.35;
     controls.enableZoom = false;
     g.pointOfView({ lat: 18, lng: 12, altitude: size.width < 600 ? 3 : 2.4 });
+    setReady(true);
+    if (!still) setRings(countries);
   }
 
-  const empty = theme === "dark" ? "rgba(255,255,255,0.07)" : "rgba(15,23,42,0.08)";
+  const empty = colors.line;
 
   return (
-    <div className="globe" ref={box}>
+    <div className={`globe-live${ready ? " ready" : ""}`} ref={box}>
       {size.width > 0 && (
         <ReactGlobe
           ref={globe}
@@ -87,25 +117,28 @@ export default function Globe({
           width={size.width}
           height={size.height}
           backgroundColor="rgba(0,0,0,0)"
-          globeImageUrl={ocean(theme === "dark" ? "#0d0f17" : "#e9ebf3")}
+          globeImageUrl={ocean(colors.paper2)}
           showAtmosphere
-          atmosphereColor="#6366f1"
-          atmosphereAltitude={0.16}
-          polygonsData={shapes}
-          polygonAltitude={(f) => (f === hover ? 0.03 : 0.008)}
-          polygonCapColor={(f) => {
+          atmosphereColor={colors.accent}
+          atmosphereAltitude={0.12}
+          ringsData={rings}
+          ringLat={(c) => (c as Country).lat}
+          ringLng={(c) => (c as Country).lng}
+          ringColor={() => (t: number) => alpha(colors.clay, 1 - t)}
+          ringMaxRadius={5}
+          ringPropagationSpeed={3}
+          ringRepeatPeriod={PULSE_MS * 2}
+          hexPolygonsData={shapes}
+          hexPolygonResolution={3}
+          hexPolygonMargin={0.4}
+          hexPolygonUseDots
+          hexPolygonAltitude={(f) => (f === hover ? 0.02 : 0.004)}
+          hexPolygonColor={(f) => {
             const c = byIso.get((f as Feature).properties.iso3);
-            return c ? shade(c.shares[topic] ?? 0, theme) : empty;
+            if (!c) return empty;
+            return c.experimental ? colors.clay : shade(c.shares[topic] ?? 0, colors);
           }}
-          polygonSideColor={() => "rgba(99,102,241,0.15)"}
-          polygonStrokeColor={(f) =>
-            byIso.get((f as Feature).properties.iso3)?.experimental
-              ? "#f59e0b"
-              : theme === "dark"
-                ? "rgba(255,255,255,0.18)"
-                : "rgba(15,23,42,0.18)"
-          }
-          polygonLabel={(f) => {
+          hexPolygonLabel={(f) => {
             const p = (f as Feature).properties;
             const c = byIso.get(p.iso3);
             if (!c)
@@ -114,12 +147,12 @@ export default function Globe({
               c.experimental ? " · experimental" : ""
             }<br/>${escapeHtml(topicLabel(topic))}: ${pct(c.shares[topic] ?? 0)} lean yes<br/><span>Click to read one agent</span></div>`;
           }}
-          onPolygonHover={(f) => setHover(f as Feature | null)}
-          onPolygonClick={(f) => {
+          onHexPolygonHover={(f) => setHover(f as Feature | null)}
+          onHexPolygonClick={(f) => {
             const c = byIso.get((f as Feature).properties.iso3);
             if (c) onSelect(c);
           }}
-          polygonsTransitionDuration={300}
+          hexPolygonsTransitionDuration={300}
         />
       )}
       <div className="globe-controls">
@@ -134,12 +167,17 @@ export default function Globe({
           </select>
         </label>
         <div className="legend">
-          <span>0%</span>
+          <span className="num">0%</span>
           <span
             className="legend-ramp"
-            style={{ background: `linear-gradient(90deg, ${shade(0, theme)}, ${shade(1, theme)})` }}
+            style={{
+              /* design: computed position */
+              background: `linear-gradient(90deg, ${shade(0, colors)}, ${shade(1, colors)})`,
+            }}
           />
-          <span>100% lean yes</span>
+          <span>
+            <span className="num">100%</span> lean yes
+          </span>
         </div>
         <p className="legend-note">
           <span className="swatch swatch-empty" /> not simulated

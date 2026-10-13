@@ -3,6 +3,7 @@ name = "realworld"
 version = "0.1.0"
 description = "Python client for the Real World Simulate API"
 requires-python = ">=3.12"
+license = { text = "Proprietary" }
 dependencies = ["httpx", "pydantic"]
 
 [dependency-groups]

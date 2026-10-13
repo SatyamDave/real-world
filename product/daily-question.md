@@ -10,15 +10,18 @@ First-time visitors from Show HN and X, who need something to do in under a minu
 
 ## How we know it works
 
-- Contract: `GET /v1/daily` returns today's question (id, text, resolution source, closes at, resolves by) and, once the caller has answered, the reveal. `POST /v1/daily/answers` takes `{question_id, player_id, probability}`; `player_id` is a random id the browser keeps. One answer per player per question; a second answer returns `409`.
-- The reveal returns `you`, `crowd` (mean and count of answers so far), `sim` and `market`, all as 0-1 numbers, plus the resolved outcome and your Brier once known.
+- Contract: `GET /v1/daily` returns today's question (id, text, resolution source, closes at, resolves by) and, once the caller has answered, the reveal. `POST /v1/daily/answers` takes `{question_id, player_id, probability}`; `player_id` is a random id the browser keeps. One answer per player per question; a second answer returns `409` with code `already_answered`, and any answer at or after `closes_at` (a date-only `closes_at` means the start of that UTC day) returns `409` with code `answers_closed` and writes nothing. An answer to a question that is not today's returns `422` with code `wrong_question`.
+- The reveal returns `you`, `crowd` (mean and count of other visitors' answers so far, never including yours; the mean is null when you are the first), `sim` and `market`, all as 0-1 numbers, plus the resolved outcome and your Brier once known, and `week`: the seven days ending today, oldest first, each with your answer (or null) and its Brier once resolved, computed from answer rows like the streak. A day with more than one answer shows your answer to today's question, and on earlier days your latest answer. Test: `test_week_shows_today_s_question_when_a_day_has_several_answers`.
+- The share grid is a pure function of `week`: 🟩 Brier under 0.10, 🟨 0.10 to 0.25 (at least as good as a constant 50%), 🟥 above 0.25, 🟦 answered and not resolved, ⬜ no answer. The copied text is the grid, the streak and a link to that day's receipts (`/receipts#<date>`), never the answer itself. Test: `share.test.ts` "the week share text is the grid, the streak and the day's receipt, without the answer".
+- Today's question is the latest committed day's own question while it is open. Once it closes, it is the open question with the soonest `closes_at` among those that day forecast and that are no day's own question, so the page stays answerable between daily runs and `sim` is still that question's committed forecast. A later day's own question is never shown early: once that day runs, the answer would sit under the wrong date. Tests: `test_the_daily_question_is_its_own_day_question_while_open`, `test_after_its_close_the_daily_question_is_the_next_open_one_the_day_forecast`, `test_the_fallback_is_never_a_later_day_s_own_question`, `test_when_every_question_has_closed_answers_are_refused_and_not_written`.
+- When every question the day forecast has closed, today's question stays the day's own, and the page shows "Answers closed <time>. The next question opens after the next daily run." instead of the slider.
 - Streak is computed from answer rows, never stored as a counter; a test covers a gap day.
 - The `sim` number shown is the committed `sim` forecast for that question and date, the same value as its receipt.
 - Measured after launch: share of new visitors who submit within 60 seconds (target 30%+), and day-7 return of day-0 players ([research/lenses/cpo.md](../research/lenses/cpo.md)).
 
 ## What it is not
 
-- No sign-in in the base build; the streak lives with the browser's player id. Sign-in to keep a streak comes with accounts.
+- No sign-in to answer. The streak lives with the browser's player id; signing in links that id to the account, which carries the streak and the [track record](track-record.md) across browsers.
 - No leagues, friend streaks, notifications or prizes.
 - No questions without a fixed, free resolution source and tie-break rule.
 - Player answers are not shown individually and are labelled "self-selected visitors", never "a poll".

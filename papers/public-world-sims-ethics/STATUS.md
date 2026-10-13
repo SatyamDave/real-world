@@ -7,7 +7,7 @@
 
 ## Pending results
 
-No product code exists, so every audit is a protocol, not yet committed or registered (Section 6, Tables 2 and 3, Appendix A). Nothing is estimated; the pass probabilities in Table 2 are design calculations under stated assumptions. Each protocol is to be committed as `evals/governance/<audit>/PROTOCOL.md`, its SHA-256 published in the receipts ledger before data collection and before the stage it gates, human-subjects studies (E1, E4, E6) registered on OSF, and every protocol and result published within 90 days of data collection. None of these paths exists yet.
+No audit has run, so every audit is a protocol, not yet committed or registered (Section 6, Tables 2 and 3, Appendix A). Nothing is estimated; the pass probabilities in Table 2 are design calculations under stated assumptions. Each protocol is to be committed as `evals/governance/<audit>/PROTOCOL.md`, its SHA-256 published in the receipts ledger before data collection and before the stage it gates, human-subjects studies (E1, E4, E6) registered on OSF, and every protocol and result published within 90 days of data collection. None of these paths exists yet.
 
 | Audit | What it measures | Gates | Produced by |
 | --- | --- | --- | --- |
@@ -68,3 +68,19 @@ Not done (nice-to-have, deferred): EU Regulation 2024/900 on political advertisi
 ## Portfolio edit (2026-10-11)
 
 Cross-paper consistency pass (see `../INDEX.md`): Engine and population described as in *Don't Ask a Model* (numeric agents, no per-agent calls, aggregate anchors in the public build, donor matching only for cleared sources); market prices never assimilated, scored run is market-blind; interval is 90% with the φ_t rule, provisional until ~100; validation grade uses population Tier 1/2 of *Unequally Known*; daily-question answers unused by scored forecasters in v1; Pew figure 11.2–14.7 to match *Silicon Samples*; companion titles; `\emergencystretch` added (no overfull boxes). Compiles with tectonic: no errors, no undefined references, no overfull boxes.
+
+## Update for PRs #6-#38 (2026-10-12)
+
+The fork API and acceptable-use screen now exist in code (engine 0.1.0: `engine/rw/simulate.py`, `engine/rw/policy.py`, `api/rw_api/`; PRs #13, #16, #28, #33, #34). New paragraph "What is built so far" in Section 3 describes them and names where they depart from the proposed rules:
+
+- Built: one-event forks (200 agents, 5 members, 7 days by default), `simulated: true` and a disclosure on every result, segment shifts only at >= 5% of the fork sample, a rule pass plus one model classification refusing private persons and election persuasion, an election window (2026-10-27 to 11-04) refusing party, candidate and ballot-measure events, 503 refusal when the screen or the spend check cannot run, per-day and per-address fork caps.
+- Departures: screen covers election persuasion only (no shock-vs-message test); floor is 5% of the sample and the lattice lacks sex and urban; free forks show a p10-p90 band over 5 members, not the min-max "uncalibrated range" label; numeric traces and a first-person model-written `/why` account ship before E4c; the population is illustrative fixture marginals.
+- Stage-0 paragraph, Section 6 opening and the limitation on the classifier updated to match. Every audit E1-E7 is still pending; what produces each is unchanged.
+
+## Update for PRs #39-#46 (2026-10-12)
+
+API keys with a dollar cap now exist (PR #43, `api/rw_api/app.py`, `api/rw_api/keys.py`, `api/rw_api/schema.sql`); the "What is built so far" paragraph now cites repository commit `bff759c` and adds them:
+
+- Built: operator-issued keys (no sign-up), only the SHA-256 stored; a keyed fork skips the per-address count and may raise `max_cost_usd` from $0.50 to $5; refused with 401 for an unknown or revoked key and 402 `key_cap_spent` when spend so far (unfinished forks at their maximum cost) plus this fork's maximum would pass the cap; 503 when the key's spend cannot be read; keyed forks still count against the $10 day budget.
+- Departures added: a key has a spend cap but no run count (the policy table proposes spend and run quotas per key), and forks run without a key under the per-address count, where the staged-release subsection keeps them to research keys until E1, E2, E3 and the fork-relevant E7 checks pass. The second departure predates #43; the #6-#38 pass did not name it.
+- No audit has run; E1-E7 stay pending. E1's budget levels (free and paid keys) are unchanged; the built keys have no free/paid distinction.

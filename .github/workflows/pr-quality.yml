@@ -37,18 +37,33 @@ jobs:
               errors.push('A feat, perf or refactor PR links the research note or decision it rests on (a path under research/) in "## Why".');
             }
 
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number,
+            });
+            const ui = files.some(f => /^(web|landing)\/src\/.*\.(tsx|css)$/.test(f.filename) && !/\.test\.tsx?$/.test(f.filename));
+            if (ui && !/!\[[^\]]*\]\([^)]+\)|\.png\b/i.test(body)) {
+              errors.push('This PR changes UI in web/src or landing/src: add screenshots at 390 and 1440 px wide (an image or a .png path) to the description.');
+            }
+
             if (errors.length) core.setFailed(errors.join('\n'));
 
   size:
     runs-on: ubuntu-latest
     steps:
-      - name: Warn on large PRs
+      - name: Refuse a large PR that does not say why it cannot be split
         uses: actions/github-script@v7
         with:
           script: |
+            const pr = context.payload.pull_request;
             const files = await github.paginate(github.rest.pulls.listFiles, {
-              owner: context.repo.owner, repo: context.repo.repo, pull_number: context.payload.pull_request.number,
+              owner: context.repo.owner, repo: context.repo.repo, pull_number: pr.number,
             });
-            const skip = /(^research\/|^product\/|\.md$|lock|\.lock$|generated)/;
+            // Papers, experiment results and the generated OpenAPI file are artifacts the rules require committed whole.
+            const skip = /(^research\/|^product\/|^papers\/|^experiments\/.*\/results\/|^api\/openapi\.json$|\.md$|lock|\.lock$|generated)/;
             const changed = files.filter(f => !skip.test(f.filename)).reduce((n, f) => n + f.additions + f.deletions, 0);
-            if (changed > 400) core.warning(`${changed} changed lines outside research and docs. Split the PR or say in the description why it cannot be split.`);
+            const body = (pr.body || '').replace(/<!--[\s\S]*?-->/g, '');
+            if (changed > 400 && !/split/i.test(body)) {
+              core.setFailed(`${changed} changed lines outside research, docs and committed artifacts. Split the PR, or say in the description why it cannot be split.`);
+            } else if (changed > 400) {
+              core.warning(`${changed} changed lines; the description says why it is not split.`);
+            }

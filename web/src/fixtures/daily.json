@@ -17,6 +17,43 @@
     "market": 0.61,
     "outcome": null,
     "brier": null,
-    "streak": 3
+    "streak": 3,
+    "week": [
+      {
+        "date": "2026-09-29",
+        "probability": null,
+        "brier": null
+      },
+      {
+        "date": "2026-09-30",
+        "probability": null,
+        "brier": null
+      },
+      {
+        "date": "2026-10-01",
+        "probability": 0.8,
+        "brier": 0.04
+      },
+      {
+        "date": "2026-10-02",
+        "probability": 0.6,
+        "brier": 0.36
+      },
+      {
+        "date": "2026-10-03",
+        "probability": 0.3,
+        "brier": 0.09
+      },
+      {
+        "date": "2026-10-04",
+        "probability": 0.55,
+        "brier": null
+      },
+      {
+        "date": "2026-10-05",
+        "probability": 0.62,
+        "brier": null
+      }
+    ]
   }
 }

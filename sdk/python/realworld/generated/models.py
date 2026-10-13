@@ -6,7 +6,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, RootModel
 
 
 class AgentStep(BaseModel):
@@ -19,10 +19,27 @@ class AgentStep(BaseModel):
 class AgentWhy(BaseModel):
     agent_id: str = Field(..., title="Agent Id")
     text: str = Field(..., title="Text")
+    provider: str = Field(
+        ...,
+        description='Who wrote the text: "openai_compatible", or "fake" (no model ran).',
+        title="Provider",
+    )
     label: Literal["Simulated account, not the cause"] = Field(
         "Simulated account, not the cause", title="Label"
     )
     simulated: Literal[True] = Field(True, title="Simulated")
+
+
+class Kind(StrEnum):
+    rfc3161 = "rfc3161"
+    opentimestamps = "opentimestamps"
+
+
+class Anchor(BaseModel):
+    kind: Kind = Field(..., title="Kind")
+    service: str = Field(..., title="Service")
+    requested_at: str = Field(..., title="Requested At")
+    proof_base64: str = Field(..., title="Proof Base64")
 
 
 class Answer(BaseModel):
@@ -32,6 +49,29 @@ class Answer(BaseModel):
     question_id: str = Field(..., title="Question Id")
     player_id: str = Field(..., max_length=64, min_length=1, title="Player Id")
     probability: float = Field(..., ge=0.0, le=1.0, title="Probability")
+
+
+class Assimilation(BaseModel):
+    iso3: str = Field(..., title="Iso3")
+    topic: str = Field(..., title="Topic")
+    before: float | None = Field(..., title="Before")
+    after_news: float = Field(..., title="After News")
+    observed: float | None = Field(..., title="Observed")
+    observed_n: int | None = Field(..., title="Observed N")
+    observed_source: str | None = Field(..., title="Observed Source")
+    innovation: float | None = Field(..., title="Innovation")
+    applied: float | None = Field(..., title="Applied")
+    gain: float | None = Field(..., title="Gain")
+    after: float = Field(..., title="After")
+
+
+class Audit(BaseModel):
+    iso3: str = Field(..., title="Iso3")
+    topic: str = Field(..., title="Topic")
+    sim_sd: float = Field(..., title="Sim Sd")
+    survey_sd: float = Field(..., title="Survey Sd")
+    ratio: float = Field(..., title="Ratio")
+    in_band: bool = Field(..., title="In Band")
 
 
 class Band(BaseModel):
@@ -45,14 +85,27 @@ class Claim(StrEnum):
     insufficient_n = "insufficient_n"
 
 
-class Conflict(BaseModel):
-    detail: str = Field(..., title="Detail")
-    id: str = Field(..., title="Id")
+class Bootstrap(BaseModel):
+    block: str = Field(..., title="Block")
+    resamples: int = Field(..., title="Resamples")
+    seed: int = Field(..., title="Seed")
+    interval: float = Field(..., title="Interval")
+
+
+class Budget(BaseModel):
+    nightly_budget_usd: float = Field(..., title="Nightly Budget Usd")
+    spent_usd: float = Field(..., title="Spent Usd")
 
 
 class Cost(BaseModel):
-    estimated_usd: float = Field(..., title="Estimated Usd")
-    actual_usd: float = Field(..., title="Actual Usd")
+    estimated_usd: float = Field(
+        ...,
+        description="An estimate made before the run, at the configured model's prices.",
+        title="Estimated Usd",
+    )
+    actual_usd: float = Field(
+        ..., description="Dollars the provider charged; 0 with the fake model.", title="Actual Usd"
+    )
 
 
 class Country(BaseModel):
@@ -73,8 +126,28 @@ class Coverage(BaseModel):
 
 
 class Crowd(BaseModel):
-    mean: float | None = Field(..., title="Mean")
-    count: int = Field(..., title="Count")
+    mean: float | None = Field(
+        ..., description="Mean of other visitors' answers; null if there are none.", title="Mean"
+    )
+    count: int = Field(
+        ...,
+        description="Other visitors' answers; the caller's own is never counted.",
+        title="Count",
+    )
+
+
+class Anchor1(StrEnum):
+    not_anchored = "not_anchored"
+    pending = "pending"
+    anchored = "anchored"
+
+
+class CycleLedger(BaseModel):
+    root: str = Field(..., title="Root")
+    leaf_count: int = Field(..., title="Leaf Count")
+    record_hash: str = Field(..., title="Record Hash")
+    anchor: Anchor1 = Field(..., title="Anchor")
+    anchored_at: str | None = Field(..., title="Anchored At")
 
 
 class DailyQuestion(BaseModel):
@@ -109,7 +182,15 @@ class DaySummary(BaseModel):
     protocol_hash: str = Field(..., title="Protocol Hash")
     engine_version: str = Field(..., title="Engine Version")
     record_hash: str = Field(..., title="Record Hash")
-    anchored: bool = Field(..., title="Anchored")
+    anchor: Anchor1 = Field(..., title="Anchor")
+    anchored_at: str | None = Field(..., title="Anchored At")
+
+
+class EmailRequest(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    email: str = Field(..., max_length=254, pattern="^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", title="Email")
 
 
 class Estimate(BaseModel):
@@ -127,6 +208,16 @@ class Event(BaseModel):
     countries: list[str] | None = Field(None, title="Countries")
 
 
+class ForecasterScore(BaseModel):
+    forecaster: str = Field(..., title="Forecaster")
+    n_questions: int = Field(..., title="N Questions")
+    n_forecasts: int = Field(..., title="N Forecasts")
+    mean_brier: float = Field(..., title="Mean Brier")
+    mean_log_score: float = Field(..., title="Mean Log Score")
+    brier_low: float | None = Field(..., title="Brier Low")
+    brier_high: float | None = Field(..., title="Brier High")
+
+
 class Status(StrEnum):
     queued = "queued"
     running = "running"
@@ -139,37 +230,252 @@ class Links(BaseModel):
     events: str = Field(..., title="Events")
 
 
+class Miss(BaseModel):
+    question_id: str = Field(..., title="Question Id")
+    text: str = Field(..., title="Text")
+    date: str = Field(..., title="Date")
+    forecaster: str = Field(..., title="Forecaster")
+    probability: float = Field(..., title="Probability")
+    outcome: int = Field(..., title="Outcome")
+    brier: float = Field(..., title="Brier")
+
+
+class Source(StrEnum):
+    fixtures = "fixtures"
+    gdelt = "gdelt"
+
+
+class NotFound(BaseModel):
+    detail: str = Field(..., title="Detail")
+
+
+class PaperPdf(BaseModel):
+    how: str = Field(..., title="How")
+    ci: str = Field(..., title="Ci")
+
+
+class Person(BaseModel):
+    id: str = Field(..., title="Id")
+    email: str = Field(..., title="Email")
+    created_at: str = Field(..., title="Created At")
+
+
+class Code(StrEnum):
+    private_person = "private_person"
+    election_persuasion = "election_persuasion"
+    election_window = "election_window"
+
+
+class PolicyRefused(BaseModel):
+    code: Code = Field(..., title="Code")
+    detail: str = Field(..., title="Detail")
+
+
+class PopulationSegment(BaseModel):
+    segment: str = Field(..., title="Segment")
+    age_band: str = Field(..., title="Age Band")
+    education: str = Field(..., title="Education")
+    agent_count: int = Field(..., title="Agent Count")
+
+
+class PopulationSource(BaseModel):
+    source_id: str = Field(..., title="Source Id")
+    kind: str = Field(..., title="Kind")
+    commercial_use: str = Field(..., title="Commercial Use")
+    checked_on: str = Field(..., title="Checked On")
+
+
+class PopulationTopic(BaseModel):
+    topic: str = Field(..., title="Topic")
+    label: str = Field(..., title="Label")
+    source_id: str = Field(..., title="Source Id")
+    calibrated_share: float = Field(..., title="Calibrated Share")
+    survey_sd_logit: float = Field(..., title="Survey Sd Logit")
+    share: float = Field(..., title="Share")
+    p10: float = Field(..., title="P10")
+    p50: float = Field(..., title="P50")
+    p90: float = Field(..., title="P90")
+    sim_sd_logit: float | None = Field(..., title="Sim Sd Logit")
+    ratio: float | None = Field(..., title="Ratio")
+    in_band: bool | None = Field(..., title="In Band")
+
+
 class PrefilledEvent(BaseModel):
     id: str = Field(..., title="Id")
     text: str = Field(..., title="Text")
     countries: list[str] | None = Field(..., title="Countries")
 
 
-class ReceiptEntry(BaseModel):
-    entry: dict[str, Any] = Field(..., title="Entry")
-    salt: str = Field(..., title="Salt")
+class Primary(BaseModel):
+    metric: str = Field(..., title="Metric")
+    value: float = Field(..., title="Value")
+    low: float = Field(..., title="Low")
+    high: float = Field(..., title="High")
+    n: int = Field(..., title="N")
+
+
+class ProofStep(BaseModel):
+    position: str = Field(..., title="Position")
+    hash: str = Field(..., title="Hash")
+
+
+class Protocol(BaseModel):
+    version: str = Field(..., title="Version")
+    hash: str = Field(..., title="Hash")
+    headline: str = Field(..., title="Headline")
+    log_clip: list[float] = Field(..., title="Log Clip")
+    coin_reference: float = Field(..., title="Coin Reference")
+    min_resolved_for_claims: int = Field(..., title="Min Resolved For Claims")
+    bootstrap: Bootstrap
+
+
+class QuestionCountry(BaseModel):
+    iso3: str = Field(..., title="Iso3")
+    name: str = Field(..., title="Name")
+    tier: str = Field(..., title="Tier")
+
+
+class QuestionForecast(BaseModel):
+    probability: float = Field(..., title="Probability")
+    p10: float | None = Field(..., description="Only the sim forecaster has a spread.", title="P10")
+    p90: float | None = Field(..., title="P90")
+    brier: float | None = Field(..., description="Null until the question resolves.", title="Brier")
+    log_score: float | None = Field(..., title="Log Score")
     leaf_hash: str = Field(..., title="Leaf Hash")
-    outcome: int | None = Field(..., title="Outcome")
-    brier: float | None = Field(..., title="Brier")
+    salt: str = Field(..., title="Salt")
+    committed_at: str = Field(..., title="Committed At")
+    model: str = Field(..., title="Model")
+    market_price_at_commit: float = Field(..., title="Market Price At Commit")
+
+
+class QuestionInfo(BaseModel):
+    id: str = Field(..., title="Id")
+    text: str = Field(..., title="Text")
+    topic: str = Field(..., title="Topic")
+    topic_label: str = Field(..., title="Topic Label")
+    countries: list[QuestionCountry] = Field(..., title="Countries")
+    opens: str = Field(..., title="Opens")
+    closes: str = Field(..., title="Closes")
+    resolves_by: str = Field(..., title="Resolves By")
+    resolution_source: str = Field(..., title="Resolution Source")
+    tie_break: str = Field(..., title="Tie Break")
+    market_source: str = Field(..., title="Market Source")
+    question_hash: str = Field(
+        ...,
+        description="sha256 of the question as committed in each forecast.",
+        title="Question Hash",
+    )
+    question_set_hash: str = Field(
+        ...,
+        description="sha256 of the question list this question is in.",
+        title="Question Set Hash",
+    )
+    daily_on: str | None = Field(..., title="Daily On")
+
+
+class QuestionOutcome(BaseModel):
+    outcome: int = Field(..., title="Outcome")
+    resolved_on: str = Field(..., title="Resolved On")
+    source_url: str = Field(..., title="Source Url")
+    read_on: str = Field(..., title="Read On")
+
+
+class ReceiptQuestion(BaseModel):
+    text: str = Field(..., title="Text")
+    resolution_source: str = Field(..., title="Resolution Source")
+    resolves_by: str = Field(..., title="Resolves By")
 
 
 class Receipts(BaseModel):
     days: list[DaySummary] = Field(..., title="Days")
 
 
+class Code1(StrEnum):
+    over_max_cost = "over_max_cost"
+    fork_budget_spent = "fork_budget_spent"
+    anon_daily_limit = "anon_daily_limit"
+    client_unknown = "client_unknown"
+    spend_unreadable = "spend_unreadable"
+    invalid_api_key = "invalid_api_key"
+    key_cap_spent = "key_cap_spent"
+    idempotency_key_running = "idempotency_key_running"
+    invalid_request = "invalid_request"
+    unsupported_version = "unsupported_version"
+    acceptable_use_unreadable = "acceptable_use_unreadable"
+    idempotency_key_reused = "idempotency_key_reused"
+    why_over_cap = "why_over_cap"
+    wrong_question = "wrong_question"
+    answers_closed = "answers_closed"
+    already_answered = "already_answered"
+    sign_in_throttled = "sign_in_throttled"
+    email_unavailable = "email_unavailable"
+    sign_in_invalid = "sign_in_invalid"
+    signed_out = "signed_out"
+    cross_origin = "cross_origin"
+    account_unreadable = "account_unreadable"
+
+
 class Refused(BaseModel):
-    detail: str = Field(..., title="Detail")
-    estimate: Estimate
+    code: Code1 = Field(..., title="Code")
+    detail: str = Field(
+        ...,
+        description="One sentence saying what was refused and why, for display.",
+        title="Detail",
+    )
+    estimate: Estimate | None = None
+    id: str | None = Field(
+        None, description="The fork already running under this Idempotency-Key.", title="Id"
+    )
 
 
-class Reveal(BaseModel):
-    you: float = Field(..., title="You")
-    crowd: Crowd
-    sim: float | None = Field(..., title="Sim")
-    market: float | None = Field(..., title="Market")
-    outcome: int | None = Field(..., title="Outcome")
-    brier: float | None = Field(..., title="Brier")
-    streak: int = Field(..., title="Streak")
+class ReliabilityBin(BaseModel):
+    bin_low: float = Field(..., title="Bin Low")
+    bin_high: float = Field(..., title="Bin High")
+    n: int = Field(..., title="N")
+    mean_probability: float = Field(..., title="Mean Probability")
+    observed_rate: float = Field(..., title="Observed Rate")
+
+
+class Forecaster(StrEnum):
+    sim = "sim"
+    plain_llm = "plain_llm"
+
+
+class ReplayRow(BaseModel):
+    question_id: str = Field(..., title="Question Id")
+    question: str | None = Field(..., title="Question")
+    forecaster: Forecaster = Field(..., title="Forecaster")
+    committed: float = Field(..., title="Committed")
+    replayed: float | None = Field(..., title="Replayed")
+    low: float | None = Field(..., title="Low")
+    high: float | None = Field(..., title="High")
+    diff: float | None = Field(..., title="Diff")
+    matches: bool = Field(..., title="Matches")
+
+
+class Rubric(BaseModel):
+    population: int = Field(..., title="Population")
+    attitudes: int = Field(..., title="Attitudes")
+    markets: int = Field(..., title="Markets")
+    news: int = Field(..., title="News")
+    ground_truth: int = Field(..., title="Ground Truth")
+    score: int = Field(..., title="Score")
+
+
+class Scored(BaseModel):
+    probability: float = Field(..., title="Probability")
+    brier: float = Field(..., title="Brier")
+
+
+class SegmentAnswer(BaseModel):
+    segment: str = Field(..., title="Segment")
+    description: str = Field(..., title="Description")
+    prior_share: float = Field(
+        ...,
+        description="The segment's share saying yes before the model call.",
+        title="Prior Share",
+    )
+    yes_share: float = Field(..., title="Yes Share")
 
 
 class SegmentShift(BaseModel):
@@ -182,18 +488,59 @@ class SegmentShift(BaseModel):
     tier: str = Field(..., title="Tier")
 
 
+class SignInSent(BaseModel):
+    email: str = Field(..., title="Email")
+    ttl_minutes: int = Field(
+        ..., description="How long the link and the code work.", title="Ttl Minutes"
+    )
+
+
 class SimulateRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    world: str = Field("today", pattern="^(today|\\d{4}-\\d{2}-\\d{2})$", title="World")
-    event: Event
-    days: int = Field(7, ge=1, le=14, title="Days")
-    members: int = Field(5, ge=1, le=20, title="Members")
-    agents: int = Field(200, ge=50, le=5000, title="Agents")
-    topics: list[str] | None = Field(None, title="Topics")
-    max_cost_usd: float = Field(0.5, gt=0.0, le=5.0, title="Max Cost Usd")
-    seed: int = Field(0, ge=0, title="Seed")
+    world: str = Field(
+        "today",
+        description="The snapshot to fork: today's world, or a committed day as YYYY-MM-DD.",
+        pattern="^(today|\\d{4}-\\d{2}-\\d{2})$",
+        title="World",
+    )
+    event: Event = Field(..., description="The one event to add, in plain words.")
+    days: int = Field(
+        7, description="Simulated days to run after the event.", ge=1, le=14, title="Days"
+    )
+    members: int = Field(
+        5,
+        description="Ensemble members: independent runs of the fork, each with its own agent subsample and noise. Their p10-p90 range is the spread.",
+        ge=1,
+        le=20,
+        title="Members",
+    )
+    agents: int = Field(
+        200,
+        description="Agents sampled from the world snapshot, in proportion to country population.",
+        ge=50,
+        le=5000,
+        title="Agents",
+    )
+    topics: list[str] | None = Field(
+        None,
+        description="Topics to report; null means every topic the world tracks.",
+        title="Topics",
+    )
+    max_cost_usd: float = Field(
+        0.5,
+        description="Cost cap in dollars. A fork whose estimate is above it is refused with 402. The estimate counts one model call per segment.",
+        gt=0.0,
+        le=5.0,
+        title="Max Cost Usd",
+    )
+    seed: int = Field(
+        0,
+        description="Fixes the agent subsample and each member's noise. The model's answers can still differ between runs.",
+        ge=0,
+        title="Seed",
+    )
 
 
 class Skill(BaseModel):
@@ -205,16 +552,42 @@ class Skill(BaseModel):
     claim: Claim = Field(..., title="Claim")
 
 
-class Cause(StrEnum):
-    event = "event"
-    anchor_pull = "anchor_pull"
+class CycleStatus(StrEnum):
+    ok = "ok"
+    failed = "failed"
+    running = "running"
+    not_run = "not_run"
 
 
-class Step(BaseModel):
-    day: int = Field(..., title="Day")
+class SystemStatus(BaseModel):
+    date: str | None = Field(..., title="Date")
+    cycle_finished_at: str | None = Field(..., title="Cycle Finished At")
+    cycle_status: CycleStatus = Field(..., title="Cycle Status")
+    root: str | None = Field(..., title="Root")
+    record_hash: str | None = Field(..., title="Record Hash")
+    anchor: Anchor1 | None = Field(..., title="Anchor")
+    anchored_at: str | None = Field(..., title="Anchored At")
+    model: str = Field(..., title="Model")
+    provider: str = Field(..., title="Provider")
+    spent_today_usd: float = Field(..., title="Spent Today Usd")
+    nightly_budget_usd: float = Field(..., title="Nightly Budget Usd")
+    engine_version: str = Field(..., title="Engine Version")
+
+
+class TopItem(BaseModel):
+    title: str = Field(..., title="Title")
+    iso3: str = Field(..., title="Iso3")
+    tier: str = Field(..., title="Tier")
+    salience: float = Field(..., title="Salience")
+    value: float = Field(..., title="Value")
+
+
+class TopicNews(BaseModel):
     topic: str = Field(..., title="Topic")
-    delta: float = Field(..., title="Delta")
-    cause: Cause = Field(..., title="Cause")
+    label: str = Field(..., title="Label")
+    signals: int = Field(..., title="Signals")
+    mean_value: float | None = Field(..., title="Mean Value")
+    top: list[TopItem] = Field(..., title="Top")
 
 
 class TopicOutput(BaseModel):
@@ -223,21 +596,35 @@ class TopicOutput(BaseModel):
     by_day: list[DayBand] = Field(..., title="By Day")
 
 
-class TraceAgent(BaseModel):
-    agent_id: str = Field(..., title="Agent Id")
-    iso3: str = Field(..., title="Iso3")
-    segment: str = Field(..., title="Segment")
-    belief_start: dict[str, float] = Field(..., title="Belief Start")
-    belief_end: dict[str, float] = Field(..., title="Belief End")
-    steps: list[Step] = Field(..., title="Steps")
+class Token(RootModel[str]):
+    root: str = Field(..., description="From the link's #token=.", max_length=128, title="Token")
 
 
-class ValidationError(BaseModel):
-    loc: list[str | int] = Field(..., title="Location")
-    msg: str = Field(..., title="Message")
-    type: str = Field(..., title="Error Type")
-    input: Any | None = Field(None, title="Input")
-    ctx: dict[str, Any] | None = Field(None, title="Context")
+class Email(RootModel[str]):
+    root: str = Field(..., max_length=254, pattern="^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", title="Email")
+
+
+class Code2(RootModel[str]):
+    root: str = Field(..., pattern="^\\d{6}$", title="Code")
+
+
+class VerifyRequest(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    token: Token | None = Field(None, description="From the link's #token=.", title="Token")
+    email: Email | None = Field(None, title="Email")
+    code: Code2 | None = Field(None, title="Code")
+
+
+class WeekDay(BaseModel):
+    date: str = Field(..., title="Date")
+    probability: float | None = Field(
+        ..., description="The visitor's answer that day; null if none.", title="Probability"
+    )
+    brier: float | None = Field(
+        ..., description="Its Brier score once the question resolved.", title="Brier"
+    )
 
 
 class World(BaseModel):
@@ -245,6 +632,61 @@ class World(BaseModel):
     countries: list[Country] = Field(..., title="Countries")
     daily_question_id: str | None = Field(..., title="Daily Question Id")
     prefilled_events: list[PrefilledEvent] = Field(..., title="Prefilled Events")
+
+
+class Cause(StrEnum):
+    event = "event"
+    anchor_pull = "anchor_pull"
+
+
+class RwSimulateStep(BaseModel):
+    day: int = Field(..., title="Day")
+    topic: str = Field(..., title="Topic")
+    delta: float = Field(..., title="Delta")
+    cause: Cause = Field(..., title="Cause")
+
+
+class RwApiRoutesCycleSettingsUsed(BaseModel):
+    assimilation: str = Field(..., title="Assimilation")
+    kalman_walk_sd_logit: float = Field(..., title="Kalman Walk Sd Logit")
+    kalman_prior_sd_logit: float = Field(..., title="Kalman Prior Sd Logit")
+    poll_error_factor: float = Field(..., title="Poll Error Factor")
+    step_cap_logit: float = Field(..., title="Step Cap Logit")
+    anchor_pull: float = Field(..., title="Anchor Pull")
+    spread_band: list[float] = Field(..., title="Spread Band")
+    daily_forecast_members: int = Field(..., title="Daily Forecast Members")
+    plain_llm_samples: int = Field(..., title="Plain Llm Samples")
+    headlines_per_question: int = Field(..., title="Headlines Per Question")
+
+
+class Status2(StrEnum):
+    ok = "ok"
+    failed = "failed"
+    running = "running"
+    not_run = "not_run"
+
+
+class RwApiRoutesCycleStep(BaseModel):
+    step: str = Field(..., title="Step")
+    status: Status2 = Field(..., title="Status")
+    started_at: str | None = Field(..., title="Started At")
+    finished_at: str | None = Field(..., title="Finished At")
+    seconds: float | None = Field(..., title="Seconds")
+    detail: dict[str, Any] | None = Field(..., title="Detail")
+    model_calls: int = Field(..., title="Model Calls")
+    in_tokens: int = Field(..., title="In Tokens")
+    out_tokens: int = Field(..., title="Out Tokens")
+    cost_usd: float = Field(..., title="Cost Usd")
+    by_purpose: dict[str, int] = Field(..., title="By Purpose")
+
+
+class RwApiRoutesWorldSettingsUsed(BaseModel):
+    world_agents: int = Field(..., title="World Agents")
+    world_seed: int = Field(..., title="World Seed")
+    spread_band: list[float] = Field(..., title="Spread Band")
+    country_floor_share: float = Field(..., title="Country Floor Share")
+    stubbornness_beta: list[float] = Field(..., title="Stubbornness Beta")
+    offset_sd_logit: float = Field(..., title="Offset Sd Logit")
 
 
 class Agent(BaseModel):
@@ -268,14 +710,15 @@ class BaselineSkill(BaseModel):
     by_region: dict[str, Skill] = Field(..., title="By Region")
 
 
-class Daily(BaseModel):
+class ExperimentResult(BaseModel):
+    path: str = Field(..., title="Path")
     date: str = Field(..., title="Date")
-    question: DailyQuestion
-    reveal: Reveal | None
-
-
-class HTTPValidationError(BaseModel):
-    detail: list[ValidationError] | None = Field(None, title="Detail")
+    command: str = Field(..., title="Command")
+    commit: str = Field(..., title="Commit")
+    provider: str = Field(..., title="Provider")
+    model: str = Field(..., title="Model")
+    primary: Primary | None
+    outcome: str = Field(..., title="Outcome")
 
 
 class JobCreated(BaseModel):
@@ -284,11 +727,219 @@ class JobCreated(BaseModel):
     links: Links
 
 
+class LeafReceipt(BaseModel):
+    day: DayRecord
+    record_hash: str = Field(..., title="Record Hash")
+    entry: dict[str, Any] = Field(..., title="Entry")
+    salt: str = Field(..., title="Salt")
+    leaf_hash: str = Field(..., title="Leaf Hash")
+    proof: list[ProofStep] = Field(..., title="Proof")
+    root: str = Field(..., title="Root")
+    question: ReceiptQuestion | None
+    outcome: int | None = Field(..., title="Outcome")
+    brier: float | None = Field(..., title="Brier")
+    anchor: Anchor1 = Field(..., title="Anchor")
+    anchored_at: str | None = Field(..., title="Anchored At")
+
+
+class News(BaseModel):
+    source: Source | None = Field(..., title="Source")
+    articles: int | None = Field(..., title="Articles")
+    clusters: int = Field(..., title="Clusters")
+    countries: int = Field(..., title="Countries")
+    by_topic: list[TopicNews] = Field(..., title="By Topic")
+
+
+class Paper(BaseModel):
+    slug: str = Field(..., title="Slug")
+    short_title: str = Field(..., title="Short Title")
+    title: str = Field(..., title="Title")
+    claim: str = Field(..., title="Claim")
+    stage: str = Field(..., title="Stage")
+    venue: str = Field(..., title="Venue")
+    pending: str = Field(..., title="Pending")
+    tex_url: str = Field(..., title="Tex Url")
+    status_url: str = Field(..., title="Status Url")
+    pdf: PaperPdf
+
+
+class PopulationCountry(BaseModel):
+    iso3: str = Field(..., title="Iso3")
+    name: str = Field(..., title="Name")
+    region: str = Field(..., title="Region")
+    population_millions: float = Field(..., title="Population Millions")
+    tier: str = Field(..., title="Tier")
+    experimental: bool = Field(..., title="Experimental")
+    rubric: Rubric
+    agent_count: int = Field(..., title="Agent Count")
+    segments: list[PopulationSegment] = Field(..., title="Segments")
+    topics: list[PopulationTopic] = Field(..., title="Topics")
+
+
+class QuestionDay(BaseModel):
+    date: str = Field(..., title="Date")
+    snapshot_sha256: str = Field(..., title="Snapshot Sha256")
+    forecasts: dict[str, QuestionForecast] = Field(
+        ..., description="By forecaster.", title="Forecasts"
+    )
+    segments: list[SegmentAnswer] = Field(
+        ...,
+        description="The model's answer per segment behind the sim forecast; empty if not recorded.",
+        title="Segments",
+    )
+    plain_samples: list[float] = Field(
+        ..., description="Each plain LLM sample's yes share.", title="Plain Samples"
+    )
+    headlines: list[str] = Field(..., title="Headlines")
+
+
+class QuestionPage(BaseModel):
+    question: QuestionInfo
+    outcome: QuestionOutcome | None
+    members: int = Field(
+        ..., description="Bootstrap resamples behind each sim spread.", title="Members"
+    )
+    plain_llm_samples: int = Field(..., title="Plain Llm Samples")
+    log_clip: list[float] = Field(
+        ..., description="Low and high clip on p before the log score.", title="Log Clip"
+    )
+    min_resolved: int = Field(
+        ...,
+        description="Resolved questions before a skill claim is reported.",
+        title="Min Resolved",
+    )
+    model: str | None = Field(..., title="Model")
+    provider: str | None = Field(..., title="Provider")
+    days: list[QuestionDay] = Field(..., description="Oldest first.", title="Days")
+
+
+class ReceiptEntry(BaseModel):
+    entry: dict[str, Any] = Field(..., title="Entry")
+    salt: str = Field(..., title="Salt")
+    leaf_hash: str = Field(..., title="Leaf Hash")
+    question: ReceiptQuestion | None = Field(
+        ...,
+        description="The forecast's question from its committed question set; null on other leaves.",
+    )
+    outcome: int | None = Field(..., title="Outcome")
+    brier: float | None = Field(..., title="Brier")
+
+
+class Replay(BaseModel):
+    date: str = Field(..., title="Date")
+    forecasts: list[ReplayRow] = Field(..., title="Forecasts")
+    calls_used: int = Field(..., title="Calls Used")
+    missing: list[str] = Field(..., title="Missing")
+
+
+class ResolvedQuestion(BaseModel):
+    question_id: str = Field(..., title="Question Id")
+    text: str = Field(..., title="Text")
+    date: str = Field(..., title="Date")
+    outcome: int = Field(..., title="Outcome")
+    resolved_on: str = Field(..., title="Resolved On")
+    tiers: list[str] = Field(..., title="Tiers")
+    region: str = Field(..., title="Region")
+    forecasts: dict[str, Scored] = Field(..., title="Forecasts")
+
+
+class Reveal(BaseModel):
+    you: float = Field(..., title="You")
+    crowd: Crowd
+    sim: float | None = Field(..., title="Sim")
+    market: float | None = Field(..., title="Market")
+    outcome: int | None = Field(..., title="Outcome")
+    brier: float | None = Field(..., title="Brier")
+    streak: int = Field(..., title="Streak")
+    week: list[WeekDay] = Field(
+        ..., description="The seven days ending today, oldest first.", title="Week"
+    )
+
+
+class Scoreboard(BaseModel):
+    protocol: Protocol
+    resolved_questions: int = Field(..., title="Resolved Questions")
+    open_questions: int = Field(..., title="Open Questions")
+    first_commit: str | None = Field(..., title="First Commit")
+    forecasters: list[ForecasterScore] = Field(..., title="Forecasters")
+    skill: dict[str, BaselineSkill] = Field(..., title="Skill")
+    reliability: dict[str, list[ReliabilityBin]] = Field(..., title="Reliability")
+    resolved: list[ResolvedQuestion] = Field(..., title="Resolved")
+    misses: list[Miss] = Field(..., title="Misses")
+
+
+class TraceAgent(BaseModel):
+    agent_id: str = Field(..., title="Agent Id")
+    iso3: str = Field(..., title="Iso3")
+    segment: str = Field(..., title="Segment")
+    belief_start: dict[str, float] = Field(..., title="Belief Start")
+    belief_end: dict[str, float] = Field(..., title="Belief End")
+    steps: list[RwSimulateStep] = Field(..., title="Steps")
+
+
+class Cycle(BaseModel):
+    date: str = Field(..., title="Date")
+    dates: list[str] = Field(..., title="Dates")
+    model: str = Field(..., title="Model")
+    provider: str = Field(..., title="Provider")
+    engine_version: str = Field(..., title="Engine Version")
+    config_hash: str = Field(..., title="Config Hash")
+    steps: list[RwApiRoutesCycleStep] = Field(..., title="Steps")
+    news: News
+    assimilation: list[Assimilation] = Field(..., title="Assimilation")
+    audit: list[Audit] = Field(..., title="Audit")
+    experimental: list[str] = Field(..., title="Experimental")
+    ledger: CycleLedger | None
+    budget: Budget
+    settings_used: RwApiRoutesCycleSettingsUsed
+
+
+class Daily(BaseModel):
+    date: str = Field(..., title="Date")
+    question: DailyQuestion
+    reveal: Reveal | None
+
+
+class Experiment(BaseModel):
+    id: str = Field(..., title="Id")
+    title: str = Field(..., title="Title")
+    registered: str = Field(..., title="Registered")
+    owner: str = Field(..., title="Owner")
+    status: str = Field(..., title="Status")
+    registry_sha256: str = Field(..., title="Registry Sha256")
+    prereg_sha256: str = Field(..., title="Prereg Sha256")
+    hash_matches: bool = Field(..., title="Hash Matches")
+    prereg_url: str = Field(..., title="Prereg Url")
+    hypothesis: str = Field(..., title="Hypothesis")
+    primary_metric: str = Field(..., title="Primary Metric")
+    kill_criterion: str = Field(..., title="Kill Criterion")
+    results: list[ExperimentResult] = Field(..., title="Results")
+
+
+class Population(BaseModel):
+    date: str = Field(..., title="Date")
+    agents: int = Field(..., title="Agents")
+    segments: int = Field(..., title="Segments")
+    tier_floors: dict[str, int] = Field(..., title="Tier Floors")
+    settings_used: RwApiRoutesWorldSettingsUsed
+    countries: list[PopulationCountry] = Field(..., title="Countries")
+    sources: list[PopulationSource] = Field(..., title="Sources")
+
+
 class ReceiptDay(BaseModel):
     day: DayRecord
     record_hash: str = Field(..., title="Record Hash")
-    anchored: bool = Field(..., title="Anchored")
+    anchor: Anchor1 = Field(..., title="Anchor")
+    anchored_at: str | None = Field(..., title="Anchored At")
+    anchors: list[Anchor] = Field(..., title="Anchors")
     entries: list[ReceiptEntry] = Field(..., title="Entries")
+
+
+class Research(BaseModel):
+    experiments: list[Experiment] = Field(..., title="Experiments")
+    papers: list[Paper] = Field(..., title="Papers")
+    repo: str = Field(..., title="Repo")
+    commit: str = Field(..., title="Commit")
 
 
 class Trace(BaseModel):
@@ -299,12 +950,16 @@ class Trace(BaseModel):
 class SimulateResult(BaseModel):
     simulated: Literal[True] = Field(True, title="Simulated")
     disclosure: str = Field(
-        "AI-simulated. A fork of a synthetic population under an event you described: not a poll, not a forecast of real people, and not scored.",
-        title="Disclosure",
+        "AI-simulated. Not a poll or a prediction of a real person", title="Disclosure"
     )
     world_snapshot_id: str = Field(..., title="World Snapshot Id")
     engine_version: str = Field(..., title="Engine Version")
     model: str = Field(..., title="Model")
+    provider: str = Field(
+        ...,
+        description='Who answered the model calls: "jev", or "fake" when no model ran.',
+        title="Provider",
+    )
     seed: int = Field(..., title="Seed")
     members: int = Field(..., title="Members")
     agents_sampled: int = Field(..., title="Agents Sampled")
@@ -313,7 +968,12 @@ class SimulateResult(BaseModel):
     coverage: list[Coverage] = Field(..., title="Coverage")
     outputs: dict[str, TopicOutput] = Field(..., title="Outputs")
     segments: list[SegmentShift] = Field(..., title="Segments")
-    top_shifts: list[SegmentShift] = Field(..., title="Top Shifts")
+    top_shifts: list[SegmentShift] = Field(
+        ...,
+        description="The largest median shifts among segments of at least top_shift_min_agents.",
+        title="Top Shifts",
+    )
+    top_shift_min_agents: int = Field(..., title="Top Shift Min Agents")
     trace: Trace
     note: Literal["Counterfactual: not scored"] = Field("Counterfactual: not scored", title="Note")
     content_hash: str = Field("", title="Content Hash")
