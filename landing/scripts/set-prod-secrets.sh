@@ -40,8 +40,9 @@ case "$DATABASE_URL_PROD" in
   *"$(get DATABASE_URL_DEV | sed -E 's#.*@([^/]*)/.*#\1#')"*) fail "DATABASE_URL_PROD points at the dev branch host" ;;
 esac
 
-echo "This will set 6 PRODUCTION secrets on Pages project '$PROJECT':"
-echo "  DATABASE_URL, AMPLITUDE_API_KEY, TURNSTILE_SECRET_KEY, TYPEFORM_WEBHOOK_SECRET, RATE_LIMIT_SALT, ENVIRONMENT"
+echo "This will set 5 PRODUCTION secrets on Pages project '$PROJECT':"
+echo "  (ENVIRONMENT=production comes from wrangler.toml, not from here)"
+echo "  DATABASE_URL, AMPLITUDE_API_KEY, TURNSTILE_SECRET_KEY, TYPEFORM_WEBHOOK_SECRET, RATE_LIMIT_SALT"
 if [ "${1:-}" != "--yes" ]; then
   read -r -p "Type 'production' to continue: " ans
   [ "$ans" = "production" ] || { echo "aborted"; exit 1; }
@@ -53,7 +54,6 @@ put AMPLITUDE_API_KEY "$AMP_PROD"
 put TURNSTILE_SECRET_KEY "$TS_PROD"
 put TYPEFORM_WEBHOOK_SECRET "$TF_SECRET"
 put RATE_LIMIT_SALT "$SALT"
-put ENVIRONMENT "production"
 
 echo
 echo "Done. Next: build with the prod values (RUNBOOK section 8) and deploy to the production branch."

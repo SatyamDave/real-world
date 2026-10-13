@@ -53,7 +53,8 @@ await api(`/accounts/${account}/pages/projects/${PROJECT}`, {
         env_vars: {
           DATABASE_URL: secret(vars.DATABASE_URL_STAGING),
           AMPLITUDE_API_KEY: secret(vars.AMPLITUDE_API_KEY_STAGING),
-          ENVIRONMENT: { type: "plain_text", value: "staging" },
+          // ENVIRONMENT comes from wrangler.toml; remove the dashboard copy set earlier.
+          ENVIRONMENT: null,
         },
       },
     },

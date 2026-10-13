@@ -5,3 +5,12 @@ name = "real-world-landing"
 pages_build_output_dir = "dist"
 compatibility_date = "2026-10-12"
 compatibility_flags = ["nodejs_compat"]
+
+# Non-secret variables must live here: with a wrangler.toml, Pages ignores plain-text
+# variables set in the dashboard or API. Secrets (database, keys) are set per environment
+# by scripts/set-staging-env.mjs and scripts/set-prod-secrets.sh.
+[env.preview.vars]
+ENVIRONMENT = "staging"
+
+[env.production.vars]
+ENVIRONMENT = "production"
