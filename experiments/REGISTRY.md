@@ -12,3 +12,4 @@ Check every hash with `shasum -a 256 experiments/E*/PREREG.md`.
 | [E004](E004/PREREG.md) | Live hashed forecasts vs the market price (Brier) | 2026-10-11 | CEO | `4d31066a1f4efe34b93b822908cfa8773f250df5edc4bf8cdec724b3150ed3b2` | registered | none |
 | [E005](E005/PREREG.md) | Native-language vs English agents on non-Western polls | 2026-10-11 | CTO | `b5f7cbf8a140a6c1c2affb30f9a2dc1fedf7f8020531d707d8a23c4c8bad3f81` | registered | none |
 | [E006](E006/PREREG.md) | Assimilation v2 vs persistence on the E003 synthetic world | 2026-10-12 | CTO | `ad372cad8f2a3d2a00641b9205cdb97afa87d87e151c88c7e3e47593b8bc450d` | supported | [2026-10-12-none](E006/results/2026-10-12-none/RESULTS.md) |
+| [E007](E007/PREREG.md) | Jev forecasts are no worse calibrated than the Haiku baseline | 2026-10-12 | CTO | `cb68d107d9da5824e53b0d0dad2aaf7528f2cc0554ada13b7a334693f6033cc5` | registered | none |

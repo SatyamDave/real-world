@@ -15,9 +15,9 @@ def client(tmp_path, monkeypatch):
         yield c
 
 
-def test_six_experiments_every_hash_matches(client):
+def test_seven_experiments_every_hash_matches(client):
     body = client.get("/v1/research").json()
-    assert [e["id"] for e in body["experiments"]] == [f"E00{i}" for i in range(1, 7)]
+    assert [e["id"] for e in body["experiments"]] == [f"E00{i}" for i in range(1, 8)]
     for e in body["experiments"]:
         assert e["hash_matches"] and e["prereg_sha256"] == e["registry_sha256"]
         assert re.fullmatch(r"[0-9a-f]{64}", e["prereg_sha256"])
@@ -32,7 +32,13 @@ def test_e003_and_e006_carry_results_the_others_none(client):
         assert r["primary"]["n"] == 50 and r["primary"]["low"] <= r["primary"]["value"]
         assert r["outcome"] == "supported" and r["model"] == "none"
         assert r["path"] == f"experiments/{exp_id}/results/2026-10-12-none/RESULTS.md"
-    assert [e["id"] for e in by_id.values() if not e["results"]] == ["E001", "E002", "E004", "E005"]
+    assert [e["id"] for e in by_id.values() if not e["results"]] == [
+        "E001",
+        "E002",
+        "E004",
+        "E005",
+        "E007",
+    ]
 
 
 def test_a_changed_prereg_reports_a_hash_that_differs(client, monkeypatch):
