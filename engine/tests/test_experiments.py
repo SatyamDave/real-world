@@ -37,10 +37,10 @@ def test_hash_mismatch_refuses_to_run(root):
 
 
 def test_unregistered_experiment_refuses(root):
-    (root / "E009").mkdir()
-    (root / "E009" / "PREREG.md").write_text("# E009\n")
+    (root / "E999").mkdir()
+    (root / "E999" / "PREREG.md").write_text("# E999\n")
     with pytest.raises(experiments.NotRegistered, match="no row"):
-        experiments.run("E009", root=root)
+        experiments.run("E999", root=root)
 
 
 def test_missing_data_names_input_and_section(root):
