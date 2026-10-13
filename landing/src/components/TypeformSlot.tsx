@@ -51,12 +51,13 @@ export function TypeformSlot({
 
   if (formId) {
     return (
-      <div
+      <section
         className="typeform-embed"
         ref={mount}
+        aria-label="Teaser forecast and role"
         data-signup-id={signupId}
         style={{ height: 420 }}
-      />
+      ></section>
     );
   }
   return (

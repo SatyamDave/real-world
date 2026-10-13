@@ -4,7 +4,7 @@ import { BRAND } from "./brand";
 import { Footer } from "./components/Footer";
 import { Hero } from "./components/Hero";
 import { HowItWorks } from "./components/HowItWorks";
-import { ReceiptsPreview } from "./components/ReceiptsPreview";
+import { ReceiptStrip } from "./components/ReceiptStrip";
 import type { Headline } from "./copy/headlines";
 import { Privacy } from "./pages/Privacy";
 import { Terms } from "./pages/Terms";
@@ -15,7 +15,14 @@ export function App({ headline, path = "/" }: { headline: Headline; path?: strin
   return <Home headline={headline} />;
 }
 
-function SiteHeader() {
+function focusEmail(location: string) {
+  track("cta_clicked", { location });
+  const input = document.getElementById("email") as HTMLInputElement | null;
+  input?.scrollIntoView({ block: "center" });
+  input?.focus({ preventScroll: true });
+}
+
+function SiteHeader({ cta = false }: { cta?: boolean }) {
   return (
     <header className="site-header wrap">
       <div className="brand">
@@ -24,7 +31,11 @@ function SiteHeader() {
           .
         </span>
       </div>
-      <div className="tagline">{BRAND.tagline}</div>
+      {cta ? (
+        <button type="button" className="btn btn-small" onClick={() => focusEmail("header")}>
+          Join the waitlist
+        </button>
+      ) : null}
     </header>
   );
 }
@@ -35,11 +46,11 @@ function Home({ headline }: { headline: Headline }) {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <SiteHeader />
+      <SiteHeader cta />
       <main id="main">
         <Hero headline={headline} />
+        <ReceiptStrip />
         <HowItWorks />
-        <ReceiptsPreview />
         <RepeatCta />
       </main>
       <Footer />
@@ -51,16 +62,7 @@ function RepeatCta() {
   return (
     <section className="cta-band wrap">
       <h2>Watch the record start.</h2>
-      <button
-        type="button"
-        className="btn"
-        onClick={() => {
-          track("cta_clicked", { location: "repeat" });
-          const input = document.getElementById("email") as HTMLInputElement | null;
-          input?.focus();
-          input?.scrollIntoView({ block: "center" });
-        }}
-      >
+      <button type="button" className="btn" onClick={() => focusEmail("repeat")}>
         Join the waitlist
       </button>
     </section>

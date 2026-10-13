@@ -41,14 +41,14 @@ Legend: [ ] todo · [x] done · [~] in progress · [B] blocked (see OVERNIGHT_LO
 - [x] Tests: 12 unit + 8 Neon-dev integration (skipped without DATABASE_URL_DEV)
 - [x] draft PR
 
-## Design pass (`landing/design-pass`, title `feat(landing): design pass from competitor analysis`) — stacked on PR 3
-- [ ] Competitor screenshots + INSPIRATION.md (table, top 8 patterns, what Real World does differently)
-- [ ] frontend-design: direction, tokens, type; re-score vs alternates, switch only if analysis clearly says so
-- [ ] Hero headline structure, contrast line, forecast-card receipts, motion polish, CTA hierarchy, mobile layout
-- [ ] design:ux-copy for every headline, CTA, state; check against gtm/messaging.md
-- [ ] Quality loop x2 (screenshot, critique in PR body, fix)
-- [ ] design:accessibility-review; Lighthouse + axe budgets pass; before/after screenshots in PR
-- [ ] engineering:code-review, draft PR
+## Design pass (`landing/design-pass`, title `feat(landing): design pass from competitor analysis`) — DONE, draft PR #23, stacked on #22
+- [x] Competitor screenshots (local, git-ignored) + INSPIRATION.md (table, top 8 patterns, what Real World does differently)
+- [x] frontend-design plan (DESIGN-PASS.md): kept A, re-scored 20/15/16
+- [x] Receipt strip, hero, contrast line, CTA row, pulses, mobile layout
+- [x] design:ux-copy (COPY.md), checked against gtm/messaging.md; spec updated
+- [x] Quality loop x3 (critique in PR body), design:accessibility-review (A11Y-REVIEW.md)
+- [x] Lighthouse (LCP 1.81 s median, CLS 0.0003, perf 99, a11y 100) and JS budget pass; before/after screenshots in PR
+- [x] code review, draft PR, CI green
 
 ## PR 4 — analytics (`landing/4-analytics`, title `feat(landing): amplitude tracking`)
 - [ ] `@amplitude/analytics-browser` autocapture+attribution+UTM; session-replay plugin w/ sample rate; mask email

@@ -2,7 +2,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { SignupForm, type SignupResult, type SubmitFn } from "./SignupForm";
+import { SignupError, SignupForm, type SignupResult, type SubmitFn } from "./SignupForm";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -96,6 +96,42 @@ test("a failed request shows the error state", async () => {
   type("ok@email.com");
   await submit();
   await until(() =>
-    expect(container.textContent).toContain("That didn't save — check your connection"),
+    expect(container.textContent).toContain("That didn't save. Check your connection"),
   );
+});
+
+test("a failed bot check and a rate limit each say what to do", async () => {
+  for (const [reason, text] of [
+    ["bot_check", "Reload the page and try again."],
+    ["rate_limited", "Wait a few minutes and try again."],
+  ] as const) {
+    container.remove();
+    container = document.body.appendChild(document.createElement("div"));
+    const fn: SubmitFn = vi.fn(async () => {
+      throw new SignupError(reason);
+    });
+    await render(<SignupForm location="test" submit={fn} />);
+    type("ok@email.com");
+    await submit();
+    await until(() => expect(container.textContent).toContain(text));
+  }
+});
+
+test("success moves focus to the result, and an error is tied to the email field", async () => {
+  const ok: SubmitFn = vi.fn(async () => ({ signupId: "s1", duplicate: false }));
+  await render(<SignupForm location="test" submit={ok} />);
+  type("ok@email.com");
+  await submit();
+  await until(() => expect(document.activeElement?.tagName).toBe("H2"));
+  expect(document.activeElement?.textContent).toContain("You're in.");
+
+  container.remove();
+  container = document.body.appendChild(document.createElement("div"));
+  await render(<SignupForm location="test" submit={ok} />);
+  type("not-an-email");
+  await submit();
+  const input = need(container.querySelector("input"), "email input");
+  expect(input.getAttribute("aria-invalid")).toBe("true");
+  const msg = need(container.querySelector("#email-msg"), "error message");
+  expect(input.getAttribute("aria-describedby")).toBe(msg.id);
 });
