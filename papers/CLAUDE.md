@@ -2,6 +2,10 @@
 
 `papers/README.md` holds the rules every paper follows. Read it first. This file adds what a session must do here.
 
+## Scope since decision 0012
+
+Papers describe the engine and its public record, which carry both product jobs of [decision 0012](../research/decisions/0012-will-it-land-and-call-it.md). Post tests become paper material only through a pre-registered experiment on marked tests; a paper never cites a single person's record.
+
 ## A great contribution
 
 - A result enters a paper only by citing a committed file under `experiments/<id>/results/` or a hashed forecast log, with its path and commit.

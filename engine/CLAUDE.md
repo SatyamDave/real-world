@@ -4,7 +4,7 @@ The Python package `rw`: settings, storage, the model gateway, the licence gate,
 
 ## Specs and research
 
-- Product: [product/world.md](../product/world.md), [product/benchmark.md](../product/benchmark.md), [product/receipts.md](../product/receipts.md)
+- Product: the engine under both jobs of [decision 0012](../research/decisions/0012-will-it-land-and-call-it.md): [product/will-it-land.md](../product/will-it-land.md) (`rw/reaction.py`), [product/daily-question.md](../product/daily-question.md), [product/world.md](../product/world.md), [product/benchmark.md](../product/benchmark.md), [product/receipts.md](../product/receipts.md)
 - Decisions: [0001-architecture](../research/decisions/0001-architecture.md) (module table, agent state, fake model), [0002-benchmark-and-receipts](../research/decisions/0002-benchmark-and-receipts.md) (ledger and scoring rules)
 - Build plan: [BUILD_PLAN.md](../research/decisions/BUILD_PLAN.md) names the files each slice may touch.
 
@@ -12,7 +12,7 @@ The Python package `rw`: settings, storage, the model gateway, the licence gate,
 
 - Each module owns its tables in `rw/sql/<module>.sql` (`CREATE TABLE IF NOT EXISTS`) and exposes plain functions.
 - Only `llm.py` talks to a model provider. Every model call goes through `llm.decide` (Jev) or `llm.complete_json` (open model) with a `Budget`.
-- Only `daily.py` and `simulate.py` compose other modules. Only `api/` speaks HTTP.
+- Only `daily.py`, `simulate.py` and `reaction.py` compose other modules. Only `api/` speaks HTTP.
 - Only `ledger.py` writes ledger tables, and those tables refuse UPDATE and DELETE.
 - Every tunable number lives in `rw/settings.py`. Local state lives under `settings.rw_home()`.
 - Every data source is read only after `sources.require(source_id)` passes.

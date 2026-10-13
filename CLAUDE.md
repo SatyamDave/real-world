@@ -4,7 +4,18 @@ Read this file before any change. Then read the `CLAUDE.md` in every folder you 
 
 ## Mission
 
-Real World is "Simulations with receipts.": AI simulates how the world reacts to the news, and every forecast is sealed before the outcome and scored in public, misses included. Each morning it takes in news, polls and markets, corrects its simulated agents, and publishes hashed forecasts; it is a forecast and simulation API with a public score, with a coverage tier on every result and every output labelled AI-simulated. It serves four people: the daily-question visitor, the receipts skeptic, the analyst forking events, and the developer on the API with a capped key ([gtm/messaging.md](gtm/messaging.md)). Our job is to make that record honest and hard to beat, and to make every change here leave it better than we found it.
+Real World is "Simulations with receipts." for everyone: know how a post will land before you post it, and call the news against an AI that seals its calls first ([decision 0012](research/decisions/0012-will-it-land-and-call-it.md)). Under both jobs runs the engine: simulated populations of 16 countries that take in each morning's news, polls and markets, a typed decision per segment, and a ledger that seals every forecast before its outcome and scores it in public, misses included. Every result carries a coverage tier and the label AI-simulated. Our job is to make the product something a person finishes in a minute and comes back to, and to keep the record behind it honest and hard to beat.
+
+## Product rules
+
+These hold for every surface, including the landing page, ads, share text and READMEs ([decision 0012](research/decisions/0012-will-it-land-and-call-it.md), [research/product/108](research/product/108-consumer-wedge.md)).
+
+- The product is two jobs, "Will this land?" (post tests) and "Call it" (the daily question against the AI), plus the person's record and the public proof (receipts, scores, question pages). A new job or primitive needs a decision record first.
+- One job per screen, finishable in under a minute, with one next action. No tours, popups or walls.
+- Earn trust with proof, not claims: seal a person's call when it is made, show the seal, and score it when the outcome is known. Compare the engine with the person's own gut, the baseline they actually use. A retrospective check is labelled "Retrospective: not on your record" and never enters any record.
+- The app runs three simulation kinds, Reaction, Event and Call, from the simulator, taught through use cases grouped by who ([decision 0014](research/decisions/0014-ledger-desk.md)). The world, the daily cycle, the SDKs and API keys stay infrastructure; no surface pitches them to consumers.
+- The landing page sells the same two jobs in the same words; [product/landing-page.md](product/landing-page.md) holds its positioning rules.
+- Keep only what the two jobs, the record or the engine need. Delete a surface, file or doc section that serves none of them; `research/`, `papers/`, `experiments/` and `gtm/` stay and are kept current instead.
 
 ## Folder map
 
@@ -14,7 +25,7 @@ Real World is "Simulations with receipts.": AI simulates how the world reacts to
 | `product/` | One spec per user-facing surface | `product/CLAUDE.md` |
 | `experiments/` | Pre-registered experiments, their hashes in `REGISTRY.md`, and committed results | `experiments/CLAUDE.md` |
 | `papers/` | Public papers built only from committed artifacts | `papers/CLAUDE.md` |
-| `gtm/` | Launch plan, customers, pricing, builders program, messaging and allowed claims | `gtm/CLAUDE.md` |
+| `gtm/` | Launch plan, users, pricing, messaging and allowed claims; B2B material marked paused | `gtm/CLAUDE.md` |
 | `company/` | North-star metric, the plan to Nov 2, risks, cadence, and decisions only the founder can make | `company/CLAUDE.md` |
 | `.claude/commands/`, `.claude/agents/` | Slash commands that walk a session through each loop step; the `consistency-reviewer` agent | this file |
 | `scripts/` | Repo checks: `check_links.py`, `check_design.py`, `check_glossary.py`, `check_sdk_parity.py` | this file |

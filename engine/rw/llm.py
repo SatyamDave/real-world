@@ -23,7 +23,7 @@ from rw import db, settings
 Schema = dict[str, Any]
 # What the public API spends on: settings.FORK_DAILY_BUDGET_USD caps these, and the nightly run's
 # budget leaves them out.
-PUBLIC_PURPOSES = ("fork_signal", "screen", "why")
+PUBLIC_PURPOSES = ("fork_signal", "screen", "why", "post_test", "post_voice", "post_rewrite")
 
 
 class BudgetExceeded(Exception):

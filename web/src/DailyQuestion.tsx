@@ -88,7 +88,7 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
   return (
     <section className="card receipt daily">
       <div className="receipt-top">
-        <span>Today's question</span>
+        <span>Call it</span>
         {reveal?.outcome != null ? (
           <span className="stamp good">Resolved {reveal.outcome ? "yes" : "no"}</span>
         ) : (
@@ -96,6 +96,12 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
         )}
       </div>
       <h2 className="question">{q.text}</h2>
+      {!reveal && loaded.data.sealed && (
+        <p className="small mono seal">
+          The AI's call is sealed · {loaded.data.sealed.leaf_hash.slice(0, 12)} ·{" "}
+          <a href={`/receipts#${loaded.data.sealed.date}`}>{loaded.data.sealed.date}</a>
+        </p>
+      )}
       <dl className="receipt-cols">
         <div>
           <dt>Committed</dt>
@@ -156,7 +162,7 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
             </span>
           </label>
           <button type="submit" className="primary" disabled={busy}>
-            Submit {value}%
+            Call it {value}%
           </button>
           {status && (
             <p className="small load-error" role="alert">
@@ -172,7 +178,7 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
 function RevealView({ reveal, date, tiers }: { reveal: Reveal; date: string; tiers: string[] }) {
   const { count } = reveal.crowd;
   const rows: [string, number | null, string][] = [
-    ["You", reveal.you, "your answer"],
+    ["You", reveal.you, "your call"],
     [
       "Visitors",
       reveal.crowd.mean,
@@ -180,7 +186,7 @@ function RevealView({ reveal, date, tiers }: { reveal: Reveal; date: string; tie
         ? "you are the first"
         : `${plural(count, "other self-selected visitor")}${count < 20 ? " so far" : ""}`,
     ],
-    [FORECASTER.sim, reveal.sim, "committed forecast"],
+    ["AI", reveal.sim, "sealed before you called"],
     [
       FORECASTER.market,
       reveal.market,
@@ -209,6 +215,7 @@ function RevealView({ reveal, date, tiers }: { reveal: Reveal; date: string; tie
           ),
         )}
       </div>
+      <VsAiLine reveal={reveal} />
       <p className="streak">
         <strong>{reveal.streak}</strong> {reveal.streak === 1 ? "day" : "days"} answered in a row
       </p>
@@ -221,6 +228,22 @@ function RevealView({ reveal, date, tiers }: { reveal: Reveal; date: string; tie
       )}
       <Disclosure tiers={tiers} />
     </div>
+  );
+}
+
+function VsAiLine({ reveal }: { reveal: Reveal }) {
+  const r = reveal.record;
+  if (r.n === 0 || r.you === null || r.ai === null)
+    return (
+      <p className="small">
+        Your record against the AI starts when your first called question resolves.
+      </p>
+    );
+  return (
+    <p className="small mono">
+      You {r.you.toFixed(3)} · AI {r.ai.toFixed(3)} on {plural(r.n, "resolved question")} · you beat
+      the AI on {r.wins} (Brier, lower is better)
+    </p>
   );
 }
 

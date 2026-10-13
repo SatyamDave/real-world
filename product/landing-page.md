@@ -1,5 +1,17 @@
 # Landing page (pre-launch)
 
+## Positioning since decision 0012 (applies to every landing change)
+
+[Decision 0012](../research/decisions/0012-will-it-land-and-call-it.md) makes the product two jobs on the engine. The landing page sells the same two jobs, in this order, and nothing else:
+
+1. **Lead with "Will this land?"**: the headline promises knowing how a post lands before posting it, and the first action is pasting a post (or joining the waitlist for it). A live demo box that runs a post test, when the API is reachable, beats any explanation.
+2. **Then "Call it"**: today's question against the AI, whose call is sealed before anyone answers.
+3. **Proof, not claims**: sealed calls and the public record are the reason to believe. No accuracy number, no "beats", no "world model" ([messaging](../gtm/messaging.md)).
+4. **No globe-first hero or developer pitch** above the fold: the globe may stay as decoration. The simulator's use cases ([decision 0014](../research/decisions/0014-ledger-desk.md)) may follow the two jobs.
+5. **Same words as the app**: post test, landing chance, seal, gut, mark, call ([glossary](glossary.md)).
+
+The sections below describe the page as first built; where they conflict with this list, this list wins until the page is rebuilt.
+
 ## What it does
 
 A temporary one-page site, live Oct 13 to Oct 27, that explains Real World in a sentence, shows a slowly turning globe with "receipt" cards that mark where tracked events will resolve, and collects a waitlist. Signup is two steps: a visitor types their email and we save it at once; then an embedded Tally asks one teaser forecast and their role. Each ad sets `utm_content`, and the page shows the matching headline from an allow-list so we can measure which message makes strangers act. The page makes no claim outside [`gtm/messaging.md`](../gtm/messaging.md): it shows no hash, no probability and no accuracy number, because the public record does not exist yet. It links to the v1 app only once `APP_URL` is set. On Oct 27 the domain moves to the live daily receipts page and this page is retired ([0003](../research/decisions/0003-prelaunch-landing-and-waitlist.md), [product/101](../research/product/101-prelaunch-landing-waitlist-ads.md)).

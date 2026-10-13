@@ -1,18 +1,12 @@
-import { ApiError, type Country, type SystemStatus, type World } from "@real-world/sdk";
-import { type ComponentType, lazy, type ReactNode, Suspense, useEffect, useState } from "react";
+import { ApiError, type SystemStatus } from "@real-world/sdk";
+import { type ComponentType, lazy, Suspense, useEffect, useState } from "react";
 import { AcceptableUse } from "./AcceptableUse";
-import { AgentPanel } from "./AgentPanel";
 import { rw } from "./api";
-import { DailyQuestion } from "./DailyQuestion";
-import { Fork, ForkRun } from "./ForkCard";
-import { ReceiptsPage, ReceiptsStrip } from "./Receipts";
+import { Home } from "./Home";
+import { ReceiptsPage } from "./Receipts";
 import { applyMeta } from "./seo";
+import { signInHref, useSession } from "./session";
 
-// three.js is most of the bundle, so the globe loads once the page is idle, and only on screens
-// wide enough to use it. A still poster holds its place until then, and is all a phone shows.
-const Globe = lazy(() => import("./Globe"));
-// The docs page carries api/openapi.json, so it loads only on /docs.
-const Docs = lazy(() => import("./Docs").then((m) => ({ default: m.Docs })));
 // A file in pages/ is a route: `/<name>` and `/<name>/<param>`. Its default export is the page, and
 // its named export `title` is the document title, read once the module loads.
 type PageModule = { default: ComponentType<{ param?: string }>; title: string };
@@ -27,16 +21,15 @@ const PAGES: Record<string, ComponentType<{ param?: string }>> = Object.fromEntr
   ]),
 );
 const NAV = [
-  ["Today", "/"],
-  ["World", "/world"],
-  ["Cycle", "/cycle"],
+  ["Home", "/"],
+  ["Playground", "/playground"],
+  ["Call it", "/call"],
+  ["Your record", "/record"],
+] as const;
+const PROOF = [
   ["Scores", "/scores"],
   ["Receipts", "/receipts"],
-  ["Research", "/research"],
-  ["API", "/docs"],
 ] as const;
-const WIDE = "(min-width: 768px)";
-const FEATURED = ["USA", "BRA", "KEN"];
 
 export const DISCLOSURE = "AI-simulated. Not a poll or a prediction of a real person";
 
@@ -48,29 +41,6 @@ export function failure(e: unknown, fallback: string): string {
   const body = e instanceof ApiError ? (e.body as { detail?: unknown } | null) : null;
   const detail = typeof body?.detail === "string" && body.detail ? body.detail : fallback;
   return `${detail.trim().replace(/\.+$/, "")}.`;
-}
-
-export const prefersReducedMotion = () =>
-  typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-/** Runs `run` once the page has loaded and the main thread is idle; returns a cancel. */
-export function whenIdle(run: () => void): () => void {
-  let cancel = () => {};
-  const idle = () => {
-    if (typeof requestIdleCallback === "function") {
-      const id = requestIdleCallback(run, { timeout: 2000 });
-      cancel = () => cancelIdleCallback(id);
-    } else {
-      const id = setTimeout(run, 200);
-      cancel = () => clearTimeout(id);
-    }
-  };
-  if (document.readyState === "complete") idle();
-  else {
-    addEventListener("load", idle, { once: true });
-    cancel = () => removeEventListener("load", idle);
-  }
-  return () => cancel();
 }
 
 export const pct = (share: number) => `${Math.round(share * 100)}%`;
@@ -177,23 +147,12 @@ export function LoadError({
   );
 }
 
-function useWide() {
-  const [query] = useState(() => (typeof matchMedia === "function" ? matchMedia(WIDE) : null));
-  const [wide, setWide] = useState(query?.matches ?? false);
-  useEffect(() => {
-    if (!query) return;
-    const on = () => setWide(query.matches);
-    query.addEventListener("change", on);
-    return () => query.removeEventListener("change", on);
-  }, [query]);
-  return wide;
-}
-
-function Header({ path, date }: { path: string; date?: string }) {
-  // /cycle/2026-10-05 highlights Cycle; a path with no nav item highlights nothing
+function Sidebar({ path }: { path: string }) {
   const section = `/${path.split("/")[1]}`;
+  const session = useSession();
+  const status = useLoad(() => rw.status());
   return (
-    <header className="topbar">
+    <aside className="sidebar">
       <a href="#main" className="skip">
         Skip to content
       </a>
@@ -203,7 +162,6 @@ function Header({ path, date }: { path: string; date?: string }) {
           <span className="brand-mark" aria-hidden="true">
             .
           </span>
-          <span className="brand-date">{date ? `World of ${shortDate(date)}` : " "}</span>
         </span>
       </a>
       <nav aria-label="Pages">
@@ -212,129 +170,35 @@ function Header({ path, date }: { path: string; date?: string }) {
             {label}
           </a>
         ))}
-      </nav>
-    </header>
-  );
-}
-
-/** The claim the page rests on, with the record as its proof. Copy follows gtm/messaging.md. */
-function Thesis() {
-  const r = useLoad(() => rw.receipts());
-  const days = r.data?.days ?? [];
-  const first = days.at(-1)?.date;
-  const leaves = days.reduce((n, d) => n + Number(d.leaf_count), 0);
-  return (
-    <section className="thesis" aria-labelledby="thesis">
-      <h1 id="thesis">Simulations with receipts.</h1>
-      <p>
-        AI simulates how the world reacts to the news. Every forecast is sealed before the outcome
-        and scored in public.
-      </p>
-      {r.error ? (
-        <LoadError what="the record" error={r.error} retry={r.retry} />
-      ) : !r.data ? (
-        <Loading what="the record" />
-      ) : first ? (
-        <p className="proof">
-          Scored in public since {shortDate(first)}: {plural(days.length, "day")},{" "}
-          {plural(leaves, "receipt")}. <a href="/receipts">Verify every hash</a>
-        </p>
-      ) : (
-        <p className="proof">No forecast is hashed yet. The record starts with the first one.</p>
-      )}
-    </section>
-  );
-}
-
-function AgentLinks({
-  countries,
-  onSelect,
-}: {
-  countries: Country[];
-  onSelect: (c: Country) => void;
-}) {
-  const picks = FEATURED.map((iso) => countries.find((c) => c.iso3 === iso)).filter(
-    (c): c is Country => c !== undefined,
-  );
-  if (!picks.length) return null;
-  return (
-    <p className="agent-links">
-      Read one agent:{" "}
-      {picks.map((c, i) => (
-        <span key={c.iso3}>
-          {i > 0 && ", "}
-          <button type="button" className="link" onClick={() => onSelect(c)}>
-            {c.name}
-          </button>
-        </span>
-      ))}
-    </p>
-  );
-}
-
-/** The phone and keyboard alternative to the globe: every simulated country with its tier. */
-function CountryList({
-  countries,
-  onSelect,
-}: {
-  countries: Country[];
-  onSelect: (c: Country) => void;
-}) {
-  return (
-    <section className="card countries">
-      <h2>Read one agent</h2>
-      <p className="muted small">Pick a country to open one sampled agent and what moved it.</p>
-      <ul>
-        {countries.map((c) => (
-          <li key={c.iso3}>
-            <button type="button" onClick={() => onSelect(c)}>
-              <span>{c.name}</span>
-              <TierBadge tier={c.tier} />
-            </button>
-          </li>
+        <span className="side-label">Proof</span>
+        {PROOF.map(([label, href]) => (
+          <a key={href} href={href} aria-current={href === section ? "page" : undefined}>
+            {label}
+          </a>
         ))}
-      </ul>
-    </section>
-  );
-}
-
-function useIdle() {
-  const [idle, setIdle] = useState(false);
-  useEffect(() => whenIdle(() => setIdle(true)), []);
-  return idle;
-}
-
-function Home({ w, tiers, alert }: { w?: World; tiers: string[]; alert?: ReactNode }) {
-  const [selected, setSelected] = useState<Country | null>(null);
-  const wide = useWide();
-  const idle = useIdle();
-  return (
-    <>
-      <div className="home">
-        {alert}
-        <Thesis />
-        <DailyQuestion tiers={tiers} />
-        {w && wide && <AgentLinks countries={w.countries} onSelect={setSelected} />}
-        <ReceiptsStrip />
-        {w && <Fork events={w.prefilled_events} />}
-        {w && !wide && <CountryList countries={w.countries} onSelect={setSelected} />}
+      </nav>
+      <div className="side-foot">
+        <div className="side-card">
+          <span className="muted small">Spend today</span>
+          <strong className="mono">
+            {status.data
+              ? status.data.provider === "fake"
+                ? "$0.00 (fake model)"
+                : `$${status.data.spent_today_usd.toFixed(2)}`
+              : "…"}
+          </strong>
+        </div>
+        {session.data ? (
+          <a href="/record" className="side-account">
+            {session.data.email}
+          </a>
+        ) : session.data === null ? (
+          <a href={signInHref()} className="side-account">
+            Sign in
+          </a>
+        ) : null}
       </div>
-      <div className="globe">
-        <img
-          className="globe-poster"
-          src="/globe-poster.svg"
-          width={500}
-          height={500}
-          alt="A dot-sampled globe of the world's land."
-        />
-        {w && wide && idle && (
-          <Suspense fallback={null}>
-            <Globe countries={w.countries} onSelect={setSelected} paused={selected !== null} />
-          </Suspense>
-        )}
-      </div>
-      {selected && <AgentPanel country={selected} onClose={() => setSelected(null)} />}
-    </>
+    </aside>
   );
 }
 
@@ -343,7 +207,7 @@ export function NotFound() {
     <section className="card notfound">
       <h1>Page not found</h1>
       <p className="muted">
-        No page at this address. <a href="/">Go to today's question</a>
+        No page at this address. <a href="/">Go home</a>
       </p>
     </section>
   );
@@ -389,7 +253,6 @@ function Footer() {
         <a href="/acceptable-use">Acceptable use</a>
         <a href="/privacy">Privacy</a>
         <a href="/terms">Terms</a>
-        <a href="/docs">API</a>
         <a href="https://github.com/SatyamDave/real-world">Source</a>
       </nav>
       <p>
@@ -402,54 +265,43 @@ function Footer() {
 }
 
 const TITLES: Record<string, string> = {
-  "/": "Simulations with receipts. · Real World",
+  "/": "Learn to simulate · Real World",
   "/receipts": "Receipts · Real World",
   "/acceptable-use": "Acceptable use · Real World",
-  "/docs": "API · Real World",
 };
 
 export function App({ path = location.pathname }: { path?: string }) {
   const { data: w, error, retry } = useLoad(() => rw.world());
   const tiers = w?.countries.map((c) => c.tier) ?? [];
-  const fork = path.match(/^\/fork\/([^/]+)$/);
   const page = path.match(/^\/([^/]+)(?:\/([^/]+))?\/?$/);
   const Page = page && Object.hasOwn(PAGES, page[1]) ? PAGES[page[1]] : undefined;
-  const known = fork !== null || path in TITLES || Page !== undefined;
-  const worldError = error && known && (
-    <LoadError what="today's world" error={error} retry={retry} />
-  );
-  // A fork names itself once its event text has loaded.
+  const known = path in TITLES || Page !== undefined;
   useEffect(() => {
-    if (!path.startsWith("/fork/") && !Page)
-      document.title = TITLES[path] ?? "Page not found · Real World";
+    if (!Page) document.title = TITLES[path] ?? "Page not found · Real World";
   }, [path, Page]);
   useEffect(() => applyMeta(import.meta.env.VITE_PUBLIC_ORIGIN ?? location.origin, path), [path]);
   return (
-    <>
-      <Header path={path} date={w?.date} />
-      <main id="main" tabIndex={-1} className={path === "/" ? undefined : "page"}>
-        {path !== "/" && worldError}
-        {fork ? (
-          <ForkRun id={decodeURIComponent(fork[1])} />
-        ) : path === "/receipts" ? (
-          <ReceiptsPage tiers={tiers} />
-        ) : path === "/docs" ? (
-          <Suspense fallback={<Loading what="the API" />}>
-            <Docs />
-          </Suspense>
-        ) : path === "/acceptable-use" ? (
-          <AcceptableUse />
-        ) : path === "/" ? (
-          <Home w={w} tiers={tiers} alert={worldError} />
-        ) : Page && page ? (
-          <Suspense fallback={<Loading what="the page" />}>
-            <Page param={page[2] === undefined ? undefined : decodeURIComponent(page[2])} />
-          </Suspense>
-        ) : (
-          <NotFound />
-        )}
-      </main>
-      <Footer />
-    </>
+    <div className="console">
+      <Sidebar path={path} />
+      <div className="console-main">
+        <main id="main" tabIndex={-1} className="page">
+          {error && known && <LoadError what="today's world" error={error} retry={retry} />}
+          {path === "/receipts" ? (
+            <ReceiptsPage tiers={tiers} />
+          ) : path === "/acceptable-use" ? (
+            <AcceptableUse />
+          ) : path === "/" ? (
+            <Home />
+          ) : Page && page ? (
+            <Suspense fallback={<Loading what="the page" />}>
+              <Page param={page[2] === undefined ? undefined : decodeURIComponent(page[2])} />
+            </Suspense>
+          ) : (
+            <NotFound />
+          )}
+        </main>
+        <Footer />
+      </div>
+    </div>
   );
 }

@@ -26,6 +26,16 @@ export type Reveal = Schemas["Reveal"];
 export type DayRecord = Schemas["DayRecord"];
 export type ReceiptEntry = Schemas["ReceiptEntry"];
 export type Skill = Schemas["Skill"];
+export type Person = Schemas["Person"];
+export type PostTestRequest = Schemas["PostTestRequest"];
+export type PostTestOut = Schemas["PostTestOut"];
+export type PostTestResult = Schemas["PostTestResult"];
+export type SegmentReaction = Schemas["SegmentReaction"];
+export type RetroRequest = Schemas["RetroRequest"];
+export type RetroResult = Schemas["RetroResult"];
+export type TestRecord = Schemas["TestRecord"];
+export type SealedTest = Schemas["SealedTest"];
+export type VsAi = Schemas["VsAi"];
 export type JobEvent = { type: string; [key: string]: unknown };
 export type { components, paths };
 

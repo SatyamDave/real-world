@@ -1,5 +1,7 @@
 # Builders program
 
+**Paused since [0012](../research/decisions/0012-will-it-land-and-call-it.md):** the API is the engine's interface, not a product surface, so no builder keys are handed out before launch. The plan below stays for when the engine opens to builders.
+
 Ten named people who each ship one public thing on the API before Oct 27. Not a community, not an application form. Source for everything below unless marked: [builders program note](../research/product/086-builders-program.md).
 
 ## The ten slots, filled by type

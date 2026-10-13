@@ -33,16 +33,16 @@ test("sitemap and robots list the static routes at the origin, and no parameter 
     ROUTES.map((r) => `<loc>${canonicalUrl("https://rw.example", r.path)}</loc>`),
   );
   expect(xml).toContain("<loc>https://rw.example/</loc>");
-  expect(xml).not.toMatch(/fork|questions/);
+  expect(xml).not.toMatch(/record|sign-in|questions/);
   expect(robotsTxt("https://rw.example")).toContain("Sitemap: https://rw.example/sitemap.xml");
   for (const r of ROUTES) expect(r.description.length).toBeLessThan(160);
 });
 
 test("every route has a description; a parameter route shares one; an unknown path has none", () => {
   for (const r of ROUTES) expect(descriptionFor(r.path)).toBe(r.description);
-  expect(descriptionFor("/world/")).toBe(descriptionFor("/world"));
+  expect(descriptionFor("/call/")).toBe(descriptionFor("/call"));
   expect(descriptionFor("/questions/abc")).toMatch(/committed/);
-  expect(descriptionFor("/fork/abc")).toBeDefined();
+  expect(descriptionFor("/questions/abc")).toBeDefined();
   expect(descriptionFor("/nope")).toBeUndefined();
 });
 
