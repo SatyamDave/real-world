@@ -17,10 +17,10 @@ The one list of what the page sends and why. The code is `src/analytics.ts` (the
 | Event | When | Properties besides `headline_variant` |
 | --- | --- | --- |
 | `landing_viewed` | Once per load of any route | `path`, `referrer`, and any of `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` present in the URL |
-| `section_viewed` | First time 40% of a section is on screen | `section`: `hero`, `receipts`, `how_it_works`, `repeat_cta`, `legal` |
+| `section_viewed` | First time 40% of a section is on screen | `section`: `hero`, `receipts`, `thesis`, `how_it_works`, `use_cases`, `research`, `collaborate`, `repeat_cta`, `legal` |
 | `globe_ready` | The animated globe started | none |
 | `globe_fallback_shown` | Poster only | `reason`: `reduced_motion` or `no_webgl` |
-| `cta_clicked` | Any call to action pressed | `location`: `hero`, `header`, `repeat`, `hero_secondary` |
+| `cta_clicked` | Any call to action pressed | `location`: `hero`, `header`, `repeat`, `hero_secondary`, `collaborate` |
 | `email_submitted` | Valid email sent to the server | `location` |
 | `signup_saved` | Server saved a new signup (the conversion) | `location`, `signup_id` |
 | `signup_duplicate` | Server found the email already saved | `location`, `signup_id` |
@@ -28,7 +28,7 @@ The one list of what the page sends and why. The code is `src/analytics.ts` (the
 | `typeform_opened` | The Typeform step mounted | `signup_id` |
 | `typeform_submitted` | The Typeform was submitted | `signup_id` |
 | `app_link_clicked` | "Try today's question" pressed (only when `APP_URL` is set) | `location` |
-| `outbound_clicked` | Contact link pressed | `to` |
+| `outbound_clicked` | Contact link pressed | `to`: `contact` (footer) or `collaboration` |
 
 ## Server events (Amplitude HTTP API, from the Pages Functions)
 

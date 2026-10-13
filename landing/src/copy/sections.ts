@@ -64,7 +64,7 @@ export const RESEARCH = {
 
 export const COLLABORATE = {
   title: "Work on this with us.",
-  body: "We are open to people who forecast, research or build. Tell us what you would do.",
+  body: "Open to people who forecast, research or build. Tell us what you would do.",
   withEmail: "Email us",
   withoutEmail: "Join the waitlist and choose your role",
 };
