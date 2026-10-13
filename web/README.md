@@ -1,6 +1,6 @@
 # web
 
-The Vite + React + TypeScript web app, shaped as a console ([0013](../research/decisions/0013-console-and-playground.md)): a home and a playground of three primitives, "Will this land?" (post tests on simulated audiences, sealed when signed in, and the retrospective check), "Call it" (the daily question against the AI's sealed call), your record, sign-in, and the proof pages (`/scores`, `/receipts` with an in-browser verifier, `/questions/{id}`). What it must do is specified in [product/web-app.md](../product/web-app.md).
+The Vite + React + TypeScript web app, shaped as a ledger desk ([0014](../research/decisions/0014-ledger-desk.md)): a home and a simulator for post tests and forks, "Will this land?" (post tests on simulated audiences, sealed when signed in, and the retrospective check), "Call it" (the daily question against the AI's sealed call), your record, sign-in, and the proof pages (`/scores`, `/receipts` with an in-browser verifier, `/questions/{id}`). What it must do is specified in [product/web-app.md](../product/web-app.md).
 
 ## Run and test
 
@@ -19,11 +19,11 @@ pnpm --filter web exec vite build --mode fixtures   # local smoke build on fixtu
 | --- | --- |
 | `src/api.ts` | The one `@real-world/sdk` client, pointed at `VITE_API_URL`. Every public read goes through it. |
 | `src/session.ts` | The cookie-authenticated calls the SDK leaves out (sign-in, post tests, your record), `useSession`, and the in-browser seal check. The only other module that calls fetch. |
-| `src/App.tsx` | Routes on `location.pathname` (`/`, `/receipts`, `/acceptable-use`, and every `src/pages/<name>.tsx` as `/<name>` and `/<name>/<param>`) and the shared bits: the sidebar with the pages, the proof links, today's spend and sign-in; disclosure line, tier badge, formatting, footer with the status strip. |
-| `src/Home.tsx` | The home: "Learn to simulate", the three primitive cards (Reaction, Event, Call) and the use cases ([home and playground](../product/playground.md)). |
-| `src/pages/playground.tsx` | The playground: primitive, text, audience, gut or days, "Run", the retrospective check, and the lessons and use cases before a run. |
-| `src/results.tsx` | The drawn results: Reaction (landing chance, reaction mix bar, audience heatmap, best and worst, accounts, rewrite, seal) and Event (topic bars with bands, the day-by-day trajectory, segment shifts). |
-| `src/usecases.ts` | The prepared use cases, each a primitive, a text and an audience. |
+| `src/App.tsx` | Routes on `location.pathname` (`/`, `/receipts`, `/acceptable-use`, and every `src/pages/<name>.tsx` as `/<name>` and `/<name>/<param>`) and the shared bits: the top bar with the pages and sign-in, the ledger tape from `GET /v1/status`, `SealGrid`, disclosure line, tier badge, formatting, footer. |
+| `src/Home.tsx` | The home: "Will this land?" with the post box, today's simulated populations with the day record's seal, and `UseCaseList` ([home and simulator](../product/playground.md)). |
+| `src/pages/simulate.tsx` | The simulator: kind tabs, text, audience, gut or days, "Test it" or "Run the fork", the retrospective check, and the use cases of the chosen kind before a run. |
+| `src/results.tsx` | The drawn results: the post test slip (quoted post, landing chance, `PopulationField`, reaction mix bar, `SegmentMatrix`, best and worst, accounts, rewrite, seal line) and the fork slip (quoted event, `BeliefShifts`, the day-by-day trajectory, segment shifts). |
+| `src/usecases.ts` | The prepared use cases, each a group, a kind, a text and an audience. |
 | `src/DailyQuestion.tsx` | Call it: the sealed AI line, slider, "Call it", four-way reveal, record against the AI, streak and week grid. The player id lives in `localStorage`. |
 | `src/pages/call.tsx`, `src/pages/record.tsx`, `src/pages/sign-in.tsx` | `/call`; `/record` with Landed and Flopped, "Check seal" and the account actions; `/sign-in` and `/sign-in/confirm`. |
 | `src/pages/scores.tsx`, `src/pages/questions.tsx`, `src/pages/privacy.tsx`, `src/pages/terms.tsx` | The proof and legal pages. Default export `Page({ param })`, named export `title`; loaded lazily. |

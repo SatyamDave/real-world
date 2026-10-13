@@ -8,6 +8,7 @@ import {
   Loading,
   pct,
   plural,
+  SealGrid,
   shortDate,
   useLoad,
 } from "./App";
@@ -98,6 +99,7 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
       <h2 className="question">{q.text}</h2>
       {!reveal && loaded.data.sealed && (
         <p className="small mono seal">
+          <SealGrid hash={loaded.data.sealed.leaf_hash} />
           The AI's call is sealed · {loaded.data.sealed.leaf_hash.slice(0, 12)} ·{" "}
           <a href={`/receipts#${loaded.data.sealed.date}`}>{loaded.data.sealed.date}</a>
         </p>

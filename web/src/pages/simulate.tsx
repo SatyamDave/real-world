@@ -2,29 +2,25 @@ import type { Country, PostTestOut, RetroResult, SimulateResult } from "@real-wo
 import { useState } from "react";
 import { failure, pct, useLoad } from "../App";
 import { rw } from "../api";
+import { UseCaseList } from "../Home";
 import { EventResult, ReactionResult } from "../results";
 import { account, useSession } from "../session";
-import { findUseCase, type Primitive, USE_CASES } from "../usecases";
+import { findUseCase, type Primitive } from "../usecases";
 
-export const title = "Playground";
+export const title = "Simulate";
 
 const MAX = 500;
 const AGES = ["18-34", "35-54", "55+"] as const;
 type Age = (typeof AGES)[number];
 type Audience = { country: string; ages: Age[] };
 
-const LESSONS = [
-  ["Reaction", "Will a launch post land?", "launch-post"],
-  ["Event", "What if phone prices double?", "chip-shortage"],
-  ["Call", "Today's question, sealed", null],
-] as const;
-
-export default function Playground() {
-  const start = findUseCase(new URLSearchParams(location.search).get("use"));
+export default function Simulate() {
+  const params = new URLSearchParams(location.search);
+  const start = findUseCase(params.get("use"));
   const world = useLoad(() => rw.world());
   const session = useSession();
   const [primitive, setPrimitive] = useState<Primitive>(start?.primitive ?? "reaction");
-  const [text, setText] = useState(start?.text ?? "");
+  const [text, setText] = useState(start?.text ?? (params.get("text") ?? "").trim().slice(0, MAX));
   const [audience, setAudience] = useState<Audience>({
     country: start?.countries?.length === 1 ? start.countries[0] : "",
     ages: start?.ages ?? [...AGES],
@@ -38,12 +34,14 @@ export default function Playground() {
   const [event, setEvent] = useState<SimulateResult | null>(null);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [asked, setAsked] = useState("");
 
   const chosen = () => countries ?? (audience.country ? [audience.country] : null);
 
   async function run(input = text) {
     setBusy(true);
     setStatus("");
+    setAsked(input);
     setReaction(null);
     setEvent(null);
     try {
@@ -69,7 +67,7 @@ export default function Playground() {
   const pick = (id: string) => {
     const u = findUseCase(id);
     if (!u) return;
-    history.replaceState(null, "", `/playground?use=${id}`);
+    history.replaceState(null, "", `/simulate?use=${id}`);
     setPrimitive(u.primitive);
     setText(u.text);
     setAudience({
@@ -82,40 +80,41 @@ export default function Playground() {
   };
 
   const list: Country[] = world.data?.countries ?? [];
+  const ran = reaction || event;
   return (
-    <div className="playground">
+    <div className="simulate">
+      <h1>Simulate</h1>
+      <p className="lead muted">
+        Run a post or one event on today's simulated populations. Every result is AI-simulated and
+        shows its coverage tier.
+      </p>
+      <div className="kind-tabs" role="radiogroup" aria-label="Simulation">
+        {(["reaction", "event"] as const).map((p) => (
+          <label key={p} className={primitive === p ? "on" : undefined}>
+            <input
+              type="radio"
+              name="primitive"
+              checked={primitive === p}
+              onChange={() => setPrimitive(p)}
+            />
+            {p === "reaction" ? "Test a post" : "Fork today's world"}
+          </label>
+        ))}
+        <a href="/call">Call today's question</a>
+      </div>
       <form
-        className="pg-input"
+        className="card bench"
         onSubmit={(e) => {
           e.preventDefault();
           run();
         }}
       >
-        <div className="pg-bar">
-          <span className="mono">Playground</span>
-          <span className="tabs-mini" role="radiogroup" aria-label="Primitive">
-            {(["reaction", "event"] as const).map((p) => (
-              <label key={p} className={`chip${primitive === p ? " on" : ""}`}>
-                <input
-                  type="radio"
-                  name="primitive"
-                  checked={primitive === p}
-                  onChange={() => setPrimitive(p)}
-                />
-                {p === "reaction" ? "Reaction" : "Event"}
-              </label>
-            ))}
-            <a className="chip" href="/call">
-              Call
-            </a>
-          </span>
-        </div>
-        <label htmlFor="pg-text" className="pg-label">
+        <label htmlFor="pg-text" className="bench-label">
           {primitive === "reaction" ? "Post" : "Event"}
         </label>
         <textarea
           id="pg-text"
-          rows={6}
+          rows={4}
           maxLength={MAX}
           value={text}
           placeholder={
@@ -128,77 +127,74 @@ export default function Playground() {
         <p className="muted small land-counter">
           {text.length} of {MAX} characters
         </p>
-        <fieldset className="pg-fields">
-          <legend className="pg-label">Audience</legend>
-          {countries ? (
-            <p className="small">
-              {countries.map((iso) => list.find((c) => c.iso3 === iso)?.name ?? iso).join(", ")}{" "}
-              <button type="button" className="link" onClick={() => setCountries(null)}>
-                Change
-              </button>
-            </p>
-          ) : (
-            <select
-              aria-label="Country"
-              value={audience.country}
-              onChange={(e) => setAudience((a) => ({ ...a, country: e.target.value }))}
-            >
-              <option value="">Every simulated country</option>
-              {list.map((c) => (
-                <option key={c.iso3} value={c.iso3}>
-                  {c.name} (tier {c.tier})
-                </option>
-              ))}
-            </select>
-          )}
-          {primitive === "reaction" && (
-            <span className="chips">
-              {AGES.map((age) => (
-                <label key={age} className="chip">
-                  <input
-                    type="checkbox"
-                    checked={audience.ages.includes(age)}
-                    onChange={() =>
-                      setAudience((a) => ({
-                        ...a,
-                        ages: a.ages.includes(age)
-                          ? a.ages.filter((x) => x !== age)
-                          : [...a.ages, age],
-                      }))
-                    }
-                  />
-                  {age}
+        <div className="bench-controls">
+          <fieldset>
+            <legend className="bench-label">Audience</legend>
+            {countries ? (
+              <p className="small">
+                {countries.map((iso) => list.find((c) => c.iso3 === iso)?.name ?? iso).join(", ")}{" "}
+                <button type="button" className="link" onClick={() => setCountries(null)}>
+                  Change
+                </button>
+              </p>
+            ) : (
+              <select
+                aria-label="Country"
+                value={audience.country}
+                onChange={(e) => setAudience((a) => ({ ...a, country: e.target.value }))}
+              >
+                <option value="">Every simulated country</option>
+                {list.map((c) => (
+                  <option key={c.iso3} value={c.iso3}>
+                    {c.name} (tier {c.tier})
+                  </option>
+                ))}
+              </select>
+            )}
+            {primitive === "reaction" && (
+              <span className="chips">
+                {AGES.map((age) => (
+                  <label key={age} className="chip">
+                    <input
+                      type="checkbox"
+                      checked={audience.ages.includes(age)}
+                      onChange={() =>
+                        setAudience((a) => ({
+                          ...a,
+                          ages: a.ages.includes(age)
+                            ? a.ages.filter((x) => x !== age)
+                            : [...a.ages, age],
+                        }))
+                      }
+                    />
+                    {age}
+                  </label>
+                ))}
+              </span>
+            )}
+          </fieldset>
+          {primitive === "reaction" ? (
+            <fieldset>
+              <legend className="bench-label">Your gut, before you see the result</legend>
+              {(["lands", "flops"] as const).map((g) => (
+                <label key={g} className="chip">
+                  <input type="radio" name="gut" checked={gut === g} onChange={() => setGut(g)} />
+                  It {g}
                 </label>
               ))}
-            </span>
+            </fieldset>
+          ) : (
+            <label className="bench-days">
+              <span className="bench-label">Simulated days</span>
+              <input
+                type="number"
+                min={1}
+                max={14}
+                value={days}
+                onChange={(e) => setDays(Number(e.target.value))}
+              />
+            </label>
           )}
-        </fieldset>
-        {primitive === "reaction" ? (
-          <fieldset className="pg-fields">
-            <legend className="pg-label">Your gut, before you see the result</legend>
-            {(["lands", "flops"] as const).map((g) => (
-              <label key={g} className="chip">
-                <input type="radio" name="gut" checked={gut === g} onChange={() => setGut(g)} />
-                It {g}
-              </label>
-            ))}
-          </fieldset>
-        ) : (
-          <label className="pg-fields">
-            <span className="pg-label">Simulated days</span>
-            <input
-              type="number"
-              min={1}
-              max={14}
-              value={days}
-              onChange={(e) => setDays(Number(e.target.value))}
-            />
-          </label>
-        )}
-        <div className="pg-run">
-          <span className="mono small muted">
-            {world.data ? `World of ${world.data.date}` : ""}
-          </span>
           <button
             type="submit"
             className="primary"
@@ -206,9 +202,14 @@ export default function Playground() {
               busy || !text.trim() || (primitive === "reaction" && audience.ages.length === 0)
             }
           >
-            Run
+            {primitive === "reaction" ? "Test it" : "Run the fork"}
           </button>
         </div>
+        <p className="mono small muted">
+          {world.data
+            ? `World of ${world.data.date} · ${world.data.countries.length} simulated populations`
+            : ""}
+        </p>
         {busy && (
           <p className="muted small loading" role="status">
             <span className="spinner" aria-hidden="true" />
@@ -222,58 +223,26 @@ export default function Playground() {
         )}
         {primitive === "reaction" && <Retrospective countries={chosen()} />}
       </form>
-      <div className="pg-output">
-        {reaction ? (
-          <ReactionResult
-            out={reaction}
-            signedIn={Boolean(session.data)}
-            onRetest={(post) => {
-              setText(post);
-              run(post);
-            }}
-          />
-        ) : event ? (
-          <EventResult result={event} />
-        ) : (
-          <Lessons onPick={pick} />
-        )}
-      </div>
+      {reaction ? (
+        <ReactionResult
+          out={reaction}
+          text={asked}
+          signedIn={Boolean(session.data)}
+          onRetest={(post) => {
+            setText(post);
+            run(post);
+          }}
+        />
+      ) : event ? (
+        <EventResult result={event} text={asked} />
+      ) : null}
+      {!ran && !busy && (
+        <section className="decisions" aria-labelledby="decisions">
+          <h2 id="decisions">Start from a real decision</h2>
+          <UseCaseList only={primitive} onPick={pick} />
+        </section>
+      )}
     </div>
-  );
-}
-
-function Lessons({ onPick }: { onPick: (id: string) => void }) {
-  return (
-    <section className="lessons" aria-labelledby="lessons">
-      <p className="mono eyebrow">EXAMPLE REQUESTS</p>
-      <h2 id="lessons">Learn to simulate</h2>
-      <p className="mono eyebrow">WALKTHROUGH LESSONS</p>
-      <div className="lesson-cards">
-        {LESSONS.map(([tag, line, id]) =>
-          id ? (
-            <button key={tag} type="button" className="lesson" onClick={() => onPick(id)}>
-              <span className="lesson-tag mono">{tag}</span>
-              <strong>{line}</strong>
-            </button>
-          ) : (
-            <a key={tag} className="lesson" href="/call">
-              <span className="lesson-tag mono">{tag}</span>
-              <strong>{line}</strong>
-            </a>
-          ),
-        )}
-      </div>
-      <p className="mono eyebrow">REAL-LIFE USE CASES</p>
-      <ul className="usecase-rows">
-        {USE_CASES.map((u) => (
-          <li key={u.id}>
-            <button type="button" onClick={() => onPick(u.id)}>
-              <strong>{u.title}</strong> <span className="muted">{u.blurb}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }
 
