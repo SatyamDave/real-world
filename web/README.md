@@ -11,7 +11,7 @@ pnpm --filter web build    # type check and production build; fails if the API a
 pnpm --filter web exec vite build --mode fixtures   # local smoke build on fixtures, without that check
 ```
 
-`VITE_API_URL` points the app at another API (default `http://localhost:8000`).
+`VITE_API_URL` points the app at another API (default `http://localhost:8000`). `VITE_PUBLIC_ORIGIN` (an https origin, no path) is required by a production build and makes canonical, `og:` and sitemap URLs absolute; dev and `--mode fixtures` use `http://localhost:5173`.
 
 ## Where things are
 
@@ -27,6 +27,7 @@ pnpm --filter web exec vite build --mode fixtures   # local smoke build on fixtu
 | `src/ForkCard.tsx` | Fork box with cost estimate, SSE progress, and the fork card. |
 | `src/Globe.tsx` | Loaded only at 768 px and wider, once the page has loaded and gone idle; a still poster holds its place. react-globe.gl over `public/countries-110m.geojson` (Natural Earth 1:110m admin-0, public domain). Each simulated country rings once when it appears; with reduced motion it does not rotate or ring. |
 | `src/share.ts` | Pure share builders: the week grid and its text, the fork sentence, text and 1200x630 image, logit steps as share points, trait codes as words. |
+| `src/seo.ts` | Per-route descriptions, the public-origin check, `robots.txt` and `sitemap.xml` text, and the canonical and description tags set on navigation. |
 | `public/og.png`, `public/favicon.svg` | The static Open Graph image and the favicon. |
 | `src/styles/tokens.css`, `src/styles/fonts.css` | The "Commit Slip" tokens and the self-hosted IBM Plex faces, copied from the landing page. `src/styles.css` holds the dark values and every component rule. |
 | `public/fonts/`, `public/globe-poster.svg` | IBM Plex Sans and Mono (latin, woff2, SIL Open Font License in `OFL.txt`) and the still globe shown until the live one loads. |

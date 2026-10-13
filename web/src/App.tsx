@@ -6,6 +6,7 @@ import { rw } from "./api";
 import { DailyQuestion } from "./DailyQuestion";
 import { Fork, ForkRun } from "./ForkCard";
 import { ReceiptsPage, ReceiptsStrip } from "./Receipts";
+import { applyMeta } from "./seo";
 
 // three.js is most of the bundle, so the globe loads once the page is idle, and only on screens
 // wide enough to use it. A still poster holds its place until then, and is all a phone shows.
@@ -420,6 +421,7 @@ export function App({ path = location.pathname }: { path?: string }) {
     if (!path.startsWith("/fork/") && !Page)
       document.title = TITLES[path] ?? "Page not found · Real World";
   }, [path, Page]);
+  useEffect(() => applyMeta(import.meta.env.VITE_PUBLIC_ORIGIN ?? location.origin, path), [path]);
   return (
     <>
       <Header path={path} date={w?.date} />
