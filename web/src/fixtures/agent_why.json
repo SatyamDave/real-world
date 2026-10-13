@@ -2,5 +2,6 @@
   "agent_id": "a00000",
   "text": "FIXTURE: Prices at the pump kept climbing, so I expect my budget to get tighter.",
   "label": "Simulated account, not the cause",
-  "simulated": true
+  "simulated": true,
+  "provider": "openai_compatible"
 }

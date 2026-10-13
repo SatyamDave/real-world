@@ -99,3 +99,9 @@ Three reviews (methods/statistics 6/10, citation audit 7/10, skeptical reviewer 
 - **Citations added (each opened via Crossref, DataCite, arXiv API, Hugging Face API or the live page):** Claude models overview, MMMLU, Holm 1979, Benjamini-Hochberg 1995, ISCED 2011, Sweeney 2002, Rubin 1987, Andridge & Little 2010, Bergsma 2013, Freedman & Lane 1983, Rassler 2002, Ghitza & Gelman 2013, Nosek et al. 2018, Meister et al. 2025, Dominguez-Olmedo et al. 2024, Tjuatja et al. 2024, Cheng et al. (Dated Data), Doudkin 2026, Ozkan 2026, Taday Morocho et al. 2026, Moon et al. 2024, AgentSociety, Chopra et al. (limits of agency), Ge et al. (1B personas), Twin-2K-500, BLEnD. Added GLOPOP-S 15.7% fill share and Tao et al. Finland 0.20 to 2.43.
 
 Remaining open: named authors; ethics committee and date; registry content (J_c, crosswalks, referent classes, P list) is outside Stage-1 review by construction; set P may be empty before the primary model retires; the H8 non-inferiority margin (2 points) and the H2 tolerance (0.5) are judgement; segment-level engine path is not evaluated; Croissant/RAI metadata not produced (no dataset yet).
+
+## Update for PRs #6-#38 (2026-10-12)
+
+- Status paragraph corrected: "the product code does not exist yet" is no longer true. Engine 0.1.0 exists (`engine/rw/population.py`, PR #6) but samples 10,000 agents in 16 countries from illustrative marginals in `data/sample/` (licence row `fixture_sample`), not GLOPOP-S or survey aggregates.
+- Section 7 (relation to the rest of the system) now says the built engine uses neither donor vectors nor published aggregates yet, and that its coverage tier is a five-part rubric score in `data/countries.csv`; no population tier or confidence score from this paper is computed.
+- No method or result of this paper is implemented; every pending artifact and what produces it is unchanged.

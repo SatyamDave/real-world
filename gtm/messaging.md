@@ -6,9 +6,24 @@ Every morning Real World simulates how the world's population will react to toda
 
 Short form: simulations with receipts.
 
+Sub-line: AI simulates how the world reacts to the news. Every forecast is sealed before the outcome and scored in public. "Sealed" is the plain word for hashed and anchored; it makes no accuracy claim, and every country or result next to it still carries its coverage tier.
+
 Category: a forecast and simulation API with a public score, not a world model or an agent-based modelling platform ([VC lens](../research/lenses/vc.md), [funding landscape](../research/market/012-funding-landscape-2026.md), [world-model state of the art](../research/engineering/100-world-model-sota.md)).
 
 The demo order is receipts, then one fork, then one agent's "what moved it" panel ([CEO lens](../research/lenses/ceo.md)).
+
+## User journeys
+
+Every surface proves one part of the one-liner, and each page offers one next action.
+
+| Who | Starts on | Next action per page |
+| --- | --- | --- |
+| Daily-question visitor | `/` | "See how the world answered" opens `/questions/{id}`; "Fork today's world" opens the fork card; "Run this from your code" opens `/docs`. |
+| Receipts and forecasting skeptic | `/receipts` | Verify the hashes in the browser, then `/scores` (skill with n and interval), then `/research` (papers and experiments). |
+| Analyst forking events | The fork box on `/` | Read the segments and the trace on the fork card, then repeat the same fork through the API. |
+| Developer on the API with a capped key | `/docs` | Request a key with a dollar cap, then run the SDK quickstart. |
+
+Surface specs: [product/README.md](../product/README.md).
 
 ## Positioning
 
@@ -42,7 +57,7 @@ The demo order is receipts, then one fork, then one agent's "what moved it" pane
 | "100,000 agents" as the headline | Agent count is not what sets us apart, and the LLM is called per archetype, not per agent ([CTO lens](../research/lenses/cto.md), [red team](../research/lenses/red-team.md)) |
 | "The whole world" without tiers | Rich data exists for a minority of countries; show tiers ([coverage tiers](../research/data/099-country-coverage-tiers.md), [cross-cultural bias](../research/science/027-cross-cultural-llm-bias.md)) |
 | "Replaces surveys", "a poll" | Simulated respondents fail on spread, subgroups and change over time ([failure modes](../research/science/018-failure-modes.md), [policy ICP](../research/product/081-icp-policy-research.md)) |
-| "Deterministic", "reproducible with a seed" | The Anthropic Messages API documents no seed parameter; replay means re-running our engine on recorded model outputs ([replay](../research/engineering/072-replay-and-caching.md), [red team](../research/lenses/red-team.md)) |
+| "Deterministic", "reproducible with a seed" | Neither Jev nor the open text model is documented to take a seed; replay means re-running our engine on recorded model outputs ([replay](../research/engineering/072-replay-and-caching.md), [red team](../research/lenses/red-team.md)) |
 | "Bet on our forecast", any trading offer | We use markets as a benchmark only ([regulation](../research/business/091-regulation.md), [CRO lens](../research/lenses/cro.md)) |
 | Any backtest number in public copy | Models have seen the past; backtests are retrospective only ([forecast scoring](../research/science/030-forecast-scoring.md)) |
 

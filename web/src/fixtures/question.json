@@ -1,0 +1,180 @@
+{
+  "question": {
+    "id": "fx-usa-cpi-rise",
+    "text": "FIXTURE: Will the illustrative US consumer price index for September, released by 2026-10-03, show a higher monthly rise than August?",
+    "topic": "inflation_worry",
+    "topic_label": "Inflation worry",
+    "countries": [
+      {
+        "iso3": "USA",
+        "name": "United States",
+        "tier": "A"
+      }
+    ],
+    "opens": "2026-09-28",
+    "closes": "2026-10-02",
+    "resolves_by": "2026-10-03",
+    "resolution_source": "https://example.com/fixture/resolution/fx-usa-cpi-rise",
+    "tie_break": "If the source has not published by resolves_by, the question is void; a revised figure published after resolves_by is ignored.",
+    "market_source": "fixture:FX-USA-CPI-RISE",
+    "question_hash": "ed662f908adc0d0dd364fe2f4cd430fb6ff958567e4bd6dc30f63eb0be87e492",
+    "question_set_hash": "dc5e9a1cc005c9510942c6963ccd5dab250eedb1c5c72806dbd8030bc3fe9e8c",
+    "daily_on": "2026-10-01"
+  },
+  "outcome": {
+    "outcome": 0,
+    "resolved_on": "2026-10-03",
+    "source_url": "https://example.com/fixture/resolution/fx-usa-cpi-rise",
+    "read_on": "2026-10-03"
+  },
+  "members": 5,
+  "plain_llm_samples": 5,
+  "log_clip": [0.01, 0.99],
+  "min_resolved": 100,
+  "model": "jev-1.13.0",
+  "provider": "fake",
+  "days": [
+    {
+      "date": "2026-10-01",
+      "snapshot_sha256": "57a91f89ab18006143c684b1907ea2e25f2b22a1fb2fada8b3368d25cbaa3b40",
+      "forecasts": {
+        "sim": {
+          "probability": 0.4989,
+          "p10": 0.4912050381315361,
+          "p90": 0.5125954564808773,
+          "brier": 0.24890121,
+          "log_score": -0.6909495970164581,
+          "leaf_hash": "3114f8b6861fa8632a1f48d8eab6dee3bc7d5828243b53af8d4b6358d7396e76",
+          "salt": "9dc17a96b21324c7602c1dfd67cacf8b",
+          "committed_at": "2026-10-12T23:32:49Z",
+          "model": "fake",
+          "market_price_at_commit": 0.6
+        },
+        "plain_llm": {
+          "probability": 0.2831,
+          "p10": null,
+          "p90": null,
+          "brier": 0.08014561,
+          "log_score": -0.33281891812331055,
+          "leaf_hash": "5b8d7143653f0a325a6954069061651085bcb4d55307d7125773a3fc683b8ad7",
+          "salt": "0746370070fca0ba15c46fa0f2d73adc",
+          "committed_at": "2026-10-12T23:32:49Z",
+          "model": "fake",
+          "market_price_at_commit": 0.6
+        },
+        "market": {
+          "probability": 0.6,
+          "p10": null,
+          "p90": null,
+          "brier": 0.36,
+          "log_score": -0.916290731874155,
+          "leaf_hash": "6fbf553acc8286467fe557bdbf3ea9f11315bcb5b202bd1e030d0fb1cf4f132a",
+          "salt": "a379cb9d943c643c5238205fde1a31b1",
+          "committed_at": "2026-10-12T23:32:49Z",
+          "model": "",
+          "market_price_at_commit": 0.6
+        }
+      },
+      "segments": [
+        {
+          "segment": "USA|18-34|high",
+          "description": "adults aged 18-34 in United States with high education",
+          "prior_share": 0.55,
+          "yes_share": 0.83015933807498
+        },
+        {
+          "segment": "USA|18-34|low",
+          "description": "adults aged 18-34 in United States with low education",
+          "prior_share": 0.6,
+          "yes_share": 0.07538987838595909
+        },
+        {
+          "segment": "USA|18-34|mid",
+          "description": "adults aged 18-34 in United States with mid education",
+          "prior_share": 0.56,
+          "yes_share": 0.34523038239395676
+        }
+      ],
+      "plain_samples": [
+        0.6704842504886991, 0.2976519614015696, 0.12126371455667972, 0.10881296345196287,
+        0.4302492781592241
+      ],
+      "headlines": [
+        "FIXTURE: Traders in United States brace for higher fuel bills after crude spike",
+        "FIXTURE: Energy shares lead gains on the United States stock exchange",
+        "FIXTURE: Campaign in United States turns to the cost of living"
+      ]
+    },
+    {
+      "date": "2026-10-02",
+      "snapshot_sha256": "fcd3950bf5be65c057521b13fd73d93a8d876a66bd20aeb56a378be9f5f2908e",
+      "forecasts": {
+        "sim": {
+          "probability": 0.4635,
+          "p10": 0.45873334587104225,
+          "p90": 0.4742868296496147,
+          "brier": 0.21483225000000003,
+          "log_score": -0.6226887169113839,
+          "leaf_hash": "086bdec52d16ace99279fc8d582a66f79ccd031f68623733cc4ff7f2d7cbff25",
+          "salt": "563d298e57b823acaafa5825e8a41327",
+          "committed_at": "2026-10-12T23:32:49Z",
+          "model": "fake",
+          "market_price_at_commit": 0.64
+        },
+        "market": {
+          "probability": 0.64,
+          "p10": null,
+          "p90": null,
+          "brier": 0.4096,
+          "log_score": -1.0216512475319814,
+          "leaf_hash": "3e3f1c439cd7acaa845b2c892082b1e12c3c2d008641aa6d3983d7e912cf0a4f",
+          "salt": "0ba443098332ac0ddc57cc983275048c",
+          "committed_at": "2026-10-12T23:32:49Z",
+          "model": "",
+          "market_price_at_commit": 0.64
+        },
+        "plain_llm": {
+          "probability": 0.526,
+          "p10": null,
+          "p90": null,
+          "brier": 0.27667600000000003,
+          "log_score": -0.7465479572870606,
+          "leaf_hash": "59eb20b5faf8e85476d36bf6a409ae442782207b1dcf80fc8aeadb66b7eed36c",
+          "salt": "e81b93253545442c9edcfe1749799008",
+          "committed_at": "2026-10-12T23:32:49Z",
+          "model": "fake",
+          "market_price_at_commit": 0.64
+        }
+      },
+      "segments": [
+        {
+          "segment": "USA|18-34|high",
+          "description": "adults aged 18-34 in United States with high education",
+          "prior_share": 0.55,
+          "yes_share": 0.10463688429158607
+        },
+        {
+          "segment": "USA|18-34|low",
+          "description": "adults aged 18-34 in United States with low education",
+          "prior_share": 0.6,
+          "yes_share": 0.2671701862459279
+        },
+        {
+          "segment": "USA|18-34|mid",
+          "description": "adults aged 18-34 in United States with mid education",
+          "prior_share": 0.57,
+          "yes_share": 0.40113405827570503
+        }
+      ],
+      "plain_samples": [
+        0.6219524258092326, 0.030164616823983068, 0.9793175994645654, 0.7208794544679568,
+        0.23511966439677756
+      ],
+      "headlines": [
+        "FIXTURE: Campaign in United States turns to the cost of living",
+        "FIXTURE: Pump prices climb across United States as crude stays high",
+        "FIXTURE: Economists in United States raise inflation forecasts on fuel costs"
+      ]
+    }
+  ]
+}
