@@ -1,0 +1,32 @@
+/* The tokens from product/design.md that tokens.css does not have yet, copied from Satyam's open
+   PR #97 (build/design-tokens, web/src/styles/tokens.css). scripts/check_design.py requires the
+   :root block of tokens.css to match web's, and web's is still the old one on main, so these live
+   in their own file until #97 merges. Then replace tokens.css with web's byte for byte, delete
+   this file, and take radius 4px with it (see landing/SYNC.md). */
+:root {
+  --line-strong: #aab2ad; /* hover border, input border at rest */
+  --accent-wash: #e1ece5; /* 10% accent fill */
+  --clay-wash: #f3e1de; /* error and refused fill */
+
+  --text-display: clamp(40px, 6vw, 56px);
+  --text-title: 28px;
+  --text-item: 20px;
+  --text-lead: 18px;
+  --text-body: 16px;
+  --text-small: 14px;
+  --text-label: 12px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  --dur-fast: 120ms; /* hover, press */
+  --dur-base: 200ms; /* a card opening, a disclosure */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}

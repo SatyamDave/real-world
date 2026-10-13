@@ -7,7 +7,11 @@
       "source": "federalreserve.gov",
       "resolvesOn": "2026-10-28",
       "status": "Hash publishes Oct 14",
-      "marker": { "lat": 38.9, "lng": -77.04 }
+      "marker": {
+        "lat": 38.9,
+        "lng": -77.04
+      },
+      "short": "US Fed decision"
     },
     {
       "id": "ecb-2026-10-29",
@@ -15,7 +19,11 @@
       "source": "ecb.europa.eu",
       "resolvesOn": "2026-10-29",
       "status": "Hash publishes Oct 14",
-      "marker": { "lat": 50.11, "lng": 8.68 }
+      "marker": {
+        "lat": 50.11,
+        "lng": 8.68
+      },
+      "short": "ECB decision"
     },
     {
       "id": "boj-2026-10-30",
@@ -23,7 +31,11 @@
       "source": "boj.or.jp",
       "resolvesOn": "2026-10-30",
       "status": "Awaiting hash",
-      "marker": { "lat": 35.68, "lng": 139.69 }
+      "marker": {
+        "lat": 35.68,
+        "lng": 139.69
+      },
+      "short": "Bank of Japan decision"
     }
   ]
 }

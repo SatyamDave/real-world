@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { track } from "./analytics";
 import { BRAND } from "./brand";
 import { Collaborate } from "./components/Collaborate";
@@ -28,19 +28,36 @@ function focusEmail(location: string) {
 }
 
 function SiteHeader({ cta = false }: { cta?: boolean }) {
+  // The header's button appears only once the hero's own field has scrolled out of view, so the
+  // first screen has one action, not two. Until then the bar says when the record starts.
+  const [away, setAway] = useState(false);
+  useEffect(() => {
+    if (!cta) return;
+    const field = document.querySelector(".hero .signup");
+    if (!field || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setAway(!entry.isIntersecting), {
+      threshold: 0,
+    });
+    io.observe(field);
+    return () => io.disconnect();
+  }, [cta]);
   return (
-    <header className="site-header wrap" data-section="header">
-      <div className="brand">
-        {BRAND.name}
-        <span className="brand-dot" aria-hidden="true">
-          .
-        </span>
+    <header className="topbar" data-section="header">
+      <div className="wrap topbar-in">
+        <a className="brand" href="/">
+          {BRAND.name}
+          <span className="brand-dot" aria-hidden="true">
+            .
+          </span>
+        </a>
+        {cta && away ? (
+          <button type="button" className="btn btn-small" onClick={() => focusEmail("header")}>
+            Join the waitlist
+          </button>
+        ) : cta ? (
+          <span className="topbar-note">Launching Oct 27</span>
+        ) : null}
       </div>
-      {cta ? (
-        <button type="button" className="btn btn-small" onClick={() => focusEmail("header")}>
-          Join the waitlist
-        </button>
-      ) : null}
     </header>
   );
 }
@@ -53,7 +70,7 @@ function Home({ headline }: { headline: Headline }) {
       </a>
       <SiteHeader cta />
       <main id="main">
-        <Hero headline={headline} />
+        <Hero headline={headline} onJoin={focusEmail} />
         <ReceiptStrip />
         <Thesis />
         <HowItWorks />

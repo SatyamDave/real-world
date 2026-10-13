@@ -4,7 +4,7 @@ import { BRAND } from "../brand";
 // gtm/prelaunch-ads.md and derives from a claim in gtm/messaging.md. The page
 // reads utm_content to pick one; an unknown or missing value falls back to the
 // default. See product/landing-page.md.
-export type HeadlineId = "receipts" | "hashed" | "public-score" | "your-call";
+export type HeadlineId = "lands" | "receipts" | "hashed" | "public-score" | "your-call";
 
 export interface Headline {
   id: HeadlineId;
@@ -15,10 +15,19 @@ export interface Headline {
 const B = BRAND.name;
 
 export const HEADLINES: Record<HeadlineId, Headline> = {
+  // The default since decision 0012: the first job, "Will this land?". Both sentences are claims on
+  // the allowed list in gtm/messaging.md ("Test a post on simulated audiences before you post it."
+  // and "Your tests are sealed when you make them.").
+  lands: {
+    id: "lands",
+    h1: "Know how a post will land before you post it.",
+    sub: "Test a post on simulated audiences before you post it. Your tests are sealed when you make them.",
+  },
   receipts: {
     id: "receipts",
     h1: "Simulations with receipts.",
-    sub: `Every morning ${B} simulates how the world's population reacts to the day's news. We hash each forecast before anything resolves, then score it in public — the misses too.`,
+    // The sub-line in gtm/messaging.md: "sealed" is its plain word for hashed and anchored.
+    sub: "AI simulates how the world reacts to the news. Every forecast is sealed before the outcome and scored in public.",
   },
   hashed: {
     id: "hashed",
@@ -37,7 +46,7 @@ export const HEADLINES: Record<HeadlineId, Headline> = {
   },
 };
 
-export const DEFAULT_HEADLINE_ID: HeadlineId = "receipts";
+export const DEFAULT_HEADLINE_ID: HeadlineId = "lands";
 
 export function resolveHeadline(utmContent: string | null | undefined): Headline {
   const key = (utmContent ?? "").trim().toLowerCase();

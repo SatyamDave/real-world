@@ -157,7 +157,7 @@ export function SignupForm({
   const loading = state.kind === "loading";
   return (
     <form className="signup" onSubmit={onSubmit} noValidate>
-      <label htmlFor="email" className="signup-label">
+      <label htmlFor="email" className="visually-hidden">
         Get the first receipts in your inbox.
       </label>
       <div className="row">
@@ -194,9 +194,9 @@ export function SignupForm({
           <button className="btn" type="submit" disabled={loading}>
             {loading ? "Saving…" : "Join the waitlist"}
           </button>
-          {secondary}
         </div>
       </div>
+      {secondary ? <div className="hero-actions">{secondary}</div> : null}
       {state.kind === "invalid" ? (
         <p className="field-msg error" role="alert" id="email-msg">
           Enter an email address like you@email.com.

@@ -6,6 +6,8 @@ import { CookieNotice, storedConsent } from "./components/CookieNotice";
 import { resolveHeadline } from "./copy/headlines";
 import "./styles/fonts.css";
 import "./styles/tokens.css";
+import "./styles/tokens-next.css";
+import "./styles/tokens-dark.css";
 import "./styles/global.css";
 
 // Message match: pick the headline from utm_content, fall back to the default.

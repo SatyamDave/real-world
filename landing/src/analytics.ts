@@ -23,6 +23,9 @@ export function getHeadlineVariant(): string {
 export type EventName =
   | "landing_viewed"
   | "globe_ready"
+  | "globe_dragged"
+  | "globe_zoomed"
+  | "marker_opened"
   | "cta_clicked"
   | "email_focused"
   | "email_started"

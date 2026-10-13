@@ -30,16 +30,16 @@ export const USE_CASES = {
   note: "From the launch on Oct 27.",
   rows: [
     {
-      term: "Make a call",
-      text: "Give your forecast on a question before it resolves. We score you against the simulated world and the market price.",
+      term: "Test a post",
+      text: "Test a post on simulated audiences before you post it. Your tests are sealed when you make them.",
+    },
+    {
+      term: "Call it",
+      text: "Call the news against an AI that seals its calls first. We score you both when it resolves.",
     },
     {
       term: "Read the record",
-      text: "Each forecast's hash and score will be public. Read the receipts instead of taking our word.",
-    },
-    {
-      term: "Get a first pass",
-      text: "A cheap first pass with stated error. Then run the real poll.",
+      text: "Each sealed call's hash and score will be public. Read the receipts instead of taking our word.",
     },
   ] satisfies LedgerRow[],
 };
@@ -49,13 +49,13 @@ export const RESEARCH = {
   note: "What we say, and what we leave out.",
   say: [
     "Forecasts hashed before the outcome, scored in public from the day of the first hash.",
-    "The population is calibrated to published marginals.",
+    "The simulated population is calibrated to published marginals.",
     "News in 65 languages through GDELT translation.",
     "Every output is labelled AI-simulated.",
   ],
   leave: [
     "No accuracy figure.",
-    "Not a poll, and not a prediction about any real person.",
+    "Not a poll, and not a prediction about any real person. It does not predict likes or followers.",
     "Not a way to bet or trade. Markets are only our yardstick.",
   ],
   caveat:

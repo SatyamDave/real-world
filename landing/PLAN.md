@@ -146,6 +146,19 @@ Order: Phase 1, then 2, then 3, then Finish. Commit after each phase. Resume fro
 - [ ] A citations section on the page; every line checked against `gtm/messaging.md`; no accuracy implication
 - [ ] Commit
 
+### Phase 4: Satyam's directives (pasted mid-run, 2026-10-13; read his PR comments every phase)
+Review comments on #22 and #24 are tracked in `landing/REVIEW_LOG.md` with the commit that answers each.
+- [ ] #22: remove `referrer`; `landing_path` is always "/" (only the home page has the form), remove it too; say so in the migration comments
+- [ ] Sister DB "D1": the waitlist and conversion data move to Cloudflare D1 (SQLite, like the product's main DB "R1"); email is the primary key (lower-cased, same rule as R1's `users.email`); a random `spoof_id` is the only id analytics sees; no product user id ever enters D1
+- [ ] R1: a proposal for the column that shows which users came from the waitlist (api/ is read-only for me), and a one-way sync from R1 emails to D1 `converted_at`
+- [ ] Amplitude: which waitlist people convert, filterable for ICP (role, source, variant); the same data saved in D1; cookie policy respected for Amplitude
+- [ ] LaunchDarkly: flag abstraction, consent-gated, flags for the headline and one small change at a time; no account or keys exist here, so tests use a fake and live verification is open
+- [ ] Iteration loop: staging flag on, end-to-end check, then prod flag on a person's say-so, then read the Amplitude drop-off; every iteration stored in D1 `experiments`
+- [ ] SEO: canonical, Open Graph, sitemap, robots, structured data; per-environment noindex
+- [ ] Reference sites converted to design tokens (`design/REFERENCE_TOKENS.md`), compared with `product/design.md`
+- [ ] Relocation: `landing/` out of the repo root as a skin of the product; a proposal and one script, not run (it touches every open PR and his guards)
+- [ ] Keep reading origin/main docs, gtm and research; shape the work to the direction (consumer pivot 0012 is open as #99)
+
 ### Finish
 - [ ] Check `.dev.vars` for `TALLY_SIGNING_SECRET_STAGING` and the staging form id; if present, real Playwright submission on staging plus replay, tamper, unsigned, cleanup by id; if not, first unchecked item in MORNING.md
 - [ ] MORNING.md, PR bodies, RUNBOOK; stop servers and browsers; clean tree
