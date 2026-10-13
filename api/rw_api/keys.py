@@ -27,7 +27,7 @@ def create(conn: sqlite3.Connection, label: str, cap_usd: float) -> str:
 
 def rows(conn: sqlite3.Connection) -> list[str]:
     keys = conn.execute("SELECT id, label, cap_usd, revoked_at FROM api_keys ORDER BY id")
-    provider = llm.provider().name
+    provider = llm.decider().name
     return ["id\tlabel\tcap\tspent\tstatus"] + [
         f"{r['id']}\t{r['label']}\t${r['cap_usd']:g}"
         f"\t{llm.cost_text(key_spent(conn, r['id']), provider)}"

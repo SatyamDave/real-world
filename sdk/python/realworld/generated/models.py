@@ -21,7 +21,7 @@ class AgentWhy(BaseModel):
     text: str = Field(..., title="Text")
     provider: str = Field(
         ...,
-        description='Who wrote the text: "anthropic", or "fake" (no model ran).',
+        description='Who wrote the text: "openai_compatible", or "fake" (no model ran).',
         title="Provider",
     )
     label: Literal["Simulated account, not the cause"] = Field(
@@ -910,7 +910,7 @@ class SimulateResult(BaseModel):
     model: str = Field(..., title="Model")
     provider: str = Field(
         ...,
-        description='Who answered the model calls: "anthropic", or "fake" when no model ran.',
+        description='Who answered the model calls: "jev", or "fake" when no model ran.',
         title="Provider",
     )
     seed: int = Field(..., title="Seed")

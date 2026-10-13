@@ -63,7 +63,7 @@ def status() -> SystemStatus:
         anchor=anchor,
         anchored_at=anchored_at,
         model=llm.model_name(),
-        provider=llm.provider().name,
+        provider=llm.decider().name,
         spent_today_usd=llm.spent_today(conn),
         nightly_budget_usd=settings.NIGHTLY_BUDGET_USD,
         engine_version=settings.ENGINE_VERSION,

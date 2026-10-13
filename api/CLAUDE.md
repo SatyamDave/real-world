@@ -12,7 +12,7 @@ The FastAPI app `rw_api`: HTTP, fork jobs, idempotency, server-sent events, the 
 
 - Only `api/` speaks HTTP. It calls engine functions; simulation, forecasting, scoring and ledger logic stay in `engine/rw/`.
 - `rw_api/schema.sql` owns `jobs`, `job_events`, `idempotency_keys` and `daily_answers`. The API never writes engine tables.
-- Model calls go through `llm.complete_json` with a `Budget`; a cost that cannot be checked refuses.
+- Model calls go through `llm.decide` or `llm.complete_json` with a `Budget`; a cost that cannot be checked refuses.
 - Every simulate result carries `simulated: true`; every agent account carries its simulated label.
 - Numbers shown for a forecast (`sim`, `market`) come from committed ledger entries, never recomputed.
 - Fixture questions (`fx-` ids, `FIXTURE:` text, `example.com` sources) are for local runs and tests. Nothing served to a person may show one: `web/src/liveCheck.ts` fails a production `vite build` against an API that serves one, and `make e2e` proves it against the fixture API [#31, #33, #35].
@@ -28,7 +28,7 @@ make openapi && git diff --exit-code api/openapi.json
 make check
 ```
 
-Tests seed a temporary `RW_HOME` with `rw.daily` over the fixture days and run with `ANTHROPIC_API_KEY` unset.
+Tests seed a temporary `RW_HOME` with `rw.daily` over the fixture days and run with every model key unset (the root `conftest.py` clears them).
 
 ## A reviewer rejects
 

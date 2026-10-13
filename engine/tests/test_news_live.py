@@ -17,7 +17,6 @@ SAMPLE = (Path(__file__).parent / "data" / "gkg-20261011120000.csv.zip").read_by
 @pytest.fixture(autouse=True)
 def isolated(tmp_path, monkeypatch):
     monkeypatch.setenv("RW_HOME", str(tmp_path / "var"))
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
 
 def gkg_zip(lines: list[str]) -> bytes:

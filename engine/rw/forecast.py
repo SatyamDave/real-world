@@ -23,16 +23,6 @@ MARKETS_SOURCE = "fixture_markets"
 
 Question = dict[str, Any]
 
-ANSWER_SCHEMA: llm.Schema = {
-    "type": "object",
-    "properties": {
-        "yes": {"type": "number", "minimum": 0, "maximum": 1},
-        "no": {"type": "number", "minimum": 0, "maximum": 1},
-    },
-    "required": ["yes", "no"],
-    "additionalProperties": False,
-}
-
 
 class ListNotApproved(ValueError):
     """A live question list that the founder has not approved (data/questions/README.md)."""
@@ -95,9 +85,36 @@ def _news_block(titles: list[str]) -> str:
     return f"Today's headlines:\n{lines}\n"
 
 
-def yes_share(answer: dict[str, Any]) -> float:
-    yes, no = float(answer["yes"]), float(answer["no"])
-    return yes / (yes + no) if yes + no > 0 else 0.5
+def sim_share(answers: dict[str, Any]) -> float:
+    """The group's yes share from a stored `decide` answer to sim_questions."""
+    return float(answers["answer"]["probabilities"]["yes"])
+
+
+def plain_share(answers: dict[str, Any]) -> float:
+    """The yes probability from a stored `decide` answer to PLAIN_QUESTIONS."""
+    return float(answers["resolves_yes"]["noul"])
+
+
+def sim_questions(date: str, q: Question, segment: str) -> llm.Questions:
+    """One Jev choice whose yes probability is the group's yes share. The option order is seeded
+    per segment so no single order biases every segment."""
+    options = ["yes", "no"]
+    random.Random(f"{date}|{q['id']}|{segment}").shuffle(options)
+    return {
+        "answer": {
+            "type": "choice",
+            "instructions": f"How would a randomly chosen member of this group answer: {q['text']}",
+            "criteria": dict.fromkeys(options),
+        }
+    }
+
+
+PLAIN_QUESTIONS: llm.Questions = {
+    "resolves_yes": {
+        "type": "noul",
+        "instructions": "Will the question in the state resolve yes by its resolution date?",
+    }
+}
 
 
 def _sigmoid(x: np.ndarray) -> np.ndarray:
@@ -110,14 +127,10 @@ def segment_text(segment: str) -> str:
 
 
 def sim_prompt(date: str, q: Question, titles: list[str], segment: str, share: float) -> str:
-    options = ["yes", "no"]
-    random.Random(f"{date}|{q['id']}|{segment}").shuffle(options)
     return (
-        _news_block(titles) + f"\nYou answer for this group of people: {segment_text(segment)}.\n"
+        _news_block(titles) + f"\nGroup of people: {segment_text(segment)}.\n"
         f"Today {share:.0%} of them answer yes to: {news.topics()[q['topic']]}\n"
         f"\nQuestion: {q['text']}\n"
-        f"Options, in this order: {', '.join(options)}.\n"
-        "Give the share of this group that would answer each option, as numbers from 0 to 1."
     )
 
 
@@ -146,9 +159,9 @@ def sim_forecast(
     """Return (probability, p10, p90) from one call per present segment, spread to agents."""
     offsets, asks = sim_inputs(conn, date, q, agents)
     logits = np.empty(len(offsets))
-    for _, mask, _, prompt in asks:
-        p = yes_share(llm.complete_json("forecast_sim", prompt, ANSWER_SCHEMA, budget, conn=conn))
-        logits[mask] = segment_logit(p)
+    for seg, mask, _, prompt in asks:
+        answers = llm.decide("forecast_sim", prompt, sim_questions(date, q, seg), budget, conn=conn)
+        logits[mask] = segment_logit(sim_share(answers))
     return sim_summary(date, q["id"], logits, offsets)
 
 
@@ -177,7 +190,6 @@ def plain_prompt(q: Question, titles: list[str], sample: int) -> str:
         _news_block(titles) + f"\nQuestion: {q['text']}\n"
         f"Resolves by {q['resolves_by']}.\n"
         f"This is independent forecast {sample + 1} of {settings.PLAIN_LLM_SAMPLES}.\n"
-        "Give the probability of yes and of no, as numbers from 0 to 1."
     )
 
 
@@ -194,9 +206,9 @@ def plain_llm_forecast(
     titles = headlines(conn, date, q["countries"])
     return plain_mean(
         [
-            yes_share(
-                llm.complete_json(
-                    "forecast_plain", plain_prompt(q, titles, i), ANSWER_SCHEMA, budget, conn=conn
+            plain_share(
+                llm.decide(
+                    "forecast_plain", plain_prompt(q, titles, i), PLAIN_QUESTIONS, budget, conn=conn
                 )
             )
             for i in range(settings.PLAIN_LLM_SAMPLES)

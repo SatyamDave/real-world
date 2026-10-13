@@ -54,8 +54,8 @@ def test_a_changed_recorded_output_is_reported_as_a_diff(conn):
     original = conn.execute(
         "SELECT output_json FROM llm_calls WHERE id = ?", (row["call_id"],)
     ).fetchone()[0]
-    flipped = {"yes": 0.99 if row["yes_share"] < 0.5 else 0.01}
-    flipped["no"] = 1 - flipped["yes"]
+    flipped = json.loads(original)
+    flipped["answer"]["probabilities"]["yes"] = 0.99 if row["yes_share"] < 0.5 else 0.01
     try:
         with conn:
             conn.execute(

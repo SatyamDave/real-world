@@ -18,7 +18,6 @@ OTS = (Path(__file__).parent / "data" / "ots_2026-10-01.bin").read_bytes()
 @pytest.fixture(autouse=True)
 def isolated(tmp_path, monkeypatch):
     monkeypatch.setenv("RW_HOME", str(tmp_path / "var"))
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
 
 def run_fixtures():
@@ -42,7 +41,7 @@ def test_fixture_days_run_verify_and_chain():
         assert s["model"] == "fake" and s["usd"] > 0
         line = daily.format_summary(s)
         assert f"\n  Cost: fake model, nothing spent (estimated ${s['usd']:.4f} at " in line
-        assert f"{settings.MODEL} prices)\n" in line and ", $" not in line
+        assert f"{llm.FAKE_PRICED_AT} prices)\n" in line and ", $" not in line
     statuses = conn.execute("SELECT DISTINCT status FROM stage_runs").fetchall()
     assert [r[0] for r in statuses] == ["ok"]
 

@@ -11,14 +11,14 @@ The Python package `rw`: settings, storage, the model gateway, the licence gate,
 ## Boundaries (from the 0001 module table)
 
 - Each module owns its tables in `rw/sql/<module>.sql` (`CREATE TABLE IF NOT EXISTS`) and exposes plain functions.
-- Only `llm.py` talks to a model provider. Every model call goes through `llm.complete_json` with a `Budget`.
+- Only `llm.py` talks to a model provider. Every model call goes through `llm.decide` (Jev) or `llm.complete_json` (open model) with a `Budget`.
 - Only `daily.py` and `simulate.py` compose other modules. Only `api/` speaks HTTP.
 - Only `ledger.py` writes ledger tables, and those tables refuse UPDATE and DELETE.
 - Every tunable number lives in `rw/settings.py`. Local state lives under `settings.rw_home()`.
 - Every data source is read only after `sources.require(source_id)` passes.
 - Beliefs change only through the operators in `beliefs.py`; the model never sets a step size.
 - Market prices never enter assimilation or the `sim` forecast prompt.
-- A keyless run reports `model: fake`, `provider: fake` and nothing spent, on every surface: fork results, ledger entries, the daily summary and experiment results. Its would-be dollars appear only labelled as an estimate at `settings.MODEL` prices [#18, #26, #27, #33, #34].
+- A keyless run reports `model: fake`, `provider: fake` and nothing spent, on every surface: fork results, ledger entries, the daily summary and experiment results. Its would-be dollars appear only labelled as an estimate at `llm.FAKE_PRICED_AT` prices [#18, #26, #27, #33, #34].
 - CLI output (`rw.daily`, `rw.experiments`, `scripts/`) is literal status in the voice of `gtm/messaging.md`: one line per step, what happened and the number it produced, sentence case, no exclamation marks, glossary terms only (`scripts/check_glossary.py` scans `daily.py` and `experiments.py`).
 
 ## Test
@@ -28,11 +28,11 @@ uv run pytest engine/tests -q
 make check
 ```
 
-Tests run with `ANTHROPIC_API_KEY` unset and `RW_HOME` pointed at a temporary directory.
+Tests run with every model key unset (the root `conftest.py` clears them) and `RW_HOME` pointed at a temporary directory.
 
 ## A reviewer rejects
 
-- A model call outside `llm.complete_json`, or one with no budget.
+- A model call outside `llm.decide` or `llm.complete_json`, or one with no budget.
 - A budget or licence check that passes when it could not run (fail closed).
 - A magic number that belongs in `settings.py`.
 - A test that needs a network or an API key.

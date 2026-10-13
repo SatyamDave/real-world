@@ -22,7 +22,6 @@ def world():
 @pytest.fixture(autouse=True)
 def isolated(tmp_path, monkeypatch, world):
     monkeypatch.setenv("RW_HOME", str(tmp_path / "var"))
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     population.write_snapshot(DAY, world)
 
 

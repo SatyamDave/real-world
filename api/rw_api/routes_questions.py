@@ -16,7 +16,7 @@ from rw import forecast, ledger, news, population, score, settings
 router = APIRouter()
 
 SEGMENT_PROMPT = re.compile(
-    r"You answer for this group of people: adults aged (?P<age>.+) in (?P<country>.+) with "
+    r"Group of people: adults aged (?P<age>.+) in (?P<country>.+) with "
     r"(?P<education>.+) education\.\nToday (?P<share>\d+)% of them answer yes"
 )
 
@@ -109,17 +109,12 @@ def _recorded_calls(
     forecast date. ponytail: two days with identical headlines share a prompt and its memoised call,
     so the call is shown on the first; give calls a forecast date column if that ever matters."""
     return conn.execute(
-        "SELECT prompt, output_json, model, provider FROM llm_calls WHERE purpose = ?"
-        " AND output_json IS NOT NULL AND instr(prompt, ?) = 1 AND instr(prompt, ?) > 0"
-        " ORDER BY id",
+        "SELECT state AS prompt, output_json, model, provider FROM"
+        " (SELECT json_extract(prompt, '$.state') AS state, output_json, model, provider, id"
+        " FROM llm_calls WHERE purpose = ? AND output_json IS NOT NULL)"
+        " WHERE instr(state, ?) = 1 AND instr(state, ?) > 0 ORDER BY id",
         (purpose, prefix, text),
     ).fetchall()
-
-
-def _yes_share(output_json: str) -> float | None:
-    answer = json.loads(output_json)
-    total = answer["yes"] + answer["no"]
-    return answer["yes"] / total if total > 0 else None
 
 
 def _segments(conn: sqlite3.Connection, titles: list[str], text: str) -> list[SegmentAnswer]:
@@ -129,8 +124,8 @@ def _segments(conn: sqlite3.Connection, titles: list[str], text: str) -> list[Se
         conn, "forecast_sim", forecast._news_block(titles), f"\nQuestion: {text}\n"
     ):
         m = SEGMENT_PROMPT.search(row["prompt"])
-        share = _yes_share(row["output_json"])
-        if m is None or share is None or m["country"] not in iso3:
+        share = forecast.sim_share(json.loads(row["output_json"]))
+        if m is None or m["country"] not in iso3:
             continue
         key = f"{iso3[m['country']]}|{m['age']}|{m['education']}"
         found.setdefault(
@@ -151,8 +146,9 @@ def _plain_samples(conn: sqlite3.Connection, titles: list[str], text: str) -> li
     rows = _recorded_calls(
         conn, "forecast_plain", forecast._news_block(titles), f"\nQuestion: {text}\n"
     )
-    shares = (_yes_share(r["output_json"]) for r in rows)
-    return [s for s in shares if s is not None][: settings.PLAIN_LLM_SAMPLES]
+    return [forecast.plain_share(json.loads(r["output_json"])) for r in rows][
+        : settings.PLAIN_LLM_SAMPLES
+    ]
 
 
 @router.get(

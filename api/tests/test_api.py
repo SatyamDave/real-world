@@ -27,7 +27,6 @@ def home(tmp_path_factory):
     path = tmp_path_factory.mktemp("rw") / "var"
     with pytest.MonkeyPatch.context() as mp:
         mp.setenv("RW_HOME", str(path))
-        mp.delenv("ANTHROPIC_API_KEY", raising=False)
         for day in daily.FIXTURE_DAYS:
             daily.run(day, world_agents=AGENTS)
     return path
@@ -36,7 +35,6 @@ def home(tmp_path_factory):
 @pytest.fixture(autouse=True)
 def isolated(home, monkeypatch):
     monkeypatch.setenv("RW_HOME", str(home))
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
 
 @pytest.fixture
@@ -294,7 +292,7 @@ def test_a_key_over_its_cap_or_the_fork_budget_is_refused_before_any_model_call(
     )
     assert body["detail"] == (
         "this API key's $0.01 cap would be passed: fake model, nothing spent (estimated $0.0000"
-        f" at {settings.MODEL} prices) so far, and this fork may cost up to $0.51"
+        f" at {llm.FAKE_PRICED_AT} prices) so far, and this fork may cost up to $0.51"
     )
     monkeypatch.setattr(settings, "FORK_DAILY_BUDGET_USD", llm.spent_today(conn, public=True))
     refused_and_spent_nothing(
@@ -343,7 +341,7 @@ def test_the_keys_cli_prints_a_key_once_lists_its_spend_and_revokes_it(conn, cap
     row = conn.execute("SELECT * FROM api_keys WHERE label = 'builder-a'").fetchone()
     assert row["key_sha256"] == hashlib.sha256(key.encode()).hexdigest()
     assert key not in json.dumps(dict(row))
-    spent = f"fake model, nothing spent (estimated $0.0000 at {settings.MODEL} prices)"
+    spent = f"fake model, nothing spent (estimated $0.0000 at {llm.FAKE_PRICED_AT} prices)"
     keys.main(["list"])
     out = capsys.readouterr().out
     assert out.startswith("id\tlabel\tcap\tspent\tstatus\n")

@@ -15,10 +15,12 @@ The Python package `rw`: the simulation engine behind the daily cycle, forks and
 
 ## The model gateway
 
-- Without `ANTHROPIC_API_KEY`, `FakeLLM` answers. It fills the schema from a random generator seeded by the SHA-256 of the prompt, so the same prompt always gets the same answer and tests never need a network.
-- With the key set, `ClaudeLLM` calls `settings.MODEL` (Claude Haiku 5.5) with structured output and low effort.
+- Two entry points, one per kind of call ([decision 0007](../research/decisions/0007-jev-and-open-model.md)). `decide(purpose, state, questions, budget)` asks Jev typed questions (`noul`, `choice`, `score`) and returns its raw answers, probabilities and confidence included; forecasts and news signals use it. `complete_json(purpose, prompt, schema, budget, max_tokens)` asks an open-weight model for JSON that matches a schema; the acceptable-use screen and the agent account use it.
+- `decide` goes to Jev pinned at `settings.JEV_MODEL` with `TYPESAFE_API_KEY`, or to `settings.JEV_OPENROUTER_MODEL` through OpenRouter with `OPENROUTER_API_KEY`. A response from any other model version is refused. Jev bills input tokens only.
+- `complete_json` goes to `settings.TEXT_MODEL` on OpenRouter with `OPENROUTER_API_KEY`, or to any OpenAI-compatible server at `RW_TEXT_BASE_URL` (for example Ollama at `http://localhost:11434/v1` with `RW_TEXT_MODEL=mistral-small3.2`, no key).
+- Without a key, `FakeLLM` answers both. It fills the schema or the questions from a random generator seeded by the SHA-256 of the prompt, so the same prompt always gets the same answer and tests never need a network.
 - Every provider call writes one `llm_calls` row: prompt, output, tokens and cost. A call whose provider, model, schema and prompt match an earlier row returns the stored answer and writes nothing, which makes reruns free.
-- A `Budget(limit_usd, spent_usd)` is checked before every provider call. If the spend plus the estimate (prompt characters / 4 input tokens, plus `max_tokens` output, at settings prices) would cross the limit, it raises `BudgetExceeded` and nothing is written. A zero, negative or NaN limit always refuses.
+- A `Budget(limit_usd, spent_usd)` is checked before every provider call. If the spend plus the estimate (prompt characters / 4 input tokens, plus `max_tokens` output, at the settings prices of the model it calls) would cross the limit, it raises `BudgetExceeded` and nothing is written. A zero, negative or NaN limit always refuses.
 - `spent_today()` sums today's (UTC) recorded cost.
 
 ## Beliefs

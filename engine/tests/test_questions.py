@@ -13,7 +13,6 @@ PROPOSED = forecast.QUESTION_LISTS / "2026-10-proposed.json"
 @pytest.fixture(autouse=True)
 def isolated(tmp_path, monkeypatch):
     monkeypatch.setenv("RW_HOME", str(tmp_path / "var"))
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
 
 def write_list(folder, name, status):
