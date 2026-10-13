@@ -17,6 +17,17 @@ Founder direction: the look of a top-tier deep-tech product: precise type, gener
 3. Polish only: no claim, number, logo, customer, funding or traction appears that is not on the allowed list in [messaging](../gtm/messaging.md) or traced to a committed artifact. No testimonial or "trusted by" row, ever.
 4. A change to these rules lands here first, in its own PR, citing a research note; then in each surface.
 
+## Identity: the ledger desk (2026-10-12)
+
+Real World is a public ledger of simulated countries; every run prints a sealed slip from it ([decision 0014](../research/decisions/0014-ledger-desk.md)).
+
+- The ledger is the chrome: no sidebar. A top bar, and under it the ledger tape, one mono 12px `--muted` line on `--paper-2` with the last cycle, the ledger head, the anchor, the model and today's spend. Every page sits under it.
+- The populations are the hero: the home shows the 16 simulated countries with their coverage tier and one belief's simulated share.
+- Each result is a slip (the receipt): the input quoted in mono at the top, the population drawn as data, the seal drawn at the foot.
+- The seal is visible: `SealGrid` draws the 64 hex digits of a SHA-256 as an 8 x 8 grid in four shades of `--ink`; unsealed is the same grid empty and dashed.
+- Mono for every number, hash, ISO code and the tape; dashed `--line` rules inside slips; torn edge only on slips; a tier badge wherever a country appears; green only for sealed, verified and "would like or share"; clay only for pending, not sealed and refused. No all-caps, no letter-spaced eyebrow.
+- Retired phrases, on no surface: "Learn to simulate", "Real World in action", "Quickstart", "Primitive", "Playground", "Example requests", "Walkthrough lessons", "Real-life use cases", "Instructions", "Example output". "Primitive" stays only as an internal type name and glossary term.
+
 ## Tokens
 
 `web/src/styles/tokens.css` is a byte-for-byte copy of the landing tokens; `tokens-dark.css` is the dark theme from the same hues. No colour, font, radius or shadow is written anywhere else. Light follows the system (`prefers-color-scheme`); a stored user choice in settings overrides it with `data-theme` on `html`. Both themes ship from the first build of any surface.
@@ -84,7 +95,12 @@ One implementation per pattern; a second button, card, badge, disclaimer, loader
 | Table | full width, no vertical rules, 1px `--line` between rows, header row 12px `--muted` on `--paper-2`, 48px row height at 1024px and up, mono right-aligned numerals, sticky header when the body scrolls; at 390px a row becomes a stacked card list or the table scrolls inside its block with the first column sticky |
 | Nav item (docs, settings) | 14px, 36px row; active has `--accent-wash` fill and 2px `--accent` left rule |
 | Callout | `--paper-2` fill, 1px `--line` border, 14px text; the only coloured variant is clay for a refusal or an error; no icon, no emoji |
-| Header | `.topbar`: 56px high, 1px bottom `--line`, brand, nav with `aria-current="page"`, then Sign in or the account button; sticky |
+| Header | a top bar with the ledger tape beneath it. `.topbar`: 56px high, bottom `--line`, brand, nav (Simulate, Call it, Your record, Receipts, Scores) with `aria-current="page"` underlined 2px `--ink`, then Sign in or the account; sticky. At 720px and below the nav takes a second row that scrolls inside itself. `.tape`: the ledger tape, one line with ellipsis at 720px and up, wrapping below |
+| `SealGrid` | `App.tsx`: a SHA-256 as 8 x 8 cells of 8px (`.lg` 12px), shades `s0`..`s3` from `--paper-2`, `--line`, `--muted`, `--ink`; empty and dashed when there is no hash. On the sealed post test, the AI's sealed call and the home's day record |
+| `PopulationField` | `results.tsx`: 100 dots split across segments by population weight (largest remainder), filled `--accent` where the segment would like or share it, empty as a `--line` ring; 20 x 5 at 720px and up, 10 x 10 below |
+| `SegmentMatrix` | `results.tsx`: country rows (ISO and tier, sticky first column) by age band and education columns, mono landing chance shaded `m0`..`m4` (`--surface`, `--paper-2`, `--line`, `--accent` at 35% and 70%); scrolls inside its block at 390px |
+| `BeliefShifts` | `results.tsx`: a row per topic, a 0-100% track with the p10-p90 band in `--line`, a 2px `--muted` tick at before and a 12px `--ink` dot at the median, and mono "{before} → {after} ({pts})" |
+| Use case list | `Home.tsx` `UseCaseList`: groups by who, rows (not cards) with an outlined mono kind tag, title, sentence and audience; 2 columns of groups at 1024px and up |
 | Footer | links (Receipts, Acceptable use, Privacy, Terms, Source), the disclosure, copyright; 44px targets |
 
 ## Landing narrative

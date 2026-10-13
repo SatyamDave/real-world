@@ -12,7 +12,7 @@ A PR that changes what a surface does updates its spec in the same PR.
 
 ## How people use it
 
-Since [decision 0013](../research/decisions/0013-console-and-playground.md) the app is a console: Home teaches three primitives (Reaction, Event, Call) and lists use cases; the [playground](playground.md) runs them.
+Since [decision 0014](../research/decisions/0014-ledger-desk.md) the app is a ledger desk: the home asks "Will this land?" beside today's simulated populations and lists use cases by who they serve; the [simulator](playground.md) runs post tests and forks.
 
 Real World tells you how a post will land before you publish it, and lets you call today's question against an AI whose call is sealed first ([decision 0012](../research/decisions/0012-will-it-land-and-call-it.md)). Under both runs the engine: simulated populations of 16 countries, a typed decision per segment, and a ledger that seals forecasts before outcomes exist.
 
