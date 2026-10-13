@@ -44,6 +44,8 @@ test("every route has a description; a parameter route shares one; an unknown pa
   expect(descriptionFor("/questions/abc")).toMatch(/committed/);
   expect(descriptionFor("/questions/abc")).toBeDefined();
   expect(descriptionFor("/nope")).toBeUndefined();
+  expect(descriptionFor("/simulate")).toMatch(/simulated populations of 16 countries/);
+  expect(descriptionFor("/playground")).toBeUndefined();
 });
 
 test("applyMeta follows the path and drops canonical on a path with no page", () => {

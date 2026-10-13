@@ -1,142 +1,186 @@
-import type { ReactNode } from "react";
-import { USE_CASES } from "./usecases";
+import { useState } from "react";
+import {
+  Disclosure,
+  LoadError,
+  Loading,
+  pct,
+  SealGrid,
+  TierBadge,
+  topicLabel,
+  useLoad,
+} from "./App";
+import { rw } from "./api";
+import { caseHref, type Primitive, USE_CASES, WHO } from "./usecases";
 
-// Shapes of real results, drawn small: the cards teach what each primitive returns.
-const REACTION_GRID = [0.7, 0.62, 0.55, 0.48, 0.41, 0.36, 0.66, 0.31, 0.24, 0.52, 0.18, 0.44];
-const EVENT_DAYS = [0.42, 0.45, 0.49, 0.53, 0.55, 0.56, 0.57];
-const CALL_BINS = [0.04, 0.09, 0.2, 0.31, 0.22, 0.1, 0.04];
+const KIND = { reaction: "Post test", event: "Fork", call: "Call it" } as const;
+const ANCHOR = {
+  anchored: "anchored",
+  pending: "anchor pending",
+  not_anchored: "not anchored",
+} as const;
 
-function Primitive(p: {
-  name: string;
-  kind: string;
-  instruction: string;
-  output: string;
-  value: string;
-  children: ReactNode;
-}) {
+/** The prepared decisions grouped by who they serve; `only` keeps one simulation kind. */
+export function UseCaseList({ only, onPick }: { only?: Primitive; onPick?: (id: string) => void }) {
   return (
-    <article className="primitive">
-      <p className="primitive-kind mono">PRIMITIVE · {p.kind}</p>
-      <h3 className="primitive-name mono">{p.name}</h3>
-      <p className="primitive-label mono">INSTRUCTIONS</p>
-      <p className="primitive-instruction mono">{p.instruction}</p>
-      <div className="primitive-art" aria-hidden="true">
-        {p.children}
-      </div>
-      <p className="primitive-label mono">EXAMPLE OUTPUT</p>
-      <p className="primitive-output mono">
-        <span className="primitive-value">{p.value}</span> {p.output}
+    <div className="decision-groups">
+      {WHO.map(([who, name]) => {
+        const rows = USE_CASES.filter((u) => u.who === who && (!only || u.primitive === only));
+        if (!rows.length) return null;
+        return (
+          <div key={who}>
+            <h3>{name}</h3>
+            <ul className="decision-rows">
+              {rows.map((u) => {
+                const body = (
+                  <>
+                    <span className="kind-tag mono">{KIND[u.primitive]}</span>
+                    <strong>{u.title}</strong>
+                    <span className="muted">{u.blurb}</span>
+                    <span className="mono muted decision-audience">{u.audience}</span>
+                  </>
+                );
+                return (
+                  <li key={u.id}>
+                    {onPick && u.primitive !== "call" ? (
+                      <button type="button" onClick={() => onPick(u.id)}>
+                        {body}
+                      </button>
+                    ) : (
+                      <a href={caseHref(u)}>{body}</a>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Register() {
+  const world = useLoad(() => rw.world());
+  const status = useLoad(() => rw.status());
+  const [belief, setBelief] = useState("inflation_worry");
+  const error = world.error ?? status.error;
+  if (error)
+    return (
+      <LoadError
+        what="today's populations"
+        error={error}
+        retry={() => {
+          world.retry();
+          status.retry();
+        }}
+      />
+    );
+  if (!world.data || !status.data) return <Loading what="today's populations" />;
+  const { countries, date } = world.data;
+  const s = status.data;
+  return (
+    <>
+      <p className="muted register-caption">
+        World of <span className="mono">{date}</span>. The simulated share leaning yes on one
+        belief, by country.
       </p>
-    </article>
+      <label className="register-belief">
+        <span>Belief</span>
+        <select value={belief} onChange={(e) => setBelief(e.target.value)}>
+          {Object.keys(countries[0]?.shares ?? {}).map((t) => (
+            <option key={t} value={t}>
+              {topicLabel(t)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <ul className="register-rows">
+        {countries.map((c) => {
+          const share = c.shares[belief] ?? 0;
+          return (
+            <li key={c.iso3}>
+              <span className="mono register-iso">{c.iso3}</span>
+              <span className="register-name">{c.name}</span>
+              <TierBadge tier={c.tier} />
+              <span className="register-bar" aria-hidden="true">
+                <span
+                  style={{ /* design: computed width */ width: `${Math.round(share * 100)}%` }}
+                />
+              </span>
+              <span className="mono register-share">{pct(share)}</span>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="register-foot">
+        <SealGrid hash={s.root} large />
+        {s.root && s.date ? (
+          <p className="mono small">
+            Day record {s.date} · root {s.root.slice(0, 8)}…{s.root.slice(-8)} ·{" "}
+            {s.anchor ? ANCHOR[s.anchor] : "not anchored"}.{" "}
+            <a href={`/receipts#${s.date}`}>Check it on Receipts</a>
+          </p>
+        ) : (
+          <p className="mono small">No day record yet</p>
+        )}
+      </div>
+      <Disclosure tiers={countries.map((c) => c.tier)} />
+    </>
   );
 }
 
 export function Home() {
   return (
-    <div className="console-home">
-      <section className="hero-band">
-        <div className="hero-copy">
-          <p className="mono eyebrow">THREE PRIMITIVES · ONE ENGINE</p>
-          <h1>Learn to simulate</h1>
-          <p>
-            Test how people react before it happens. Every result is AI-simulated, and every call
-            you seal is scored.
+    <div className="home">
+      <div className="home-top">
+        <section className="home-ask">
+          <h1>Will this land?</h1>
+          <p className="lead muted">
+            Test a post on simulated audiences in 16 countries before you publish. Every test you
+            seal is scored when you mark how it did.
           </p>
-          <a className="button primary" href="/playground">
-            Playground →
-          </a>
-        </div>
-        <div className="primitives">
-          <Primitive
-            name="REACTION"
-            kind="AUDIENCE"
-            instruction="HOW DOES THIS AUDIENCE REACT TO A POST?"
-            value="54%"
-            output="landing chance"
-          >
-            <span className="dots">
-              {REACTION_GRID.map((v, i) => (
-                <span
-                  // biome-ignore lint/suspicious/noArrayIndexKey: a fixed drawing
-                  key={i}
-                  style={{ /* design: computed shade */ opacity: 0.2 + 0.8 * v }}
-                />
-              ))}
-            </span>
-          </Primitive>
-          <Primitive
-            name="EVENT"
-            kind="FORK"
-            instruction="HOW DO BELIEFS SHIFT AFTER ONE EVENT?"
-            value="+15 pts"
-            output="inflation worry, day 7"
-          >
-            <svg viewBox="0 0 140 60" className="spark">
-              <title>Example: a share rising over seven simulated days</title>
-              <polyline
-                points={EVENT_DAYS.map((v, i) => `${i * 22 + 4},${56 - v * 90}`).join(" ")}
-              />
-            </svg>
-          </Primitive>
-          <Primitive
-            name="CALL"
-            kind="SEALED"
-            instruction="WILL THIS HAPPEN?"
-            value="62%"
-            output="sealed before the outcome"
-          >
-            <span className="bins">
-              {CALL_BINS.map((v, i) => (
-                <span
-                  // biome-ignore lint/suspicious/noArrayIndexKey: a fixed drawing
-                  key={i}
-                  style={{ /* design: computed height */ height: `${v * 160}px` }}
-                />
-              ))}
-            </span>
-          </Primitive>
-        </div>
-      </section>
-      <div className="home-columns">
-        <section className="in-action" aria-labelledby="in-action">
-          <h2 id="in-action">Real World in action</h2>
-          <ul className="usecases">
-            {USE_CASES.map((u) => (
-              <li key={u.id}>
-                <a href={`/playground?use=${u.id}`}>
-                  <span className="usecase-tag mono">
-                    {u.primitive === "reaction" ? "Reaction" : "Event"}
-                  </span>
-                  <strong>{u.title}</strong>
-                  <span className="muted">{u.blurb}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
+          <form action="/simulate" method="get" className="ask-form">
+            <label htmlFor="home-text">Your post</label>
+            <textarea
+              id="home-text"
+              name="text"
+              rows={4}
+              maxLength={500}
+              placeholder="Paste a tweet, a caption, a headline or a hook"
+            />
+            <button type="submit" className="primary">
+              Test it
+            </button>
+          </form>
+          <p className="muted">
+            Or <a href="/call">call today's question</a> against the AI, whose call is sealed before
+            you answer.
+          </p>
         </section>
-        <aside className="quickstart" aria-labelledby="quickstart">
-          <h2 id="quickstart">Quickstart</h2>
-          <ol>
-            <li>Pick a use case, or paste your own post or event in the playground.</li>
-            <li>Run it: the engine asks each simulated audience and draws the result.</li>
-            <li>Sign in to seal a reaction test, then mark how it really did.</li>
-          </ol>
-          <div className="quick-links">
-            <a href="/call">
-              <strong>Call it</strong>
-              <span className="muted">Today's question against the AI's sealed call</span>
-            </a>
-            <a href="/record">
-              <strong>Your record</strong>
-              <span className="muted">Engine against your gut on marked tests</span>
-            </a>
-            <a href="/receipts">
-              <strong>Receipts</strong>
-              <span className="muted">Every forecast, hashed before its outcome</span>
-            </a>
-          </div>
-        </aside>
+        <section className="card register" aria-labelledby="register">
+          <h2 id="register">Today's simulated populations</h2>
+          <Register />
+        </section>
       </div>
+      <section className="decisions" aria-labelledby="decisions">
+        <h2 id="decisions">Start from a real decision</h2>
+        <p className="muted">
+          Each one opens the simulator filled in. Change anything before you run it.
+        </p>
+        <UseCaseList />
+      </section>
+      <section className="proof-line" aria-labelledby="proof">
+        <h2 id="proof">Sealed before the outcome</h2>
+        <p className="muted">
+          The AI's daily calls are hashed before the outcome and scored in public, misses included.
+          Your sealed tests are scored against your own gut.
+        </p>
+        <p className="proof-links">
+          <a href="/receipts">Receipts</a>
+          <a href="/scores">Scores</a>
+          <a href="/record">Your record</a>
+        </p>
+      </section>
     </div>
   );
 }

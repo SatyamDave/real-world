@@ -21,14 +21,11 @@ const PAGES: Record<string, ComponentType<{ param?: string }>> = Object.fromEntr
   ]),
 );
 const NAV = [
-  ["Home", "/"],
-  ["Playground", "/playground"],
+  ["Simulate", "/simulate"],
   ["Call it", "/call"],
   ["Your record", "/record"],
-] as const;
-const PROOF = [
-  ["Scores", "/scores"],
   ["Receipts", "/receipts"],
+  ["Scores", "/scores"],
 ] as const;
 
 export const DISCLOSURE = "AI-simulated. Not a poll or a prediction of a real person";
@@ -147,21 +144,18 @@ export function LoadError({
   );
 }
 
-function Sidebar({ path }: { path: string }) {
+function Header({ path }: { path: string }) {
   const section = `/${path.split("/")[1]}`;
   const session = useSession();
-  const status = useLoad(() => rw.status());
   return (
-    <aside className="sidebar">
+    <header className="topbar">
       <a href="#main" className="skip">
         Skip to content
       </a>
       <a href="/" className="brand">
-        <span>
-          Real World
-          <span className="brand-mark" aria-hidden="true">
-            .
-          </span>
+        Real World
+        <span className="brand-mark" aria-hidden="true">
+          .
         </span>
       </a>
       <nav aria-label="Pages">
@@ -170,35 +164,52 @@ function Sidebar({ path }: { path: string }) {
             {label}
           </a>
         ))}
-        <span className="side-label">Proof</span>
-        {PROOF.map(([label, href]) => (
-          <a key={href} href={href} aria-current={href === section ? "page" : undefined}>
-            {label}
-          </a>
-        ))}
       </nav>
-      <div className="side-foot">
-        <div className="side-card">
-          <span className="muted small">Spend today</span>
-          <strong className="mono">
-            {status.data
-              ? status.data.provider === "fake"
-                ? "$0.00 (fake model)"
-                : `$${status.data.spent_today_usd.toFixed(2)}`
-              : "…"}
-          </strong>
-        </div>
-        {session.data ? (
-          <a href="/record" className="side-account">
-            {session.data.email}
-          </a>
-        ) : session.data === null ? (
-          <a href={signInHref()} className="side-account">
-            Sign in
-          </a>
-        ) : null}
-      </div>
-    </aside>
+      {session.data ? (
+        <a href="/record" className="account">
+          {session.data.email}
+        </a>
+      ) : session.data === null ? (
+        <a href={signInHref()} className="account">
+          Sign in
+        </a>
+      ) : null}
+    </header>
+  );
+}
+
+/** The ledger tape: one mono line under the top bar, the live ledger every page sits under. */
+function Tape() {
+  const r = useLoad(() => rw.status());
+  return (
+    <div className="tape">
+      {r.error ? (
+        <LoadError what="system status" error={r.error} retry={r.retry} />
+      ) : !r.data ? (
+        <Loading what="system status" />
+      ) : (
+        <p role="status">{statusLine(r.data)}</p>
+      )}
+    </div>
+  );
+}
+
+/** A SHA-256 drawn as 64 cells, one per hex digit, in four shades; empty and dashed when there is no hash. */
+export function SealGrid({ hash, large = false }: { hash?: string | null; large?: boolean }) {
+  const cells = hash
+    ? [...hash.slice(0, 64)].map((h) => Number.parseInt(h, 16) >> 2)
+    : Array<null>(64).fill(null);
+  return (
+    <span
+      className={`seal-grid${large ? " lg" : ""}${hash ? "" : " empty"}`}
+      role="img"
+      aria-label={hash ? `Seal ${hash.slice(0, 12)}` : "Not sealed"}
+    >
+      {cells.map((v, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: a fixed 64-cell drawing
+        <span key={i} className={v === null ? "" : `s${v}`} />
+      ))}
+    </span>
   );
 }
 
@@ -231,23 +242,9 @@ export function statusLine(s: SystemStatus): string {
   ].join(" · ");
 }
 
-function StatusStrip() {
-  const r = useLoad(() => rw.status());
-  return r.error ? (
-    <LoadError what="system status" error={r.error} retry={r.retry} />
-  ) : !r.data ? (
-    <Loading what="system status" />
-  ) : (
-    <p className="status-strip" role="status">
-      {statusLine(r.data)}
-    </p>
-  );
-}
-
 function Footer() {
   return (
     <footer className="site-footer">
-      <StatusStrip />
       <nav aria-label="Footer">
         <a href="/receipts">Receipts</a>
         <a href="/acceptable-use">Acceptable use</a>
@@ -265,7 +262,7 @@ function Footer() {
 }
 
 const TITLES: Record<string, string> = {
-  "/": "Learn to simulate · Real World",
+  "/": "Will this land? · Real World",
   "/receipts": "Receipts · Real World",
   "/acceptable-use": "Acceptable use · Real World",
 };
@@ -281,27 +278,26 @@ export function App({ path = location.pathname }: { path?: string }) {
   }, [path, Page]);
   useEffect(() => applyMeta(import.meta.env.VITE_PUBLIC_ORIGIN ?? location.origin, path), [path]);
   return (
-    <div className="console">
-      <Sidebar path={path} />
-      <div className="console-main">
-        <main id="main" tabIndex={-1} className="page">
-          {error && known && <LoadError what="today's world" error={error} retry={retry} />}
-          {path === "/receipts" ? (
-            <ReceiptsPage tiers={tiers} />
-          ) : path === "/acceptable-use" ? (
-            <AcceptableUse />
-          ) : path === "/" ? (
-            <Home />
-          ) : Page && page ? (
-            <Suspense fallback={<Loading what="the page" />}>
-              <Page param={page[2] === undefined ? undefined : decodeURIComponent(page[2])} />
-            </Suspense>
-          ) : (
-            <NotFound />
-          )}
-        </main>
-        <Footer />
-      </div>
+    <div className="site">
+      <Header path={path} />
+      <Tape />
+      <main id="main" tabIndex={-1} className="page">
+        {error && known && <LoadError what="today's world" error={error} retry={retry} />}
+        {path === "/receipts" ? (
+          <ReceiptsPage tiers={tiers} />
+        ) : path === "/acceptable-use" ? (
+          <AcceptableUse />
+        ) : path === "/" ? (
+          <Home />
+        ) : Page && page ? (
+          <Suspense fallback={<Loading what="the page" />}>
+            <Page param={page[2] === undefined ? undefined : decodeURIComponent(page[2])} />
+          </Suspense>
+        ) : (
+          <NotFound />
+        )}
+      </main>
+      <Footer />
     </div>
   );
 }

@@ -12,7 +12,7 @@ import { DailyQuestion } from "./DailyQuestion";
 import dailyFixture from "./fixtures/daily.json";
 import statusFixture from "./fixtures/status.json";
 import worldFixture from "./fixtures/world.json";
-import { USE_CASES } from "./usecases";
+import { caseHref, USE_CASES } from "./usecases";
 
 const world = worldFixture as World;
 let container: HTMLDivElement;
@@ -320,19 +320,20 @@ test("the coverage line shows a count for every tier, including one", async () =
   expect(rows).toEqual(["Coverage tier A×2", "Coverage tier B×1", "Coverage tier D×1"]);
 });
 
-test("the footer's status strip is one literal line from GET /v1/status", async () => {
+test("the ledger tape is one literal line from GET /v1/status, and the footer has none", async () => {
   vi.mocked(rw.status).mockResolvedValue(statusFixture as SystemStatus);
   const el = await render(<App path="/acceptable-use" />);
-  await until(() => expect(el.querySelector(".status-strip")).not.toBeNull());
-  expect(el.querySelector(".status-strip")?.textContent).toBe(
+  await until(() => expect(el.querySelector(".tape [role=status]")).not.toBeNull());
+  expect(el.querySelector("footer")?.textContent).not.toContain("ledger head");
+  expect(el.querySelector(".tape")?.textContent).toBe(
     "Last cycle 2026-10-05 ok · ledger head b885…6550 · anchor: not anchored · model: fake (nothing spent) · spend today $0.00 of $25.00",
   );
 });
 
 test("a status that cannot load says so with a retry", async () => {
   const el = await render(<App path="/acceptable-use" />);
-  await until(() => expect(el.querySelector("footer .load-error")).not.toBeNull());
-  expect(el.querySelector("footer .load-error")?.textContent).toContain(
+  await until(() => expect(el.querySelector(".tape .load-error")).not.toBeNull());
+  expect(el.querySelector(".tape .load-error")?.textContent).toContain(
     "Could not load system status",
   );
 });
@@ -393,13 +394,12 @@ const typeInto = (el: HTMLTextAreaElement | HTMLInputElement, value: string) => 
 test("a post test shows the landing chance, both sides, the accounts and a sign-in line", async () => {
   vi.mocked(rw.world).mockResolvedValue(world);
   const calls = serve({ "/v1/me": [401, { detail: "signed out" }], "/v1/tests": [200, tested] });
-  const el = await render(<App path="/playground" />);
+  const el = await render(<App path="/simulate" />);
   await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
-  expect(el.textContent).toContain("Learn to simulate");
-  expect(button("Run").disabled).toBe(true);
+  expect(button("Test it").disabled).toBe(true);
   await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "Half off"));
   await act(async () => (el.querySelector("input[name=gut]") as HTMLInputElement).click());
-  await act(async () => button("Run").click());
+  await act(async () => button("Test it").click());
   await until(() => expect(el.querySelector(".land-result")).not.toBeNull());
   const sent = calls.find((c) => c.path === "/v1/tests")?.body;
   expect(sent).toEqual({ text: "Half off", gut: "lands", countries: null, age_bands: null });
@@ -425,10 +425,10 @@ test("a refused post test shows the API's sentence", async () => {
     "/v1/me": [401, {}],
     "/v1/tests": [429, { code: "test_daily_limit", detail: "this address has run 20 tests today" }],
   });
-  const el = await render(<App path="/playground" />);
+  const el = await render(<App path="/simulate" />);
   await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
   await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "x"));
-  await act(async () => button("Run").click());
+  await act(async () => button("Test it").click());
   await until(() => expect(el.textContent).toContain("this address has run 20 tests today."));
 });
 
@@ -448,12 +448,17 @@ test("a signed-in test shows its seal and the retrospective check is labelled", 
       },
     ],
   });
-  const el = await render(<App path="/playground" />);
+  const el = await render(<App path="/simulate" />);
   await until(() => expect(el.textContent).toContain("ada@example.org"));
   await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "Half off"));
-  await act(async () => button("Run").click());
+  await act(async () => button("Test it").click());
   await until(() => expect(el.querySelector(".seal")?.textContent).toContain("abababababab"));
   expect(el.querySelector(".land-result .stamp")?.textContent).toBe("Sealed");
+  const cells = [...el.querySelectorAll(".seal-line .seal-grid span")];
+  expect(cells).toHaveLength(64);
+  expect(cells.every((c) => /^s[0-3]$/.test(c.className))).toBe(true);
+  expect(el.querySelector(".seal-hash")?.textContent).toBe("ab".repeat(32));
+  expect(el.textContent).toContain("Sealed 2026-10-06 12:00 UTC");
 
   await act(async () =>
     typeInto(el.querySelector("[aria-label='Past post 1']") as HTMLTextAreaElement, "old post"),
@@ -541,46 +546,113 @@ test("sign-in sends the email, then takes the code", async () => {
   });
 });
 
-test("the sidebar lists the pages and the proof, marks the active one, and offers sign-in", async () => {
+test("the top bar lists the pages, marks the active one, and offers sign-in", async () => {
   serve({ "/v1/me": [401, {}] });
   const el = await render(<App path="/call" />);
-  await until(() => expect(el.querySelector(".side-account")).not.toBeNull());
-  expect([...el.querySelectorAll(".sidebar nav a")].map((a) => a.textContent)).toEqual([
-    "Home",
-    "Playground",
+  await until(() => expect(el.querySelector(".account")).not.toBeNull());
+  expect([...el.querySelectorAll(".topbar nav a")].map((a) => a.textContent)).toEqual([
+    "Simulate",
     "Call it",
     "Your record",
-    "Scores",
     "Receipts",
+    "Scores",
   ]);
-  expect(el.querySelector(".sidebar nav [aria-current]")?.textContent).toBe("Call it");
-  expect(el.querySelector(".side-account")?.textContent).toBe("Sign in");
+  expect(el.querySelector(".topbar nav [aria-current]")?.textContent).toBe("Call it");
+  expect(el.querySelector(".account")?.textContent).toBe("Sign in");
+  expect(el.querySelector(".sidebar")).toBeNull();
 });
 
-test("the home teaches the three primitives and links every use case", async () => {
+test("the home asks the post question, lists today's populations and links every use case", async () => {
   serve({ "/v1/me": [401, {}] });
+  vi.mocked(rw.world).mockResolvedValue(world);
+  vi.mocked(rw.status).mockResolvedValue(statusFixture as SystemStatus);
   const el = await render(<App path="/" />);
-  expect(el.querySelector("h1")?.textContent).toBe("Learn to simulate");
-  expect([...el.querySelectorAll(".primitive-name")].map((n) => n.textContent)).toEqual([
-    "REACTION",
-    "EVENT",
-    "CALL",
-  ]);
-  const links = [...el.querySelectorAll(".usecases a")].map((a) => a.getAttribute("href"));
-  expect(links).toEqual(USE_CASES.map((u) => `/playground?use=${u.id}`));
+  expect(el.querySelector("h1")?.textContent).toBe("Will this land?");
+  const form = el.querySelector<HTMLFormElement>("main form");
+  expect(form?.getAttribute("action")).toBe("/simulate");
+  expect(form?.querySelector("textarea")?.getAttribute("name")).toBe("text");
+  await until(() =>
+    expect(el.querySelectorAll(".register-rows li")).toHaveLength(world.countries.length),
+  );
+  expect(
+    el.querySelectorAll(
+      ".register-foot .seal-grid span.s0, .register-foot .seal-grid span.s1, .register-foot .seal-grid span.s2, .register-foot .seal-grid span.s3",
+    ),
+  ).toHaveLength(64);
+  const links = [...el.querySelectorAll(".decision-rows a")].map((a) => a.getAttribute("href"));
+  expect(links).toEqual(USE_CASES.map(caseHref));
+  const text = el.textContent ?? "";
+  for (const gone of [
+    "Learn to simulate",
+    "Primitive",
+    "PRIMITIVE",
+    "Quickstart",
+    "in action",
+    "Playground",
+  ])
+    expect(text).not.toContain(gone);
 });
 
-test("a use case opens the playground filled in", async () => {
+test("?text= starts the simulator with that post", async () => {
+  serve({ "/v1/me": [401, {}] });
+  history.replaceState(null, "", "/simulate?text=%20Half%20off%20today%20");
+  const el = await render(<App path="/simulate" />);
+  await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
+  expect((el.querySelector("#pg-text") as HTMLTextAreaElement).value).toBe("Half off today");
+  expect(
+    (el.querySelector("input[name=primitive]:checked") as HTMLInputElement).parentElement
+      ?.textContent,
+  ).toBe("Test a post");
+  history.replaceState(null, "", "/");
+});
+
+test("/playground is not a page", async () => {
+  const el = await render(<App path="/playground" />);
+  expect(el.textContent).toContain("Page not found");
+});
+
+test("the reaction slip draws 100 dots and a segment matrix", async () => {
+  const countries = ["USA", "IND", "BRA"];
+  const audiences = countries.flatMap((c, i) =>
+    ["low", "high"].map((e, j) => ({
+      segment: `${c}|18-34|${e}`,
+      label: `${c} ${e}`,
+      country: c,
+      coverage_tier: "B",
+      weight: 1 / 6,
+      landing: 0.2 * (i + j + 1),
+    })),
+  );
+  serve({
+    "/v1/me": [401, {}],
+    "/v1/tests": [200, { ...tested, result: { ...tested.result, audiences } }],
+  });
+  const el = await render(<App path="/simulate" />);
+  await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
+  await act(async () => typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "Half off"));
+  await act(async () => button("Test it").click());
+  await until(() => expect(el.querySelector(".land-result")).not.toBeNull());
+  expect(el.querySelector(".slip-quote")?.textContent).toBe("Half off");
+  expect(el.querySelectorAll(".field span")).toHaveLength(100);
+  const filled = el.querySelectorAll(".field span.on").length;
+  expect(el.textContent).toContain(`Filled dots would like or share it: ${filled} of 100.`);
+  const rows = [...el.querySelectorAll(".matrix tbody tr")];
+  expect(rows).toHaveLength(countries.length);
+  expect(rows[0].querySelectorAll("td")).toHaveLength(9);
+  expect(el.querySelector(".seal-line .seal-grid.empty")).not.toBeNull();
+});
+
+test("a use case opens the simulator filled in", async () => {
   serve({ "/v1/me": [401, {}] });
   const u = USE_CASES.find((x) => x.primitive === "event") as (typeof USE_CASES)[number];
-  history.replaceState(null, "", `/playground?use=${u.id}`);
-  const el = await render(<App path="/playground" />);
+  history.replaceState(null, "", `/simulate?use=${u.id}`);
+  const el = await render(<App path="/simulate" />);
   await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
   expect((el.querySelector("#pg-text") as HTMLTextAreaElement).value).toBe(u.text);
   expect(
     (el.querySelector("input[name=primitive]:checked") as HTMLInputElement).parentElement
       ?.textContent,
-  ).toBe("Event");
+  ).toBe("Fork today's world");
   history.replaceState(null, "", "/");
 });
 
@@ -626,7 +698,7 @@ test("an event run draws every topic and says it is not scored", async () => {
     note: "Counterfactual: not scored",
     content_hash: "",
   } as never);
-  const el = await render(<App path="/playground" />);
+  const el = await render(<App path="/simulate" />);
   await until(() => expect(el.querySelector("#pg-text")).not.toBeNull());
   await act(async () =>
     (el.querySelectorAll("input[name=primitive]")[1] as HTMLInputElement).click(),
@@ -634,11 +706,14 @@ test("an event run draws every topic and says it is not scored", async () => {
   await act(async () =>
     typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "Rates fall"),
   );
-  await act(async () => button("Run").click());
+  await act(async () => button("Run the fork").click());
   await until(() => expect(el.querySelector(".event-result")).not.toBeNull());
   const text = el.querySelector(".event-result")?.textContent ?? "";
   for (const s of [
     "+15.0 pts",
+    "Fork · 7 simulated days from the world of 2026-10-05",
+    "Rates fall",
+    "40% → 55% (+15.0 pts)",
     "Inflation worry",
     "Tech optimism",
     "Counterfactual: not scored",
