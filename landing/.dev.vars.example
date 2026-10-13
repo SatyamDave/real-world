@@ -32,9 +32,14 @@ TURNSTILE_SECRET_KEY=
 TURNSTILE_SITE_KEY_PROD=
 TURNSTILE_SECRET_KEY_PROD=
 
-# Typeform — personal access token (form create/update) and webhook signing secret.
-TYPEFORM_TOKEN=
-TYPEFORM_WEBHOOK_SECRET=
+# Tally (the post-signup form; free plan). One form and one webhook signing secret per
+# environment, both made by hand from tally/FORM_SPEC.md. The form id is the part after
+# tally.so/r/. The ids are public (they are in the embed URL); the signing secrets are not.
+# scripts/set-staging-env.mjs and scripts/set-prod-secrets.sh set TALLY_SIGNING_SECRET on Pages.
+TALLY_FORM_ID_STAGING=
+TALLY_FORM_ID_PROD=
+TALLY_SIGNING_SECRET_STAGING=
+TALLY_SIGNING_SECRET_PROD=
 
 # The v1 app base URL (Satyam hosts web/ separately). While empty, all "Try it" links are hidden.
 # APP_URL is the canonical server value; VITE_APP_URL (below) mirrors it into the client bundle,
@@ -52,8 +57,8 @@ VITE_ENVIRONMENT=
 VITE_AMPLITUDE_API_KEY=
 # Dev only: send to Amplitude (staging key) instead of logging to the console.
 VITE_AMPLITUDE_DEV_SEND=false
-# Typeform form id (printed by `node scripts/typeform-sync.mjs`, stored in typeform/form-id.txt).
-VITE_TYPEFORM_FORM_ID=
+# Tally form id for this environment; scripts/build.mjs sets it from TALLY_FORM_ID_STAGING or _PROD.
+VITE_TALLY_FORM_ID=
 # Turnstile site key again, exposed to the browser widget.
 VITE_TURNSTILE_SITE_KEY=
 # Session-replay sample rate, 0..1.

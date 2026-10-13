@@ -2,7 +2,7 @@
 
 ## What it does
 
-A temporary one-page site, live Oct 13 to Oct 27, that explains Real World in a sentence, shows a slowly turning globe with "receipt" cards that mark where tracked events will resolve, and collects a waitlist. Signup is two steps: a visitor types their email and we save it at once; then an embedded Typeform asks one teaser forecast and their role. Each ad sets `utm_content`, and the page shows the matching headline from an allow-list so we can measure which message makes strangers act. The page makes no claim outside [`gtm/messaging.md`](../gtm/messaging.md): it shows no hash, no probability and no accuracy number, because the public record does not exist yet. It links to the v1 app only once `APP_URL` is set. On Oct 27 the domain moves to the live daily receipts page and this page is retired ([0003](../research/decisions/0003-prelaunch-landing-and-waitlist.md), [product/101](../research/product/101-prelaunch-landing-waitlist-ads.md)).
+A temporary one-page site, live Oct 13 to Oct 27, that explains Real World in a sentence, shows a slowly turning globe with "receipt" cards that mark where tracked events will resolve, and collects a waitlist. Signup is two steps: a visitor types their email and we save it at once; then an embedded Tally asks one teaser forecast and their role. Each ad sets `utm_content`, and the page shows the matching headline from an allow-list so we can measure which message makes strangers act. The page makes no claim outside [`gtm/messaging.md`](../gtm/messaging.md): it shows no hash, no probability and no accuracy number, because the public record does not exist yet. It links to the v1 app only once `APP_URL` is set. On Oct 27 the domain moves to the live daily receipts page and this page is retired ([0003](../research/decisions/0003-prelaunch-landing-and-waitlist.md), [product/101](../research/product/101-prelaunch-landing-waitlist-ads.md)).
 
 ## Who it is for
 
@@ -10,8 +10,8 @@ Strangers arriving from a Reddit or X ad on a phone, who need to understand the 
 
 ## How we know it works
 
-- Routes: `/` (header with a join button, hero, receipt strip, thesis, how-it-works, use cases, research and limits, collaboration, repeat CTA, footer), `/privacy`, `/terms`. Two Pages Functions: `POST /api/signup` and `POST /api/typeform`. The field and event shapes are defined once in `landing/db/migrations/` (the signup row) and `landing/analytics/TRACKING_PLAN.md` (events); this spec does not restate them.
-- The email CTA writes a row to Neon before any Typeform iframe loads, so a Typeform outage never loses a lead ([101](../research/product/101-prelaunch-landing-waitlist-ads.md)).
+- Routes: `/` (header with a join button, hero, receipt strip, thesis, how-it-works, use cases, research and limits, collaboration, repeat CTA, footer), `/privacy`, `/terms`. Two Pages Functions: `POST /api/signup` and `POST /api/tally`. The field and event shapes are defined once in `landing/db/migrations/` (the signup row) and `landing/analytics/TRACKING_PLAN.md` (events); this spec does not restate them.
+- The email CTA writes a row to Neon before any Tally iframe loads, so a Tally outage never loses a lead ([101](../research/product/101-prelaunch-landing-waitlist-ads.md)).
 - The headline is chosen from `utm_content` against the allow-list in [`gtm/prelaunch-ads.md`](../gtm/prelaunch-ads.md); an unknown or missing value falls back to the default headline. The chosen `headline_variant` is recorded on every analytics event and on the signup row.
 - Automated checks (Vitest + Playwright, in `landing/`): the headline resolver returns the default for an unknown `utm_content` and the right headline for each known id; the signup form shows each state below from a mocked endpoint (empty, loading, error, duplicate, success); the globe falls back to the poster under `prefers-reduced-motion` and when WebGL is absent; an axe pass finds no violations on `/`. "Works" for the deploy is a Playwright signup on the preview URL that writes a row to Neon and an event to Amplitude.
 - Measured after ads run, not tonight: signups by `headline_variant` and `utm_source`, and the step-1 to step-2 drop-off ([101](../research/product/101-prelaunch-landing-waitlist-ads.md)).
@@ -44,8 +44,8 @@ All copy below is the whole of what the page says. `{BRAND}` is the display name
 - Email CTA, bot-check failure (server says the Turnstile check failed): "We couldn't confirm you're human. Reload the page and try again."
 - Email CTA, rate-limited state (server says too many tries from this visitor): "Too many tries from this device. Wait a few minutes and try again."
 - Email CTA, invalid-email state (client-side, before submit): inline message: "Enter an email address like you@email.com."
-- Email CTA, duplicate-email state (server returns the existing signup): heading "You're already on the list." Body: "We've got this email. Answer the teaser question below to finish." The Typeform opens as in the success state.
-- Email CTA, success state: heading "You're in." Body: "One quick question while you're here — it's the kind {BRAND} scores every day." The embedded Typeform opens below. When `APP_URL` is set, a link also appears: "Try today's question →".
+- Email CTA, duplicate-email state (server returns the existing signup): heading "You're already on the list." Body: "We've got this email. Answer the teaser question below to finish." The Tally opens as in the success state.
+- Email CTA, success state: heading "You're in." Body: "One quick question while you're here — it's the kind {BRAND} scores every day." The embedded Tally opens below. When `APP_URL` is set, a link also appears: "Try today's question →".
 - Turnstile note (shown small near the button): "Protected by a bot check."
 
 ### How it works (three steps; allowed claims only)
@@ -84,17 +84,17 @@ Every sentence restates a claim on the allowed list in [messaging](../gtm/messag
 
 ### /privacy and /terms
 
-- Both carry a banner at the top: "Draft — reviewed by the founders before launch." Full copy lives in the page components; the privacy page lists what we collect, the processors (Cloudflare, Neon, Amplitude, Typeform, Reddit, X), the purpose, retention, deletion on request, and that we do not sell data. See `landing/RUNBOOK.md` for the go-live review step.
+- Both carry a banner at the top: "Draft — reviewed by the founders before launch." Full copy lives in the page components; the privacy page lists what we collect, the processors (Cloudflare, Neon, Amplitude, Tally, Reddit, X), the purpose, retention, deletion on request, and that we do not sell data. See `landing/RUNBOOK.md` for the go-live review step.
 
 ## What it is not
 
 - Not the launch. It never links to a waitlist from Show HN; Show HN links the live daily page ([launch plan](../gtm/launch-plan.md)). It is deleted on Oct 27.
 - Not a place that shows a forecast number, a hash, a probability or an accuracy claim. The record does not exist yet, and inventing one is forbidden ([messaging](../gtm/messaging.md), [CLAUDE.md](../CLAUDE.md)).
-- Not the app. No account, no daily question answered here, no fork. The teaser forecast is collected by Typeform for the waitlist only.
+- Not the app. No account, no daily question answered here, no fork. The teaser forecast is collected by Tally for the waitlist only.
 - A cookie notice asks before any analytics: until the visitor accepts, Amplitude and the ad pixels do not load and nothing is sent ([TRACKING_PLAN](../landing/analytics/TRACKING_PLAN.md)).
 - Not built in `web/`; it is a separate app so it cannot break the launch ([0003](../research/decisions/0003-prelaunch-landing-and-waitlist.md)).
 
 ## Where the code lives
 
-- `landing/` (Vite + React + TypeScript on Cloudflare Pages; Pages Functions for signup and the Typeform webhook; Neon Postgres; Amplitude).
+- `landing/` (Vite + React + TypeScript on Cloudflare Pages; Pages Functions for signup and the Tally webhook; Neon Postgres; Amplitude).
 - Rests on: [0003](../research/decisions/0003-prelaunch-landing-and-waitlist.md), [0004](../research/decisions/0004-launch-name-real-world.md), [product/101](../research/product/101-prelaunch-landing-waitlist-ads.md), [lenses/cpo.md](../research/lenses/cpo.md), [open-source/041](../research/open-source/041-globe-visualization.md), [engineering/071](../research/engineering/071-web-app-stack.md), [messaging](../gtm/messaging.md).

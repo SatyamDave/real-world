@@ -28,8 +28,8 @@ export type EventName =
   | "signup_saved"
   | "signup_duplicate"
   | "signup_failed"
-  | "typeform_opened"
-  | "typeform_submitted"
+  | "form_opened"
+  | "form_submitted"
   | "section_viewed"
   | "app_link_clicked"
   | "outbound_clicked";

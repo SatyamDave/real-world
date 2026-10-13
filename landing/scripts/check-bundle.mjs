@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Fails when the JavaScript the page loads before first paint is over the budget.
 // "Before first paint" means what dist/index.html references: the entry script and
-// its modulepreloads. Dynamic chunks (cobe, Typeform, Amplitude, session replay,
+// its modulepreloads. Dynamic chunks (cobe, Amplitude, session replay,
 // pixels) are loaded later and are listed for information only.
 //
 //   pnpm --filter landing build && pnpm --filter landing check:bundle

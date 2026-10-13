@@ -26,15 +26,20 @@ const need = (k) => {
 };
 
 const TURNSTILE_TEST_SITE_KEY = "1x00000000000000000000AA";
-const formFile = target === "production" ? "form-id.production.txt" : "form-id.txt";
-let formId = "";
-try {
-  formId = readFileSync(new URL(`../typeform/${formFile}`, import.meta.url), "utf8").trim();
-} catch {
-  console.error(`typeform/${formFile} is missing; run typeform-sync.mjs --env ${target}`);
+const env = { ...process.env, VITE_ENVIRONMENT: target };
+
+// The Tally form id is per environment (public: it is in the embed URL). Staging may build
+// without one (the page then shows the teaser as text); production may not.
+const formId = vars[target === "production" ? "TALLY_FORM_ID_PROD" : "TALLY_FORM_ID_STAGING"] ?? "";
+if (formId) env.VITE_TALLY_FORM_ID = formId;
+else if (target === "production") {
+  console.error(
+    "TALLY_FORM_ID_PROD is missing from .dev.vars; build the form from tally/FORM_SPEC.md",
+  );
   process.exit(1);
+} else {
+  console.warn("TALLY_FORM_ID_STAGING is not set: this build shows the teaser as text, no form");
 }
-const env = { ...process.env, VITE_ENVIRONMENT: target, VITE_TYPEFORM_FORM_ID: formId };
 
 if (target === "staging") {
   env.VITE_AMPLITUDE_API_KEY = need("AMPLITUDE_API_KEY_STAGING");

@@ -3,7 +3,7 @@
 export const BRAND = {
   name: "Real World",
   tagline: "simulations with receipts",
-  // The teaser forecast shown in the post-signup Typeform (never in ad creative).
+  // The teaser forecast shown in the post-signup Tally form (never in ad creative).
   // Default event per the overnight brief; Fed decision date verified on
   // federalreserve.gov (FOMC meets Oct 27-28 2026, decision Oct 28).
   teaser: {

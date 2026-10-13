@@ -1,6 +1,6 @@
 # Tracking plan: pre-launch landing page
 
-The one list of what the page sends and why. The code is `src/analytics.ts` (the `track()` wrapper), `src/amplitude.ts` (SDK setup) and `src/pixels.ts` (ad pixels); server events are in `functions/_lib/signup.ts` and `functions/_lib/typeform.ts`. The question this answers is in [product/landing-page.md](../../product/landing-page.md): which headline and channel make a stranger sign up, and where they drop between the two steps.
+The one list of what the page sends and why. The code is `src/analytics.ts` (the `track()` wrapper), `src/amplitude.ts` (SDK setup) and `src/pixels.ts` (ad pixels); server events are in `functions/_lib/signup.ts` and `functions/_lib/tally.ts`. The question this answers is in [product/landing-page.md](../../product/landing-page.md): which headline and channel make a stranger sign up, and where they drop between the two steps.
 
 ## Rules
 
@@ -24,8 +24,8 @@ The one list of what the page sends and why. The code is `src/analytics.ts` (the
 | `signup_saved` | Server saved a new signup (the conversion) | `location`, `signup_id` |
 | `signup_duplicate` | Server found the email already saved | `location`, `signup_id` |
 | `signup_failed` | The request failed | `location`, `reason`: `request_failed`, `bot_check`, `rate_limited` |
-| `typeform_opened` | The Typeform step mounted | `signup_id` |
-| `typeform_submitted` | The Typeform was submitted | `signup_id` |
+| `form_opened` | The Tally form step mounted | `signup_id` |
+| `form_submitted` | Tally reported the form submitted (a `Tally.FormSubmitted` message from tally.so) | `signup_id` |
 | `app_link_clicked` | "Try today's question" pressed (only when `APP_URL` is set) | `location` |
 | `outbound_clicked` | Contact link pressed | `to`: `contact` (footer) or `collaboration` |
 
@@ -34,7 +34,7 @@ The one list of what the page sends and why. The code is `src/analytics.ts` (the
 | Event | When | Properties besides `headline_variant` |
 | --- | --- | --- |
 | `waitlist_email_saved` | A new row was inserted | `signup_id`, `utm_source`, `utm_content`. `insert_id` is the signup id, so a retry is not counted twice. |
-| `waitlist_completed` | A verified Typeform webhook filled in the row | `signup_id`, `role`. `insert_id` is `typeform:<Typeform event id>`. |
+| `waitlist_completed` | A verified Tally webhook filled in the row | `signup_id`, `role`. `insert_id` is `tally:<Tally event id>`. |
 
 Both use the browser `device_id` when the signup carried one, so the funnel joins across browser and server; otherwise the signup id is the `user_id`.
 
@@ -54,11 +54,11 @@ The signup id as the conversion id lets a later server-side conversion call dedu
 
 ## Funnel the dashboard shows
 
-`landing_viewed` to `section_viewed` (receipts) to `cta_clicked` to `email_submitted` to `signup_saved` to `typeform_opened` to `typeform_submitted`, split by `headline_variant` and by `utm_source`. The server events are the check on the browser ones: `waitlist_email_saved` should match `signup_saved` within a few percent, and a gap means ad blockers or a failed script.
+`landing_viewed` to `section_viewed` (receipts) to `cta_clicked` to `email_submitted` to `signup_saved` to `form_opened` to `form_submitted`, split by `headline_variant` and by `utm_source`. The server events are the check on the browser ones: `waitlist_email_saved` should match `signup_saved` within a few percent, and a gap means ad blockers or a failed script.
 
 ## Verify after a deploy
 
-0. On staging, `node scripts/verify-staging.mjs --typeform` runs steps 1 to 3 and the Typeform for you and prints the ids.
+0. On staging, `node scripts/verify-staging.mjs --form` runs steps 1 to 3 and the Tally form for you and prints the ids.
 1. Open the preview with `?utm_source=test&utm_content=hashed`, accept nothing, wait 5 seconds.
 2. Accept the cookie notice. In Amplitude, find the device in the user lookup. Expect `landing_viewed` with `headline_variant = hashed`, the autocapture page view with the UTM properties, and `section_viewed` for `hero`.
 3. Submit a `test+<timestamp>@example.com` address. Expect `email_submitted`, `signup_saved` and the server `waitlist_email_saved` with the same `signup_id`.

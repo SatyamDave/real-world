@@ -34,13 +34,12 @@ export function Privacy() {
           <strong>Your country</strong>, taken from the request. We do not store your IP address,
           and we set Amplitude not to collect it. To limit abuse we keep a salted hash of it for a
           few minutes at a time and delete those rows after a day. Cloudflare, which serves the
-          page, and Typeform, which runs the form, see your IP address in the course of their
-          service.
+          page, and Tally, which runs the form, see your IP address in the course of their service.
         </li>
         <li>
           <strong>Your answers</strong> to the forecast question and the role question in the form
-          that follows signup. Typeform keeps them and sends them to us, and we save them with your
-          signup. Typeform may also set its own cookies.
+          that follows signup. Tally keeps them and sends them to us, and we save them with your
+          signup. Tally may also set its own cookies.
         </li>
         <li>
           <strong>How you use this page,</strong> only if you accept the cookie notice, through
@@ -65,7 +64,7 @@ export function Privacy() {
         </li>
         <li>Neon, a database provider in the United States, stores the waitlist.</li>
         <li>Amplitude records usage and session replays.</li>
-        <li>Typeform runs the form with the forecast and role questions.</li>
+        <li>Tally runs the form with the forecast and role questions.</li>
         <li>Reddit and X receive pixel events when their pixels are on.</li>
       </ul>
       <p>We do not sell your data.</p>

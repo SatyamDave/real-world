@@ -100,3 +100,35 @@ Waitlist is the only call to action; v1 is not connected before ads. Decisions f
 
 ### Finish
 - [x] MORNING.md: evidence per milestone, what still needs Rohit, mistakes. Stop servers and browsers, clean tree.
+
+## One-shot: Tally, award-level UI, public research (2026-10-13)
+
+Order: Phase 1, then 2, then 3, then Finish. Commit after each phase. Resume from the first unchecked box. Decisions follow the protocol in DECISIONS.md (Milestone C).
+
+### Phase 1: Tally instead of Typeform (`landing/8-tally`, off `landing/7-sections`, draft PR on top of #93)
+- [ ] Verify Tally facts from docs: hidden fields on the free plan and how they reach the embed; the `Tally-Signature` header and what it signs; payload shape; retries and duplicates; CSP the embed needs
+- [ ] Screenshot and report the free-plan "Made with Tally" badge
+- [ ] Replace the Typeform webhook and embed with Tally (signature, replay, tamper, idempotency); remove Typeform code and `TYPEFORM_TOKEN`
+- [ ] Per-environment secrets and form ids; `set-prod-secrets.sh`, RUNBOOK, go-live checklist
+- [ ] `landing/tally/FORM_SPEC.md`: click-by-click for two forms (staging, prod)
+- [ ] Privacy page and LEGAL_REVIEW.md: Tally is a processor
+- [ ] Commit, push, draft PR
+
+### Phase 2: Milestone C, an award-level page (`landing/9-wow`, off `landing/8-tally`, draft PR)
+- [ ] Audit first, no code: `design/UI_AUDIT.md` (screenshots at 390x844 and 1440x900, ruthless critique); references listed in `INSPIRATION.md`
+- [ ] `design/EQUIP.md`: options, byte costs, recommendation (skills, OGL/raw shaders/cobe, GSAP, Lenis, CSS scroll-driven, View Transitions)
+- [ ] Three bold directions scored against the audit; one picked and logged
+- [ ] Interactive globe like Google Earth: drag with inertia, pinch, zoom buttons, reset, marker click to receipt cards; no scroll hijack; touch scrolls vertically; keyboard; accessible alternative; reduced motion; honest pending markers only
+- [ ] Scroll story; waitlist stays the one dominant action; no demo, no v1 link, nothing on APP_URL
+- [ ] Budgets: poster first, globe after first paint on capable devices only, static fallback; Amplitude events for drag, zoom, marker open; Lighthouse/CLS/LCP before and after, local and live staging
+- [ ] Screenshot critique loop at least three times at both sizes; say plainly if not clearly better
+- [ ] Commit, push, draft PR
+
+### Phase 3: public research citations (same branch)
+- [ ] `design/PAPERS.md`: every source opened and verified (title, authors, year, exact finding); unverifiable entries dropped
+- [ ] A citations section on the page; every line checked against `gtm/messaging.md`; no accuracy implication
+- [ ] Commit
+
+### Finish
+- [ ] Check `.dev.vars` for `TALLY_SIGNING_SECRET_STAGING` and the staging form id; if present, real Playwright submission on staging plus replay, tamper, unsigned, cleanup by id; if not, first unchecked item in MORNING.md
+- [ ] MORNING.md, PR bodies, RUNBOOK; stop servers and browsers; clean tree
