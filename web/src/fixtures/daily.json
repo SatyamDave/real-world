@@ -7,6 +7,10 @@
     "closes_at": "2026-10-06T23:59:00Z",
     "resolves_by": "2026-10-07"
   },
+  "sealed": {
+    "leaf_hash": "3f9a1c0be27d4e5f8a6b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f",
+    "date": "2026-10-05"
+  },
   "reveal": {
     "you": 0.62,
     "crowd": {
@@ -54,6 +58,12 @@
         "probability": 0.62,
         "brier": null
       }
-    ]
+    ],
+    "record": {
+      "n": 4,
+      "you": 0.181,
+      "ai": 0.204,
+      "wins": 3
+    }
   }
 }

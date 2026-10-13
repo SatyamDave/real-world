@@ -1,5 +1,4 @@
 import type { Scoreboard } from "@real-world/sdk";
-import { ApiCall } from "../ApiCall";
 import {
   Disclosure,
   FORECASTER,
@@ -356,23 +355,6 @@ function Explained({ b }: { b: Board }) {
   );
 }
 
-const csvRows = (b: Board) =>
-  b.resolved.map((r) => ({
-    question_id: r.question_id,
-    text: r.text,
-    date: r.date,
-    outcome: r.outcome,
-    resolved_on: r.resolved_on,
-    tiers: r.tiers.join(" "),
-    region: r.region,
-    ...Object.fromEntries(
-      ORDER.flatMap((f) => [
-        [`${f}_probability`, r.forecasts[f]?.probability ?? ""],
-        [`${f}_brier`, r.forecasts[f]?.brier ?? ""],
-      ]),
-    ),
-  }));
-
 export default function ScoresRoute() {
   const { data: b, error, retry } = useLoad(() => rw.scoreboard());
   if (error) return <LoadError what="the scoreboard" error={error} retry={retry} />;
@@ -395,13 +377,6 @@ export default function ScoresRoute() {
         </>
       )}
       <Explained b={b} />
-      <ApiCall
-        path="/v1/scoreboard"
-        sdk="scoreboard()"
-        data={b}
-        csv={csvRows(b)}
-        filename="real-world-scoreboard"
-      />
       <p>
         <button type="button" className="primary" onClick={() => location.assign("/receipts")}>
           Verify the receipts

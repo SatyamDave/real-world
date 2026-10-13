@@ -25,7 +25,7 @@ People deciding whether a post will land, people who want to call today's questi
 
 ## How we know it works
 
-- All data comes through `@real-world/sdk`; the app has no hand-written fetch calls.
+- All public data comes through `@real-world/sdk`; the cookie-authenticated calls live only in `web/src/session.ts`.
 - A file `src/pages/<name>.tsx` is the route `/<name>` and `/<name>/<param>`; its default export is the page and its named export `title` sets the document title.
 - Search and share metadata: `VITE_PUBLIC_ORIGIN` makes every share URL absolute and a production build fails without it; `robots.txt` and `sitemap.xml` list the parameterless routes. `src/seo.test.ts` covers it.
 - A production build asks the API at `VITE_API_URL` for every question it would show and fails if any is a fixture; `vite build --mode fixtures` skips the check. `src/liveCheck.test.ts` covers it.

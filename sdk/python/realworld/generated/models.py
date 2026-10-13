@@ -230,6 +230,18 @@ class Links(BaseModel):
     events: str = Field(..., title="Events")
 
 
+class Outcome(StrEnum):
+    landed = "landed"
+    flopped = "flopped"
+
+
+class Mark(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    outcome: Outcome = Field(..., title="Outcome")
+
+
 class Miss(BaseModel):
     question_id: str = Field(..., title="Question Id")
     text: str = Field(..., title="Text")
@@ -238,6 +250,13 @@ class Miss(BaseModel):
     probability: float = Field(..., title="Probability")
     outcome: int = Field(..., title="Outcome")
     brier: float = Field(..., title="Brier")
+
+
+class Mix(BaseModel):
+    scroll_past: float = Field(..., title="Scroll Past")
+    read: float = Field(..., title="Read")
+    like: float = Field(..., title="Like")
+    share: float = Field(..., title="Share")
 
 
 class Source(StrEnum):
@@ -249,9 +268,12 @@ class NotFound(BaseModel):
     detail: str = Field(..., title="Detail")
 
 
-class PaperPdf(BaseModel):
-    how: str = Field(..., title="How")
-    ci: str = Field(..., title="Ci")
+class PastPost(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    text: str = Field(..., max_length=500, min_length=1, title="Text")
+    outcome: Outcome = Field(..., title="Outcome")
 
 
 class Person(BaseModel):
@@ -300,18 +322,37 @@ class PopulationTopic(BaseModel):
     in_band: bool | None = Field(..., title="In Band")
 
 
+class AgeBand(StrEnum):
+    field_18_34 = "18-34"
+    field_35_54 = "35-54"
+    field_55_ = "55+"
+
+
+class Gut(StrEnum):
+    lands = "lands"
+    flops = "flops"
+
+
+class PostTestRequest(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    countries: list[str] | None = Field(
+        None, description="ISO3 codes; null means every simulated country.", title="Countries"
+    )
+    age_bands: list[AgeBand] | None = Field(
+        None, description="Null means every age.", title="Age Bands"
+    )
+    text: str = Field(..., max_length=500, min_length=1, title="Text")
+    gut: Gut | None = Field(
+        None, description="The person's own call before the result.", title="Gut"
+    )
+
+
 class PrefilledEvent(BaseModel):
     id: str = Field(..., title="Id")
     text: str = Field(..., title="Text")
     countries: list[str] | None = Field(..., title="Countries")
-
-
-class Primary(BaseModel):
-    metric: str = Field(..., title="Metric")
-    value: float = Field(..., title="Value")
-    low: float = Field(..., title="Low")
-    high: float = Field(..., title="High")
-    n: int = Field(..., title="N")
 
 
 class ProofStep(BaseModel):
@@ -413,6 +454,8 @@ class Code1(StrEnum):
     signed_out = "signed_out"
     cross_origin = "cross_origin"
     account_unreadable = "account_unreadable"
+    test_daily_limit = "test_daily_limit"
+    already_marked = "already_marked"
 
 
 class Refused(BaseModel):
@@ -453,6 +496,38 @@ class ReplayRow(BaseModel):
     matches: bool = Field(..., title="Matches")
 
 
+class RetroPost(BaseModel):
+    text: str = Field(..., title="Text")
+    outcome: Outcome = Field(..., title="Outcome")
+    landing_chance: float = Field(..., title="Landing Chance")
+    hit: bool = Field(..., title="Hit")
+
+
+class RetroRequest(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    countries: list[str] | None = Field(
+        None, description="ISO3 codes; null means every simulated country.", title="Countries"
+    )
+    age_bands: list[AgeBand] | None = Field(
+        None, description="Null means every age.", title="Age Bands"
+    )
+    posts: list[PastPost] = Field(..., max_length=5, min_length=1, title="Posts")
+
+
+class RetroResult(BaseModel):
+    posts: list[RetroPost] = Field(..., title="Posts")
+    hits: int = Field(..., title="Hits")
+    brier: float = Field(..., title="Brier")
+    label: Literal["Retrospective: not on your record"] = Field(
+        "Retrospective: not on your record", title="Label"
+    )
+    disclosure: str = Field(
+        "AI-simulated. Not a poll or a prediction of a real person", title="Disclosure"
+    )
+
+
 class Rubric(BaseModel):
     population: int = Field(..., title="Population")
     attitudes: int = Field(..., title="Attitudes")
@@ -467,6 +542,39 @@ class Scored(BaseModel):
     brier: float = Field(..., title="Brier")
 
 
+class Seal(BaseModel):
+    id: str = Field(..., title="Id")
+    sha256: str = Field(
+        ..., description="SHA-256 of `body`, the canonical JSON of the stored test.", title="Sha256"
+    )
+    sealed_at: str = Field(..., title="Sealed At")
+
+
+class Sealed(BaseModel):
+    leaf_hash: str = Field(
+        ...,
+        description="The AI's committed sim forecast leaf, its number hidden.",
+        title="Leaf Hash",
+    )
+    date: str = Field(..., description="The day record it is committed in.", title="Date")
+
+
+class SealedTest(BaseModel):
+    seal: Seal
+    body: str = Field(
+        ..., description="The canonical JSON the seal hashes, byte for byte.", title="Body"
+    )
+    text: str = Field(..., title="Text")
+    gut: Gut | None = Field(..., title="Gut")
+    landing_chance: float = Field(..., title="Landing Chance")
+    outcome: Outcome | None = Field(..., title="Outcome")
+    marked_at: str | None = Field(..., title="Marked At")
+    brier: float | None = Field(..., description="The engine's Brier once marked.", title="Brier")
+    gut_brier: float | None = Field(
+        ..., description="The gut's Brier once marked, if a gut was given.", title="Gut Brier"
+    )
+
+
 class SegmentAnswer(BaseModel):
     segment: str = Field(..., title="Segment")
     description: str = Field(..., title="Description")
@@ -476,6 +584,17 @@ class SegmentAnswer(BaseModel):
         title="Prior Share",
     )
     yes_share: float = Field(..., title="Yes Share")
+
+
+class SegmentReaction(BaseModel):
+    segment: str = Field(..., title="Segment")
+    label: str = Field(..., description="The segment in words.", title="Label")
+    country: str = Field(..., title="Country")
+    coverage_tier: str = Field(..., title="Coverage Tier")
+    weight: float = Field(
+        ..., description="Share of the audience's agents in this segment.", title="Weight"
+    )
+    landing: float = Field(..., description="Share who would like or share it.", title="Landing")
 
 
 class SegmentShift(BaseModel):
@@ -574,6 +693,19 @@ class SystemStatus(BaseModel):
     engine_version: str = Field(..., title="Engine Version")
 
 
+class TestRecord(BaseModel):
+    tests: list[SealedTest] = Field(..., title="Tests")
+    marked: int = Field(..., title="Marked")
+    hits: int = Field(
+        ..., description="Marked tests where the engine's side of 50% matched.", title="Hits"
+    )
+    brier: float | None = Field(..., title="Brier")
+    gut_brier: float | None = Field(
+        ..., description="Over marked tests that had a gut call.", title="Gut Brier"
+    )
+    gut_marked: int = Field(..., title="Gut Marked")
+
+
 class TopItem(BaseModel):
     title: str = Field(..., title="Title")
     iso3: str = Field(..., title="Iso3")
@@ -615,6 +747,25 @@ class VerifyRequest(BaseModel):
     token: Token | None = Field(None, description="From the link's #token=.", title="Token")
     email: Email | None = Field(None, title="Email")
     code: Code2 | None = Field(None, title="Code")
+
+
+class Voice(BaseModel):
+    label: str = Field(..., title="Label")
+    text: str = Field(..., title="Text")
+    simulated: Literal["Simulated account"] = Field("Simulated account", title="Simulated")
+
+
+class VsAi(BaseModel):
+    n: int = Field(
+        ..., description="Resolved questions this player called that the AI also called.", title="N"
+    )
+    you: float | None = Field(..., description="The player's mean Brier on them.", title="You")
+    ai: float | None = Field(
+        ..., description="The AI's (sim) mean Brier on the same questions.", title="Ai"
+    )
+    wins: int = Field(
+        ..., description="Questions where the player's Brier was lower than the AI's.", title="Wins"
+    )
 
 
 class WeekDay(BaseModel):
@@ -710,17 +861,6 @@ class BaselineSkill(BaseModel):
     by_region: dict[str, Skill] = Field(..., title="By Region")
 
 
-class ExperimentResult(BaseModel):
-    path: str = Field(..., title="Path")
-    date: str = Field(..., title="Date")
-    command: str = Field(..., title="Command")
-    commit: str = Field(..., title="Commit")
-    provider: str = Field(..., title="Provider")
-    model: str = Field(..., title="Model")
-    primary: Primary | None
-    outcome: str = Field(..., title="Outcome")
-
-
 class JobCreated(BaseModel):
     id: str = Field(..., title="Id")
     status: Status = Field(..., title="Status")
@@ -750,19 +890,6 @@ class News(BaseModel):
     by_topic: list[TopicNews] = Field(..., title="By Topic")
 
 
-class Paper(BaseModel):
-    slug: str = Field(..., title="Slug")
-    short_title: str = Field(..., title="Short Title")
-    title: str = Field(..., title="Title")
-    claim: str = Field(..., title="Claim")
-    stage: str = Field(..., title="Stage")
-    venue: str = Field(..., title="Venue")
-    pending: str = Field(..., title="Pending")
-    tex_url: str = Field(..., title="Tex Url")
-    status_url: str = Field(..., title="Status Url")
-    pdf: PaperPdf
-
-
 class PopulationCountry(BaseModel):
     iso3: str = Field(..., title="Iso3")
     name: str = Field(..., title="Name")
@@ -774,6 +901,28 @@ class PopulationCountry(BaseModel):
     agent_count: int = Field(..., title="Agent Count")
     segments: list[PopulationSegment] = Field(..., title="Segments")
     topics: list[PopulationTopic] = Field(..., title="Topics")
+
+
+class PostTestResult(BaseModel):
+    landing_chance: float = Field(
+        ..., description="Audience share who would like or share it.", title="Landing Chance"
+    )
+    band: list[float] = Field(
+        ..., description="p10 and p90 of landing across segments.", title="Band"
+    )
+    mix: Mix
+    best: list[SegmentReaction] = Field(..., title="Best")
+    worst: list[SegmentReaction] = Field(..., title="Worst")
+    voices: list[Voice] = Field(..., title="Voices")
+    rewrite: str = Field(..., title="Rewrite")
+    segments: int = Field(..., title="Segments")
+    model_calls: int = Field(..., title="Model Calls")
+    cost_usd: float = Field(..., title="Cost Usd")
+    provider: str = Field(..., title="Provider")
+    calibration: str = Field("Uncalibrated until 100 marked tests", title="Calibration")
+    disclosure: str = Field(
+        "AI-simulated. Not a poll or a prediction of a real person", title="Disclosure"
+    )
 
 
 class QuestionDay(BaseModel):
@@ -854,6 +1003,7 @@ class Reveal(BaseModel):
     week: list[WeekDay] = Field(
         ..., description="The seven days ending today, oldest first.", title="Week"
     )
+    record: VsAi
 
 
 class Scoreboard(BaseModel):
@@ -897,23 +1047,8 @@ class Cycle(BaseModel):
 class Daily(BaseModel):
     date: str = Field(..., title="Date")
     question: DailyQuestion
+    sealed: Sealed | None = Field(..., description="The AI's call on this question, sealed.")
     reveal: Reveal | None
-
-
-class Experiment(BaseModel):
-    id: str = Field(..., title="Id")
-    title: str = Field(..., title="Title")
-    registered: str = Field(..., title="Registered")
-    owner: str = Field(..., title="Owner")
-    status: str = Field(..., title="Status")
-    registry_sha256: str = Field(..., title="Registry Sha256")
-    prereg_sha256: str = Field(..., title="Prereg Sha256")
-    hash_matches: bool = Field(..., title="Hash Matches")
-    prereg_url: str = Field(..., title="Prereg Url")
-    hypothesis: str = Field(..., title="Hypothesis")
-    primary_metric: str = Field(..., title="Primary Metric")
-    kill_criterion: str = Field(..., title="Kill Criterion")
-    results: list[ExperimentResult] = Field(..., title="Results")
 
 
 class Population(BaseModel):
@@ -926,6 +1061,11 @@ class Population(BaseModel):
     sources: list[PopulationSource] = Field(..., title="Sources")
 
 
+class PostTestOut(BaseModel):
+    result: PostTestResult
+    seal: Seal | None = Field(..., description="Null when signed out: nothing is stored.")
+
+
 class ReceiptDay(BaseModel):
     day: DayRecord
     record_hash: str = Field(..., title="Record Hash")
@@ -933,13 +1073,6 @@ class ReceiptDay(BaseModel):
     anchored_at: str | None = Field(..., title="Anchored At")
     anchors: list[Anchor] = Field(..., title="Anchors")
     entries: list[ReceiptEntry] = Field(..., title="Entries")
-
-
-class Research(BaseModel):
-    experiments: list[Experiment] = Field(..., title="Experiments")
-    papers: list[Paper] = Field(..., title="Papers")
-    repo: str = Field(..., title="Repo")
-    commit: str = Field(..., title="Commit")
 
 
 class Trace(BaseModel):

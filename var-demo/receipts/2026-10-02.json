@@ -1,0 +1,553 @@
+{
+  "day": {
+    "date": "2026-10-02",
+    "engine_version": "0.1.0",
+    "leaf_count": "27",
+    "prev_root": "fba09ab0fc9efdd015aae7577f3e7403c152f15e3adf86a2c5daa99cfe2ed745",
+    "protocol_hash": "4fd1241129a3ef74c9006321917e3334c82c460270f289051ff0df8fc3d15b47",
+    "root": "16cd32c2aab6d1d9079fcb46d4f83d0b4ac12a90cedaad9bc74c5b55ba00907a"
+  },
+  "entries": [
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "sim",
+        "kind": "forecast",
+        "market_price_at_commit": "0.8400",
+        "market_source": "fixture:FX-GBR-RATE-HOLD",
+        "model": "fake",
+        "probability": "0.4590",
+        "question_hash": "e73003f53e9e12c00bf135475e3071298a89df23a830eb5aa85ec059965a2abe",
+        "question_id": "fx-gbr-rate-hold",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "09823262740953bf053a8fdc5bb8922365c2301d8294b48ec04c30d5d931eb80",
+      "salt": "6e1773ea380276601fbeb4a37b9b18a4"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "market",
+        "kind": "forecast",
+        "market_price_at_commit": "0.4300",
+        "market_source": "fixture:FX-IND-IDN-FUEL-PRICE",
+        "model": "",
+        "probability": "0.4300",
+        "question_hash": "9c679fb72bf1585d82642e5bc9d480958d9ca23228b03d8ce6dc72c091e45950",
+        "question_id": "fx-ind-idn-fuel-price",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "0c0ae607d14c897e21a9a3a95801957e18f229a95aefd5e0eb66480f0e69d37e",
+      "salt": "75f8cf3500ee5858c82c1b065c6c9763"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "market",
+        "kind": "forecast",
+        "market_price_at_commit": "0.6400",
+        "market_source": "fixture:FX-USA-CPI-RISE",
+        "model": "",
+        "probability": "0.6400",
+        "question_hash": "ed662f908adc0d0dd364fe2f4cd430fb6ff958567e4bd6dc30f63eb0be87e492",
+        "question_id": "fx-usa-cpi-rise",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "1162a4bb5a9ea3b2774942d412cf8a6b147603812b36a97d5c7112435f60e78b",
+      "salt": "34d3d1a0bccd877872739f99715f7a39"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "plain_llm",
+        "kind": "forecast",
+        "market_price_at_commit": "0.4300",
+        "market_source": "fixture:FX-IND-IDN-FUEL-PRICE",
+        "model": "fake",
+        "probability": "0.3166",
+        "question_hash": "9c679fb72bf1585d82642e5bc9d480958d9ca23228b03d8ce6dc72c091e45950",
+        "question_id": "fx-ind-idn-fuel-price",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "118229db5ef38debb0a2934fd4283a61e23d34ee587611bfa829e020faf3aa05",
+      "salt": "c51549c1d5ef08bc016c52bece8a10ec"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "plain_llm",
+        "kind": "forecast",
+        "market_price_at_commit": "0.6400",
+        "market_source": "fixture:FX-USA-CPI-RISE",
+        "model": "fake",
+        "probability": "0.5137",
+        "question_hash": "ed662f908adc0d0dd364fe2f4cd430fb6ff958567e4bd6dc30f63eb0be87e492",
+        "question_id": "fx-usa-cpi-rise",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "174060d2106370d2973d829d2c46e9cf8a483aeb6dd4e0218627eae9c2e2b145",
+      "salt": "ead6c140f7f1371c33e1e4f7ecec3d89"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "plain_llm",
+        "kind": "forecast",
+        "market_price_at_commit": "0.8400",
+        "market_source": "fixture:FX-GBR-RATE-HOLD",
+        "model": "fake",
+        "probability": "0.4998",
+        "question_hash": "e73003f53e9e12c00bf135475e3071298a89df23a830eb5aa85ec059965a2abe",
+        "question_id": "fx-gbr-rate-hold",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "1795e666e6a4102e8b20f59d8cab852051d952019f91b6d7d6bd23b081da200e",
+      "salt": "4885f7778611531e89e50e6382cdc481"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "market",
+        "kind": "forecast",
+        "market_price_at_commit": "0.4600",
+        "market_source": "fixture:FX-JPN-AI-GUIDELINES",
+        "model": "",
+        "probability": "0.4600",
+        "question_hash": "baaae053dbb433d6acb524cffaf68ef8afcd171752ebf6141a2cb60488d1d626",
+        "question_id": "fx-jpn-ai-guidelines",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "1a400dd64fcbf7e2e4fa2aae0a6572925da718b2d0ef9e67c70151485e599b88",
+      "salt": "a9db249197ce7605b3ef0a612234bd6b"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "market",
+        "kind": "forecast",
+        "market_price_at_commit": "0.7000",
+        "market_source": "fixture:FX-MENA-CEASEFIRE",
+        "model": "",
+        "probability": "0.7000",
+        "question_hash": "e6751fad1643ae5840353d14d0ec484675ada380620cdd07becd0ed88b12f2a7",
+        "question_id": "fx-mena-ceasefire",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "1ce7a0e9f20e32d225d7bd5902be631f878f2224a15561bf3b96eb4b53bca485",
+      "salt": "d24d77cbceac771826332231e75736c2"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "market",
+        "kind": "forecast",
+        "market_price_at_commit": "0.5500",
+        "market_source": "fixture:FX-DEU-CLIMATE-BILL",
+        "model": "",
+        "probability": "0.5500",
+        "question_hash": "8fe23e1674123f3eed8d1178c7bea5971067ef0316e5b93c34a1900522b8dd34",
+        "question_id": "fx-deu-climate-bill",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "2587d681508eed59a135bbc146ac645591840c71e0404bb1cb99daeb32d24c89",
+      "salt": "914af2a80b06ce8ee984042f8d3c21b7"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "plain_llm",
+        "kind": "forecast",
+        "market_price_at_commit": "0.5700",
+        "market_source": "fixture:FX-AFR-MIGRATION-QUOTA",
+        "model": "fake",
+        "probability": "0.8493",
+        "question_hash": "ce3a20acd632a73a85c8c106384ef9fc6de26f30fd5b3b9382d053c7d6b00ff1",
+        "question_id": "fx-afr-migration-quota",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "2b2abc52316f1ed15b98266a7d6785d11e3c68978d0c3e76a6890167c2fcebb3",
+      "salt": "ca964c5c12298d0f1e2dc3432025d37c"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "plain_llm",
+        "kind": "forecast",
+        "market_price_at_commit": "0.7000",
+        "market_source": "fixture:FX-MENA-CEASEFIRE",
+        "model": "fake",
+        "probability": "0.2720",
+        "question_hash": "e6751fad1643ae5840353d14d0ec484675ada380620cdd07becd0ed88b12f2a7",
+        "question_id": "fx-mena-ceasefire",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "3b5839ccd4143cc959a74bd3c344b07783a4a9ca6e09191fa0d34219dd884ab7",
+      "salt": "d36caeae60786ef37aea815feced5a4a"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "sim",
+        "kind": "forecast",
+        "market_price_at_commit": "0.2500",
+        "market_source": "fixture:FX-TUR-CONFIDENCE-VOTE",
+        "model": "fake",
+        "probability": "0.5103",
+        "question_hash": "94f61ce3048ccda38db3534f9ac006d3c43671089f493672d34636afd774d806",
+        "question_id": "fx-tur-confidence-vote",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "56e8d4187fabd01cb913d5c1770bbc57702fefeeb8d4a8e8a2f6d0bf392519cc",
+      "salt": "5476c75d699497479be239d94a4faaf0"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "market",
+        "kind": "forecast",
+        "market_price_at_commit": "0.8400",
+        "market_source": "fixture:FX-GBR-RATE-HOLD",
+        "model": "",
+        "probability": "0.8400",
+        "question_hash": "e73003f53e9e12c00bf135475e3071298a89df23a830eb5aa85ec059965a2abe",
+        "question_id": "fx-gbr-rate-hold",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "5f2b1f48c2659cdde8830a1d94696caa8aca833182324142616cf16828eb28b1",
+      "salt": "72572c6751f0e8962ad1fa45e0f57f93"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "plain_llm",
+        "kind": "forecast",
+        "market_price_at_commit": "0.2500",
+        "market_source": "fixture:FX-TUR-CONFIDENCE-VOTE",
+        "model": "fake",
+        "probability": "0.3608",
+        "question_hash": "94f61ce3048ccda38db3534f9ac006d3c43671089f493672d34636afd774d806",
+        "question_id": "fx-tur-confidence-vote",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "686a0919bc0ea977756f68b582ece0584e2f0bb13db4432274366479e2967566",
+      "salt": "762617371731f5af26b29be9ce825c95"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "plain_llm",
+        "kind": "forecast",
+        "market_price_at_commit": "0.5500",
+        "market_source": "fixture:FX-DEU-CLIMATE-BILL",
+        "model": "fake",
+        "probability": "0.6364",
+        "question_hash": "8fe23e1674123f3eed8d1178c7bea5971067ef0316e5b93c34a1900522b8dd34",
+        "question_id": "fx-deu-climate-bill",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "6f27ce7924f169bdc11114088c238fd9f193e227f4248896d3159dffdf11c21b",
+      "salt": "ea92588b7e1f9415ea88ce61e102eaa8"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "sim",
+        "kind": "forecast",
+        "market_price_at_commit": "0.6400",
+        "market_source": "fixture:FX-USA-CPI-RISE",
+        "model": "fake",
+        "probability": "0.5048",
+        "question_hash": "ed662f908adc0d0dd364fe2f4cd430fb6ff958567e4bd6dc30f63eb0be87e492",
+        "question_id": "fx-usa-cpi-rise",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "72c41835d8ab6afc1d253f24c440ff17e35fc403c373c2cf8d1c65c9bf5f33a3",
+      "salt": "c752dfd084e856e3e9a55516b61c3383"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "plain_llm",
+        "kind": "forecast",
+        "market_price_at_commit": "0.4600",
+        "market_source": "fixture:FX-JPN-AI-GUIDELINES",
+        "model": "fake",
+        "probability": "0.8704",
+        "question_hash": "baaae053dbb433d6acb524cffaf68ef8afcd171752ebf6141a2cb60488d1d626",
+        "question_id": "fx-jpn-ai-guidelines",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "7a24923484d9939a0affd2642a095da8b239f65569611e7c0eefc7677b835975",
+      "salt": "20182171b8f5aa8598819718d1cac7f2"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "market",
+        "kind": "forecast",
+        "market_price_at_commit": "0.3500",
+        "market_source": "fixture:FX-BRA-MEX-RETAIL",
+        "model": "",
+        "probability": "0.3500",
+        "question_hash": "3ad4e688a2faf47a334ec1c26ff7c333ee676d803fcff5a146c4e7d5f6751648",
+        "question_id": "fx-bra-mex-retail",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "8b1f1687948c7ed41439ef72eaef7c11b25b7b7c2bdc6cd4870a77d51dcb1895",
+      "salt": "80ba10ed0b901025676f8faaa2d8e43b"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "sim",
+        "kind": "forecast",
+        "market_price_at_commit": "0.3500",
+        "market_source": "fixture:FX-BRA-MEX-RETAIL",
+        "model": "fake",
+        "probability": "0.5317",
+        "question_hash": "3ad4e688a2faf47a334ec1c26ff7c333ee676d803fcff5a146c4e7d5f6751648",
+        "question_id": "fx-bra-mex-retail",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "92817458bc023d622915c10601247f892ecb6b96941f4e67ebae56ebb25163c1",
+      "salt": "04a43327f7dc45f7bc91d8152a39aeba"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "sim",
+        "kind": "forecast",
+        "market_price_at_commit": "0.5700",
+        "market_source": "fixture:FX-AFR-MIGRATION-QUOTA",
+        "model": "fake",
+        "probability": "0.4625",
+        "question_hash": "ce3a20acd632a73a85c8c106384ef9fc6de26f30fd5b3b9382d053c7d6b00ff1",
+        "question_id": "fx-afr-migration-quota",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "957648edcb01dc6047c6b71d1d088ce46d9901a6b369c7b878ec74550857ff41",
+      "salt": "92b882e46778bbc6d555af334c09b705"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "sim",
+        "kind": "forecast",
+        "market_price_at_commit": "0.7000",
+        "market_source": "fixture:FX-MENA-CEASEFIRE",
+        "model": "fake",
+        "probability": "0.4621",
+        "question_hash": "e6751fad1643ae5840353d14d0ec484675ada380620cdd07becd0ed88b12f2a7",
+        "question_id": "fx-mena-ceasefire",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "9a114ac177cae631833cc40bf9f8e9ffd75cc264681d522e7a0400fe9ed18d3b",
+      "salt": "49eb73031c80854e396b19b9600a4c05"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "plain_llm",
+        "kind": "forecast",
+        "market_price_at_commit": "0.3500",
+        "market_source": "fixture:FX-BRA-MEX-RETAIL",
+        "model": "fake",
+        "probability": "0.4578",
+        "question_hash": "3ad4e688a2faf47a334ec1c26ff7c333ee676d803fcff5a146c4e7d5f6751648",
+        "question_id": "fx-bra-mex-retail",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "c11449778a54d5e158901baaa98f0f2ecca9e1aa599d0320f8ecab40820de2af",
+      "salt": "bf8af59e9b510a8cfee63be3a05d8a8e"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "sim",
+        "kind": "forecast",
+        "market_price_at_commit": "0.4300",
+        "market_source": "fixture:FX-IND-IDN-FUEL-PRICE",
+        "model": "fake",
+        "probability": "0.5242",
+        "question_hash": "9c679fb72bf1585d82642e5bc9d480958d9ca23228b03d8ce6dc72c091e45950",
+        "question_id": "fx-ind-idn-fuel-price",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "c1f499f137daa685ffdbaee6c5270fd937b50c15bf7d4c4544be4812086376eb",
+      "salt": "24d5f56b60c6c974494828ec1c5d643c"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "sim",
+        "kind": "forecast",
+        "market_price_at_commit": "0.5500",
+        "market_source": "fixture:FX-DEU-CLIMATE-BILL",
+        "model": "fake",
+        "probability": "0.3740",
+        "question_hash": "8fe23e1674123f3eed8d1178c7bea5971067ef0316e5b93c34a1900522b8dd34",
+        "question_id": "fx-deu-climate-bill",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "ce7407338fe7256f15c25329c008c6606a56be6e047d92c06b6af4b3e023ee49",
+      "salt": "a5697cae6ae9baf1259312be76da6d0c"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "sim",
+        "kind": "forecast",
+        "market_price_at_commit": "0.4600",
+        "market_source": "fixture:FX-JPN-AI-GUIDELINES",
+        "model": "fake",
+        "probability": "0.3940",
+        "question_hash": "baaae053dbb433d6acb524cffaf68ef8afcd171752ebf6141a2cb60488d1d626",
+        "question_id": "fx-jpn-ai-guidelines",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "d525615a0f39a078a78397cca0a4f26c529f3e9ac113eb628807e757a49d662c",
+      "salt": "7759bd86be227efe6277182f4d6eb3af"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "market",
+        "kind": "forecast",
+        "market_price_at_commit": "0.2500",
+        "market_source": "fixture:FX-TUR-CONFIDENCE-VOTE",
+        "model": "",
+        "probability": "0.2500",
+        "question_hash": "94f61ce3048ccda38db3534f9ac006d3c43671089f493672d34636afd774d806",
+        "question_id": "fx-tur-confidence-vote",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "e73d29dda0b7237f3ec8da7b7b4e8d279b9a9e6c63271d9367b8c302978eff20",
+      "salt": "1f948c4eda398e6329d3858f645e81a1"
+    },
+    {
+      "entry": {
+        "committed_at": "2026-10-13T03:02:07Z",
+        "config_hash": "2b25b46477373a5f2b8b6404451a7b1e79afab95de4f2a22082cdb77e848d6b7",
+        "date": "2026-10-02",
+        "engine_version": "0.1.0",
+        "forecaster": "market",
+        "kind": "forecast",
+        "market_price_at_commit": "0.5700",
+        "market_source": "fixture:FX-AFR-MIGRATION-QUOTA",
+        "model": "",
+        "probability": "0.5700",
+        "question_hash": "ce3a20acd632a73a85c8c106384ef9fc6de26f30fd5b3b9382d053c7d6b00ff1",
+        "question_id": "fx-afr-migration-quota",
+        "snapshot_sha256": "eff4590e3d756dcd4204c60edc1611e5ae41bb82107110c446c3cc741906d925",
+        "supersedes": ""
+      },
+      "leaf_hash": "ea1e6d158f4e22a975d6e0b91b89e8615812a5adec86a41a14eb41d1db13ec25",
+      "salt": "dfd716269fa2fc2c4fe6d0bb6268cc41"
+    }
+  ],
+  "record_hash": "671b55c0eb3678e6f901cd4c741598c0ee9d2940ae58386337c8aa6dccc3d039"
+}

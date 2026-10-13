@@ -731,24 +731,6 @@
         }
       }
     },
-    "/v1/research": {
-      "get": {
-        "summary": "The experiment registry with its pre-registration hashes and results, and the papers",
-        "operationId": "research_v1_research_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Research"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/v1/receipts/{day}/leaves/{leaf_hash}": {
       "get": {
         "summary": "One receipt with its inclusion proof up to the day's root",
@@ -1300,6 +1282,313 @@
           },
           "503": {
             "description": "The sign-in state could not be read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tests": {
+      "post": {
+        "tags": ["account"],
+        "summary": "Test a post on a simulated audience; sealed when signed in",
+        "operationId": "test_post_v1_tests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostTestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostTestOut"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Over the test's cost cap or today's budget",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid, or breaks acceptable use",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyRefused"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "This address has used today's tests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A spend or acceptable-use check could not run",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No live session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not JSON, or not from an allowed origin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tests/retrospective": {
+      "post": {
+        "tags": ["account"],
+        "summary": "Score the engine on posts already published; stores nothing",
+        "operationId": "retrospective_v1_tests_retrospective_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetroRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetroResult"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Over the test's cost cap or today's budget",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid, or breaks acceptable use",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyRefused"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "This address has used today's tests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A spend or acceptable-use check could not run",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No live session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not JSON, or not from an allowed origin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/tests": {
+      "get": {
+        "tags": ["account"],
+        "summary": "The signed-in person's sealed post tests and how they scored",
+        "operationId": "my_tests_v1_me_tests_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestRecord"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No live session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The sign-in state could not be read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/tests/{test_id}/outcome": {
+      "post": {
+        "tags": ["account"],
+        "summary": "Mark a sealed post test landed or flopped, once",
+        "operationId": "mark_v1_me_tests__test_id__outcome_post",
+        "parameters": [
+          {
+            "name": "test_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Test Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Mark"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SealedTest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No live session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not JSON, or not from an allowed origin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such post test",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFound"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Already marked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refused"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is invalid",
             "content": {
               "application/json": {
                 "schema": {
@@ -1981,6 +2270,17 @@
           "question": {
             "$ref": "#/components/schemas/DailyQuestion"
           },
+          "sealed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Sealed"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The AI's call on this question, sealed."
+          },
           "reveal": {
             "anyOf": [
               {
@@ -1993,7 +2293,7 @@
           }
         },
         "type": "object",
-        "required": ["date", "question", "reveal"],
+        "required": ["date", "question", "sealed", "reveal"],
         "title": "Daily"
       },
       "DailyQuestion": {
@@ -2202,136 +2502,6 @@
         "type": "object",
         "required": ["text"],
         "title": "Event"
-      },
-      "Experiment": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "registered": {
-            "type": "string",
-            "title": "Registered"
-          },
-          "owner": {
-            "type": "string",
-            "title": "Owner"
-          },
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
-          "registry_sha256": {
-            "type": "string",
-            "title": "Registry Sha256"
-          },
-          "prereg_sha256": {
-            "type": "string",
-            "title": "Prereg Sha256"
-          },
-          "hash_matches": {
-            "type": "boolean",
-            "title": "Hash Matches"
-          },
-          "prereg_url": {
-            "type": "string",
-            "title": "Prereg Url"
-          },
-          "hypothesis": {
-            "type": "string",
-            "title": "Hypothesis"
-          },
-          "primary_metric": {
-            "type": "string",
-            "title": "Primary Metric"
-          },
-          "kill_criterion": {
-            "type": "string",
-            "title": "Kill Criterion"
-          },
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/ExperimentResult"
-            },
-            "type": "array",
-            "title": "Results"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "title",
-          "registered",
-          "owner",
-          "status",
-          "registry_sha256",
-          "prereg_sha256",
-          "hash_matches",
-          "prereg_url",
-          "hypothesis",
-          "primary_metric",
-          "kill_criterion",
-          "results"
-        ],
-        "title": "Experiment"
-      },
-      "ExperimentResult": {
-        "properties": {
-          "path": {
-            "type": "string",
-            "title": "Path"
-          },
-          "date": {
-            "type": "string",
-            "title": "Date"
-          },
-          "command": {
-            "type": "string",
-            "title": "Command"
-          },
-          "commit": {
-            "type": "string",
-            "title": "Commit"
-          },
-          "provider": {
-            "type": "string",
-            "title": "Provider"
-          },
-          "model": {
-            "type": "string",
-            "title": "Model"
-          },
-          "primary": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Primary"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "outcome": {
-            "type": "string",
-            "title": "Outcome"
-          }
-        },
-        "type": "object",
-        "required": [
-          "path",
-          "date",
-          "command",
-          "commit",
-          "provider",
-          "model",
-          "primary",
-          "outcome"
-        ],
-        "title": "ExperimentResult"
       },
       "ForecasterScore": {
         "properties": {
@@ -2578,6 +2748,19 @@
         "required": ["self", "events"],
         "title": "Links"
       },
+      "Mark": {
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": ["landed", "flopped"],
+            "title": "Outcome"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["outcome"],
+        "title": "Mark"
+      },
       "Miss": {
         "properties": {
           "question_id": {
@@ -2620,6 +2803,29 @@
           "brier"
         ],
         "title": "Miss"
+      },
+      "Mix": {
+        "properties": {
+          "scroll_past": {
+            "type": "number",
+            "title": "Scroll Past"
+          },
+          "read": {
+            "type": "number",
+            "title": "Read"
+          },
+          "like": {
+            "type": "number",
+            "title": "Like"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          }
+        },
+        "type": "object",
+        "required": ["scroll_past", "read", "like", "share"],
+        "title": "Mix"
       },
       "News": {
         "properties": {
@@ -2677,77 +2883,24 @@
         "required": ["detail"],
         "title": "NotFound"
       },
-      "Paper": {
+      "PastPost": {
         "properties": {
-          "slug": {
+          "text": {
             "type": "string",
-            "title": "Slug"
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Text"
           },
-          "short_title": {
+          "outcome": {
             "type": "string",
-            "title": "Short Title"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "claim": {
-            "type": "string",
-            "title": "Claim"
-          },
-          "stage": {
-            "type": "string",
-            "title": "Stage"
-          },
-          "venue": {
-            "type": "string",
-            "title": "Venue"
-          },
-          "pending": {
-            "type": "string",
-            "title": "Pending"
-          },
-          "tex_url": {
-            "type": "string",
-            "title": "Tex Url"
-          },
-          "status_url": {
-            "type": "string",
-            "title": "Status Url"
-          },
-          "pdf": {
-            "$ref": "#/components/schemas/PaperPdf"
+            "enum": ["landed", "flopped"],
+            "title": "Outcome"
           }
         },
+        "additionalProperties": false,
         "type": "object",
-        "required": [
-          "slug",
-          "short_title",
-          "title",
-          "claim",
-          "stage",
-          "venue",
-          "pending",
-          "tex_url",
-          "status_url",
-          "pdf"
-        ],
-        "title": "Paper"
-      },
-      "PaperPdf": {
-        "properties": {
-          "how": {
-            "type": "string",
-            "title": "How"
-          },
-          "ci": {
-            "type": "string",
-            "title": "Ci"
-          }
-        },
-        "type": "object",
-        "required": ["how", "ci"],
-        "title": "PaperPdf"
+        "required": ["text", "outcome"],
+        "title": "PastPost"
       },
       "Person": {
         "properties": {
@@ -3033,6 +3186,171 @@
         ],
         "title": "PopulationTopic"
       },
+      "PostTestOut": {
+        "properties": {
+          "result": {
+            "$ref": "#/components/schemas/PostTestResult"
+          },
+          "seal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Seal"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when signed out: nothing is stored."
+          }
+        },
+        "type": "object",
+        "required": ["result", "seal"],
+        "title": "PostTestOut"
+      },
+      "PostTestRequest": {
+        "properties": {
+          "countries": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Countries",
+            "description": "ISO3 codes; null means every simulated country."
+          },
+          "age_bands": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "enum": ["18-34", "35-54", "55+"]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Bands",
+            "description": "Null means every age."
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "gut": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["lands", "flops"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gut",
+            "description": "The person's own call before the result."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["text"],
+        "title": "PostTestRequest"
+      },
+      "PostTestResult": {
+        "properties": {
+          "landing_chance": {
+            "type": "number",
+            "title": "Landing Chance",
+            "description": "Audience share who would like or share it."
+          },
+          "band": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Band",
+            "description": "p10 and p90 of landing across segments."
+          },
+          "mix": {
+            "$ref": "#/components/schemas/Mix"
+          },
+          "best": {
+            "items": {
+              "$ref": "#/components/schemas/SegmentReaction"
+            },
+            "type": "array",
+            "title": "Best"
+          },
+          "worst": {
+            "items": {
+              "$ref": "#/components/schemas/SegmentReaction"
+            },
+            "type": "array",
+            "title": "Worst"
+          },
+          "voices": {
+            "items": {
+              "$ref": "#/components/schemas/Voice"
+            },
+            "type": "array",
+            "title": "Voices"
+          },
+          "rewrite": {
+            "type": "string",
+            "title": "Rewrite"
+          },
+          "segments": {
+            "type": "integer",
+            "title": "Segments"
+          },
+          "model_calls": {
+            "type": "integer",
+            "title": "Model Calls"
+          },
+          "cost_usd": {
+            "type": "number",
+            "title": "Cost Usd"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "calibration": {
+            "type": "string",
+            "title": "Calibration",
+            "default": "Uncalibrated until 100 marked tests"
+          },
+          "disclosure": {
+            "type": "string",
+            "title": "Disclosure",
+            "default": "AI-simulated. Not a poll or a prediction of a real person"
+          }
+        },
+        "type": "object",
+        "required": [
+          "landing_chance",
+          "band",
+          "mix",
+          "best",
+          "worst",
+          "voices",
+          "rewrite",
+          "segments",
+          "model_calls",
+          "cost_usd",
+          "provider"
+        ],
+        "title": "PostTestResult"
+      },
       "PrefilledEvent": {
         "properties": {
           "id": {
@@ -3061,33 +3379,6 @@
         "type": "object",
         "required": ["id", "text", "countries"],
         "title": "PrefilledEvent"
-      },
-      "Primary": {
-        "properties": {
-          "metric": {
-            "type": "string",
-            "title": "Metric"
-          },
-          "value": {
-            "type": "number",
-            "title": "Value"
-          },
-          "low": {
-            "type": "number",
-            "title": "Low"
-          },
-          "high": {
-            "type": "number",
-            "title": "High"
-          },
-          "n": {
-            "type": "integer",
-            "title": "N"
-          }
-        },
-        "type": "object",
-        "required": ["metric", "value", "low", "high", "n"],
-        "title": "Primary"
       },
       "ProofStep": {
         "properties": {
@@ -3660,7 +3951,9 @@
               "sign_in_invalid",
               "signed_out",
               "cross_origin",
-              "account_unreadable"
+              "account_unreadable",
+              "test_daily_limit",
+              "already_marked"
             ],
             "title": "Code"
           },
@@ -3841,35 +4134,6 @@
         ],
         "title": "ReplayRow"
       },
-      "Research": {
-        "properties": {
-          "experiments": {
-            "items": {
-              "$ref": "#/components/schemas/Experiment"
-            },
-            "type": "array",
-            "title": "Experiments"
-          },
-          "papers": {
-            "items": {
-              "$ref": "#/components/schemas/Paper"
-            },
-            "type": "array",
-            "title": "Papers"
-          },
-          "repo": {
-            "type": "string",
-            "title": "Repo"
-          },
-          "commit": {
-            "type": "string",
-            "title": "Commit"
-          }
-        },
-        "type": "object",
-        "required": ["experiments", "papers", "repo", "commit"],
-        "title": "Research"
-      },
       "ResolvedQuestion": {
         "properties": {
           "question_id": {
@@ -3923,6 +4187,111 @@
           "forecasts"
         ],
         "title": "ResolvedQuestion"
+      },
+      "RetroPost": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": ["landed", "flopped"],
+            "title": "Outcome"
+          },
+          "landing_chance": {
+            "type": "number",
+            "title": "Landing Chance"
+          },
+          "hit": {
+            "type": "boolean",
+            "title": "Hit"
+          }
+        },
+        "type": "object",
+        "required": ["text", "outcome", "landing_chance", "hit"],
+        "title": "RetroPost"
+      },
+      "RetroRequest": {
+        "properties": {
+          "countries": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Countries",
+            "description": "ISO3 codes; null means every simulated country."
+          },
+          "age_bands": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "enum": ["18-34", "35-54", "55+"]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Bands",
+            "description": "Null means every age."
+          },
+          "posts": {
+            "items": {
+              "$ref": "#/components/schemas/PastPost"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Posts"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["posts"],
+        "title": "RetroRequest"
+      },
+      "RetroResult": {
+        "properties": {
+          "posts": {
+            "items": {
+              "$ref": "#/components/schemas/RetroPost"
+            },
+            "type": "array",
+            "title": "Posts"
+          },
+          "hits": {
+            "type": "integer",
+            "title": "Hits"
+          },
+          "brier": {
+            "type": "number",
+            "title": "Brier"
+          },
+          "label": {
+            "type": "string",
+            "const": "Retrospective: not on your record",
+            "title": "Label",
+            "default": "Retrospective: not on your record"
+          },
+          "disclosure": {
+            "type": "string",
+            "title": "Disclosure",
+            "default": "AI-simulated. Not a poll or a prediction of a real person"
+          }
+        },
+        "type": "object",
+        "required": ["posts", "hits", "brier"],
+        "title": "RetroResult"
       },
       "Reveal": {
         "properties": {
@@ -3988,10 +4357,23 @@
             "type": "array",
             "title": "Week",
             "description": "The seven days ending today, oldest first."
+          },
+          "record": {
+            "$ref": "#/components/schemas/VsAi"
           }
         },
         "type": "object",
-        "required": ["you", "crowd", "sim", "market", "outcome", "brier", "streak", "week"],
+        "required": [
+          "you",
+          "crowd",
+          "sim",
+          "market",
+          "outcome",
+          "brier",
+          "streak",
+          "week",
+          "record"
+        ],
         "title": "Reveal"
       },
       "Rubric": {
@@ -4117,6 +4499,135 @@
         "required": ["probability", "brier"],
         "title": "Scored"
       },
+      "Seal": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256",
+            "description": "SHA-256 of `body`, the canonical JSON of the stored test."
+          },
+          "sealed_at": {
+            "type": "string",
+            "title": "Sealed At"
+          }
+        },
+        "type": "object",
+        "required": ["id", "sha256", "sealed_at"],
+        "title": "Seal"
+      },
+      "Sealed": {
+        "properties": {
+          "leaf_hash": {
+            "type": "string",
+            "title": "Leaf Hash",
+            "description": "The AI's committed sim forecast leaf, its number hidden."
+          },
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "The day record it is committed in."
+          }
+        },
+        "type": "object",
+        "required": ["leaf_hash", "date"],
+        "title": "Sealed"
+      },
+      "SealedTest": {
+        "properties": {
+          "seal": {
+            "$ref": "#/components/schemas/Seal"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body",
+            "description": "The canonical JSON the seal hashes, byte for byte."
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "gut": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["lands", "flops"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gut"
+          },
+          "landing_chance": {
+            "type": "number",
+            "title": "Landing Chance"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["landed", "flopped"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "marked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marked At"
+          },
+          "brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier",
+            "description": "The engine's Brier once marked."
+          },
+          "gut_brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gut Brier",
+            "description": "The gut's Brier once marked, if a gut was given."
+          }
+        },
+        "type": "object",
+        "required": [
+          "seal",
+          "body",
+          "text",
+          "gut",
+          "landing_chance",
+          "outcome",
+          "marked_at",
+          "brier",
+          "gut_brier"
+        ],
+        "title": "SealedTest"
+      },
       "SegmentAnswer": {
         "properties": {
           "segment": {
@@ -4140,6 +4651,40 @@
         "type": "object",
         "required": ["segment", "description", "prior_share", "yes_share"],
         "title": "SegmentAnswer"
+      },
+      "SegmentReaction": {
+        "properties": {
+          "segment": {
+            "type": "string",
+            "title": "Segment"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "The segment in words."
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "coverage_tier": {
+            "type": "string",
+            "title": "Coverage Tier"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight",
+            "description": "Share of the audience's agents in this segment."
+          },
+          "landing": {
+            "type": "number",
+            "title": "Landing",
+            "description": "Share who would like or share it."
+          }
+        },
+        "type": "object",
+        "required": ["segment", "label", "country", "coverage_tier", "weight", "landing"],
+        "title": "SegmentReaction"
       },
       "SegmentShift": {
         "properties": {
@@ -4547,6 +5092,56 @@
         ],
         "title": "SystemStatus"
       },
+      "TestRecord": {
+        "properties": {
+          "tests": {
+            "items": {
+              "$ref": "#/components/schemas/SealedTest"
+            },
+            "type": "array",
+            "title": "Tests"
+          },
+          "marked": {
+            "type": "integer",
+            "title": "Marked"
+          },
+          "hits": {
+            "type": "integer",
+            "title": "Hits",
+            "description": "Marked tests where the engine's side of 50% matched."
+          },
+          "brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brier"
+          },
+          "gut_brier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gut Brier",
+            "description": "Over marked tests that had a gut call."
+          },
+          "gut_marked": {
+            "type": "integer",
+            "title": "Gut Marked"
+          }
+        },
+        "type": "object",
+        "required": ["tests", "marked", "hits", "brier", "gut_brier", "gut_marked"],
+        "title": "TestRecord"
+      },
       "TopItem": {
         "properties": {
           "title": {
@@ -4740,6 +5335,68 @@
         "additionalProperties": false,
         "type": "object",
         "title": "VerifyRequest"
+      },
+      "Voice": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "simulated": {
+            "type": "string",
+            "const": "Simulated account",
+            "title": "Simulated",
+            "default": "Simulated account"
+          }
+        },
+        "type": "object",
+        "required": ["label", "text"],
+        "title": "Voice"
+      },
+      "VsAi": {
+        "properties": {
+          "n": {
+            "type": "integer",
+            "title": "N",
+            "description": "Resolved questions this player called that the AI also called."
+          },
+          "you": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "You",
+            "description": "The player's mean Brier on them."
+          },
+          "ai": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai",
+            "description": "The AI's (sim) mean Brier on the same questions."
+          },
+          "wins": {
+            "type": "integer",
+            "title": "Wins",
+            "description": "Questions where the player's Brier was lower than the AI's."
+          }
+        },
+        "type": "object",
+        "required": ["n", "you", "ai", "wins"],
+        "title": "VsAi"
       },
       "WeekDay": {
         "properties": {

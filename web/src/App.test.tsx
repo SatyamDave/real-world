@@ -1,35 +1,19 @@
 // @vitest-environment jsdom
 
-import {
-  type Agent,
-  type AgentWhy,
-  ApiError,
-  type Daily,
-  type Job,
-  type SystemStatus,
-  type World,
-} from "@real-world/sdk";
+import { ApiError, type Daily, type SystemStatus, type World } from "@real-world/sdk";
 import type { ReactNode } from "react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import spec from "../../api/openapi.json";
 import vector from "../../data/fixtures/receipts_test_vector.json";
-import { AgentPanel } from "./AgentPanel";
-import { App, DISCLOSURE, Disclosure, whenIdle } from "./App";
-import { API_URL, rw } from "./api";
+import { App, DISCLOSURE, Disclosure } from "./App";
+import { rw } from "./api";
 import { DailyQuestion } from "./DailyQuestion";
-import { atApi } from "./Docs";
-import { Fork, ForkCard, ForkRun } from "./ForkCard";
-import agentFixture from "./fixtures/agent.json";
-import whyFixture from "./fixtures/agent_why.json";
 import dailyFixture from "./fixtures/daily.json";
-import jobFixture from "./fixtures/job.json";
 import statusFixture from "./fixtures/status.json";
 import worldFixture from "./fixtures/world.json";
 
 const world = worldFixture as World;
-const job = jobFixture as Job;
 let container: HTMLDivElement;
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -41,13 +25,10 @@ beforeEach(() => {
     "world",
     "daily",
     "answer_daily",
-    "agent",
-    "agent_why",
     "receipts",
     "status",
     "receipt_day",
     "scores",
-    "get_simulation",
   ] as const)
     vi.spyOn(rw, m).mockRejectedValue(new Error("not stubbed"));
   // The daily fixture closes on Oct 6, 23:59 UTC.
@@ -56,6 +37,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.unstubAllGlobals();
   container.remove();
   vi.useRealTimers();
   vi.restoreAllMocks();
@@ -82,25 +64,25 @@ const button = (text: string) => {
   return b;
 };
 
-test("the reveal shows you, visitors, the simulated world and the market after submit", async () => {
+test("the reveal shows you, visitors, the AI and the market after you call it", async () => {
   const daily = dailyFixture as Daily;
   vi.mocked(rw.daily).mockResolvedValue({ ...daily, reveal: null });
   vi.mocked(rw.answer_daily).mockResolvedValue(daily);
 
   const el = await render(<DailyQuestion tiers={["A", "B", "B"]} />);
   expect(el.textContent).toContain(daily.question.text);
-  expect(el.textContent).not.toContain("Simulation");
+  expect(el.textContent).not.toContain("sealed before you called");
   expect(el.querySelector(".receipt-cols")?.textContent).toContain("Shown after you answer");
 
-  await act(async () => button("Submit 50%").click());
-  await until(() => expect(el.textContent).toContain("Simulation"));
+  await act(async () => button("Call it 50%").click());
+  await until(() => expect(el.textContent).toContain("sealed before you called"));
   expect(el.querySelector<HTMLAnchorElement>(".receipt-cols a")?.getAttribute("href")).toBe(
     "/receipts#2026-10-05",
   );
 
   expect(rw.answer_daily).toHaveBeenCalledWith(daily.question.id, expect.any(String), 0.5);
   const text = el.textContent ?? "";
-  for (const s of ["You", "62%", "1,204 other self-selected visitors", "Simulation", "56%"])
+  for (const s of ["You", "62%", "1,204 other self-selected visitors", "AI", "56%"])
     expect(text).toContain(s);
   expect(text).toContain("Market61%");
   expect(text).toContain("3 days answered in a row");
@@ -140,7 +122,7 @@ test("the daily card is a receipt: a Pending stamp until it resolves, and when a
   const daily = dailyFixture as Daily;
   vi.mocked(rw.daily).mockResolvedValue({ ...daily, reveal: null });
   const el = await render(<DailyQuestion tiers={[]} />);
-  expect(el.querySelector(".receipt-top .stamp")?.textContent).toBe("Pending");
+  expect(el.querySelector(".stamp")?.textContent).toBe("Pending");
   const cols = el.querySelector(".receipt-cols")?.textContent ?? "";
   expect(cols).toContain("Resolves2026-10-07example.org");
 
@@ -152,28 +134,6 @@ test("the daily card is a receipt: a Pending stamp until it resolves, and when a
   const stamp = resolved.querySelector(".receipt-top .stamp");
   expect(stamp?.textContent).toBe("Resolved yes");
   expect(stamp?.classList.contains("good")).toBe(true);
-});
-
-test("the globe waits for the load event and an idle moment, and can be cancelled", () => {
-  const idle = vi.fn((_cb: () => void) => 7);
-  const cancelIdle = vi.fn();
-  vi.stubGlobal("requestIdleCallback", idle);
-  vi.stubGlobal("cancelIdleCallback", cancelIdle);
-  const ready = vi.spyOn(document, "readyState", "get").mockReturnValue("loading");
-  const run = vi.fn();
-
-  const cancel = whenIdle(run);
-  expect(idle).not.toHaveBeenCalled();
-  dispatchEvent(new Event("load"));
-  expect(idle).toHaveBeenCalledWith(run, { timeout: 2000 });
-  cancel();
-  expect(cancelIdle).toHaveBeenCalledWith(7);
-
-  ready.mockReturnValue("complete");
-  whenIdle(run);
-  expect(idle).toHaveBeenCalledTimes(2);
-  expect(run).not.toHaveBeenCalled();
-  vi.unstubAllGlobals();
 });
 
 test("a failed load says what failed in words and retries", async () => {
@@ -194,119 +154,8 @@ test("a repeat answer (409) still shows the reveal", async () => {
   vi.mocked(rw.answer_daily).mockRejectedValue(new ApiError(409, {}));
 
   const el = await render(<DailyQuestion tiers={[]} />);
-  await act(async () => button("Submit").click());
-  await until(() => expect(el.textContent).toContain("Simulation"));
-});
-
-test("the fork card renders a fixture SimulateResult", async () => {
-  const el = await render(<ForkCard job={job} />);
-  const text = el.textContent ?? "";
-  expect(text).toContain("“A chip shortage doubles phone prices worldwide”");
-  expect(el.querySelectorAll(".shifts li")).toHaveLength(3);
-  expect(text).toContain("USA · 25-34 · tertiary");
-  expect(text).toContain("+8.1 pts");
-  expect(text).toContain("n = 14 agents");
-  expect(text).toContain(
-    "Inflation worry rose 6.0 pts across 3 countries; all 5 members agree within 5.0 pts.",
-  );
-  expect(text).toContain("p10-p90 range across 5 ensemble members, not a confidence interval yet");
-  expect(text).toContain("52% to 58% (56-61%)");
-  expect(el.querySelectorAll("figure.chart")).toHaveLength(2);
-  expect(text).toContain("Get this via API");
-  expect(el.querySelector(".card.receipt")?.closest(".card.fork")).toBeNull();
-  expect(text).toContain("$0.01 (estimated $0.01)");
-  expect(text).toContain("Counterfactual: not scored");
-  expect(el.querySelector<HTMLInputElement>(".share input")?.value).toBe(
-    `${location.origin}/fork/job_fixture1`,
-  );
-  expect(text).toContain(DISCLOSURE);
-  expect(el.querySelectorAll(".disclosure .tier")).toHaveLength(3);
-});
-
-test("the fork form shows an acceptable-use refusal inline", async () => {
-  const detail = "The event names a private person. Real World simulates groups.";
-  vi.spyOn(rw, "estimate").mockResolvedValue({
-    estimated_cost_usd: 0.001,
-    model_calls: 3,
-    segments: 3,
-    within_cap: true,
-  });
-  vi.spyOn(rw, "simulate").mockRejectedValue(new ApiError(422, { code: "private_person", detail }));
-  const el = await render(<Fork events={world.prefilled_events} />);
-  await act(async () => button(world.prefilled_events[0].text).click());
-  await until(() => expect(button("Run fork").disabled).toBe(false));
-  await act(async () => button("Run fork").click());
-  await until(() => expect(el.textContent).toContain(`${detail} See acceptable use.`));
-  expect(el.querySelector(".bad a")?.getAttribute("href")).toBe("/acceptable-use");
-});
-
-test("the fork form shows a spend refusal's sentence", async () => {
-  const detail = "today's fork budget is spent; try again after 00:00 UTC";
-  vi.spyOn(rw, "estimate").mockResolvedValue({
-    estimated_cost_usd: 0.001,
-    model_calls: 3,
-    segments: 3,
-    within_cap: true,
-  });
-  vi.spyOn(rw, "simulate").mockRejectedValue(
-    new ApiError(402, { code: "fork_budget_spent", detail, estimate: null }),
-  );
-  const el = await render(<Fork events={world.prefilled_events} />);
-  await act(async () => button(world.prefilled_events[0].text).click());
-  await until(() => expect(button("Run fork").disabled).toBe(false));
-  await act(async () => button("Run fork").click());
-  await until(() => expect(el.textContent).toContain(`${detail}.`));
-});
-
-test("a fake-model fork says nothing was spent and labels the estimate", async () => {
-  const r = job.result;
-  if (!r) throw new Error("fixture has a result");
-  const fake = { ...r, provider: "fake", cost: { estimated_usd: 0.0061, actual_usd: 0 } };
-  const el = await render(<ForkCard job={{ ...job, result: fake }} />);
-  expect(el.textContent).toContain("Fake model, nothing spent (a real run is estimated at $0.01)");
-});
-
-test("a fork with no shift past the floor says so", async () => {
-  const r = job.result;
-  if (!r) throw new Error("fixture has a result");
-  const el = await render(<ForkCard job={{ ...job, result: { ...r, top_shifts: [] } }} />);
-  expect(el.textContent).toContain("No segment of at least 10 agents moved.");
-});
-
-test("a missing fork reads as missing, not as a response body", async () => {
-  vi.mocked(rw.get_simulation).mockRejectedValue(new ApiError(404, { detail: "no simulation" }));
-  const el = await render(<ForkRun id="job_doesnotexist" />);
-  expect(el.textContent).toContain("No page at this address.");
-  expect(el.textContent).not.toContain("detail");
-});
-
-test("the agent panel labels the trace and the simulated account", async () => {
-  vi.mocked(rw.agent).mockResolvedValue(agentFixture as Agent);
-  vi.mocked(rw.agent_why).mockResolvedValue(whyFixture as AgentWhy);
-
-  const el = await render(<AgentPanel country={world.countries[0]} onClose={() => {}} />);
-  const headings = [...el.querySelectorAll("h3")].map((h) => h.textContent);
-  expect(headings).toEqual(["What moved this agent", "What it says"]);
-  expect(rw.agent).toHaveBeenCalledWith(world.countries[0].sample_agent_id);
-  expect(el.textContent).toContain("FIXTURE: Fuel prices rise for a third week");
-  expect(el.querySelector(".traits")?.textContent).toContain("female · 25-34 · tertiary · urban");
-  // 0.031 logit at a share of about 61% is under 1 point, never "+3.1 pts".
-  expect(el.querySelector(".moves .up")?.textContent).toBe("+0.7 pts");
-  expect(el.querySelector(".stamp")?.textContent).toBe(whyFixture.label);
-  expect(whyFixture.label).toBe("Simulated account, not the cause");
-  expect(el.querySelector("blockquote")?.textContent).toBe(whyFixture.text);
-  expect(el.textContent).toContain(DISCLOSURE);
-});
-
-test("the agent panel says when the account came from the fake model", async () => {
-  vi.mocked(rw.agent).mockResolvedValue(agentFixture as Agent);
-  vi.mocked(rw.agent_why).mockResolvedValue({ ...(whyFixture as AgentWhy), provider: "fake" });
-  const el = await render(<AgentPanel country={world.countries[0]} onClose={() => {}} />);
-  await until(() =>
-    expect(el.querySelector(".stamp")?.textContent).toBe(
-      "Simulated account, not the cause, fake model, placeholder text",
-    ),
-  );
+  await act(async () => button("Call it").click());
+  await until(() => expect(el.textContent).toContain("sealed before you called"));
 });
 
 const QUESTION = {
@@ -418,42 +267,16 @@ test.each([
   },
 );
 
-test("the home page states the thesis with the record as proof", async () => {
-  vi.mocked(rw.world).mockResolvedValue(world);
-  vi.mocked(rw.daily).mockResolvedValue({ ...(dailyFixture as Daily), reveal: null });
-  vi.mocked(rw.receipts).mockResolvedValue({
-    days: [
-      { ...vector.day, record_hash: vector.record_hash, anchor: "not_anchored", anchored_at: null },
-    ],
-  });
-  const el = await render(<App path="/" />);
-  await until(() => expect(el.textContent).toContain("Scored in public since"));
-  expect(el.querySelector("h1")?.textContent).toBe("Simulations with receipts.");
-  expect(el.querySelector(".thesis p")?.textContent).toBe(
-    "AI simulates how the world reacts to the news. Every forecast is sealed before the outcome and scored in public.",
-  );
-  expect(el.textContent).toContain(
-    `Scored in public since Oct 1: 1 day, ${vector.day.leaf_count} receipts.`,
-  );
-  expect(el.textContent).toContain("World of Oct 5");
-  // Without a wide screen the globe is not loaded; the still poster shows and every country is a
-  // button instead.
-  expect(el.querySelector(".globe-poster")).not.toBeNull();
-  expect(el.querySelector(".globe-live")).toBeNull();
-  expect(el.querySelectorAll(".countries button")).toHaveLength(world.countries.length);
-});
-
 test("an unknown path renders not found, not the home page", async () => {
   const el = await render(<App path="/nothing-here" />);
   expect(el.textContent).toContain("Page not found");
   expect(el.textContent).not.toContain("Don't ask a model");
 });
 
-test.each(["/", "/receipts", "/fork/x", "/nothing-here"])("%s has the footer", async (path) => {
+test.each(["/", "/receipts", "/call", "/nothing-here"])("%s has the footer", async (path) => {
   const el = await render(<App path={path} />);
   const links = [...el.querySelectorAll("footer nav a")].map((a) => a.textContent);
-  expect(links).toEqual(["Receipts", "Acceptable use", "Privacy", "Terms", "API", "Source"]);
-  expect(el.querySelector("footer a[href='/docs']")?.textContent).toBe("API");
+  expect(links).toEqual(["Receipts", "Acceptable use", "Privacy", "Terms", "Source"]);
   expect(el.querySelector("footer")?.textContent).toContain(
     "Real World outputs are AI-simulated. Simulated populations are not polls and not predictions about real people.",
   );
@@ -490,82 +313,10 @@ test.each([
   expect(document.title).toBe(`${name} · Real World`);
 });
 
-test("the docs page lists every operation in openapi.json with its refusal codes", async () => {
-  const el = await render(<App path="/docs" />);
-  await until(() => expect(el.querySelector(".op")).not.toBeNull());
-  expect(document.title).toBe("API · Real World");
-  const ops = Object.entries(spec.paths).flatMap(([path, methods]) =>
-    Object.keys(methods).map((m) => `${m.toUpperCase()} ${path}`),
-  );
-  expect([...el.querySelectorAll(".op")].map((s) => s.getAttribute("aria-label"))).toEqual(ops);
-  const simulate = el.querySelector(".op[aria-label='POST /v1/simulate']");
-  for (const code of [
-    ...spec.components.schemas.Refused.properties.code.enum,
-    ...spec.components.schemas.PolicyRefused.properties.code.enum,
-  ])
-    expect(simulate?.querySelector(".codes")?.textContent).toContain(code);
-  expect(simulate?.textContent).toContain(
-    spec.components.schemas.SimulateRequest.properties.members.description,
-  );
-  expect(el.querySelector(".first-call pre")?.textContent).toContain("Idempotency-Key");
-  expect(el.textContent).toContain("Authorization: Bearer rw_...");
-  const sdk = () => [...el.querySelectorAll("pre")].at(-1)?.textContent;
-  expect(sdk()).toContain("rw = Client(");
-  await act(async () => button("TypeScript").click());
-  expect(sdk()).toContain("const rw = new Client(");
-  expect(el.querySelector("header nav a[href='/docs']")?.textContent).toBe("API");
-});
-
-test("the docs snippets point at the API this app talks to, not localhost:8000", async () => {
-  const base = "https://api.example.com";
-  expect(
-    atApi('curl -s -X POST localhost:8000/v1/simulate\nnew Client("http://localhost:8000")', base),
-  ).toBe(
-    'curl -s -X POST https://api.example.com/v1/simulate\nnew Client("https://api.example.com")',
-  );
-  const el = await render(<App path="/docs" />);
-  await until(() => expect(el.querySelector(".op")).not.toBeNull());
-  const snippets = [...el.querySelectorAll("pre")].map((p) => p.textContent).join("\n");
-  expect(snippets).toContain(`${API_URL}/v1/simulate`);
-});
-
 test("the coverage line shows a count for every tier, including one", async () => {
   const el = await render(<Disclosure tiers={["A", "A", "B", "D"]} />);
   const rows = [...el.querySelectorAll(".disclosure-tier")].map((t) => t.textContent);
   expect(rows).toEqual(["Coverage tier A×2", "Coverage tier B×1", "Coverage tier D×1"]);
-});
-
-test("an unknown fork sets a not-found title", async () => {
-  vi.mocked(rw.get_simulation).mockRejectedValue(new ApiError(404, { detail: "no simulation" }));
-  await render(<ForkRun id="job_doesnotexist" />);
-  expect(document.title).toBe("Fork not found · Real World");
-});
-
-test("a succeeded fork has one h1, its setup sentence", async () => {
-  const el = await render(<ForkCard job={job} />);
-  const h1 = el.querySelectorAll("h1");
-  expect(h1).toHaveLength(1);
-  expect(h1[0].textContent).toContain("A chip shortage doubles phone prices worldwide");
-});
-
-test("the nav lists the seven pages in order and marks the active section", async () => {
-  const links = (el: HTMLElement) =>
-    [...el.querySelectorAll("header nav a")].map((a) => [a.textContent, a.getAttribute("href")]);
-  let el = await render(<App path="/receipts" />);
-  expect(links(el)).toEqual([
-    ["Today", "/"],
-    ["World", "/world"],
-    ["Cycle", "/cycle"],
-    ["Scores", "/scores"],
-    ["Receipts", "/receipts"],
-    ["Research", "/research"],
-    ["API", "/docs"],
-  ]);
-  expect(el.querySelector("header nav [aria-current]")?.textContent).toBe("Receipts");
-  el.remove();
-  container = document.body.appendChild(document.createElement("div"));
-  el = await render(<App path="/cycle/2026-10-05" />);
-  expect(el.querySelector("header nav [aria-current]")?.textContent).toBe("Cycle");
 });
 
 test("the footer's status strip is one literal line from GET /v1/status", async () => {
@@ -583,4 +334,220 @@ test("a status that cannot load says so with a retry", async () => {
   expect(el.querySelector("footer .load-error")?.textContent).toContain(
     "Could not load system status",
   );
+});
+
+// session.ts calls fetch for the cookie routes; each test answers the paths it needs.
+function serve(routes: Record<string, [number, unknown]>) {
+  const calls: { path: string; body?: unknown }[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string, init?: RequestInit) => {
+      const path = new URL(url).pathname;
+      calls.push({ path, body: init?.body ? JSON.parse(String(init.body)) : undefined });
+      const [status, body] = routes[path] ?? [404, { detail: "not stubbed" }];
+      return new Response(body === null ? "" : JSON.stringify(body), { status });
+    }),
+  );
+  return calls;
+}
+
+const segment = (label: string, landing: number, tier = "A") => ({
+  segment: `USA|18-34|${label}`,
+  label,
+  country: "USA",
+  coverage_tier: tier,
+  weight: 0.1,
+  landing,
+});
+
+const tested = {
+  result: {
+    landing_chance: 0.42,
+    band: [0.3, 0.55],
+    mix: { scroll_past: 0.4, read: 0.18, like: 0.3, share: 0.12 },
+    best: [segment("young urban", 0.6)],
+    worst: [segment("older rural", 0.2, "C")],
+    voices: [
+      { label: "young urban", text: "I would share this.", simulated: "Simulated account" },
+      { label: "older rural", text: "Not for me.", simulated: "Simulated account" },
+    ],
+    rewrite: "Half price for students, this week only.",
+    segments: 12,
+    model_calls: 15,
+    cost_usd: 0.0004,
+    provider: "fake",
+    calibration: "Uncalibrated until 100 marked tests",
+    disclosure: DISCLOSURE,
+  },
+  seal: null,
+};
+
+const typeInto = (el: HTMLTextAreaElement | HTMLInputElement, value: string) => {
+  const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement : HTMLInputElement;
+  Object.getOwnPropertyDescriptor(proto.prototype, "value")?.set?.call(el, value);
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+};
+
+test("a post test shows the landing chance, both sides, the accounts and a sign-in line", async () => {
+  vi.mocked(rw.world).mockResolvedValue(world);
+  const calls = serve({ "/v1/me": [401, { detail: "signed out" }], "/v1/tests": [200, tested] });
+  const el = await render(<App path="/" />);
+  expect(el.querySelector("h1")?.textContent).toBe("Will this land?");
+  expect(button("Test it").disabled).toBe(true);
+  await act(async () => typeInto(el.querySelector("textarea") as HTMLTextAreaElement, "Half off"));
+  await act(async () => (el.querySelector("input[type=radio]") as HTMLInputElement).click());
+  await act(async () => button("Test it").click());
+  await until(() => expect(el.querySelector(".land-result")).not.toBeNull());
+  const sent = calls.find((c) => c.path === "/v1/tests")?.body;
+  expect(sent).toEqual({ text: "Half off", gut: "lands", countries: null, age_bands: null });
+  const text = el.querySelector(".land-result")?.textContent ?? "";
+  for (const s of [
+    "42%",
+    "30% to 55% across 12 audiences",
+    "Uncalibrated until 100 marked tests",
+    "young urban",
+    "older rural",
+    "Simulated account, fake model, placeholder text",
+    "Half price for students, this week only.",
+    "Sign in to seal this test and keep your record.",
+    "fake model, nothing spent",
+    DISCLOSURE,
+  ])
+    expect(text).toContain(s);
+  expect(el.querySelector(".land-result .stamp")?.textContent).toBe("Not sealed");
+});
+
+test("a refused post test shows the API's sentence", async () => {
+  serve({
+    "/v1/me": [401, {}],
+    "/v1/tests": [429, { code: "test_daily_limit", detail: "this address has run 20 tests today" }],
+  });
+  const el = await render(<App path="/" />);
+  await act(async () => typeInto(el.querySelector("textarea") as HTMLTextAreaElement, "x"));
+  await act(async () => button("Test it").click());
+  await until(() => expect(el.textContent).toContain("this address has run 20 tests today."));
+});
+
+test("a signed-in test shows its seal and the retrospective check is labelled", async () => {
+  const seal = { id: "pt_1", sha256: "ab".repeat(32), sealed_at: "2026-10-06T12:00:00Z" };
+  serve({
+    "/v1/me": [200, { id: "usr_1", email: "ada@example.org", created_at: "2026-10-06" }],
+    "/v1/tests": [200, { ...tested, seal }],
+    "/v1/tests/retrospective": [
+      200,
+      {
+        posts: [{ text: "old post", outcome: "landed", landing_chance: 0.7, hit: true }],
+        hits: 1,
+        brier: 0.09,
+        label: "Retrospective: not on your record",
+        disclosure: DISCLOSURE,
+      },
+    ],
+  });
+  const el = await render(<App path="/" />);
+  await until(() => expect(el.textContent).toContain("ada@example.org"));
+  await act(async () => typeInto(el.querySelector("#post") as HTMLTextAreaElement, "Half off"));
+  await act(async () => button("Test it").click());
+  await until(() => expect(el.querySelector(".seal")?.textContent).toContain("abababababab"));
+  expect(el.querySelector(".land-result .stamp")?.textContent).toBe("Sealed");
+
+  await act(async () =>
+    typeInto(el.querySelector("[aria-label='Past post 1']") as HTMLTextAreaElement, "old post"),
+  );
+  await act(async () => button("Run the check").click());
+  await until(() => expect(el.textContent).toContain("The engine would have called 1 of 1."));
+  expect(el.textContent).toContain("Retrospective: not on your record");
+});
+
+test("Call it shows the AI's sealed call before the answer and the record after", async () => {
+  const daily = dailyFixture as Daily;
+  vi.mocked(rw.daily).mockResolvedValue({ ...daily, reveal: null });
+  const el = await render(<DailyQuestion tiers={[]} />);
+  expect(el.querySelector(".seal")?.textContent).toContain(
+    "The AI's call is sealed · 3f9a1c0be27d",
+  );
+  expect(el.textContent).not.toContain("56%");
+  vi.mocked(rw.daily).mockResolvedValue(daily);
+  const after = await render(<DailyQuestion tiers={[]} />);
+  await until(() =>
+    expect(after.textContent).toContain("You 0.181 · AI 0.204 on 4 resolved questions"),
+  );
+  expect(after.textContent).toContain("you beat the AI on 3");
+});
+
+test("the record asks a signed-out visitor to sign in", async () => {
+  serve({ "/v1/me": [401, {}] });
+  const el = await render(<App path="/record" />);
+  await until(() => expect(el.textContent).toContain("Sign in to keep your record."));
+});
+
+test("the record lists sealed tests, marks one and checks its seal", async () => {
+  const body = '{"id":"pt_1","text":"Half off"}';
+  const sha = await crypto.subtle
+    .digest("SHA-256", new TextEncoder().encode(body))
+    .then((d) => [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join(""));
+  const test1 = {
+    seal: { id: "pt_1", sha256: sha, sealed_at: "2026-10-06T12:00:00Z" },
+    body,
+    text: "Half off",
+    gut: "lands",
+    landing_chance: 0.42,
+    outcome: null,
+    marked_at: null,
+    brier: null,
+    gut_brier: null,
+  };
+  const calls = serve({
+    "/v1/me": [200, { id: "usr_1", email: "ada@example.org", created_at: "2026-10-06" }],
+    "/v1/me/tests": [
+      200,
+      { tests: [test1], marked: 0, hits: 0, brier: null, gut_brier: null, gut_marked: 0 },
+    ],
+    "/v1/me/tests/pt_1/outcome": [200, { ...test1, outcome: "landed" }],
+  });
+  const el = await render(<App path="/record" />);
+  await until(() => expect(el.textContent).toContain("Half off"));
+  expect(el.textContent).toContain("Mark a test Landed or Flopped once you know how it did.");
+  await act(async () => button("Check seal").click());
+  await until(() => expect(el.textContent).toContain("Seal matches"));
+  await act(async () => button("Landed").click());
+  await until(() => expect(calls.some((c) => c.path === "/v1/me/tests/pt_1/outcome")).toBe(true));
+  await act(async () => button("Delete account").click());
+  expect(document.activeElement?.textContent).toBe("Cancel");
+});
+
+test("sign-in sends the email, then takes the code", async () => {
+  const calls = serve({
+    "/v1/me": [401, {}],
+    "/v1/auth/email": [202, { email: "ada@example.org", ttl_minutes: 15 }],
+  });
+  const el = await render(<App path="/sign-in" />);
+  await until(() => expect(el.querySelector("#email")).not.toBeNull());
+  await act(async () =>
+    typeInto(el.querySelector("#email") as HTMLInputElement, "ada@example.org"),
+  );
+  await act(async () => button("Email me a sign-in link").click());
+  await until(() =>
+    expect(el.textContent).toContain(
+      "Check ada@example.org. The link and the code in it work for 15 minutes.",
+    ),
+  );
+  expect(calls.find((c) => c.path === "/v1/auth/email")?.body).toEqual({
+    email: "ada@example.org",
+  });
+});
+
+test("the nav lists the two jobs, the record and the proof, and marks the active one", async () => {
+  serve({ "/v1/me": [401, {}] });
+  const el = await render(<App path="/call" />);
+  await until(() => expect(el.querySelector(".nav-account")).not.toBeNull());
+  expect([...el.querySelectorAll("header nav a")].map((a) => a.textContent)).toEqual([
+    "Will this land?",
+    "Call it",
+    "Your record",
+    "Scores",
+    "Receipts",
+    "Sign in",
+  ]);
+  expect(el.querySelector("header nav [aria-current]")?.textContent).toBe("Call it");
 });
