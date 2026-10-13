@@ -852,6 +852,8 @@ def test_allowed_origins_add_to_localhost_and_a_malformed_one_fails_startup(monk
     preflight = {"Access-Control-Request-Method": "GET"}
     try:
         monkeypatch.setenv("RW_ALLOWED_ORIGINS", "https://realworld.example")
+        monkeypatch.setenv("RW_EMAIL_API_KEY", "re_test")
+        monkeypatch.setenv("RW_EMAIL_FROM", "sign-in@realworld.example")
         with TestClient(importlib.reload(api).app) as c:
             for origin in ("https://realworld.example", "http://localhost:5173"):
                 r = c.options("/v1/world", headers={"Origin": origin, **preflight})

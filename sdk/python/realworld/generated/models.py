@@ -6,7 +6,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, RootModel
 
 
 class AgentStep(BaseModel):
@@ -186,6 +186,13 @@ class DaySummary(BaseModel):
     anchored_at: str | None = Field(..., title="Anchored At")
 
 
+class EmailRequest(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    email: str = Field(..., max_length=254, pattern="^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", title="Email")
+
+
 class Estimate(BaseModel):
     estimated_cost_usd: float = Field(..., title="Estimated Cost Usd")
     model_calls: int = Field(..., title="Model Calls")
@@ -245,6 +252,12 @@ class NotFound(BaseModel):
 class PaperPdf(BaseModel):
     how: str = Field(..., title="How")
     ci: str = Field(..., title="Ci")
+
+
+class Person(BaseModel):
+    id: str = Field(..., title="Id")
+    email: str = Field(..., title="Email")
+    created_at: str = Field(..., title="Created At")
 
 
 class Code(StrEnum):
@@ -394,6 +407,12 @@ class Code1(StrEnum):
     wrong_question = "wrong_question"
     answers_closed = "answers_closed"
     already_answered = "already_answered"
+    sign_in_throttled = "sign_in_throttled"
+    email_unavailable = "email_unavailable"
+    sign_in_invalid = "sign_in_invalid"
+    signed_out = "signed_out"
+    cross_origin = "cross_origin"
+    account_unreadable = "account_unreadable"
 
 
 class Refused(BaseModel):
@@ -467,6 +486,13 @@ class SegmentShift(BaseModel):
     shift_p90: float = Field(..., title="Shift P90")
     n_agents: int = Field(..., title="N Agents")
     tier: str = Field(..., title="Tier")
+
+
+class SignInSent(BaseModel):
+    email: str = Field(..., title="Email")
+    ttl_minutes: int = Field(
+        ..., description="How long the link and the code work.", title="Ttl Minutes"
+    )
 
 
 class SimulateRequest(BaseModel):
@@ -568,6 +594,27 @@ class TopicOutput(BaseModel):
     baseline_share: float = Field(..., title="Baseline Share")
     final: Band
     by_day: list[DayBand] = Field(..., title="By Day")
+
+
+class Token(RootModel[str]):
+    root: str = Field(..., description="From the link's #token=.", max_length=128, title="Token")
+
+
+class Email(RootModel[str]):
+    root: str = Field(..., max_length=254, pattern="^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", title="Email")
+
+
+class Code2(RootModel[str]):
+    root: str = Field(..., pattern="^\\d{6}$", title="Code")
+
+
+class VerifyRequest(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    token: Token | None = Field(None, description="From the link's #token=.", title="Token")
+    email: Email | None = Field(None, title="Email")
+    code: Code2 | None = Field(None, title="Code")
 
 
 class WeekDay(BaseModel):

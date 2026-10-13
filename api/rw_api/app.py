@@ -31,6 +31,7 @@ from rw_api import routes_cycle, routes_research
 
 log = logging.getLogger("rw_api")
 SCHEMA = Path(__file__).parent / "schema.sql"
+SQL_DIR = Path(__file__).parent / "sql"
 IDEMPOTENCY_TTL = timedelta(hours=24)
 HEARTBEAT_SECONDS = 15.0
 POLL_SECONDS = 0.2
@@ -85,6 +86,12 @@ RefusedCode = Literal[
     "wrong_question",
     "answers_closed",
     "already_answered",
+    "sign_in_throttled",
+    "email_unavailable",
+    "sign_in_invalid",
+    "signed_out",
+    "cross_origin",
+    "account_unreadable",
 ]
 
 
@@ -274,6 +281,8 @@ def not_found(what: str) -> dict[str, Any]:
 def connect() -> sqlite3.Connection:
     conn = db.connect()
     db.apply(conn, SCHEMA)
+    for path in sorted(SQL_DIR.glob("*.sql")):
+        db.apply(conn, path)
     return conn
 
 
@@ -322,6 +331,7 @@ def _finish(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    auth.require_email_transport(allowed_origins())
     conn = connect()
     stale = conn.execute("SELECT id FROM jobs WHERE status IN ('queued', 'running')").fetchall()
     for (job_id,) in stale:
@@ -368,6 +378,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins(),
     allow_origin_regex=CORS_ORIGIN_REGEX,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -1262,6 +1273,16 @@ app.include_router(routes_questions.router, responses={404: not_found("question"
 from rw_api import routes_scores  # noqa: E402
 
 app.include_router(routes_scores.router)
+
+from rw_api import auth, routes_me  # noqa: E402
+
+app.include_router(auth.router)
+app.include_router(routes_me.router)
+
+
+@app.exception_handler(auth.CrossOrigin)
+async def cross_origin(_: Request, __: auth.CrossOrigin) -> JSONResponse:
+    return auth.cross_origin_response()
 
 
 if __name__ == "__main__":

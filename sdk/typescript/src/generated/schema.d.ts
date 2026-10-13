@@ -381,6 +381,75 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v1/auth/email": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Email a sign-in link and a six-digit code */
+    post: operations["email_sign_in_v1_auth_email_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/auth/verify": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Redeem a sign-in link token or an email and code; sets the session cookie */
+    post: operations["verify_v1_auth_verify_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/auth/sign-out": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** End this session, or every session of the account with everywhere=true */
+    post: operations["sign_out_v1_auth_sign_out_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The signed-in account */
+    get: operations["me_v1_me_get"];
+    put?: never;
+    post?: never;
+    /** Delete the account: its email, sessions and sign-in tokens are removed */
+    delete: operations["delete_me_v1_me_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -729,6 +798,11 @@ export interface components {
       /** Anchored At */
       anchored_at: string | null;
     };
+    /** EmailRequest */
+    EmailRequest: {
+      /** Email */
+      email: string;
+    };
     /** Estimate */
     Estimate: {
       /** Estimated Cost Usd */
@@ -940,6 +1014,15 @@ export interface components {
       how: string;
       /** Ci */
       ci: string;
+    };
+    /** Person */
+    Person: {
+      /** Id */
+      id: string;
+      /** Email */
+      email: string;
+      /** Created At */
+      created_at: string;
     };
     /** PolicyRefused */
     PolicyRefused: {
@@ -1298,7 +1381,13 @@ export interface components {
         | "why_over_cap"
         | "wrong_question"
         | "answers_closed"
-        | "already_answered";
+        | "already_answered"
+        | "sign_in_throttled"
+        | "email_unavailable"
+        | "sign_in_invalid"
+        | "signed_out"
+        | "cross_origin"
+        | "account_unreadable";
       /**
        * Detail
        * @description One sentence saying what was refused and why, for display.
@@ -1488,6 +1577,16 @@ export interface components {
       n_agents: number;
       /** Tier */
       tier: string;
+    };
+    /** SignInSent */
+    SignInSent: {
+      /** Email */
+      email: string;
+      /**
+       * Ttl Minutes
+       * @description How long the link and the code work.
+       */
+      ttl_minutes: number;
     };
     /** SimulateRequest */
     SimulateRequest: {
@@ -1707,6 +1806,18 @@ export interface components {
       };
       /** Steps */
       steps: components["schemas"]["rw__simulate__Step"][];
+    };
+    /** VerifyRequest */
+    VerifyRequest: {
+      /**
+       * Token
+       * @description From the link's #token=.
+       */
+      token?: string | null;
+      /** Email */
+      email?: string | null;
+      /** Code */
+      code?: string | null;
     };
     /** WeekDay */
     WeekDay: {
@@ -2641,6 +2752,283 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["Scoreboard"];
+        };
+      };
+    };
+  };
+  email_sign_in_v1_auth_email_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EmailRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SignInSent"];
+        };
+      };
+      /** @description Not JSON, or not from an allowed origin */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description The request is invalid */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description Too many sign-in emails this hour */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description The email could not be sent, or a throttle could not be read */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  verify_v1_auth_verify_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["VerifyRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Person"];
+        };
+      };
+      /** @description The token or code is wrong, used or expired */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description Not JSON, or not from an allowed origin */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description The request is invalid */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description Too many wrong codes from this address */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description The sign-in state could not be read */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  sign_out_v1_auth_sign_out_post: {
+    parameters: {
+      query?: {
+        everywhere?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Signed out already */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description Not JSON, or not from an allowed origin */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description The request is invalid */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description The sign-in state could not be read */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  me_v1_me_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Person"];
+        };
+      };
+      /** @description No live session */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description The sign-in state could not be read */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  delete_me_v1_me_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description No live session */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description Not JSON, or not from an allowed origin */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description The request is invalid */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description The sign-in state could not be read */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
         };
       };
     };
