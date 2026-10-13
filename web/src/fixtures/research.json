@@ -1,0 +1,297 @@
+{
+  "experiments": [
+    {
+      "id": "E001",
+      "title": "Engine vs a single frontier-model prompt on post-cutoff poll subgroup distributions",
+      "registered": "2026-10-11",
+      "owner": "CTO",
+      "status": "registered",
+      "registry_sha256": "62d1906059bd1357380b68d65ad75411da67529df41f540df9d8ea2c69c1f0ed",
+      "prereg_sha256": "62d1906059bd1357380b68d65ad75411da67529df41f540df9d8ea2c69c1f0ed",
+      "hash_matches": true,
+      "prereg_url": "https://github.com/SatyamDave/real-world/blob/main/experiments/E001/PREREG.md",
+      "hypothesis": "The engine's simulated answer distributions for country-by-subgroup cells are closer to the observed post-cutoff poll distributions than those of a single frontier-model prompt asked to describe the same subgroup.",
+      "primary_metric": "Mean paired difference in Jensen-Shannon distance between predicted and observed answer distributions, engine minus baseline, over all eligible question-by-country-by-subgroup cells. Negative favours the engine.",
+      "kill_criterion": "If the interval is not entirely below zero, we stop claiming that the population layer improves subgroup accuracy, publish the result on the receipts page and in `experiments/E001/results/`, and rework the engine before scaling it. If the interval is entirely above zero, the agent layer is removed from public claims until a new registered experiment shows otherwise ([CEO lens](../../research/lenses/ceo.md), [red team](../../research/lenses/red-team.md)).",
+      "results": []
+    },
+    {
+      "id": "E002",
+      "title": "Variance-collapse correction",
+      "registered": "2026-10-11",
+      "owner": "CTO",
+      "status": "registered",
+      "registry_sha256": "0d2339a1b597362036994315f5ca4efe8c7fdb2f98017e728b565c3f5459d8ab",
+      "prereg_sha256": "0d2339a1b597362036994315f5ca4efe8c7fdb2f98017e728b565c3f5459d8ab",
+      "hash_matches": true,
+      "prereg_url": "https://github.com/SatyamDave/real-world/blob/main/experiments/E002/PREREG.md",
+      "hypothesis": "A per-country dispersion calibration map, fitted on held-out survey items, moves the median ratio of simulated to survey standard deviation for Tier A and B countries into the band 0.8 to 1.2, from outside it, without making the answer distributions worse.",
+      "primary_metric": "Median, over Tier A and B country-by-item cells in the test split, of the ratio of simulated SD to survey SD, for the calibrated engine. Success requires the calibrated median inside [0.8, 1.2] and the uncalibrated median outside it. The band comes from the [CEO lens](../../research/lenses/ceo.md) and [CTO lens](../../research/lenses/cto.md).",
+      "kill_criterion": "If the calibrated median stays outside [0.8, 1.2] or non-inferiority fails, calibration is not shipped as the fix. Countries outside the band are labelled experimental with widened intervals, as the [CEO lens](../../research/lenses/ceo.md) requires, and no public copy claims the population's spread matches surveys.",
+      "results": []
+    },
+    {
+      "id": "E003",
+      "title": "Belief assimilation converges on a synthetic ground-truth world",
+      "registered": "2026-10-11",
+      "owner": "CTO",
+      "status": "supported",
+      "registry_sha256": "13b0279a0d5f87d5b4f48fb652dd327c3cea4368a86b4476b69cc2794b5d7171",
+      "prereg_sha256": "13b0279a0d5f87d5b4f48fb652dd327c3cea4368a86b4476b69cc2794b5d7171",
+      "hash_matches": true,
+      "prereg_url": "https://github.com/SatyamDave/real-world/blob/main/experiments/E003/PREREG.md",
+      "hypothesis": "On a synthetic world whose true segment beliefs are known, capped per-segment nudging in logit space lowers the error of the estimated segment beliefs after 30 simulated days compared with no assimilation, without shrinking ensemble spread when there is no evidence.",
+      "primary_metric": "Root-mean-square error, in logit space, between estimated and true segment beliefs on day 30, nudging minus no assimilation, paired by random seed. Negative favours nudging.",
+      "kill_criterion": "If nudging does not beat no assimilation, it does not enter the nightly run, and published forecasts are labelled unassimilated until a new registered experiment passes. If the zero-evidence property fails, the update operator is fixed before any other assimilation work. If the ETKF beats nudging with an interval excluding zero, that result goes to a decision record on the assimilation operator ([CTO lens](../../research/lenses/cto.md)).",
+      "results": [
+        {
+          "path": "experiments/E003/results/2026-10-12-none/RESULTS.md",
+          "date": "2026-10-12",
+          "command": "python -m rw.experiments run E003",
+          "commit": "b6957bed1957a251d55a46731fa640f71ac0f566",
+          "provider": "none",
+          "model": "none",
+          "primary": {
+            "metric": "primary_day30_rmse_nudge_minus_none",
+            "value": -0.4449448805149698,
+            "low": -0.4497016877226154,
+            "high": -0.4400645899798173,
+            "n": 50
+          },
+          "outcome": "supported"
+        }
+      ]
+    },
+    {
+      "id": "E004",
+      "title": "Live hashed forecasts vs the market price (Brier)",
+      "registered": "2026-10-11",
+      "owner": "CEO",
+      "status": "registered",
+      "registry_sha256": "4d31066a1f4efe34b93b822908cfa8773f250df5edc4bf8cdec724b3150ed3b2",
+      "prereg_sha256": "4d31066a1f4efe34b93b822908cfa8773f250df5edc4bf8cdec724b3150ed3b2",
+      "hash_matches": true,
+      "prereg_url": "https://github.com/SatyamDave/real-world/blob/main/experiments/E004/PREREG.md",
+      "hypothesis": "On pre-committed binary questions, the engine's blind forecast, which never sees market prices, has a lower mean Brier score than the market price at commit time.",
+      "primary_metric": "Mean paired Brier difference per question, engine blind forecast minus market price at commit. Negative favours the engine.",
+      "kill_criterion": "At 100 resolved questions: if the interval for engine minus plain LLM is not entirely below zero, the population simulation is dropped from the pitch as a source of forecast accuracy, and the product is presented as the ledger plus the cheaper forecaster ([red team](../../research/lenses/red-team.md), [CTO lens](../../research/lenses/cto.md)). \"Beats the market\" is claimed only if the interval for engine minus market is entirely below zero; otherwise the copy stays \"scored live since <date>\".",
+      "results": []
+    },
+    {
+      "id": "E005",
+      "title": "Native-language vs English agents on non-Western polls",
+      "registered": "2026-10-11",
+      "owner": "CTO",
+      "status": "registered",
+      "registry_sha256": "b5f7cbf8a140a6c1c2affb30f9a2dc1fedf7f8020531d707d8a23c4c8bad3f81",
+      "prereg_sha256": "b5f7cbf8a140a6c1c2affb30f9a2dc1fedf7f8020531d707d8a23c4c8bad3f81",
+      "hash_matches": true,
+      "prereg_url": "https://github.com/SatyamDave/real-world/blob/main/experiments/E005/PREREG.md",
+      "hypothesis": "In at least one of the ten countries below, agents prompted in the language of the country's survey instrument produce answer distributions closer to the observed post-cutoff survey marginals than agents prompted in English with country framing.",
+      "primary_metric": "Per country, mean paired Jensen-Shannon distance to the observed marginals, native-language arm minus English-with-country-framing arm, over that country's questions. Negative favours native language.",
+      "kill_criterion": "Native-language prompting is enabled only in countries that pass. If none pass, every agent stays on English prompts, the `prompt_lang` field stays English, and no copy claims native-language agents.",
+      "results": []
+    },
+    {
+      "id": "E006",
+      "title": "Assimilation v2 vs persistence on the E003 synthetic world",
+      "registered": "2026-10-12",
+      "owner": "CTO",
+      "status": "supported",
+      "registry_sha256": "ad372cad8f2a3d2a00641b9205cdb97afa87d87e151c88c7e3e47593b8bc450d",
+      "prereg_sha256": "ad372cad8f2a3d2a00641b9205cdb97afa87d87e151c88c7e3e47593b8bc450d",
+      "hash_matches": true,
+      "prereg_url": "https://github.com/SatyamDave/real-world/blob/main/experiments/E006/PREREG.md",
+      "hypothesis": "On the E003 synthetic world, the v2 per-segment Kalman update with an anchor offset has lower day-30 segment belief error than persistence (holding each cell's last poll).",
+      "primary_metric": "Root-mean-square error, in logit, between estimated and true segment beliefs over all segment-topic cells on day 30, v2 minus persistence, paired by seed. Negative favours v2.",
+      "kill_criterion": "If the primary interval is not wholly below zero, the daily default stays capped nudging, we say v2 did not beat persistence, and decision 0005 is revisited before more assimilation work. If v2 wins but either misspecification arm loses to persistence with an interval wholly above zero, the default still switches, and estimating the real walk SD from poll series becomes a blocking item in `company/decisions-needed.md` before any live claim about assimilation.",
+      "results": [
+        {
+          "path": "experiments/E006/results/2026-10-12-none/RESULTS.md",
+          "date": "2026-10-12",
+          "command": "python -m rw.experiments run E006",
+          "commit": "3163defe77750a8bed4c0e199f1c82697014f36b",
+          "provider": "none",
+          "model": "none",
+          "primary": {
+            "metric": "primary_day30_rmse_v2_minus_persistence",
+            "value": -0.018222162959999663,
+            "low": -0.019040526306106007,
+            "high": -0.017416993563313332,
+            "n": 50
+          },
+          "outcome": "supported"
+        }
+      ]
+    },
+    {
+      "id": "E007",
+      "title": "Jev forecasts are no worse calibrated than the Haiku baseline",
+      "registered": "2026-10-12",
+      "owner": "CTO",
+      "status": "registered",
+      "registry_sha256": "cb68d107d9da5824e53b0d0dad2aaf7528f2cc0554ada13b7a334693f6033cc5",
+      "prereg_sha256": "cb68d107d9da5824e53b0d0dad2aaf7528f2cc0554ada13b7a334693f6033cc5",
+      "hash_matches": true,
+      "prereg_url": "https://github.com/SatyamDave/real-world/blob/main/experiments/E007/PREREG.md",
+      "hypothesis": "On the same questions and days, the sim forecast from the Jev path has a mean Brier score no more than 0.01 above the sim forecast from the Claude Haiku 5.5 path.",
+      "primary_metric": "Mean paired Brier difference per resolved question, Jev sim minus Haiku sim, each question's Brier being the mean over the days both paths forecast it. Positive favours Haiku.",
+      "kill_criterion": "If the upper end exceeds 0.01, the Jev sim path does not write scored forecasts; we write a decision record choosing between the open model for forecasts and a calibration layer on Jev, and rerun this design on the choice.",
+      "results": []
+    },
+    {
+      "id": "E008",
+      "title": "The self-improving loop on a synthetic question stream",
+      "registered": "2026-10-12",
+      "owner": "CTO",
+      "status": "registered",
+      "registry_sha256": "ebc8593d8389a247d9a1e494a88bb4bbc69f89c8a1ff970da8375ce86e99440d",
+      "prereg_sha256": "ebc8593d8389a247d9a1e494a88bb4bbc69f89c8a1ff970da8375ce86e99440d",
+      "hash_matches": true,
+      "prereg_url": "https://github.com/SatyamDave/real-world/blob/main/experiments/E008/PREREG.md",
+      "hypothesis": "On a synthetic stream where the raw forecaster is overconfident, the loop's published forecasts have lower Brier than the raw forecasts on later questions, and on a stream where the raw forecaster is already calibrated the loop rarely promotes and does not raise Brier.",
+      "primary_metric": "Overconfident arm: mean Brier over question-days of the published forecasts minus the raw forecasts, for questions resolving on days 61 to 100, paired by seed. Negative favours the loop.",
+      "kill_criterion": "If the calibrated-arm interval lies wholly above zero or its false promotion rate exceeds 10%, the loop promotes noise: the `improve` step is removed from the daily cycle and decision 0008 is revisited before the gate is retuned under a new registration. If only the primary fails, the loop is harmless but useless at this data volume: it stays, and we say it has not shown a gain.",
+      "results": []
+    },
+    {
+      "id": "E009",
+      "title": "LoRA-tuned opinion model vs its base model vs Jev on survey questions fielded after registration",
+      "registered": "2026-10-12",
+      "owner": "CTO",
+      "status": "registered",
+      "registry_sha256": "a83836b9b9fb03ff62854c15bbcd721437804d0edf4a0ca10590176b091c34c5",
+      "prereg_sha256": "a83836b9b9fb03ff62854c15bbcd721437804d0edf4a0ca10590176b091c34c5",
+      "hash_matches": true,
+      "prereg_url": "https://github.com/SatyamDave/real-world/blob/main/experiments/E009/PREREG.md",
+      "hypothesis": "On survey questions fielded after 2026-10-12, a LoRA adapter on Qwen3.5-9B trained on licensed survey distributions predicts country-by-subgroup answer distributions closer to the observed ones than Jev (`jev-1.13.0`) does, by at least 0.01 in Jensen-Shannon distance.",
+      "primary_metric": "Mean paired difference in Jensen-Shannon distance (base 2, so in [0, 1]) between predicted and observed answer distributions, tuned model minus Jev, over all eligible question-by-country-by-subgroup cells. Negative favours the tuned model.",
+      "kill_criterion": "- If the interval for tuned minus Jev does not lie wholly below -0.01, the tuned model does not replace Jev for `forecast_sim`, decision 0010 stays proposed, and the result is published in `experiments/E009/results/` and `REGISTRY.md` the same week.\n- If the interval for tuned minus base does not lie wholly below zero, we stop believing that survey fine-tuning helps on forward questions: the training program stops, and decision 0010 is withdrawn by a superseding record.",
+      "results": []
+    }
+  ],
+  "papers": [
+    {
+      "slug": "ask-a-world",
+      "short_title": "Don't Ask a Model, Ask a World",
+      "title": "Don't Ask a Model, Ask a World: A Data-Assimilated Population Simulation with Public Forecast Receipts",
+      "claim": "Pre-registered: a market-blind population model calibrated to published marginals and corrected each morning against polls forecasts better than a same-feed LLM given the same observations, models and number of calls, with an equivalence test for the opposite.",
+      "stage": "Internal review",
+      "venue": "arXiv cs.AI, then a NeurIPS-style position/systems track",
+      "pending": "H1 W vs matched B1 (superiority/equivalence), H2 W vs market (estimation), H3 assimilation vs P, L, B2, B3, H4 dispersion, H5 fork sign, H6 coherence, cost (eval/ask-a-world/.json); daily ledger (ledger/YYYY-MM-DD/root.json)",
+      "tex_url": "https://github.com/SatyamDave/real-world/blob/main/papers/ask-a-world/paper.tex",
+      "status_url": "https://github.com/SatyamDave/real-world/blob/main/papers/ask-a-world/STATUS.md",
+      "pdf": {
+        "how": "cd papers/ask-a-world && tectonic paper.tex",
+        "ci": "Papers workflow artifact"
+      }
+    },
+    {
+      "slug": "belief-assimilation",
+      "short_title": "Belief Assimilation",
+      "title": "Belief Assimilation: Ensemble Data Assimilation for Large Synthetic Belief Populations Observed Only in Aggregate",
+      "claim": "A two-level ensemble filter (local ETKF on segment moments, operators on full populations, loading-weighted lift to agents) can correct a 10^5-agent belief population against aggregates without adding or erasing within-segment heterogeneity, in a stated window of spread structure; whether it beats a free run, the v1 filter, aggregators or the market is pre-specified, not shown.",
+      "stage": "Internal review",
+      "venue": "Registered-report or workshop track; arXiv first",
+      "pending": "E1 synthetic truth H1–H7 (eval/belief-assimilation/e1_synthetic.json), E2 hindcast H8–H11 (e2_hindcast.json), E3 live H12–H13 (e3_live.jsonl)",
+      "tex_url": "https://github.com/SatyamDave/real-world/blob/main/papers/belief-assimilation/paper.tex",
+      "status_url": "https://github.com/SatyamDave/real-world/blob/main/papers/belief-assimilation/STATUS.md",
+      "pdf": {
+        "how": "cd papers/belief-assimilation && tectonic paper.tex",
+        "ci": "Papers workflow artifact"
+      }
+    },
+    {
+      "slug": "global-population",
+      "short_title": "Unequally Known",
+      "title": "Unequally Known: A Registered Report on a Tiered, Provenance-Tracked Global Synthetic Population for LLM Agents, Built from Synthetic Survey-Derived Demographics and Attitude Surveys",
+      "claim": "A global agent population can be built from GLOPOP-S plus donor-matched attitude surveys with per-attribute provenance, four population tiers and a per-country confidence score fixed in advance; whether the score predicts noise-corrected error is tested, not assumed.",
+      "stage": "Internal review (Stage-1 registered report)",
+      "venue": "A venue accepting Stage-1 registered reports; datasets track once v0 exists",
+      "pending": "Registry, coverage, fallback map, licences, power, Fréchet widths, disclosure test; H1–H8 (artifacts/global-population/v0/...)",
+      "tex_url": "https://github.com/SatyamDave/real-world/blob/main/papers/global-population/paper.tex",
+      "status_url": "https://github.com/SatyamDave/real-world/blob/main/papers/global-population/STATUS.md",
+      "pdf": {
+        "how": "cd papers/global-population && tectonic paper.tex",
+        "ci": "Papers workflow artifact"
+      }
+    },
+    {
+      "slug": "variance-correction",
+      "short_title": "Correcting Variance Collapse",
+      "title": "Correcting Variance Collapse in LLM-Simulated Survey Respondents: Typed Probabilities, Dispersion Matching, and Post-Stratification, with a Pre-Registered Post-Cutoff Evaluation",
+      "claim": "Typed per-agent probabilities, a question-agnostic dispersion map and post-stratification should bring simulated poll distributions closer to post-cutoff polls than persona panels, tested against a describe-the-population call and a fitted non-LLM baseline that may beat it.",
+      "stage": "Internal review",
+      "venue": "ACL/EMNLP (main or Findings); ICWSM alternate",
+      "pending": "Feasibility census, pilot, fitted θ, retrospective split, prospective H1–H7 and S1–S5 (artifacts/variance-correction/...)",
+      "tex_url": "https://github.com/SatyamDave/real-world/blob/main/papers/variance-correction/paper.tex",
+      "status_url": "https://github.com/SatyamDave/real-world/blob/main/papers/variance-correction/STATUS.md",
+      "pdf": {
+        "how": "cd papers/variance-correction && tectonic paper.tex",
+        "ci": "Papers workflow artifact"
+      }
+    },
+    {
+      "slug": "receipts-protocol",
+      "short_title": "Receipts",
+      "title": "Receipts: A Tamper-Evident, Pre-Registered, Forward-Only Protocol for Scoring Forecasts Against the Market at Call Time",
+      "claim": "Beacon-selected questions committed before forecasts, every forecaster-by-question cell a salted positional leaf in a signed, chained daily record anchored by two of three RFC 3161 authorities, OpenTimestamps and a transparency log, maximum loss for every uncheckable cell, and scoring against the market price at a scheduled call time make each modelled manipulation impossible, charged, logged or detectable; it proves integrity, not accuracy.",
+      "stage": "Internal review",
+      "venue": "International Journal of Forecasting; arXiv",
+      "pending": "H1 integrity, H2 reimplementation + rerun audit, H3 operations, H4 retrieval leakage, H5 call-time decomposition, H6 confirmatory rw-blind vs market on window W1 (artifacts/receipts/...)",
+      "tex_url": "https://github.com/SatyamDave/real-world/blob/main/papers/receipts-protocol/paper.tex",
+      "status_url": "https://github.com/SatyamDave/real-world/blob/main/papers/receipts-protocol/STATUS.md",
+      "pdf": {
+        "how": "cd papers/receipts-protocol && tectonic paper.tex",
+        "ci": "Papers workflow artifact"
+      }
+    },
+    {
+      "slug": "real-world-bench",
+      "short_title": "The Real World Benchmark",
+      "title": "The Real World Benchmark: Forward-Dated Evaluation of Population Simulators Against Polls, Markets and Pricing Experiments",
+      "claim": "Population simulators should be judged only on predictions committed before the answer existed, against cheap baselines including a same-feed LLM; three pre-registered tracks (polls with subgroups, rule-generated market calls, pricing experiments) do that.",
+      "stage": "Internal review (pre-registration)",
+      "venue": "NeurIPS Datasets and Benchmarks",
+      "pending": "Feasibility counts, round-1 manifest, item census, Track A/B/C scores, 7 confirmatory tests (Holm within track), ablations, deviations log (bench/...)",
+      "tex_url": "https://github.com/SatyamDave/real-world/blob/main/papers/real-world-bench/paper.tex",
+      "status_url": "https://github.com/SatyamDave/real-world/blob/main/papers/real-world-bench/STATUS.md",
+      "pdf": {
+        "how": "cd papers/real-world-bench && tectonic paper.tex",
+        "ci": "Papers workflow artifact"
+      }
+    },
+    {
+      "slug": "silicon-samples-sok",
+      "short_title": "Silicon Samples, 2022–2026",
+      "title": "Silicon Samples, 2022–2026: A Targeted Survey of How Language-Model Simulations of Human Populations Compare with Human Data",
+      "claim": "Across 52 empirical studies, LLM-simulated populations agree with human data on effect directions and rank orders more often than on levels, spreads or individual answers, and where a non-LLM baseline is fit the prompted LLM is not ahead; a four-axis taxonomy accounts for 5 of 11 conflicting pairs, a check with little power.",
+      "stage": "Internal review",
+      "venue": "ACM Computing Surveys; arXiv first",
+      "pending": "Corpus counts committed (data/); pending: double coding, protocol H1–H9 (bench/silicon-sok/results/...)",
+      "tex_url": "https://github.com/SatyamDave/real-world/blob/main/papers/silicon-samples-sok/paper.tex",
+      "status_url": "https://github.com/SatyamDave/real-world/blob/main/papers/silicon-samples-sok/STATUS.md",
+      "pdf": {
+        "how": "cd papers/silicon-samples-sok && tectonic paper.tex",
+        "ci": "Papers workflow artifact"
+      }
+    },
+    {
+      "slug": "public-world-sims-ethics",
+      "short_title": "Governing Public World Simulators",
+      "title": "Governing Public World Simulators: Misuse, Consent, Labeling and Uncertainty in a Forkable Simulation of Society",
+      "claim": "A public world simulator should be governed as a forecasting instrument under public scoring, with structural limits in its schema and API, each paired with a pre-registered audit that gates a release stage.",
+      "stage": "Internal review",
+      "venue": "ACM FAccT (alternate AIES)",
+      "pending": "Audits E1–E7 (evals/governance/<audit>/)",
+      "tex_url": "https://github.com/SatyamDave/real-world/blob/main/papers/public-world-sims-ethics/paper.tex",
+      "status_url": "https://github.com/SatyamDave/real-world/blob/main/papers/public-world-sims-ethics/STATUS.md",
+      "pdf": {
+        "how": "cd papers/public-world-sims-ethics && tectonic paper.tex",
+        "ci": "Papers workflow artifact"
+      }
+    }
+  ],
+  "repo": "https://github.com/SatyamDave/real-world",
+  "commit": "6e5e748e456520d1fc5e2cc63868b36bdfc0dee7"
+}

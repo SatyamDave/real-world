@@ -15,6 +15,9 @@ export type AgentWhy = Schemas["AgentWhy"];
 export type Daily = Schemas["Daily"];
 export type SystemStatus = Schemas["SystemStatus"];
 export type Scoreboard = Schemas["Scoreboard"];
+export type Cycle = Schemas["Cycle"];
+export type Replay = Schemas["Replay"];
+export type Research = Schemas["Research"];
 export type Receipts = Schemas["Receipts"];
 export type ReceiptDay = Schemas["ReceiptDay"];
 export type LeafReceipt = Schemas["LeafReceipt"];
@@ -253,5 +256,21 @@ export class Client {
   /** Returns the scoreboard: Brier per forecaster, skill, reliability bins and misses. */
   scoreboard(): Promise<Scoreboard> {
     return ok(this.http.GET("/v1/scoreboard"));
+  }
+
+  /** Returns one daily cycle as a run log; the latest cycle when no date is given. */
+  cycle(date?: string): Promise<Cycle> {
+    if (date === undefined) return ok(this.http.GET("/v1/cycle"));
+    return ok(this.http.GET("/v1/cycle/{date}", { params: { path: { date } } }));
+  }
+
+  /** Replays the day's forecasts from recorded model outputs and diffs them against the ledger. */
+  cycle_replay(date: string): Promise<Replay> {
+    return ok(this.http.GET("/v1/cycle/{date}/replay", { params: { path: { date } } }));
+  }
+
+  /** Returns the experiment registry with its hashes and results, and the papers. */
+  research(): Promise<Research> {
+    return ok(this.http.GET("/v1/research"));
   }
 }

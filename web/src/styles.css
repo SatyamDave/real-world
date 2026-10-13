@@ -1743,7 +1743,10 @@ main :is(p, li, dd, h3) a {
 
 /* ---- World ---- */
 
-.world {
+.world,
+.cycle,
+.research,
+.research-group {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -1802,6 +1805,78 @@ main :is(p, li, dd, h3) a {
   font-size: 20px;
   font-weight: 600;
   margin: 0;
+}
+
+/* ---- Cycle and research ---- */
+
+.cycle-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 16px;
+}
+
+.cycle-dates [aria-current="page"] {
+  font-weight: 600;
+}
+
+/* A step's detail and a topic's items are sentences, so they wrap and the numbers stay on screen. */
+.cycle td.cycle-detail,
+.cycle td.cycle-items {
+  white-space: normal;
+  min-width: 14rem;
+  max-width: 28rem;
+}
+
+.cycle-items ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cycle-items li + li {
+  margin-top: 4px;
+}
+
+.research .table-wrap td:first-child {
+  min-width: 0;
+}
+
+.research-item h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.research-item {
+  overflow-wrap: anywhere;
+}
+
+.research-terms {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: 8px 16px;
+  margin: 16px 0;
+  max-width: 70ch;
+}
+
+.research-terms dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.research-terms dd {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .research-terms {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .research-terms dd {
+    margin-bottom: 12px;
+  }
 }
 
 /* ---- Question page ---- */

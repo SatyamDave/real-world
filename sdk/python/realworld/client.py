@@ -13,6 +13,7 @@ from realworld.generated.models import (
     Agent,
     AgentWhy,
     BaselineSkill,
+    Cycle,
     Daily,
     Estimate,
     Job,
@@ -22,6 +23,8 @@ from realworld.generated.models import (
     QuestionPage,
     ReceiptDay,
     Receipts,
+    Replay,
+    Research,
     Scoreboard,
     SimulateRequest,
     SimulateResult,
@@ -215,3 +218,15 @@ class Client:
     def scoreboard(self) -> Scoreboard:
         """Returns the scoreboard: Brier per forecaster, skill, reliability bins and misses."""
         return Scoreboard.model_validate(self._send("GET", "/v1/scoreboard"))
+
+    def cycle(self, date: str | None = None) -> Cycle:
+        """Returns one daily cycle as a run log; the latest cycle when no date is given."""
+        return Cycle.model_validate(self._send("GET", f"/v1/cycle/{date}" if date else "/v1/cycle"))
+
+    def cycle_replay(self, date: str) -> Replay:
+        """Replays the day's forecasts from recorded model outputs; diffs them with the ledger."""
+        return Replay.model_validate(self._send("GET", f"/v1/cycle/{date}/replay"))
+
+    def research(self) -> Research:
+        """Returns the experiment registry with its hashes and results, and the papers."""
+        return Research.model_validate(self._send("GET", "/v1/research"))

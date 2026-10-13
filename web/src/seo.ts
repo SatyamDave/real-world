@@ -16,6 +16,11 @@ export const ROUTES: Route[] = [
       "The simulated population: agents are rows of numbers, and the model is called once per segment, never per agent. AI-simulated.",
   },
   {
+    path: "/cycle",
+    description:
+      "The daily cycle as a run log: each step, its model calls and cost, the news that moved the simulated world, and a replay of the day's forecasts.",
+  },
+  {
     path: "/scores",
     description:
       "Scored in public: the simulation, a plain LLM and the market, with n and an interval.",
@@ -24,6 +29,11 @@ export const ROUTES: Route[] = [
     path: "/receipts",
     description:
       "Every forecast, hashed before its outcome existed. Verify each hash in your browser.",
+  },
+  {
+    path: "/research",
+    description:
+      "Every pre-registered experiment with its hash, its committed runs and misses, and the papers.",
   },
   {
     path: "/docs",
@@ -38,6 +48,8 @@ export const ROUTES: Route[] = [
 
 /** Routes that take a parameter: listed under their first path segment, never in the sitemap. */
 const PARAM_DESCRIPTIONS: Record<string, string> = {
+  cycle:
+    "One day's run log: each step, its model calls and cost, the news that moved the simulated world, and a replay of the day's forecasts.",
   questions:
     "One question's forecasts, committed before it resolved: the simulation, a plain LLM and the market side by side. AI-simulated.",
   fork: "A fork of today's world: the top segment shifts with the number of agents behind each, and what the run cost. AI-simulated.",
