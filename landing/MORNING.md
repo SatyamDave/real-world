@@ -1,4 +1,26 @@
-# Morning: pre-launch landing page, 2026-10-12
+# Morning: pre-launch landing page
+
+## Update 2026-10-14 (read this first): Tally, the globe, the research section
+
+Same guardrails: draft PRs only, no merge, no DNS, no production deploy, no production secret, nothing in `web/`, `engine/` or `api/`.
+
+**First unchecked item: the real Tally verification has not been done.** `TALLY_SIGNING_SECRET_STAGING` and `TALLY_FORM_ID_STAGING` in `.dev.vars` are empty, so no real form exists. Unverified until one does: which bytes Tally signs (the server accepts raw or re-serialized), and that `/embed/<id>?signup_id=...` fills the hidden field. Steps: `tally/FORM_SPEC.md`, then a Playwright submission through the staging embed, then replay, tamper and unsigned requests, then delete the rows by id.
+
+- [ ] **Tally**, as above. Then PR [#98](https://github.com/SatyamDave/real-world/pull/98) can leave draft.
+- [ ] **Apply `db/migrations/0003_drop_referrer_landing_path.sql`** to dev and staging (a column drop, so I did not run it), main at go-live.
+- [ ] **Answer the D1 question** in [design/SISTER_DB.md](design/SISTER_DB.md): does D1 replace the Neon waitlist? Nothing was created.
+- [ ] **LaunchDarkly** has no account or key; the flag layer is not built.
+- [ ] Look at the globe PR (`landing/9-wow`), the screenshots in `design/c-rounds/` and the open spots below.
+
+What changed: Tally replaces Typeform (#98); the page follows decision 0012 (copy and field first, then the interactive globe whose markers open pending receipts that end in "Make your call"); a cited research section with no figures ([design/PAPERS.md](design/PAPERS.md)); referrer and landing_path removed; SEO tags; [REVIEW_LOG.md](REVIEW_LOG.md) maps Satyam's comments to answers. Decisions C1 to C9 in [DECISIONS.md](DECISIONS.md). `SYNC.md` logs the merge of main.
+
+Measured: first-load JavaScript 81.9 KB gzipped (budget 120); local Lighthouse LCP about 1.8 s on four of five runs (2.4 s cold), CLS 0.039; 69 end-to-end tests pass on desktop and mobile; live-staging LCP was not re-measured after this change.
+
+Open spots, said plainly: on a phone the open receipt covers the whole globe; land dots are near black in light mode; mobile Playwright cannot tap a spinning marker (real taps work; tests use hover or dispatch); the relocation of `landing/` and the flag layer are proposals only.
+
+---
+
+## Earlier: 2026-10-12
 
 Read this first. Everything below was done on draft PRs and a preview deploy. Nothing touched `tryrealworld.com`, DNS, a production branch, or the production database.
 
