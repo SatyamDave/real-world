@@ -1,10 +1,14 @@
 import { useEffect, useRef } from "react";
 import { track } from "./analytics";
 import { BRAND } from "./brand";
+import { Collaborate } from "./components/Collaborate";
 import { Footer } from "./components/Footer";
 import { Hero } from "./components/Hero";
 import { HowItWorks } from "./components/HowItWorks";
 import { ReceiptStrip } from "./components/ReceiptStrip";
+import { Research } from "./components/Research";
+import { Thesis } from "./components/Thesis";
+import { UseCases } from "./components/UseCases";
 import type { Headline } from "./copy/headlines";
 import { Privacy } from "./pages/Privacy";
 import { Terms } from "./pages/Terms";
@@ -51,7 +55,11 @@ function Home({ headline }: { headline: Headline }) {
       <main id="main">
         <Hero headline={headline} />
         <ReceiptStrip />
+        <Thesis />
         <HowItWorks />
+        <UseCases />
+        <Research />
+        <Collaborate onJoin={() => focusEmail("collaborate")} />
         <RepeatCta />
       </main>
       <Footer />

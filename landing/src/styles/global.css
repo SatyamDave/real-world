@@ -478,6 +478,89 @@ canvas {
   margin-bottom: 18px;
 }
 
+/* Thesis, ledger, claims, collaboration: the sections below the receipts.
+   The one large type moment is the thesis statement; the rest stays quiet. */
+.thesis {
+  display: grid;
+  gap: 28px;
+}
+.thesis-statement {
+  font-size: clamp(30px, 6.4vw, 46px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.06;
+  max-width: 16ch;
+}
+.ledger {
+  display: grid;
+}
+.ledger-row {
+  display: grid;
+  gap: 4px;
+  padding: 14px 0;
+  border-top: 1.5px solid var(--ink);
+}
+.ledger-row:last-child {
+  border-bottom: 1.5px solid var(--line);
+}
+.ledger dt {
+  font-weight: 600;
+  font-size: 17px;
+}
+.ledger dd {
+  color: var(--muted);
+  max-width: 56ch;
+}
+.claims {
+  display: grid;
+  gap: 24px;
+}
+.claims-title {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding-top: 12px;
+  border-top: 1.5px solid var(--ink);
+}
+.claims ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  max-width: 52ch;
+}
+.caveat {
+  margin-top: 28px;
+  padding-top: 14px;
+  border-top: 1.5px solid var(--line);
+  max-width: 70ch;
+  color: var(--muted);
+  font-size: 15px;
+}
+.collab {
+  display: grid;
+  gap: 4px;
+  padding-top: 36px;
+  padding-bottom: 36px;
+}
+.collab .section-note {
+  margin-bottom: 4px;
+}
+.collab-link {
+  justify-self: start;
+  min-height: 44px;
+  padding: 10px 0;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
 /* Footer */
 .site-footer {
   border-top: 1.5px solid var(--line);
@@ -540,6 +623,24 @@ canvas {
   .steps {
     grid-template-columns: repeat(3, 1fr);
     gap: 32px;
+  }
+  .thesis {
+    grid-template-columns: 5fr 7fr;
+    gap: 56px;
+    align-items: start;
+  }
+  .ledger-row {
+    grid-template-columns: 200px 1fr;
+    gap: 24px;
+  }
+  .claims {
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+  }
+  .collab {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 48px;
   }
   .receipts-scroll {
     margin: 0;
