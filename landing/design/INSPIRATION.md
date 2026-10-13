@@ -74,3 +74,21 @@ Ranked by expected effect on trust and clarity.
 - "Beats the market" or ranking language next to the receipts. Any skill figure appears only as the receipts page computes it, with n and an interval.
 - Competitor assets: images, icons, fonts (ABC Oracle, gtStandard, Geist, kalshiSans), the triangle, lens photos and isometric tiles. Layouts here are patterns, not templates.
 - Hiding the pending state. A pending receipt is shown as pending.
+
+## Phase 2 references (2026-10-13)
+
+Patterns only, never assets, copy, logos or layouts. Screenshots are local and git-ignored (`design/inspo/refs2/`: 70 screenshots at 390x844 and 1440x900, five scroll positions each, plus drag and wheel tests for the two globe sites; `results.json` holds the measured facts). Tool: Playwright with Chrome, no login, a US IP. Transfer sizes are lower bounds (cross-origin resources without a Timing-Allow-Origin header report zero).
+
+Rohit named omi.me ("the wearable brand"); the other six I chose, to cover an interactive globe, a WebGL hero, a product-UI hero, a restrained brand and a scroll story. Before this, `design/INSPIRATION.md` above covered the competitors and Linear and Vercel; Satyam's direction research is [research/product/107](../../research/product/107-design-direction-references.md) (TypeSafe, OpenAI developers, Cloudflare Workers AI, Linear, Perplexity).
+
+| Site | Measured (1440) | Pattern taken | Pattern left alone |
+| --- | --- | --- | --- |
+| [omi.me](https://www.omi.me) | no canvas; about 2.0 MB JS, 8.5 MB total, 506 requests; h1 56px | One object is the hero, with no UI chrome around it; a tight heavy headline; the one action is the one contrasting pill in the nav | The discount modal that covers content by half scroll, the promo bar, the page weight |
+| [stripe.com](https://stripe.com) | 2 WebGL canvases; about 1.3 MB JS, 1.7 MB total, 127 requests; h1 48px | Left-aligned display headline, a solid primary action beside a quiet secondary, a small mono "live system" line above the headline | The gradient WebGL background (`design.md` bans gradients), the logo marquee (forbidden by `design.md`: no customer row) |
+| [earth.nullschool.net](https://earth.nullschool.net) | WebGL, about 83 KB JS, 262 KB total, 11 requests; the page does not scroll | The globe fills the screen and is the interface; chrome is tiny and pinned to corners; drag, wheel and pinch are direct manipulation with no tutorial; the lightest page measured | No inertia after release, no zoom buttons, no reset, and no cue that it is interactive: we add all four |
+| [cobe.vercel.app](https://cobe.vercel.app) | 2 WebGL canvases; about 171 KB JS, 258 KB total, 12 requests | Markers are real DOM labels anchored to the globe, so they stay crisp, focusable and stylable; a pale dotted globe on white | A monochrome demo with no data meaning; documentation framing |
+| [linear.app](https://linear.app) | no canvas; h1 64px; 251 requests | Left-aligned display type and a one-line sub; the product's own UI built from real text as the hero artwork (our equivalent is the real pending receipt); section heads as a short heading left and a paragraph right | The dark glow, the page length |
+| [teenage.engineering](https://teenage.engineering) | no canvas; about 468 KB JS; the shortest page (2,285 px) | Restraint: monochrome, no gradients, no shadows, no rounded cards; the navigation is the site map | No h1 and tiny nav text (poor for comprehension and accessibility) |
+| [apple.com/airpods-pro](https://www.apple.com/airpods-pro/) | about 8.3 MB total, 47 requests; page 28,920 px tall | A fixed section layout (a large heading left, body right, one text link) repeated with whitespace as the rhythm; a sticky local bar that carries the one action | The weight, the length, and the section-per-product-shot structure we have no shots for |
+
+Cross-site findings (measured): none of the seven hijacks the wheel, none exposes `gsap`, `ScrollTrigger` or `Lenis` globals, and the two lightest pages are the two globe pages (262 KB and 258 KB).
