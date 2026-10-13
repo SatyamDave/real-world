@@ -450,6 +450,74 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/v1/tests": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Test a post on a simulated audience; sealed when signed in */
+    post: operations["test_post_v1_tests_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/tests/retrospective": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Score the engine on posts already published; stores nothing */
+    post: operations["retrospective_v1_tests_retrospective_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/me/tests": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The signed-in person's sealed post tests and how they scored */
+    get: operations["my_tests_v1_me_tests_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/v1/me/tests/{test_id}/outcome": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark a sealed post test landed or flopped, once */
+    post: operations["mark_v1_me_tests__test_id__outcome_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -733,6 +801,8 @@ export interface components {
       /** Date */
       date: string;
       question: components["schemas"]["DailyQuestion"];
+      /** @description The AI's call on this question, sealed. */
+      sealed: components["schemas"]["Sealed"] | null;
       reveal: components["schemas"]["Reveal"] | null;
     };
     /** DailyQuestion */
@@ -951,6 +1021,14 @@ export interface components {
       /** Events */
       events: string;
     };
+    /** Mark */
+    Mark: {
+      /**
+       * Outcome
+       * @enum {string}
+       */
+      outcome: "landed" | "flopped";
+    };
     /** Miss */
     Miss: {
       /** Question Id */
@@ -967,6 +1045,17 @@ export interface components {
       outcome: number;
       /** Brier */
       brier: number;
+    };
+    /** Mix */
+    Mix: {
+      /** Scroll Past */
+      scroll_past: number;
+      /** Read */
+      read: number;
+      /** Like */
+      like: number;
+      /** Share */
+      share: number;
     };
     /** News */
     News: {
@@ -1014,6 +1103,16 @@ export interface components {
       how: string;
       /** Ci */
       ci: string;
+    };
+    /** PastPost */
+    PastPost: {
+      /** Text */
+      text: string;
+      /**
+       * Outcome
+       * @enum {string}
+       */
+      outcome: "landed" | "flopped";
     };
     /** Person */
     Person: {
@@ -1122,6 +1221,72 @@ export interface components {
       ratio: number | null;
       /** In Band */
       in_band: boolean | null;
+    };
+    /** PostTestOut */
+    PostTestOut: {
+      result: components["schemas"]["PostTestResult"];
+      /** @description Null when signed out: nothing is stored. */
+      seal: components["schemas"]["Seal"] | null;
+    };
+    /** PostTestRequest */
+    PostTestRequest: {
+      /**
+       * Countries
+       * @description ISO3 codes; null means every simulated country.
+       */
+      countries?: string[] | null;
+      /**
+       * Age Bands
+       * @description Null means every age.
+       */
+      age_bands?: ("18-34" | "35-54" | "55+")[] | null;
+      /** Text */
+      text: string;
+      /**
+       * Gut
+       * @description The person's own call before the result.
+       */
+      gut?: ("lands" | "flops") | null;
+    };
+    /** PostTestResult */
+    PostTestResult: {
+      /**
+       * Landing Chance
+       * @description Audience share who would like or share it.
+       */
+      landing_chance: number;
+      /**
+       * Band
+       * @description p10 and p90 of landing across segments.
+       */
+      band: number[];
+      mix: components["schemas"]["Mix"];
+      /** Best */
+      best: components["schemas"]["SegmentReaction"][];
+      /** Worst */
+      worst: components["schemas"]["SegmentReaction"][];
+      /** Voices */
+      voices: components["schemas"]["Voice"][];
+      /** Rewrite */
+      rewrite: string;
+      /** Segments */
+      segments: number;
+      /** Model Calls */
+      model_calls: number;
+      /** Cost Usd */
+      cost_usd: number;
+      /** Provider */
+      provider: string;
+      /**
+       * Calibration
+       * @default Uncalibrated until 100 marked tests
+       */
+      calibration?: string;
+      /**
+       * Disclosure
+       * @default AI-simulated. Not a poll or a prediction of a real person
+       */
+      disclosure?: string;
     };
     /** PrefilledEvent */
     PrefilledEvent: {
@@ -1387,7 +1552,9 @@ export interface components {
         | "sign_in_invalid"
         | "signed_out"
         | "cross_origin"
-        | "account_unreadable";
+        | "account_unreadable"
+        | "test_daily_limit"
+        | "already_marked";
       /**
        * Detail
        * @description One sentence saying what was refused and why, for display.
@@ -1480,6 +1647,55 @@ export interface components {
         [key: string]: components["schemas"]["Scored"];
       };
     };
+    /** RetroPost */
+    RetroPost: {
+      /** Text */
+      text: string;
+      /**
+       * Outcome
+       * @enum {string}
+       */
+      outcome: "landed" | "flopped";
+      /** Landing Chance */
+      landing_chance: number;
+      /** Hit */
+      hit: boolean;
+    };
+    /** RetroRequest */
+    RetroRequest: {
+      /**
+       * Countries
+       * @description ISO3 codes; null means every simulated country.
+       */
+      countries?: string[] | null;
+      /**
+       * Age Bands
+       * @description Null means every age.
+       */
+      age_bands?: ("18-34" | "35-54" | "55+")[] | null;
+      /** Posts */
+      posts: components["schemas"]["PastPost"][];
+    };
+    /** RetroResult */
+    RetroResult: {
+      /** Posts */
+      posts: components["schemas"]["RetroPost"][];
+      /** Hits */
+      hits: number;
+      /** Brier */
+      brier: number;
+      /**
+       * Label
+       * @default Retrospective: not on your record
+       * @constant
+       */
+      label?: "Retrospective: not on your record";
+      /**
+       * Disclosure
+       * @default AI-simulated. Not a poll or a prediction of a real person
+       */
+      disclosure?: string;
+    };
     /** Reveal */
     Reveal: {
       /** You */
@@ -1500,6 +1716,7 @@ export interface components {
        * @description The seven days ending today, oldest first.
        */
       week: components["schemas"]["WeekDay"][];
+      record: components["schemas"]["VsAi"];
     };
     /** Rubric */
     Rubric: {
@@ -1547,6 +1764,60 @@ export interface components {
       /** Brier */
       brier: number;
     };
+    /** Seal */
+    Seal: {
+      /** Id */
+      id: string;
+      /**
+       * Sha256
+       * @description SHA-256 of `body`, the canonical JSON of the stored test.
+       */
+      sha256: string;
+      /** Sealed At */
+      sealed_at: string;
+    };
+    /** Sealed */
+    Sealed: {
+      /**
+       * Leaf Hash
+       * @description The AI's committed sim forecast leaf, its number hidden.
+       */
+      leaf_hash: string;
+      /**
+       * Date
+       * @description The day record it is committed in.
+       */
+      date: string;
+    };
+    /** SealedTest */
+    SealedTest: {
+      seal: components["schemas"]["Seal"];
+      /**
+       * Body
+       * @description The canonical JSON the seal hashes, byte for byte.
+       */
+      body: string;
+      /** Text */
+      text: string;
+      /** Gut */
+      gut: ("lands" | "flops") | null;
+      /** Landing Chance */
+      landing_chance: number;
+      /** Outcome */
+      outcome: ("landed" | "flopped") | null;
+      /** Marked At */
+      marked_at: string | null;
+      /**
+       * Brier
+       * @description The engine's Brier once marked.
+       */
+      brier: number | null;
+      /**
+       * Gut Brier
+       * @description The gut's Brier once marked, if a gut was given.
+       */
+      gut_brier: number | null;
+    };
     /** SegmentAnswer */
     SegmentAnswer: {
       /** Segment */
@@ -1560,6 +1831,30 @@ export interface components {
       prior_share: number;
       /** Yes Share */
       yes_share: number;
+    };
+    /** SegmentReaction */
+    SegmentReaction: {
+      /** Segment */
+      segment: string;
+      /**
+       * Label
+       * @description The segment in words.
+       */
+      label: string;
+      /** Country */
+      country: string;
+      /** Coverage Tier */
+      coverage_tier: string;
+      /**
+       * Weight
+       * @description Share of the audience's agents in this segment.
+       */
+      weight: number;
+      /**
+       * Landing
+       * @description Share who would like or share it.
+       */
+      landing: number;
     };
     /** SegmentShift */
     SegmentShift: {
@@ -1743,6 +2038,27 @@ export interface components {
       /** Engine Version */
       engine_version: string;
     };
+    /** TestRecord */
+    TestRecord: {
+      /** Tests */
+      tests: components["schemas"]["SealedTest"][];
+      /** Marked */
+      marked: number;
+      /**
+       * Hits
+       * @description Marked tests where the engine's side of 50% matched.
+       */
+      hits: number;
+      /** Brier */
+      brier: number | null;
+      /**
+       * Gut Brier
+       * @description Over marked tests that had a gut call.
+       */
+      gut_brier: number | null;
+      /** Gut Marked */
+      gut_marked: number;
+    };
     /** TopItem */
     TopItem: {
       /** Title */
@@ -1818,6 +2134,42 @@ export interface components {
       email?: string | null;
       /** Code */
       code?: string | null;
+    };
+    /** Voice */
+    Voice: {
+      /** Label */
+      label: string;
+      /** Text */
+      text: string;
+      /**
+       * Simulated
+       * @default Simulated account
+       * @constant
+       */
+      simulated?: "Simulated account";
+    };
+    /** VsAi */
+    VsAi: {
+      /**
+       * N
+       * @description Resolved questions this player called that the AI also called.
+       */
+      n: number;
+      /**
+       * You
+       * @description The player's mean Brier on them.
+       */
+      you: number | null;
+      /**
+       * Ai
+       * @description The AI's (sim) mean Brier on the same questions.
+       */
+      ai: number | null;
+      /**
+       * Wins
+       * @description Questions where the player's Brier was lower than the AI's.
+       */
+      wins: number;
     };
     /** WeekDay */
     WeekDay: {
@@ -3024,6 +3376,271 @@ export interface operations {
       };
       /** @description The sign-in state could not be read */
       503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  test_post_v1_tests_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PostTestRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PostTestOut"];
+        };
+      };
+      /** @description No live session */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description Over the test's cost cap or today's budget */
+      402: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description Not JSON, or not from an allowed origin */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description Invalid, or breaks acceptable use */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PolicyRefused"];
+        };
+      };
+      /** @description This address has used today's tests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description A spend or acceptable-use check could not run */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  retrospective_v1_tests_retrospective_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RetroRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RetroResult"];
+        };
+      };
+      /** @description No live session */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description Over the test's cost cap or today's budget */
+      402: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description Not JSON, or not from an allowed origin */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description Invalid, or breaks acceptable use */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PolicyRefused"];
+        };
+      };
+      /** @description This address has used today's tests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description A spend or acceptable-use check could not run */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  my_tests_v1_me_tests_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TestRecord"];
+        };
+      };
+      /** @description No live session */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description The sign-in state could not be read */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+    };
+  };
+  mark_v1_me_tests__test_id__outcome_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        test_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Mark"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SealedTest"];
+        };
+      };
+      /** @description No live session */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description Not JSON, or not from an allowed origin */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description No such post test */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotFound"];
+        };
+      };
+      /** @description Already marked */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Refused"];
+        };
+      };
+      /** @description The request is invalid */
+      422: {
         headers: {
           [name: string]: unknown;
         };

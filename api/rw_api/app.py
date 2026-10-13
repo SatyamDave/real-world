@@ -92,6 +92,8 @@ RefusedCode = Literal[
     "signed_out",
     "cross_origin",
     "account_unreadable",
+    "test_daily_limit",
+    "already_marked",
 ]
 
 
@@ -181,6 +183,18 @@ class WeekDay(BaseModel):
     brier: float | None = Field(description="Its Brier score once the question resolved.")
 
 
+class VsAi(BaseModel):
+    n: int = Field(description="Resolved questions this player called that the AI also called.")
+    you: float | None = Field(description="The player's mean Brier on them.")
+    ai: float | None = Field(description="The AI's (sim) mean Brier on the same questions.")
+    wins: int = Field(description="Questions where the player's Brier was lower than the AI's.")
+
+
+class Sealed(BaseModel):
+    leaf_hash: str = Field(description="The AI's committed sim forecast leaf, its number hidden.")
+    date: str = Field(description="The day record it is committed in.")
+
+
 class Reveal(BaseModel):
     you: float
     crowd: Crowd
@@ -190,11 +204,13 @@ class Reveal(BaseModel):
     brier: float | None
     streak: int
     week: list[WeekDay] = Field(description="The seven days ending today, oldest first.")
+    record: VsAi
 
 
 class Daily(BaseModel):
     date: str
     question: DailyQuestion
+    sealed: Sealed | None = Field(description="The AI's call on this question, sealed.")
     reveal: Reveal | None
 
 
@@ -1032,6 +1048,41 @@ def _week(conn: sqlite3.Connection, player_id: str, day: str, question_id: str) 
     return week
 
 
+def _sim_leaf(conn: sqlite3.Connection, day: str, question_id: str) -> dict[str, Any] | None:
+    for e in ledger.entries(conn, day):
+        entry = e["entry"]
+        if (entry["kind"], entry.get("forecaster"), entry.get("question_id")) == (
+            "forecast",
+            "sim",
+            question_id,
+        ):
+            return e
+    return None
+
+
+def _vs_ai(conn: sqlite3.Connection, player_id: str) -> VsAi:
+    """Each resolved question the player answered, scored against the sim forecast committed on
+    the day of the answer."""
+    rows = conn.execute(
+        "SELECT a.date, a.question_id, a.probability, r.outcome FROM daily_answers a"
+        " JOIN resolutions r USING (question_id) WHERE a.player_id = ?",
+        (player_id,),
+    ).fetchall()
+    pairs = []
+    for day, qid, p, outcome in rows:
+        leaf = _sim_leaf(conn, day, qid)
+        if leaf is not None:
+            ai = float(leaf["entry"]["probability"])
+            pairs.append((score.brier(p, outcome), score.brier(ai, outcome)))
+    n = len(pairs)
+    return VsAi(
+        n=n,
+        you=sum(y for y, _ in pairs) / n if n else None,
+        ai=sum(a for _, a in pairs) / n if n else None,
+        wins=sum(y < a for y, a in pairs),
+    )
+
+
 def _daily(conn: sqlite3.Connection, player_id: str | None) -> Daily:
     day, q = _daily_question(conn)
     question = DailyQuestion(
@@ -1045,8 +1096,10 @@ def _daily(conn: sqlite3.Connection, player_id: str | None) -> Daily:
         "SELECT probability FROM daily_answers WHERE question_id = ? AND player_id = ?",
         (q["id"], player_id),
     ).fetchone()
+    leaf = _sim_leaf(conn, day, q["id"])
+    sealed = None if leaf is None else Sealed(leaf_hash=leaf["leaf_hash"], date=day)
     if player_id is None or mine is None:
-        return Daily(date=day, question=question, reveal=None)
+        return Daily(date=day, question=question, sealed=sealed, reveal=None)
     you = float(mine[0])
 
     committed = {
@@ -1066,6 +1119,7 @@ def _daily(conn: sqlite3.Connection, player_id: str | None) -> Daily:
     return Daily(
         date=day,
         question=question,
+        sealed=sealed,
         reveal=Reveal(
             you=you,
             crowd=Crowd(mean=mean, count=count),
@@ -1075,6 +1129,7 @@ def _daily(conn: sqlite3.Connection, player_id: str | None) -> Daily:
             brier=None if outcome is None else score.brier(you, outcome),
             streak=_streak(conn, player_id, day),
             week=_week(conn, player_id, day, q["id"]),
+            record=_vs_ai(conn, player_id),
         ),
     )
 
@@ -1274,10 +1329,11 @@ from rw_api import routes_scores  # noqa: E402
 
 app.include_router(routes_scores.router)
 
-from rw_api import auth, routes_me  # noqa: E402
+from rw_api import auth, routes_me, routes_tests  # noqa: E402
 
 app.include_router(auth.router)
 app.include_router(routes_me.router)
+app.include_router(routes_tests.router)
 
 
 @app.exception_handler(auth.CrossOrigin)
