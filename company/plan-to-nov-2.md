@@ -2,7 +2,7 @@
 
 22 days, Oct 11 to Nov 1. Launch on Oct 27; submit the YC application by Nov 1. The Winter 2027 deadline is Nov 2 at 8:00 p.m. PT ([YC application](../research/business/088-yc-application.md)); we submit a day early so a failed upload is not fatal.
 
-What we launch, since [0012](../research/decisions/0012-will-it-land-and-call-it.md): "Will this land?" (post tests, sealed for signed-in people), "Call it" (the daily question against the AI's sealed call), the person's record, and the receipts and scores pages as the public proof. Forks and `POST /v1/simulate` stay as the engine's interface. Anything else waits ([CPO lens](../research/lenses/cpo.md), [CEO lens](../research/lenses/ceo.md)).
+What we launch, since [0016](../research/decisions/0016-icp-audiences.md): the message test for consumer (B2C) founders (a one-line product idea, 27 ideal-customer segments, a plain baseline, sealed for signed-in people), the backtest, the founder's marked real results, and the receipts and scores pages as the public record behind it. The daily question, forks and `POST /v1/simulate` stay as the engine's interface. Businesses and enterprise are not in the product. Anything else waits ([CPO lens](../research/lenses/cpo.md), [CEO lens](../research/lenses/ceo.md)).
 
 Amended 2026-10-12 by [decision 0011](../research/decisions/0011-consumer-product-and-api.md) (founder ruling): we also launch free email accounts, a skippable onboarding, a personal home with the daily briefing, saved forks with history and share links, a personal track record, and self-serve API keys with a daily cap per key. Today's question, receipts and the proof surfaces stay open with no sign-in. No paid plan, billing, teams or workspaces. Build order: the slices in 0011's build plan. A product slice not green by Gate 3 ships switched off; the open daily page and proof surfaces never wait on it.
 
@@ -66,18 +66,18 @@ Kill criterion: any spend path without a working fail-closed cap is switched off
 
 Must be true:
 - About 25 forecasts hashed, some already resolved in public, starting with the Brazil runoff on Oct 25 ([CEO lens](../research/lenses/ceo.md), [events calendar](../research/data/059-resolvable-events-calendar.md)).
-- The daily page works with no sign-up.
+- The message test and the public record work with no sign-up.
 - All public copy passes [`gtm/messaging.md`](../gtm/messaging.md).
 - A privacy notice is published before the first email address is collected (decisions-needed item 17).
-- Ten buyer calls done ([CEO lens](../research/lenses/ceo.md)).
+- Ten consumer-founder calls done ([CEO lens](../research/lenses/ceo.md)).
 
-Kill criterion: if the daily page cannot be used without sign-up, no Show HN; launch to the forecasting community only ([builders program](../research/product/086-builders-program.md)). The launch sequence is in [`gtm/launch-plan.md`](../gtm/launch-plan.md).
+Kill criterion: if the message test cannot be used without sign-up, no Show HN; launch to the forecasting community only ([builders program](../research/product/086-builders-program.md)). The launch sequence is in [`gtm/launch-plan.md`](../gtm/launch-plan.md).
 
 ## Gate 5: Nov 1, YC application submitted
 
 Must be true:
 - Application submitted, with the demo recorded from the live product and a known-flaws section written from measured numbers ([CEO lens](../research/lenses/ceo.md)).
 - Every number in it traces to the ledger, a committed experiment result, or a signed document.
-- Buyer commitments reported as they are: target three signed pilots ([CRO lens](../research/lenses/cro.md)); zero is reported as zero.
+- Founder usage reported as it is: tests marked and the engine's Brier against the baseline with n ([E010](../experiments/E010/PREREG.md)); zero is reported as zero. No pilot or enterprise commitment is a gate.
 
 Kill criterion: none moves the deadline. If a number cannot be sourced, it comes out of the application.

@@ -12,9 +12,9 @@ It is always shown next to its quality: the paired Brier differences in input 2.
 
 Targets from the [CEO lens](../research/lenses/ceo.md): at least 25 pre-registered forecasts by Oct 26, at least 12 resolved by Nov 7, and about 100 resolved before any comparative claim.
 
-## Product metric beside it (proposed in [0012](../research/decisions/0012-will-it-land-and-call-it.md), aimed at founders and companies by [0015](../research/decisions/0015-founders-and-companies.md))
+## Product metric beside it (proposed in [0012](../research/decisions/0012-will-it-land-and-call-it.md), aimed at consumer founders by [0016](../research/decisions/0016-icp-audiences.md))
 
-**People with three or more marked post tests.** A person who has sealed a post test and come back to mark three of them has used the product, trusted it enough to return, and added to the per-person record that proves the engine against their gut. Source: the `post_tests` table. Current value: 0. Waiting on the founder in [decisions-needed](decisions-needed.md) item 12.
+**Consumer founders with three or more marked tests.** A founder who has sealed a message test and come back to mark three of them with what really happened has used the product, trusted it enough to return, and added to the record that proves the engine against the plain baseline and their gut. Source: the `post_tests` table. The share of founders who mark a sealed test within 14 days is its leading signal, and [E010](../experiments/E010/PREREG.md) reads the engine against the baseline at 100 marked tests. Current value: 0. Waiting on the founder in [decisions-needed](decisions-needed.md) item 12.
 
 ## The five input metrics
 
@@ -24,7 +24,7 @@ Targets from the [CEO lens](../research/lenses/ceo.md): at least 25 pre-register
 | 2 | Engine Brier minus plain-LLM Brier, and minus market Brier, with n and interval | Paired by question, day-block bootstrap; from the scorer, analysed in [E004](../experiments/E004/PREREG.md) | Interval entirely below zero at n = 100 | Decides whether the population simulation adds value ([red team](../research/lenses/red-team.md), [VC lens](../research/lenses/vc.md)) |
 | 3 | Median simulated-to-survey SD ratio, Tier A and B countries | From the nightly spread audit, tested in [E002](../experiments/E002/PREREG.md) | 0.8 to 1.2 | Tells us whether the agents are a population or one voice repeated ([CEO lens](../research/lenses/ceo.md), [failure modes](../research/science/018-failure-modes.md)) |
 | 4 | Day-7 return of daily-question players | Share of day-0 submitters who submit again on day 6, 7 or 8; from submission rows | Not set until a week of data exists | Tells us whether the panel moat exists ([CPO lens](../research/lenses/cpo.md), [daily question](../research/product/077-daily-question-mechanics.md)) |
-| 5 | Buyers with a written commitment | Signed pilots or LOIs, counted with their dollar value; from the signed documents | 3 pilots by Nov 2 ([CRO lens](../research/lenses/cro.md)); at least 1 named LOI ([VC lens](../research/lenses/vc.md)) | Zero means a research project with a nice page ([VC lens](../research/lenses/vc.md)) |
+| 5 | Marked message tests, and engine Brier minus baseline Brier on them | Tests marked Landed or Flopped, with n; from the `post_tests` table, analysed in [E010](../experiments/E010/PREREG.md) | 100 marked tests for E010; no target before first use | Zero marked tests means nobody trusts the result enough to check it ([0016](../research/decisions/0016-icp-audiences.md)) |
 
 Current value of all five on 2026-10-11: not measured yet.
 
@@ -35,4 +35,4 @@ Watched, not steered by. A breach stops work on whatever caused it.
 - Nightly LLM spend: budget $25, alarm at $60, every cap fails closed ([CEO lens](../research/lenses/ceo.md), [CFO lens](../research/lenses/cfo.md)).
 - Measured standard cost per 1,000 agent-steps: at or below $0.33 keeps the proposed price ([CFO lens](../research/lenses/cfo.md)).
 - Data sources in the shipped pipeline with written commercial clearance, out of the total in use: 100% by Oct 27 ([red team](../research/lenses/red-team.md)).
-- First-minute activation: share of new visitors who submit the daily question or open a fork card within 60 seconds; below 30% means the first screen is wrong ([CPO lens](../research/lenses/cpo.md)).
+- First-minute activation: share of new visitors who run a message test within 60 seconds; below 30% means the first screen is wrong ([CPO lens](../research/lenses/cpo.md)).

@@ -1,20 +1,18 @@
 # Real World
 
-**Simulations with receipts.**
+Message testing for consumer founders. Write what you are building in one line, paste a message, and see how your ideal customer reacts before you ship it ([decision 0016](research/decisions/0016-icp-audiences.md)).
 
-Know how a post will land before you post it, and call the news against an AI that seals its calls first ([decision 0012](research/decisions/0012-will-it-land-and-call-it.md)).
-
-Under both runs the engine: simulated populations of 16 countries that take in each morning's news, polls and markets, a typed decision per segment, and a ledger that seals every forecast before its outcome and scores it in public, misses included. Every result carries a coverage tier and the label AI-simulated.
+A test simulates your ideal consumer customer, not a country. The engine expands your description into 27 segments (attitude to new products x price sensitivity x familiarity with the category), asks each one a typed decision call from Jev, and returns who would sign up, try or buy, who would not, and the objection that stops them. Every test also runs a plain Jev baseline with no segments, so you can see whether the segments add anything. Every result is labelled AI-simulated. It is free while in beta; enterprise on request.
 
 ## How people use it
 
 | Who | Starts at | What they get |
 | --- | --- | --- |
-| Person about to post | `/` or `/simulate`, "Test a post" | Paste a post, pick an audience, record your gut, and get the landing chance, the reaction mix, the best and worst audiences, two simulated accounts and a rewrite. Signed in, the test is sealed and marked "Landed" or "Flopped" later on `/record`. |
-| Person calling the news | `/call` Call it | Today's question against the AI, whose call is sealed before you answer; then you, visitors, the AI and the market side by side, and your record against the AI. |
-| Skeptic | `/scores`, `/receipts` | The AI's public record: every forecast hashed before its outcome, verified in the browser, and its skill with n and an interval. |
+| Consumer founder | `/` | Describe the product in one line and the ideal customer in plain words, paste a message, record your gut, and get the share who would act across 27 segments, the objections, the baseline's answer and a rewrite. Signed in, the test is sealed and later marked Landed or Flopped, with an optional real metric and a note; a mark cannot change. |
+| Consumer founder with past messages | `/simulate`, Backtest | Up to 10 messages you already shipped, each with what really happened. The engine and the baseline predict every one; the result shows hits, Brier and a calibration table for both. Labelled "Backtest: not on your record". |
+| Skeptic | `/scores`, `/receipts` | The track record: every daily forecast the engine made about real events, hashed before its outcome, verified in the browser and scored with n and an interval, misses included. |
 
-The app is a ledger desk ([decision 0014](research/decisions/0014-ledger-desk.md)): a top bar and a one-line ledger tape on every page; `/` asks "Will this land?" beside today's simulated populations and lists use cases by who they serve; `/simulate` runs a post test (and the retrospective check) or a fork (drawn per topic and day). Routes: `/call` the daily question; `/record` your sealed tests (sign-in); `/sign-in`; `/scores`; `/receipts`; `/questions/{id}`; `/acceptable-use`, `/privacy`, `/terms`. The engine's forks API (`POST /v1/simulate`) stays for builders but is not an app surface. Specs: [product/README.md](product/README.md).
+The track record is the evidence behind the product, not the product. The engine forecasts real events every day and seals each forecast before the outcome ([decision 0012](research/decisions/0012-will-it-land-and-call-it.md)); the web app links it as one "Public record" and explains it on "How it works". Marked tests score the engine against the baseline and against your gut on your own messages ([E010](experiments/E010/PREREG.md)). Routes: `/` and `/simulate` message tests, `/record` your sealed tests (sign-in), `/sign-in`, `/scores`, `/receipts`, `/questions/{id}`, `/acceptable-use`, `/privacy`, `/terms`. The engine's forks API (`POST /v1/simulate`) and the daily question stay as the track record's interface, not as product surfaces. Specs: [product/README.md](product/README.md).
 
 ## Run it
 
@@ -30,9 +28,9 @@ What you see at each step:
 
 1. `make daily-fixtures` prints one block per day: the steps that ran, model calls and the dollars a real model would have cost (a keyless run spends nothing), forecasts committed, the day's root hash, questions scored, countries marked experimental, and the anchor status (`not anchored: fixture days are not sent to public timestamp servers` for every fixture day). The first run makes about 180-210 fake model calls per day; a second run prints `ran: nothing (all steps ok)` with `model calls 0` for every day. `make dev` seeds these days on its own when `var/` is empty.
 2. `make dev` prints the web URL (Vite moves to the next port when 5173 is taken) and the API docs are at http://localhost:8000/docs. `curl localhost:8000/healthz` returns `{"ok":true}`. To run a second stack beside the first, pick other ports and another state folder: `RW_HOME=var2 make dev API_PORT=8001 WEB_PORT=5174`.
-3. The web app opens on "Will this land?". Paste a post and click "Test it", or pick a use case; on `/simulate` pick your gut and click "Test it": on the fake model the result appears within a second, with up to 24 audience segments spread across the chosen countries, the reaction mix, the best and worst audiences, and placeholder text (`fake-…`) where a real model writes the two accounts and the rewrite. "Check it on posts you already published" runs the retrospective check.
+3. The web app opens on the message test. Describe the product in one line and your ideal customer, paste a message and click "Test my message": on the fake model the result appears within a second, with the 27 customer segments, the baseline, the objections, and placeholder text (`fake-…`) where a real model writes the accounts and the rewrite. "Backtest" runs up to 10 past messages against what really happened.
 4. To seal tests, open "Sign in", type any email, and read the six-digit code from the API's log (`sign-in email written to …: link …, code 123456`) or `$RW_HOME/outbox/`; no email key is needed on localhost. Each test you run is then sealed; `/record` lists them with "Landed" and "Flopped", the engine, baseline and gut Brier and "Check seal".
-5. "Call it" shows today's question with "The AI's call is sealed" and its leaf hash. Move the slider and click "Call it": the reveal shows you, visitors, the AI and the market, your streak and your record against the AI. On fixtures the page stays answerable until 2026-10-28, the last fixture question's `closes`; after that the daily cycle must run on a later day.
+5. "Public record" opens the track record: the daily question with "The AI's call is sealed" and its leaf hash. On fixtures the question stays answerable until 2026-10-28, the last fixture question's `closes`; after that the daily cycle must run on a later day.
 6. "Receipts" opens the day records with their receipts; "Verify in this browser" recomputes every leaf, root and chain link with WebCrypto and reports `Verified 5 days and N receipts back to the first day`. The same check from the terminal: `uv run python -m rw.ledger verify --date 2026-10-05` prints `OK`.
 From the terminal, a post test is one call from an allowed origin:
 
@@ -91,13 +89,13 @@ Then `make daily-fixtures` or `make dev` run on the real models.
 | [`papers/`](papers/README.md) | Our public research papers. Every number in them comes from an artifact in this repo, and they are updated after every merged PR. | n/a |
 | [`product/`](product/README.md) | One plain-language spec per product surface: what it does, who it is for, how we know it works, and which code owns it. | n/a |
 | [`experiments/`](experiments/README.md) | Pre-registered experiments, hashed into a registry before they run, and their committed results, misses included. Papers cite only these. | n/a |
-| [`gtm/`](gtm/README.md) | Who uses Real World first, pricing, the launch plan, and the claims we may and may not make; B2B material marked paused. | n/a |
+| [`gtm/`](gtm/README.md) | Who uses Real World first (consumer founders), pricing, the launch plan, and the claims we may and may not make. | n/a |
 | [`company/`](company/README.md) | The north-star metric, the plan to Nov 2 with its gates, the risk register, the operating cadence, and decisions only the founder can make. | n/a |
-| [`engine/`](engine/README.md) | The Python package `rw`: settings, the model gateway, the licence gate, the population, beliefs, news, forecasts, the ledger, scoring, forks, post tests (`reaction.py`) and the daily cycle. | [will it land](product/will-it-land.md), [world](product/world.md), [benchmark](product/benchmark.md), [receipts](product/receipts.md) |
-| [`api/`](api/README.md) | The FastAPI app `rw_api`: every `/v1` endpoint, sign-in, sealed post tests, fork jobs, idempotency, server-sent events and the committed `openapi.json`. | [will it land](product/will-it-land.md), [call it](product/daily-question.md), [accounts](product/accounts.md), [simulate API](product/simulate-api.md) |
+| [`engine/`](engine/README.md) | The Python package `rw`: settings, the model gateway, the licence gate, the population, beliefs, news, forecasts, the ledger, scoring, forks, message tests (`reaction.py`) and the daily cycle. | [will it land](product/will-it-land.md), [world](product/world.md), [benchmark](product/benchmark.md), [receipts](product/receipts.md) |
+| [`api/`](api/README.md) | The FastAPI app `rw_api`: every `/v1` endpoint, sign-in, sealed message tests, fork jobs, idempotency, server-sent events and the committed `openapi.json`. | [will it land](product/will-it-land.md), [daily question](product/daily-question.md), [accounts](product/accounts.md), [simulate API](product/simulate-api.md) |
 | [`sdk/`](sdk/CLAUDE.md) | The [Python](sdk/python/README.md) and [TypeScript](sdk/typescript/README.md) clients, generated from `api/openapi.json`, each README opening with its quickstart. | [SDKs](product/sdks.md) |
-| [`data/`](data/README.md) | The licence table, the country and topic vocabularies, bundled sample data and fixtures. | [world](product/world.md) |
-| [`web/`](web/README.md) | The Vite + React web app: Will this land?, Call it, your record and the proof pages. | [web app](product/web-app.md) |
+| [`data/`](data/README.md) | The licence table, the country and topic vocabularies for the public record, bundled sample data and fixtures. | [world](product/world.md) |
+| [`web/`](web/README.md) | The Vite + React web app: the message test, backtest, your tests and the public record pages. | [web app](product/web-app.md) |
 
 The layout and module boundaries come from [decision 0001](research/decisions/0001-architecture.md).
 

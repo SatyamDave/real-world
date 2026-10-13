@@ -1,16 +1,14 @@
 # Landing page (pre-launch)
 
-## Positioning since decision 0012 (applies to every landing change)
+## Positioning since decision 0016 (applies to every landing change)
 
-Since decision 0015 the product is message testing for founders and companies, and the landing page adopts `web/src/styles/tokens.css` (the "Neutral" look in [design](design.md)) as its tokens when it merges.
+[Decision 0016](../research/decisions/0016-icp-audiences.md) makes the product message testing for consumer (B2C) founders: a message is tested on the founder's ideal customer, in 27 segments, beside a plain baseline. The landing page adopts `web/src/styles/tokens.css` (the "Neutral" look in [design](design.md)) as its tokens when it merges, and sells that one product, in this order, and nothing else:
 
-[Decision 0012](../research/decisions/0012-will-it-land-and-call-it.md) makes the product two jobs on the engine. The landing page sells the same two jobs, in this order, and nothing else:
-
-1. **Lead with "Will this land?"**: the headline promises knowing how a post lands before posting it, and the first action is pasting a post (or joining the waitlist for it). A live demo box that runs a post test, when the API is reachable, beats any explanation.
-2. **Then "Call it"**: today's question against the AI, whose call is sealed before anyone answers.
-3. **Proof, not claims**: sealed calls and the public record are the reason to believe. No accuracy number, no "beats", no "world model" ([messaging](../gtm/messaging.md)).
-4. **No globe-first hero or developer pitch** above the fold: the globe may stay as decoration. The simulator's use cases ([decision 0014](../research/decisions/0014-ledger-desk.md)) may follow the two jobs.
-5. **Same words as the app**: post test, landing chance, seal, gut, mark, call ([glossary](glossary.md)).
+1. **Lead with the message test**: the headline promises knowing how your ideal customer reacts before you ship, and the first action is writing what you are building and pasting a message (or joining the waitlist for it). A live demo box that runs a test, when the API is reachable, beats any explanation.
+2. **Then the real results**: tests are sealed, then marked Landed or Flopped with what really happened, and the engine is scored against the baseline and the founder's gut. Backtesting up to 10 past messages is the way to check it today.
+3. **Proof, not claims**: the public record of sealed daily forecasts is the track record behind the product, shown as one "Public record" link, not as a second product. No accuracy number, no "beats", no "world model" ([messaging](../gtm/messaging.md)).
+4. **No globe-first hero, country selector, population list or developer pitch** above the fold; no B2B or enterprise pitch. The only mention of businesses is "Enterprise on request." beside "Free while in beta."
+5. **Same words as the app**: message test, would act, baseline, seal, gut, mark, backtest ([glossary](glossary.md)).
 
 The sections below describe the page as first built; where they conflict with this list, this list wins until the page is rebuilt.
 

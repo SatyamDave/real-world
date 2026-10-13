@@ -4,7 +4,7 @@
 
 ## Scope
 
-- One spec per surface: `product/<surface>.md`. The product is two jobs, [Will this land?](will-it-land.md) and [Call it](daily-question.md), with [your record](track-record.md) and the public proof (receipts, scores, question pages), per [decision 0012](../research/decisions/0012-will-it-land-and-call-it.md). Forks, the world and `POST /v1/simulate` are the engine's interface, not product surfaces. A new surface needs a decision record first.
+- One spec per surface: `product/<surface>.md`. The product is the [message test](will-it-land.md) for consumer (B2C) founders, with its backtest, [your tests](track-record.md) and one "Public record" link to the proof (receipts, scores, question pages, the [daily question](daily-question.md)), per [decision 0016](../research/decisions/0016-icp-audiences.md). Forks, the world and `POST /v1/simulate` are the engine's interface, not product surfaces. No spec pitches businesses, enterprise, country populations, an Event tab, "Call it" or a ledger tape as the product. A new surface needs a decision record first.
 - Every product screen does one job a person can finish in under a minute, proves itself with something sealed before the outcome, and never asks for trust it has not earned.
 - A field, endpoint or event is defined once, in the JSON Schema the code generates from. Specs link it; they never restate it in prose.
 - A term is defined once. Before using a word like agent-step, world snapshot, fork, ensemble member, receipt, skill or coverage tier, check how the existing specs define it, and reuse that definition.
@@ -18,7 +18,7 @@
 - "How we know it works" is one measurable outcome and the automated check that proves it, by name.
 - "What it is not" names the cuts the lenses made for this surface.
 - Every claim about users, cost or accuracy links a research note or a committed result.
-- Every output shows ensemble spread and coverage tier, never a bare point estimate, and every simulated output is labelled as simulated.
+- Every output shows its spread (and the coverage tier on country results in the public record), never a bare point estimate, and every simulated output is labelled as simulated.
 - Spend paths name their cap and say they fail closed when the cap cannot be checked.
 
 ## What gets rejected

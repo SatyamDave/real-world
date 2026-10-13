@@ -5,7 +5,10 @@ One definition per term. Specs, code comments and UI copy use these words with t
 | Term | Meaning | Do not write |
 | --- | --- | --- |
 | Agent | One simulated person: a row of fixed traits (country, age band, sex, education, urban) and a belief per topic. Agents are numbers; the model is not called per agent. | persona, respondent, cohort |
-| Segment | Agents sharing country, age band and education. The model is called once per segment, and agents draw from the segment's answer with their own offset. | subpopulation |
+| Segment | Agents sharing country, age band and education, in the public record's engine. The model is called once per segment, and agents draw from the segment's answer with their own offset. | subpopulation |
+| Customer segment | One of the 27 kinds of the founder's ideal customer in a message test: attitude to new products x price sensitivity x familiarity with the category, equally weighted ([message test](will-it-land.md)). | |
+| Ideal customer | The founder's plain-words description of who buys, expanded into the 27 customer segments. | |
+| Baseline | One plain Jev call per test with no segments, returned as `baseline_intent` and scored beside the engine. | |
 | Topic | One belief every agent holds, listed in `data/topics.csv` (for example `inflation_worry`). Stored on a logit scale, shown as a share from 0 to 1. | |
 | World snapshot | The full agent table for one date, `var/snapshots/YYYY-MM-DD/agents.parquet`. Its id is the date. "Today's world" is the latest committed snapshot. | |
 | Daily cycle | The eight steps that produce a snapshot and the day's forecasts: ingest, assimilate, forecast, publish, anchor, score, learn, improve. | |
@@ -24,17 +27,17 @@ One definition per term. Specs, code comments and UI copy use these words with t
 | Inclusion proof | The sibling hashes from one leaf up to the day's Merkle root; verifying it shows the leaf is in the day record. | |
 | Reliability diagram | Forecasts binned by stated probability against the share that resolved yes; the diagonal is perfect calibration. | |
 | Run log | The recorded steps, model calls, tokens and cost of one daily cycle, from `stage_runs` and `llm_calls`. | |
-| Account | A person's free sign-in, made by email, holding their sessions and sealed post tests ([accounts](accounts.md)). | |
-| Record | One account's sealed post tests with their marks, scored engine against gut, and one browser's calls against the AI on resolved questions ([track record](track-record.md)). | |
-| Primitive | One kind of simulation the simulator runs: Reaction (a post test), Event (a fork) or Call (a sealed probability) ([home and simulator](playground.md)). | |
+| Account | A person's free sign-in, made by email, holding their sessions and sealed message tests ([accounts](accounts.md)). | |
+| Record | One account's sealed message tests with their marks, scored engine against baseline and gut ([track record](track-record.md)). | |
+| Track record | The public hashed forecasts, receipts and scores the engine makes about real events every day; the proof behind the product, not the product. | |
+| Backtest | Up to 10 messages a founder already shipped, each with what really happened, predicted by the engine and the baseline; labelled "Backtest: not on your record" and stored nowhere. | |
 | Use case | A prepared simulator input for one real decision, in `web/src/usecases.ts`, grouped by who it serves. | |
-| Ledger tape | The one mono line under the top bar on every page, from `GET /v1/status`: the last cycle, the latest receipt (the newest day record's hash), the anchor, the model and today's spend. | |
-| Message | What a founder or team tests: a launch post, a price change, a headline or an announcement, up to 500 characters. The user-facing word; the API keeps its field names (`text`, `posts`). | |
-| Post test | One run of a message (a post) through the engine; on screen "Message test" for a chosen audience: landing chance, reaction mix, best and worst segments, two simulated accounts and a rewrite ([will it land](will-it-land.md)). | |
-| Landing chance | The share of the chosen audience, weighted by population, that would like or share a post, with its p10-p90 across segments. Uncalibrated until 100 marked post tests. | |
+| Message | What a founder tests: a launch post, a price line, a headline or an ad line, up to 500 characters. The user-facing word; the API keeps its field names (`text`, `posts`). | |
+| Post test | One run of a message through the engine; on screen "Message test" for the ideal customer: would act across 27 customer segments, the baseline, objections, best and worst segments and a rewrite ([message test](will-it-land.md)). | |
+| Would act | The share of simulated ideal customers that would sign up, try or buy because of a message, with its spread across the 27 customer segments. Uncalibrated until 100 marked tests. | |
 | Seal | The SHA-256 of a stored post test's canonical JSON, made when the test is made; the database refuses changes to a sealed test. | |
 | Gut | The person's own call on a post, "lands" or "flops", recorded before the result shows; the baseline the engine is scored against. | |
-| Mark | The person's one-time record of how a sealed post did: "landed" or "flopped". | |
-| Call | A visitor's answer to the daily question, set against the AI's sealed `sim` forecast ([call it](daily-question.md)). | |
+| Mark | The person's one-time, immutable record of how a sealed test really did: "landed" or "flopped", with an optional real metric and note. | |
+| Call | A visitor's answer to the daily question, set against the AI's sealed `sim` forecast ([daily question](daily-question.md)). | |
 | Anonymous allowance | Forks a visitor without an account may start per address per UTC day (`FORK_ANON_PER_DAY`). | |
 | Replay | Re-running a step on the recorded model outputs in `llm_calls`; a differing result is shown as a diff. | |

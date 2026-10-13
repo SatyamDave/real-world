@@ -1,5 +1,7 @@
 # Pre-launch ads
 
+**Since [0016](../research/decisions/0016-icp-audiences.md):** the product the ads point at is message testing for consumer founders, and creative targets consumer founders, not forecasters or businesses. The allow-list below was written for the earlier record-first page: `hashed` and `public-score` describe the track record and may run only as proof lines beside a message-testing headline, and `your-call` (the daily question) is paused. New headlines are added here and in `landing/src/copy/headlines.ts` in the same PR as the landing copy, each built from a claim in [`messaging.md`](messaging.md).
+
 Paid acquisition for the pre-launch landing page only, Oct 13 to Oct 26. This is a message test and a first-cohort collector, not the launch. The Oct 27 launch channels are unchanged and organic: Show HN points at the live daily page, never at this page or a waitlist ([launch plan](launch-plan.md), [product/101](../research/product/101-prelaunch-landing-waitlist-ads.md)). Running small paid ads here rests on [product/101](../research/product/101-prelaunch-landing-waitlist-ads.md) and the CPO lens guidance to keep spend small until cost per signup, message and day-0-to-day-7 numbers exist ([CPO lens](../research/lenses/cpo.md)).
 
 ## UTM scheme
@@ -12,7 +14,7 @@ Every ad link carries these parameters. The landing page reads `utm_content` to 
 | `utm_medium` | `paid_social` | one value for both networks |
 | `utm_campaign` | `prelaunch_waitlist_2026_10` | one campaign for the whole test |
 | `utm_content` | a headline id from the allow-list below | exactly the id; an unknown or missing value falls back to the default headline |
-| `utm_term` | a short audience slug, lower-case with underscores (for example `forecasting`, `data_science`) | optional; for reporting only, never shown on the page |
+| `utm_term` | a short audience slug, lower-case with underscores (for example `consumer_founders`, `indie_makers`) | optional; for reporting only, never shown on the page |
 
 Example: `?utm_source=reddit&utm_medium=paid_social&utm_campaign=prelaunch_waitlist_2026_10&utm_content=receipts&utm_term=forecasting`.
 
