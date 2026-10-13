@@ -94,6 +94,7 @@ class PostTestResult(BaseModel):
     mix: Mix
     best: list[SegmentReaction]
     worst: list[SegmentReaction]
+    audiences: list[SegmentReaction] = Field(description="Every segment asked, most likely first.")
     voices: list[Voice]
     rewrite: str
     segments: int
@@ -265,6 +266,7 @@ def run(req: PostTestRequest, conn: sqlite3.Connection, budget: llm.Budget) -> P
         mix=Mix(**{k: round(float(v), 6) for k, v in zip(REACTIONS.values(), mix, strict=True)}),
         best=best,
         worst=worst,
+        audiences=ranked,
         voices=voices,
         rewrite=rewrite,
         segments=len(segments),

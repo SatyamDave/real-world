@@ -8,7 +8,12 @@ export const ROUTES: Route[] = [
   {
     path: "/",
     description:
-      "Test a post on simulated audiences in 16 countries before you post it. AI-simulated, and sealed when you sign in.",
+      "Learn to simulate: three primitives, Reaction, Event and Call, on simulated populations of 16 countries. AI-simulated.",
+  },
+  {
+    path: "/playground",
+    description:
+      "Run a simulation: test a post on simulated audiences or follow beliefs after one event, from ready use cases.",
   },
   {
     path: "/call",

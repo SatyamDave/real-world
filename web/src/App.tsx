@@ -1,11 +1,11 @@
-import { ApiError, type Country, type SystemStatus } from "@real-world/sdk";
+import { ApiError, type SystemStatus } from "@real-world/sdk";
 import { type ComponentType, lazy, Suspense, useEffect, useState } from "react";
 import { AcceptableUse } from "./AcceptableUse";
 import { rw } from "./api";
+import { Home } from "./Home";
 import { ReceiptsPage } from "./Receipts";
 import { applyMeta } from "./seo";
 import { signInHref, useSession } from "./session";
-import { WillItLand } from "./WillItLand";
 
 // A file in pages/ is a route: `/<name>` and `/<name>/<param>`. Its default export is the page, and
 // its named export `title` is the document title, read once the module loads.
@@ -21,7 +21,8 @@ const PAGES: Record<string, ComponentType<{ param?: string }>> = Object.fromEntr
   ]),
 );
 const NAV = [
-  ["Will this land?", "/"],
+  ["Home", "/"],
+  ["Playground", "/playground"],
   ["Call it", "/call"],
   ["Your record", "/record"],
 ] as const;
@@ -146,11 +147,12 @@ export function LoadError({
   );
 }
 
-function Header({ path }: { path: string }) {
+function Sidebar({ path }: { path: string }) {
   const section = `/${path.split("/")[1]}`;
   const session = useSession();
+  const status = useLoad(() => rw.status());
   return (
-    <header className="topbar">
+    <aside className="sidebar">
       <a href="#main" className="skip">
         Skip to content
       </a>
@@ -168,24 +170,35 @@ function Header({ path }: { path: string }) {
             {label}
           </a>
         ))}
-        <span className="nav-proof">
-          {PROOF.map(([label, href]) => (
-            <a key={href} href={href} aria-current={href === section ? "page" : undefined}>
-              {label}
-            </a>
-          ))}
-        </span>
+        <span className="side-label">Proof</span>
+        {PROOF.map(([label, href]) => (
+          <a key={href} href={href} aria-current={href === section ? "page" : undefined}>
+            {label}
+          </a>
+        ))}
+      </nav>
+      <div className="side-foot">
+        <div className="side-card">
+          <span className="muted small">Spend today</span>
+          <strong className="mono">
+            {status.data
+              ? status.data.provider === "fake"
+                ? "$0.00 (fake model)"
+                : `$${status.data.spent_today_usd.toFixed(2)}`
+              : "…"}
+          </strong>
+        </div>
         {session.data ? (
-          <a href="/record" className="nav-account">
+          <a href="/record" className="side-account">
             {session.data.email}
           </a>
         ) : session.data === null ? (
-          <a href={signInHref()} className="nav-account">
+          <a href={signInHref()} className="side-account">
             Sign in
           </a>
         ) : null}
-      </nav>
-    </header>
+      </div>
+    </aside>
   );
 }
 
@@ -194,7 +207,7 @@ export function NotFound() {
     <section className="card notfound">
       <h1>Page not found</h1>
       <p className="muted">
-        No page at this address. <a href="/">Test a post</a>
+        No page at this address. <a href="/">Go home</a>
       </p>
     </section>
   );
@@ -252,15 +265,10 @@ function Footer() {
 }
 
 const TITLES: Record<string, string> = {
-  "/": "Will this land? · Real World",
+  "/": "Learn to simulate · Real World",
   "/receipts": "Receipts · Real World",
   "/acceptable-use": "Acceptable use · Real World",
 };
-
-function Home({ countries }: { countries: Country[] }) {
-  const session = useSession();
-  return <WillItLand countries={countries} signedIn={Boolean(session.data)} />;
-}
 
 export function App({ path = location.pathname }: { path?: string }) {
   const { data: w, error, retry } = useLoad(() => rw.world());
@@ -273,25 +281,27 @@ export function App({ path = location.pathname }: { path?: string }) {
   }, [path, Page]);
   useEffect(() => applyMeta(import.meta.env.VITE_PUBLIC_ORIGIN ?? location.origin, path), [path]);
   return (
-    <>
-      <Header path={path} />
-      <main id="main" tabIndex={-1} className="page">
-        {error && known && <LoadError what="today's world" error={error} retry={retry} />}
-        {path === "/receipts" ? (
-          <ReceiptsPage tiers={tiers} />
-        ) : path === "/acceptable-use" ? (
-          <AcceptableUse />
-        ) : path === "/" ? (
-          <Home countries={w?.countries ?? []} />
-        ) : Page && page ? (
-          <Suspense fallback={<Loading what="the page" />}>
-            <Page param={page[2] === undefined ? undefined : decodeURIComponent(page[2])} />
-          </Suspense>
-        ) : (
-          <NotFound />
-        )}
-      </main>
-      <Footer />
-    </>
+    <div className="console">
+      <Sidebar path={path} />
+      <div className="console-main">
+        <main id="main" tabIndex={-1} className="page">
+          {error && known && <LoadError what="today's world" error={error} retry={retry} />}
+          {path === "/receipts" ? (
+            <ReceiptsPage tiers={tiers} />
+          ) : path === "/acceptable-use" ? (
+            <AcceptableUse />
+          ) : path === "/" ? (
+            <Home />
+          ) : Page && page ? (
+            <Suspense fallback={<Loading what="the page" />}>
+              <Page param={page[2] === undefined ? undefined : decodeURIComponent(page[2])} />
+            </Suspense>
+          ) : (
+            <NotFound />
+          )}
+        </main>
+        <Footer />
+      </div>
+    </div>
   );
 }
