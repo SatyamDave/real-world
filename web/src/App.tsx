@@ -1,5 +1,5 @@
 import { ApiError, type SystemStatus } from "@real-world/sdk";
-import { type ComponentType, lazy, Suspense, useEffect, useState } from "react";
+import { type ComponentType, lazy, type ReactNode, Suspense, useEffect, useState } from "react";
 import { AcceptableUse } from "./AcceptableUse";
 import { rw } from "./api";
 import { Home } from "./Home";
@@ -49,6 +49,9 @@ export const usd = (v: number) => (v < 0.005 ? "under 1 cent" : `$${v.toFixed(2)
 
 export const topicLabel = (topic: string) =>
   topic.charAt(0).toUpperCase() + topic.slice(1).replaceAll("_", " ");
+
+/** A label as the start of a sentence: its first character upper-cased. */
+export const sentence = (label: string) => label.charAt(0).toUpperCase() + label.slice(1);
 
 export const shortDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
@@ -213,6 +216,33 @@ export function SealGrid({ hash, large = false }: { hash?: string | null; large?
   );
 }
 
+export const ANCHOR: Record<string, string> = {
+  anchored: "anchored",
+  pending: "anchor pending",
+  not_anchored: "not anchored",
+};
+
+/** A seal drawn beside two lines: what is sealed, then the hash and where to check it. */
+export function SealRow({
+  hash,
+  title,
+  children,
+}: {
+  hash?: string | null;
+  title: ReactNode;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="seal-row">
+      <SealGrid hash={hash} large />
+      <div>
+        <p className="seal-row-title">{title}</p>
+        {children && <div className="mono seal-row-meta">{children}</div>}
+      </div>
+    </div>
+  );
+}
+
 export function NotFound() {
   return (
     <section className="card notfound">
@@ -227,7 +257,7 @@ export function NotFound() {
 const SPENT_NOTHING = "fake (nothing spent)";
 const head = (hash: string) => `${hash.slice(0, 4)}…${hash.slice(-4)}`;
 
-/** One mono line from GET /v1/status: the cycle, the ledger head, the model and today's spend. */
+/** One mono line from GET /v1/status: the cycle, the latest receipt, the model and today's spend. */
 export function statusLine(s: SystemStatus): string {
   if (!s.date) return "No cycle has run yet";
   const fake = s.provider === "fake";
@@ -235,7 +265,7 @@ export function statusLine(s: SystemStatus): string {
     s.anchor === "anchored" ? `anchored ${s.anchored_at}` : (s.anchor ?? "").replace("_", " ");
   return [
     `Last cycle ${s.date} ${s.cycle_status.replace("_", " ")}`,
-    `ledger head ${s.record_hash ? head(s.record_hash) : "none"}`,
+    `latest receipt ${s.record_hash ? head(s.record_hash) : "none"}`,
     `anchor: ${anchor || "none"}`,
     `model: ${fake ? SPENT_NOTHING : s.model}`,
     `spend today $${(fake ? 0 : s.spent_today_usd).toFixed(2)} of $${s.nightly_budget_usd.toFixed(2)}`,
@@ -280,7 +310,7 @@ export function App({ path = location.pathname }: { path?: string }) {
   return (
     <div className="site">
       <Header path={path} />
-      <Tape />
+      {path !== "/" && <Tape />}
       <main id="main" tabIndex={-1} className="page">
         {error && known && <LoadError what="today's world" error={error} retry={retry} />}
         {path === "/receipts" ? (
@@ -297,6 +327,8 @@ export function App({ path = location.pathname }: { path?: string }) {
           <NotFound />
         )}
       </main>
+      {/* The home leads with who it is for; the ledger tape follows the page there. */}
+      {path === "/" && <Tape />}
       <Footer />
     </div>
   );

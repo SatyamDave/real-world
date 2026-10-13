@@ -1,6 +1,6 @@
 import type { Person, SealedTest } from "@real-world/sdk";
 import { useState } from "react";
-import { failure, LoadError, Loading, pct, plural, useLoad } from "../App";
+import { failure, LoadError, Loading, pct, plural, SealGrid, shortDate, useLoad } from "../App";
 import { account, sealOf, signInHref, useSession } from "../session";
 
 export const title = "Your record";
@@ -10,16 +10,45 @@ export default function Record() {
   if (session.error)
     return <LoadError what="your record" error={session.error} retry={session.retry} />;
   if (session.data === undefined) return <Loading what="your record" />;
-  if (session.data === null)
-    return (
-      <section className="card">
-        <h1>Your record</h1>
-        <p>
-          Sign in to keep your record. <a href={signInHref("/record")}>Sign in</a>
-        </p>
-      </section>
-    );
+  if (session.data === null) return <SignedOut />;
   return <Signed person={session.data} />;
+}
+
+const BRIER_LINE = "Brier: 0 is perfect, 0.25 is a coin flip.";
+
+/** The record's anatomy with nothing in it yet, and the one way to start it. */
+function SignedOut() {
+  return (
+    <div className="record">
+      <h1>Your record</h1>
+      <p className="lead muted">
+        Every post test you seal waits here until you mark how it did. Then the engine and your gut
+        are scored on the same posts.
+      </p>
+      <section className="card receipt" aria-label="The engine vs your gut">
+        <div className="receipt-top">
+          <span className="slip-kind">The engine vs your gut</span>
+          <span className="stamp plain">Not signed in</span>
+        </div>
+        <div className="record-cols">
+          {["The engine", "Your gut"].map((who) => (
+            <div key={who}>
+              <h2>{who}</h2>
+              <p className="mono record-brier">– Brier</p>
+              <p className="mono small muted">0 marked tests</p>
+            </div>
+          ))}
+        </div>
+        <div className="record-empty">
+          <SealGrid />
+          <a href={signInHref("/record")} className="button primary">
+            Sign in to start your record
+          </a>
+        </div>
+      </section>
+      <p className="muted small">{BRIER_LINE}</p>
+    </div>
+  );
 }
 
 function Signed({ person }: { person: Person }) {
@@ -37,21 +66,36 @@ function Signed({ person }: { person: Person }) {
         </p>
       ) : (
         <>
-          {r.data.marked === 0 || r.data.brier === null ? (
-            <p>Mark a test Landed or Flopped once you know how it did.</p>
-          ) : (
-            <p className="mono">
-              Engine {r.data.brier.toFixed(3)}
-              {r.data.gut_brier !== null && ` · your gut ${r.data.gut_brier.toFixed(3)}`} on{" "}
-              {plural(r.data.marked, "marked test")} (Brier, lower is better) · hits {r.data.hits}{" "}
-              of {r.data.marked}
-            </p>
-          )}
-          <ol className="tests">
-            {r.data.tests.map((t) => (
-              <TestRow key={t.seal.id} test={t} onMarked={r.retry} />
-            ))}
-          </ol>
+          <section className="card record-strip" aria-labelledby="vs">
+            <h2 id="vs">The engine vs your gut</h2>
+            {r.data.marked === 0 || r.data.brier === null ? (
+              <p>Mark a test Landed or Flopped once you know how it did.</p>
+            ) : (
+              <>
+                <div className="record-cols">
+                  <p>
+                    The engine <span className="mono record-brier">{r.data.brier.toFixed(3)}</span>
+                  </p>
+                  <p>
+                    Your gut{" "}
+                    <span className="mono record-brier">
+                      {r.data.gut_brier === null ? "–" : r.data.gut_brier.toFixed(3)}
+                    </span>
+                  </p>
+                </div>
+                <p className="mono small">
+                  {plural(r.data.marked, "marked test")} · hits {r.data.hits} of {r.data.marked}
+                </p>
+              </>
+            )}
+            <p className="muted small">{BRIER_LINE}</p>
+          </section>
+          <Rows
+            title="Waiting to be marked"
+            tests={r.data.tests.filter((t) => !t.outcome)}
+            onMarked={r.retry}
+          />
+          <Rows title="Marked" tests={r.data.tests.filter((t) => t.outcome)} onMarked={r.retry} />
         </>
       )}
       <p className="muted small">
@@ -59,6 +103,28 @@ function Signed({ person }: { person: Person }) {
       </p>
       <Account person={person} />
     </div>
+  );
+}
+
+function Rows({
+  title,
+  tests,
+  onMarked,
+}: {
+  title: string;
+  tests: SealedTest[];
+  onMarked: () => void;
+}) {
+  if (!tests.length) return null;
+  return (
+    <section aria-label={title}>
+      <h2>{title}</h2>
+      <ol className="record-rows">
+        {tests.map((t) => (
+          <TestRow key={t.seal.id} test={t} onMarked={onMarked} />
+        ))}
+      </ol>
+    </section>
   );
 }
 
@@ -75,53 +141,53 @@ function TestRow({ test, onMarked }: { test: SealedTest; onMarked: () => void })
     }
   }
   return (
-    <li className="card receipt">
-      <div className="receipt-top">
-        <span className="mono small">
-          Sealed {new Date(test.seal.sealed_at).toLocaleString()} · {test.seal.sha256.slice(0, 12)}
-        </span>
-        <span className={`stamp${test.outcome ? " good" : ""}`}>
-          {test.outcome ? `Marked ${test.outcome}` : "Not marked"}
-        </span>
-      </div>
-      <p>{test.text}</p>
-      <p className="small">
-        Landing chance {pct(test.landing_chance)}
-        {test.gut && ` · your gut: it ${test.gut}`}
-        {test.brier !== null && ` · engine Brier ${test.brier.toFixed(3)}`}
-        {test.gut_brier !== null && ` · gut Brier ${test.gut_brier.toFixed(3)}`}
-      </p>
-      {!test.outcome && (
-        <p>
-          <button type="button" onClick={() => mark("landed")}>
-            Landed
+    <li>
+      <SealGrid hash={test.seal.sha256} />
+      <div className="record-row-body">
+        <p className="record-post">"{test.text}"</p>
+        <p className="mono small muted">
+          Sealed {shortDate(test.seal.sealed_at)} · {test.seal.sha256.slice(0, 12)} · landing{" "}
+          {pct(test.landing_chance)}
+          {test.gut && ` · your gut: it ${test.gut}`}
+          {test.brier !== null && ` · engine Brier ${test.brier.toFixed(3)}`}
+          {test.gut_brier !== null && ` · gut Brier ${test.gut_brier.toFixed(3)}`} ·{" "}
+          <button
+            type="button"
+            className="link"
+            onClick={async () =>
+              setCheck(
+                (await sealOf(test.body)) === test.seal.sha256
+                  ? "Seal matches"
+                  : "Seal does not match",
+              )
+            }
+          >
+            Check seal
           </button>{" "}
-          <button type="button" onClick={() => mark("flopped")}>
-            Flopped
-          </button>
+          {check && <span role="status">{check}</span>}
         </p>
-      )}
-      <p className="small">
-        <button
-          type="button"
-          className="link"
-          onClick={async () =>
-            setCheck(
-              (await sealOf(test.body)) === test.seal.sha256
-                ? "Seal matches"
-                : "Seal does not match",
-            )
-          }
-        >
-          Check seal
-        </button>{" "}
-        {check && <span role="status">{check}</span>}
-      </p>
-      {status && (
-        <p className="small load-error" role="alert">
-          {status}
-        </p>
-      )}
+        {status && (
+          <p className="small load-error" role="alert">
+            {status}
+          </p>
+        )}
+      </div>
+      <div className="record-row-act">
+        {test.outcome ? (
+          <span className={`stamp${test.outcome === "landed" ? " good" : ""}`}>
+            {test.outcome === "landed" ? "Landed" : "Flopped"}
+          </span>
+        ) : (
+          <>
+            <button type="button" onClick={() => mark("landed")}>
+              Landed
+            </button>
+            <button type="button" onClick={() => mark("flopped")}>
+              Flopped
+            </button>
+          </>
+        )}
+      </div>
     </li>
   );
 }

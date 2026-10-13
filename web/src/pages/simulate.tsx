@@ -97,11 +97,14 @@ export default function Simulate() {
               checked={primitive === p}
               onChange={() => setPrimitive(p)}
             />
-            {p === "reaction" ? "Test a post" : "Fork today's world"}
+            {p === "reaction" ? "Test a post" : "Test an event"}
           </label>
         ))}
         <a href="/call">Call today's question</a>
       </div>
+      {primitive === "event" && (
+        <p className="muted small">See how beliefs in 16 countries shift after one event.</p>
+      )}
       <form
         className="card bench"
         onSubmit={(e) => {
@@ -202,7 +205,7 @@ export default function Simulate() {
               busy || !text.trim() || (primitive === "reaction" && audience.ages.length === 0)
             }
           >
-            {primitive === "reaction" ? "Test it" : "Run the fork"}
+            {primitive === "reaction" ? "Test it" : "Test the event"}
           </button>
         </div>
         <p className="mono small muted">

@@ -21,8 +21,8 @@ Founder direction: the look of a top-tier deep-tech product: precise type, gener
 
 Real World is a public ledger of simulated countries; every run prints a sealed slip from it ([decision 0014](../research/decisions/0014-ledger-desk.md)).
 
-- The ledger is the chrome: no sidebar. A top bar, and under it the ledger tape, one mono 12px `--muted` line on `--paper-2` with the last cycle, the ledger head, the anchor, the model and today's spend. Every page sits under it.
-- The populations are the hero: the home shows the 16 simulated countries with their coverage tier and one belief's simulated share.
+- The ledger is the chrome: no sidebar. A top bar, and under it the ledger tape, one mono 12px `--muted` line on `--paper-2` with the last cycle, the latest receipt, the anchor, the model and today's spend. Every page sits under it except the home, where it follows the content so the first screen says who the product is for.
+- The person is the hero: the home's first screen says who it is for (people who post online), what it simulates for them and what to do, with a labelled example result beside the post box. The 16 simulated countries, their tiers and the day record follow below it.
 - Each result is a slip (the receipt): the input quoted in mono at the top, the population drawn as data, the seal drawn at the foot.
 - The seal is visible: `SealGrid` draws the 64 hex digits of a SHA-256 as an 8 x 8 grid in four shades of `--ink`; unsealed is the same grid empty and dashed.
 - Mono for every number, hash, ISO code and the tape; dashed `--line` rules inside slips; torn edge only on slips; a tier badge wherever a country appears; green only for sealed, verified and "would like or share"; clay only for pending, not sealed and refused. No all-caps, no letter-spaced eyebrow.
@@ -96,10 +96,15 @@ One implementation per pattern; a second button, card, badge, disclaimer, loader
 | Nav item (docs, settings) | 14px, 36px row; active has `--accent-wash` fill and 2px `--accent` left rule |
 | Callout | `--paper-2` fill, 1px `--line` border, 14px text; the only coloured variant is clay for a refusal or an error; no icon, no emoji |
 | Header | a top bar with the ledger tape beneath it. `.topbar`: 56px high, bottom `--line`, brand, nav (Simulate, Call it, Your record, Receipts, Scores) with `aria-current="page"` underlined 2px `--ink`, then Sign in or the account; sticky. At 720px and below the nav takes a second row that scrolls inside itself. `.tape`: the ledger tape, one line with ellipsis at 720px and up, wrapping below |
+| `SealRow` | `App.tsx`: the one seal line: a `.lg` `SealGrid` left, 12px gap, `align-items: center`, then two lines: a 14px 500 title and a mono 12px line with the hash and where to check it. Used on the home's day record and Today's question, on Call it and at the foot of the post test |
+| `.button` | a link drawn as the button (`.button.primary` filled), for the one next action when it is a page: "Make your call", "Sign in to start your record" |
 | `SealGrid` | `App.tsx`: a SHA-256 as 8 x 8 cells of 8px (`.lg` 12px), shades `s0`..`s3` from `--paper-2`, `--line`, `--muted`, `--ink`; empty and dashed when there is no hash. On the sealed post test, the AI's sealed call and the home's day record |
 | `PopulationField` | `results.tsx`: 100 dots split across segments by population weight (largest remainder), filled `--accent` where the segment would like or share it, empty as a `--line` ring; 20 x 5 at 720px and up, 10 x 10 below |
-| `SegmentMatrix` | `results.tsx`: country rows (ISO and tier, sticky first column) by age band and education columns, mono landing chance shaded `m0`..`m4` (`--surface`, `--paper-2`, `--line`, `--accent` at 35% and 70%); scrolls inside its block at 390px |
-| `BeliefShifts` | `results.tsx`: a row per topic, a 0-100% track with the p10-p90 band in `--line`, a 2px `--muted` tick at before and a 12px `--ink` dot at the median, and mono "{before} → {after} ({pts})" |
+| `MixBar` | `results.tsx`: the reaction mix as one stacked bar with labels inside; under 720px the in-bar labels hide and a mono 12px legend row with a swatch per part sits under the bar |
+| `SegmentMatrix` | `results.tsx`: country rows (ISO and tier, sticky first column) by age band and education columns, only the columns with at least one asked segment (an age band with none is dropped), mono landing chance shaded `m0`..`m4` (`--surface`, `--paper-2`, `--line`, `--accent` at 35% and 70%); scrolls inside its block at 390px |
+| `BeliefShifts` | `results.tsx`: a row per topic, a 0-100% track with the p10-p90 band (at least 2px, `--ink` at 25% on `--surface`), a 2px `--muted` tick at before that runs 6px above and below the track, and a 10px `--ink` dot at the median, and mono "{before} → {after} ({pts}) · p10–p90 {p10}–{p90}", which drops under the track at 720px and below. Call it reuses the track for its resolved strip: you as the filled dot, the AI as a hollow dot, the outcome as the tick |
+| Call it | two slips at 1024px and up (7fr 5fr, 32px gap), one column below with "Your call" first; the slider starts unset (a dashed thumb, "–", the button disabled reading "Move the slider to call it") |
+| Charts | `Chart.tsx`: the svg's viewBox is its measured pixel width, so every chart spans its slip and axis text stays 12px mono at every width |
 | Use case list | `Home.tsx` `UseCaseList`: groups by who, rows (not cards) with an outlined mono kind tag, title, sentence and audience; 2 columns of groups at 1024px and up |
 | Footer | links (Receipts, Acceptable use, Privacy, Terms, Source), the disclosure, copyright; 44px targets |
 
@@ -107,7 +112,7 @@ One implementation per pattern; a second button, card, badge, disclaimer, loader
 
 Since [decision 0012](../research/decisions/0012-will-it-land-and-call-it.md) the landing page and the app's home tell one story, in this order; [landing-page.md](landing-page.md) holds the positioning rules. Each block is a headline, one lead sentence, and one artefact from real data; no stock imagery, no decoration.
 
-1. Hero: "Will this land?", the sub-line from [messaging](../gtm/messaging.md), and the post box itself as the one primary action ("Test it"). The still globe poster may sit beside it as decoration, never as the action.
+1. Hero: "See how people react before you post.", who it is for, what it simulates, and the post box itself as the one primary action ("Test my post"). The still globe poster may sit beside it as decoration, never as the action.
 2. The result: a real post test card (landing chance with its range, best and worst audiences with tiers, two simulated accounts, the rewrite) and the seal line.
 3. Call it: today's question with "The AI's call is sealed" and its leaf hash.
 4. Proof: the latest receipts and the score card with its n, "No claim yet" until the rule allows one, linking `/receipts` and `/scores`.

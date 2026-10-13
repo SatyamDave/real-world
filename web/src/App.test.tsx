@@ -12,6 +12,7 @@ import { DailyQuestion } from "./DailyQuestion";
 import dailyFixture from "./fixtures/daily.json";
 import statusFixture from "./fixtures/status.json";
 import worldFixture from "./fixtures/world.json";
+import { PopulationField, SegmentMatrix } from "./results";
 import { caseHref, USE_CASES } from "./usecases";
 
 const world = worldFixture as World;
@@ -73,8 +74,11 @@ test("the reveal shows you, visitors, the AI and the market after you call it", 
   const el = await render(<DailyQuestion tiers={["A", "B", "B"]} />);
   expect(el.textContent).toContain(daily.question.text);
   expect(el.textContent).not.toContain("sealed before you called");
-  expect(el.querySelector(".receipt-cols")?.textContent).toContain("Shown after you answer");
+  expect(el.querySelector(".receipt-cols")?.textContent).toContain("Shown after you call");
+  expect(el.textContent).not.toContain("Committed");
 
+  // A click where the thumb rests sets the value, though the value does not change.
+  await act(async () => (el.querySelector("input[type=range]") as HTMLInputElement).click());
   await act(async () => button("Call it 50%").click());
   await until(() => expect(el.textContent).toContain("sealed before you called"));
   expect(el.querySelector<HTMLAnchorElement>(".receipt-cols a")?.getAttribute("href")).toBe(
@@ -155,7 +159,8 @@ test("a repeat answer (409) still shows the reveal", async () => {
   vi.mocked(rw.answer_daily).mockRejectedValue(new ApiError(409, {}));
 
   const el = await render(<DailyQuestion tiers={[]} />);
-  await act(async () => button("Call it").click());
+  await act(async () => typeInto(el.querySelector("input[type=range]") as HTMLInputElement, "40"));
+  await act(async () => button("Call it 40%").click());
   await until(() => expect(el.textContent).toContain("sealed before you called"));
 });
 
@@ -260,11 +265,15 @@ test.each([
     });
     vi.mocked(rw.scores).mockResolvedValue({});
     const el = await render(<App path="/receipts" />);
-    await until(() => expect(el.querySelector(".receipt-top .stamp")?.textContent).toBe(stamp));
+    await until(() =>
+      expect(el.querySelector(".day-record summary .stamp")?.textContent).toBe(stamp),
+    );
     expect(el.querySelector(".receipt-cols div:last-child dd")?.textContent).toBe(detail);
     expect(el.textContent).not.toContain("Not yet anchored");
     // Green marks an anchored day; a pending one keeps the clay stamp.
-    expect(el.querySelector(".receipt-top .stamp")?.classList.contains("good")).toBe(anchored);
+    expect(el.querySelector(".day-record summary .stamp")?.classList.contains("good")).toBe(
+      anchored,
+    );
   },
 );
 
@@ -324,9 +333,9 @@ test("the ledger tape is one literal line from GET /v1/status, and the footer ha
   vi.mocked(rw.status).mockResolvedValue(statusFixture as SystemStatus);
   const el = await render(<App path="/acceptable-use" />);
   await until(() => expect(el.querySelector(".tape [role=status]")).not.toBeNull());
-  expect(el.querySelector("footer")?.textContent).not.toContain("ledger head");
+  expect(el.querySelector("footer")?.textContent).not.toContain("latest receipt");
   expect(el.querySelector(".tape")?.textContent).toBe(
-    "Last cycle 2026-10-05 ok · ledger head b885…6550 · anchor: not anchored · model: fake (nothing spent) · spend today $0.00 of $25.00",
+    "Last cycle 2026-10-05 ok · latest receipt b885…6550 · anchor: not anchored · model: fake (nothing spent) · spend today $0.00 of $25.00",
   );
 });
 
@@ -408,8 +417,8 @@ test("a post test shows the landing chance, both sides, the accounts and a sign-
     "42%",
     "30% to 55% across 12 audiences",
     "Uncalibrated until 100 marked tests",
-    "young urban",
-    "older rural",
+    "Young urban",
+    "Older rural",
     "Simulated account, fake model, placeholder text",
     "Half price for students, this week only.",
     "Sign in to seal this test and keep your record.",
@@ -472,9 +481,13 @@ test("Call it shows the AI's sealed call before the answer and the record after"
   const daily = dailyFixture as Daily;
   vi.mocked(rw.daily).mockResolvedValue({ ...daily, reveal: null });
   const el = await render(<DailyQuestion tiers={[]} />);
-  expect(el.querySelector(".seal")?.textContent).toContain(
-    "The AI's call is sealed · 3f9a1c0be27d",
+  const ai = el.querySelector(".ai-slip");
+  expect(ai?.querySelector(".stamp.good")?.textContent).toBe("Sealed");
+  expect(ai?.querySelectorAll(".seal-grid span[class^=s]")).toHaveLength(64);
+  expect(ai?.querySelector(".seal-row")?.textContent).toBe(
+    "The AI's call is sealed3f9a1c0be27d · day record 2026-10-05",
   );
+  expect(ai?.textContent).toContain("Its number is hidden until you call.");
   expect(el.textContent).not.toContain("56%");
   vi.mocked(rw.daily).mockResolvedValue(daily);
   const after = await render(<DailyQuestion tiers={[]} />);
@@ -482,12 +495,41 @@ test("Call it shows the AI's sealed call before the answer and the record after"
     expect(after.textContent).toContain("You 0.181 · AI 0.204 on 4 resolved questions"),
   );
   expect(after.textContent).toContain("you beat the AI on 3");
+  expect(after.querySelector(".ai-slip .big")?.textContent).toBe("56%");
 });
 
-test("the record asks a signed-out visitor to sign in", async () => {
+test("the call button stays disabled until the slider moves", async () => {
+  vi.mocked(rw.daily).mockResolvedValue({ ...(dailyFixture as Daily), reveal: null });
+  const el = await render(<DailyQuestion tiers={[]} />);
+  expect(el.querySelector(".slider-value")?.textContent).toBe("–");
+  expect(button("Move the slider to call it").disabled).toBe(true);
+  await act(async () => typeInto(el.querySelector("input[type=range]") as HTMLInputElement, "70"));
+  expect(button("Call it 70%").disabled).toBe(false);
+});
+
+test("a resolved question draws you, the AI and the outcome on one strip", async () => {
+  const daily = dailyFixture as Daily;
+  vi.mocked(rw.daily).mockResolvedValue({
+    ...daily,
+    reveal: { ...dailyFixture.reveal, outcome: 1, brier: 0.14 },
+  });
+  const el = await render(<DailyQuestion tiers={[]} />);
+  await until(() => expect(el.querySelector(".outcome-strip")).not.toBeNull());
+  const strip = el.querySelector(".outcome-strip");
+  expect(strip?.querySelectorAll(".shift-dot, .shift-tick")).toHaveLength(3);
+  expect(strip?.querySelector(".outcome-marks")?.textContent).toBe("You 62%AI 56%Outcome Yes");
+  expect(strip?.textContent).toContain("Closer: you, by 6.5 pts.");
+});
+
+test("the record signed out shows an empty engine-vs-gut slip and no numbers", async () => {
   serve({ "/v1/me": [401, {}] });
   const el = await render(<App path="/record" />);
-  await until(() => expect(el.textContent).toContain("Sign in to keep your record."));
+  await until(() => expect(el.textContent).toContain("Sign in to start your record"));
+  const main = el.querySelector("main")?.textContent ?? "";
+  for (const s of ["The engine", "Your gut", "– Brier", "0 marked tests"])
+    expect(main).toContain(s);
+  expect(el.querySelector("main .seal-grid.empty")).not.toBeNull();
+  expect(new Set(main.match(/\d+(\.\d+)?/g))).toEqual(new Set(["0", "0.25"]));
 });
 
 test("the record lists sealed tests, marks one and checks its seal", async () => {
@@ -517,6 +559,8 @@ test("the record lists sealed tests, marks one and checks its seal", async () =>
   const el = await render(<App path="/record" />);
   await until(() => expect(el.textContent).toContain("Half off"));
   expect(el.textContent).toContain("Mark a test Landed or Flopped once you know how it did.");
+  expect(el.querySelector("[aria-label='Waiting to be marked'] .record-rows li")).not.toBeNull();
+  expect(el.querySelector("[aria-label='Marked']")).toBeNull();
   await act(async () => button("Check seal").click());
   await until(() => expect(el.textContent).toContain("Seal matches"));
   await act(async () => button("Landed").click());
@@ -567,7 +611,17 @@ test("the home asks the post question, lists today's populations and links every
   vi.mocked(rw.world).mockResolvedValue(world);
   vi.mocked(rw.status).mockResolvedValue(statusFixture as SystemStatus);
   const el = await render(<App path="/" />);
-  expect(el.querySelector("h1")?.textContent).toBe("Will this land?");
+  expect(el.querySelector("h1")?.textContent).toBe("See how people react before you post.");
+  expect(el.querySelector("main form button")?.textContent).toBe("Test my post");
+  expect(el.querySelector(".example-slip .stamp")?.textContent).toBe("Example");
+  expect([...el.querySelectorAll(".made-for strong")].map((x) => x.textContent)).toEqual([
+    "Creators",
+    "Small brands",
+    "Founders",
+    "Newsrooms",
+  ]);
+  // The ledger tape follows the home's content instead of leading it.
+  expect(el.querySelector("main ~ .tape")).not.toBeNull();
   const form = el.querySelector<HTMLFormElement>("main form");
   expect(form?.getAttribute("action")).toBe("/simulate");
   expect(form?.querySelector("textarea")?.getAttribute("name")).toBe("text");
@@ -638,8 +692,48 @@ test("the reaction slip draws 100 dots and a segment matrix", async () => {
   expect(el.textContent).toContain(`Filled dots would like or share it: ${filled} of 100.`);
   const rows = [...el.querySelectorAll(".matrix tbody tr")];
   expect(rows).toHaveLength(countries.length);
-  expect(rows[0].querySelectorAll("td")).toHaveLength(9);
+  expect(rows[0].querySelectorAll("td")).toHaveLength(2);
+  expect(el.querySelector(".matrix caption")?.textContent).toContain("6 segments asked");
   expect(el.querySelector(".seal-line .seal-grid.empty")).not.toBeNull();
+});
+
+test("the dot field fills exactly the headline's share of 100 dots", async () => {
+  const ages = ["18-34", "35-54", "55+"];
+  const synthetic = Array.from({ length: 24 }, (_, i) => ({
+    segment: `C${i % 8}|${ages[i % 3]}|${["low", "mid", "high"][i % 3]}`,
+    label: `segment ${i}`,
+    country: `C${i % 8}`,
+    coverage_tier: "B",
+    weight: 1 + (i % 5),
+    landing: ((i * 37) % 100) / 100,
+  }));
+  for (const [rows, chance] of [
+    [tested.result.audiences, tested.result.landing_chance],
+    [synthetic, 0.39],
+    [synthetic, 0.985],
+    [synthetic, 0.004],
+  ] as const) {
+    const el = await render(<PopulationField rows={[...rows]} landingChance={chance} />);
+    expect(el.querySelectorAll(".field span")).toHaveLength(100);
+    expect(el.querySelectorAll(".field span.on")).toHaveLength(Math.round(chance * 100));
+    container.remove();
+    container = document.body.appendChild(document.createElement("div"));
+  }
+});
+
+test("the segment matrix keeps only the asked age band and education columns", async () => {
+  const at = (country: string, age: string, edu: string) => ({
+    ...segment(`${country} ${age} ${edu}`, 0.3),
+    segment: `${country}|${age}|${edu}`,
+    country,
+  });
+  const rows = [at("USA", "18-34", "low"), at("USA", "55+", "high"), at("MEX", "18-34", "high")];
+  const el = await render(<SegmentMatrix rows={rows} />);
+  const cells = (r: number) =>
+    [...el.querySelectorAll(`thead tr:nth-child(${r}) th`)].map((t) => t.textContent);
+  expect(cells(1)).toEqual(["Country", "18-34", "55+"]);
+  expect(cells(2)).toEqual(["low", "high", "high"]);
+  expect(el.querySelector("caption")?.textContent).toContain("3 segments asked");
 });
 
 test("a use case opens the simulator filled in", async () => {
@@ -652,7 +746,7 @@ test("a use case opens the simulator filled in", async () => {
   expect(
     (el.querySelector("input[name=primitive]:checked") as HTMLInputElement).parentElement
       ?.textContent,
-  ).toBe("Fork today's world");
+  ).toBe("Test an event");
   history.replaceState(null, "", "/");
 });
 
@@ -706,12 +800,12 @@ test("an event run draws every topic and says it is not scored", async () => {
   await act(async () =>
     typeInto(el.querySelector("#pg-text") as HTMLTextAreaElement, "Rates fall"),
   );
-  await act(async () => button("Run the fork").click());
+  await act(async () => button("Test the event").click());
   await until(() => expect(el.querySelector(".event-result")).not.toBeNull());
   const text = el.querySelector(".event-result")?.textContent ?? "";
   for (const s of [
     "+15.0 pts",
-    "Fork · 7 simulated days from the world of 2026-10-05",
+    "Event · 7 simulated days from the world of 2026-10-05",
     "Rates fall",
     "40% → 55% (+15.0 pts)",
     "Inflation worry",

@@ -1,6 +1,6 @@
 import type { ReceiptDay, ReceiptEntry, Skill } from "@real-world/sdk";
 import { useEffect, useState } from "react";
-import { Disclosure, FORECASTER, LoadError, Loading, pct, plural, useLoad } from "./App";
+import { Disclosure, FORECASTER, LoadError, Loading, pct, plural, SealGrid, useLoad } from "./App";
 import { rw } from "./api";
 import { verifyChain } from "./verify";
 
@@ -255,99 +255,105 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
       {all.error && <LoadError what="receipts" error={all.error} retry={all.retry} />}
       {!all.data && !all.error && <Loading what="receipts" />}
       {all.data && !all.data.length && <p className="muted">No day records committed yet.</p>}
-      {all.data?.map((d) => (
-        <section key={d.day.date} id={d.day.date} className="card receipt day">
-          <div className="receipt-top">
-            <h3>{d.day.date}</h3>
-            <span>
-              <AnchorStamp d={d} />
-              {result?.[d.day.date] && !result[d.day.date].length && (
-                <>
-                  {" "}
-                  <span className="stamp good">Verified</span>
-                </>
-              )}
+      {all.data?.map((d, i) => (
+        <details
+          key={d.day.date}
+          id={d.day.date}
+          className="day-record"
+          open={i === 0 || location.hash === `#${d.day.date}`}
+        >
+          <summary>
+            <SealGrid hash={d.day.root} />
+            <span className="mono day-line">
+              {d.day.date} · {plural(d.entries.filter(isForecast).length, "receipt")} · root{" "}
+              {d.day.root.slice(0, 8)}…{d.day.root.slice(-8)}
             </span>
-          </div>
-          {result?.[d.day.date]?.length ? (
-            <p className="bad small">{result[d.day.date].join("; ")}</p>
-          ) : null}
-          <dl className="receipt-cols">
-            <div>
-              <dt>Root</dt>
-              <dd title={d.day.root}>{short(d.day.root)}</dd>
-            </div>
-            <div>
-              <dt>Previous root</dt>
-              <dd title={d.day.prev_root}>{short(d.day.prev_root)}</dd>
-            </div>
-            <div>
-              <dt>Record hash</dt>
-              <dd title={d.record_hash}>{short(d.record_hash)}</dd>
-            </div>
-            <div>
-              <dt>Forecasts</dt>
-              <dd>{d.entries.filter(isForecast).length}</dd>
-            </div>
-            <div>
-              <dt>Anchor</dt>
-              <AnchorDetail d={d} />
-            </div>
-          </dl>
-          <section
-            className="table-wrap"
-            aria-label={`Forecasts committed ${d.day.date}`}
-            // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be keyboard reachable
-            tabIndex={0}
-          >
-            <table>
-              <thead>
-                <tr>
-                  <th>Question</th>
-                  <th>Forecaster</th>
-                  <th>Probability</th>
-                  <th>Market at commit</th>
-                  <th>Committed</th>
-                  <th>Leaf hash</th>
-                  <th>Outcome</th>
-                </tr>
-              </thead>
-              <tbody>
-                {d.entries.map((r) => (
-                  <tr key={r.leaf_hash}>
-                    <td>
-                      {isForecast(r) ? (
-                        <Question r={r} />
-                      ) : (
-                        `Question set, ${(r.entry.question_ids as string[])?.length ?? 0} questions`
-                      )}
-                    </td>
-                    <td data-label="Forecaster">{forecaster(str(r.entry.forecaster))}</td>
-                    <td data-label="Probability" className="num" title={str(r.entry.probability)}>
-                      {prob(r.entry.probability)}
-                    </td>
-                    <td
-                      data-label="Market at commit"
-                      className="num"
-                      title={str(r.entry.market_price_at_commit)}
-                    >
-                      {prob(r.entry.market_price_at_commit)}
-                    </td>
-                    <td data-label="Committed">
-                      <Committed r={r} />
-                    </td>
-                    <td data-label="Leaf hash" className="mono" title={r.leaf_hash}>
-                      {short(r.leaf_hash)}
-                    </td>
-                    <td data-label="Outcome">
-                      <Outcome r={r} />
-                    </td>
+            <AnchorStamp d={d} />
+            {result?.[d.day.date] && !result[d.day.date].length && (
+              <span className="stamp good">Verified</span>
+            )}
+          </summary>
+          <div className="receipt day">
+            {result?.[d.day.date]?.length ? (
+              <p className="bad small">{result[d.day.date].join("; ")}</p>
+            ) : null}
+            <dl className="receipt-cols">
+              <div>
+                <dt>Root</dt>
+                <dd title={d.day.root}>{short(d.day.root)}</dd>
+              </div>
+              <div>
+                <dt>Previous root</dt>
+                <dd title={d.day.prev_root}>{short(d.day.prev_root)}</dd>
+              </div>
+              <div>
+                <dt>Record hash</dt>
+                <dd title={d.record_hash}>{short(d.record_hash)}</dd>
+              </div>
+              <div>
+                <dt>Forecasts</dt>
+                <dd>{d.entries.filter(isForecast).length}</dd>
+              </div>
+              <div>
+                <dt>Anchor</dt>
+                <AnchorDetail d={d} />
+              </div>
+            </dl>
+            <section
+              className="table-wrap"
+              aria-label={`Forecasts committed ${d.day.date}`}
+              // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be keyboard reachable
+              tabIndex={0}
+            >
+              <table>
+                <thead>
+                  <tr>
+                    <th>Question</th>
+                    <th>Forecaster</th>
+                    <th>Probability</th>
+                    <th>Market at commit</th>
+                    <th>Committed</th>
+                    <th>Leaf hash</th>
+                    <th>Outcome</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-        </section>
+                </thead>
+                <tbody>
+                  {d.entries.map((r) => (
+                    <tr key={r.leaf_hash}>
+                      <td>
+                        {isForecast(r) ? (
+                          <Question r={r} />
+                        ) : (
+                          `Question set, ${(r.entry.question_ids as string[])?.length ?? 0} questions`
+                        )}
+                      </td>
+                      <td data-label="Forecaster">{forecaster(str(r.entry.forecaster))}</td>
+                      <td data-label="Probability" className="num" title={str(r.entry.probability)}>
+                        {prob(r.entry.probability)}
+                      </td>
+                      <td
+                        data-label="Market at commit"
+                        className="num"
+                        title={str(r.entry.market_price_at_commit)}
+                      >
+                        {prob(r.entry.market_price_at_commit)}
+                      </td>
+                      <td data-label="Committed">
+                        <Committed r={r} />
+                      </td>
+                      <td data-label="Leaf hash" className="mono" title={r.leaf_hash}>
+                        {short(r.leaf_hash)}
+                      </td>
+                      <td data-label="Outcome">
+                        <Outcome r={r} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          </div>
+        </details>
       ))}
       <Disclosure tiers={tiers} />
     </div>

@@ -70,7 +70,8 @@ textarea {
   color: inherit;
 }
 
-button {
+button,
+.button {
   cursor: pointer;
   min-height: 44px;
   border: 1.5px solid var(--ink);
@@ -97,13 +98,23 @@ button:disabled {
   cursor: not-allowed;
 }
 
-button.primary {
+.button {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+button.primary,
+.button.primary {
   background: var(--ink);
   color: var(--on-accent);
   font-size: 16px;
 }
 
-button.primary:hover:not(:disabled) {
+button.primary:hover:not(:disabled),
+.button.primary:hover {
   background: var(--accent);
   border-color: var(--accent);
 }
@@ -1084,7 +1095,6 @@ main :is(p, li, dd, h3) a {
 .chart svg {
   display: block;
   width: 100%;
-  max-width: 540px;
   height: auto;
 }
 
@@ -1212,7 +1222,6 @@ main :is(p, li, dd, h3) a {
 /* ---- Will this land? ---- */
 
 .land,
-.call,
 .record {
   display: flex;
   flex-direction: column;
@@ -1326,14 +1335,6 @@ main :is(p, li, dd, h3) a {
 
 /* ---- Your record and sign-in ---- */
 
-.tests {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
 .confirm {
   margin-top: 12px;
   padding: 12px;
@@ -1373,6 +1374,36 @@ main :is(p, li, dd, h3) a {
   overflow: hidden;
   text-overflow: ellipsis;
   border-right: 1.5px solid var(--surface);
+}
+
+.mixbar-legend {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .mixbar > span {
+    color: transparent;
+  }
+
+  .mixbar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin: -4px 0 12px;
+    font-size: 12px;
+  }
+
+  .mixbar-legend > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--line);
 }
 
 .mixbar-scroll_past {
@@ -1521,8 +1552,21 @@ main :is(p, li, dd, h3) a {
   border: 1.5px dashed var(--line);
 }
 
-p.seal .seal-grid {
-  margin-right: 8px;
+/* A seal grid beside two lines: what is sealed, then the hash and where to check it. */
+.seal-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.seal-row-title {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.seal-row-meta {
+  font-size: 12px;
+  overflow-wrap: anywhere;
 }
 
 .lead {
@@ -1542,6 +1586,10 @@ p.seal .seal-grid {
   display: grid;
   gap: 48px;
   align-items: start;
+}
+
+.home-top > * {
+  min-width: 0;
 }
 
 @media (min-width: 1024px) {
@@ -1673,11 +1721,6 @@ p.seal .seal-grid {
   border-top: 1.5px dashed var(--line);
 }
 
-.register-foot p {
-  font-size: 12px;
-  overflow-wrap: anywhere;
-}
-
 .decisions h2 {
   margin-bottom: 4px;
 }
@@ -1745,8 +1788,82 @@ p.seal .seal-grid {
   font-size: 12px;
 }
 
-.proof-line {
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 0;
+  padding: 16px 0 0;
+  list-style: none;
+  border-top: 1.5px solid var(--line);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.steps .mono {
+  display: inline-flex;
+  justify-content: center;
+  width: 24px;
+  margin-right: 4px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+}
+
+.made-for {
+  display: grid;
+  gap: 16px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 720px) {
+  .made-for {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .made-for {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.made-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  min-height: 44px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.made-card:hover {
+  background: var(--paper-2);
+}
+
+.home-proof {
   padding-top: 48px;
+  border-top: 1.5px solid var(--line);
+}
+
+.today {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding-top: 24px;
+  border-top: 1.5px solid var(--line);
+}
+
+.today-text {
+  font-size: 18px;
+  text-wrap: balance;
+}
+
+.proof-line {
+  padding-top: 24px;
   border-top: 1.5px solid var(--line);
 }
 
@@ -1970,7 +2087,7 @@ p.seal .seal-grid {
 
 .shifts li {
   display: grid;
-  grid-template-columns: 160px minmax(0, 1fr) 184px;
+  grid-template-columns: 160px minmax(0, 1fr) 304px;
   align-items: center;
   gap: 12px;
   font-size: 14px;
@@ -1988,13 +2105,15 @@ p.seal .seal-grid {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: var(--line);
+  min-width: 2px;
+  background: color-mix(in srgb, var(--ink) 25%, var(--surface));
 }
 
+/* Taller than the dot so the before tick shows above and below it. */
 .shift-tick {
   position: absolute;
-  top: -4px;
-  bottom: -4px;
+  top: -6px;
+  bottom: -6px;
   width: 2px;
   margin-left: -1px;
   background: var(--muted);
@@ -2003,8 +2122,8 @@ p.seal .seal-grid {
 .shift-dot {
   position: absolute;
   top: 50%;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--ink);
   transform: translate(-50%, -50%);
@@ -2015,16 +2134,237 @@ p.seal .seal-grid {
   text-align: right;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 720px) {
   .shifts li {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 120px minmax(0, 1fr);
     gap: 4px 12px;
   }
 
-  .shift-track {
+  .shift-text {
     grid-column: 1 / -1;
     grid-row: 2;
+    text-align: left;
   }
+}
+
+.shift-dot.ai {
+  background: var(--surface);
+  border: 1.5px solid var(--ink);
+}
+
+/* Call it after resolution: you, the AI and the outcome on one track. */
+.outcome-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 20px 0 16px;
+}
+
+.outcome-strip .shift-track {
+  display: block;
+}
+
+.outcome-marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 12px;
+}
+
+.mark-you,
+.mark-ai,
+.mark-outcome {
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.mark-you,
+.mark-ai {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.mark-ai {
+  background: var(--surface);
+  border: 1.5px solid var(--ink);
+}
+
+.mark-outcome {
+  width: 2px;
+  height: 12px;
+  background: var(--muted);
+}
+
+.copy-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 16px 0;
+}
+
+.copy-result textarea {
+  flex-basis: 100%;
+}
+
+/* ---- Call it: your call and the AI's, side by side from 1024px ---- */
+
+.call {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.call .thesis {
+  max-width: 720px;
+}
+
+.call-slips {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .call-slips {
+    grid-template-columns: 7fr 5fr;
+    gap: 32px;
+  }
+}
+
+.ai-slip .seal-row {
+  margin-bottom: 16px;
+}
+
+.ai-number {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slider input.unset::-webkit-slider-thumb {
+  border-style: dashed;
+  border-color: var(--muted);
+}
+
+.slider input.unset::-moz-range-thumb {
+  border-style: dashed;
+  border-color: var(--muted);
+}
+
+/* ---- Your record ---- */
+
+.record-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.record-cols h2 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.record-brier {
+  font-size: 26px;
+  font-weight: 500;
+}
+
+.record-empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1.5px dashed var(--line);
+}
+
+.record-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.record-rows {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+
+.record-rows li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 0;
+  border-top: 1.5px solid var(--line);
+}
+
+.record-post {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.record-row-act {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  .record-rows li {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .record-row-act {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---- Receipts: one open day, the rest one row each ---- */
+
+.day-record {
+  border-top: 1.5px solid var(--line);
+}
+
+.day-record > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+/* A 32px seal so each closed day stays one 44px row. */
+.day-record .seal-grid {
+  grid-template-columns: repeat(8, 4px);
+  gap: 0;
+}
+
+.day-record .seal-grid span {
+  width: 4px;
+  height: 4px;
+}
+
+.day-line {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.day-record[open] > summary {
+  margin-bottom: 8px;
 }
 
 .seal-line {
