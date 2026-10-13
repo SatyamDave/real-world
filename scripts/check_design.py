@@ -6,7 +6,8 @@ Every colour and typeface in web/ and landing/ comes from styles/tokens*.css and
 styles/fonts.css. A raw hex colour or a literal font-family anywhere else is how two
 surfaces drift into two looks. While web/ and landing/ each hold a tokens.css, their
 :root blocks must be identical. Inline styles, off-token radii and shadows, unloaded font
-weights and a second component with the same name are the same drift by other routes.
+weights, border widths and a second component with the same name (Loading, LoadError, Empty,
+Refused, Tabs, CodeBlock, DataTable or any other) are the same drift by other routes.
 """
 
 import pathlib
@@ -24,10 +25,13 @@ OPT_OUT = re.compile(r"/\*\s*design:\s*\S")
 # fonts.css loads only 400, 500 and 600; any other weight renders faux-bold or faux-light.
 ALLOWED = {
     "border-radius": ({"var(--radius)", "0", "50%", "inherit"}, "use var(--radius), 0 or 50%"),
+    "border-width": ({"1px", "1.5px"}, "use 1px, or 1.5px on the receipt and rings"),
     "font-weight": ({"400", "500", "600"}, "use 400, 500 or 600, the weights fonts.css loads"),
     "box-shadow": ({"var(--card-shadow)", "none"}, "use var(--card-shadow), none or an inset ring"),
 }
 VALUE = re.compile(r"(border-radius|font-weight|box-shadow):\s*([^;}]+)")
+# `border: 1px solid ...` or `border-top: 1px dashed ...`; the underline tab is the one 2px border.
+BORDER = re.compile(r"(?<![\w-])border(?:-(top|right|bottom|left))?:\s*([\d.]+px)\b")
 COMPONENT = re.compile(r"^export (?:default )?(?:function|const|class) ([A-Z]\w*[a-z]\w*)")
 
 
@@ -72,6 +76,10 @@ def main():
                     # An inset ring is a border drawn without layout, not a shadow.
                     if value.strip() not in allowed and not value.strip().startswith("inset "):
                         problems.append(f"{rel}:{n}: {prop} {value.strip()}; {fix}")
+                for side, width in BORDER.findall(line):
+                    allowed, fix = ALLOWED["border-width"]
+                    if width not in allowed and (width, side) != ("2px", "bottom"):
+                        problems.append(f"{rel}:{n}: border {width}; {fix}")
                 name = folder == "web/src" and path.suffix == ".tsx" and COMPONENT.match(line)
                 if name:
                     components.setdefault(name.group(1), []).append(f"{rel}:{n}")

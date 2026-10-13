@@ -5,6 +5,9 @@ import "./styles/fonts.css";
 import "./styles/tokens.css";
 import "./styles/tokens-dark.css";
 import "./styles.css";
+import { applyTheme, storedTheme } from "./theme";
+
+applyTheme(storedTheme());
 
 const root = document.getElementById("root");
 if (!root) throw new Error("index.html has no #root element");

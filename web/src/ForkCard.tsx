@@ -9,6 +9,7 @@ import {
   pct,
   plural,
   pts,
+  Refused,
   TierBadge,
   topicLabel,
   usd,
@@ -118,9 +119,13 @@ export function Fork({ events }: { events: PrefilledEvent[] }) {
           </button>
         </div>
         {refusal && (
-          <p className="bad small" role="alert">
-            {refusal.text} {refusal.policy && <a href="/acceptable-use">See acceptable use.</a>}
-          </p>
+          <Refused
+            help={
+              refusal.policy ? { label: "See acceptable use.", href: "/acceptable-use" } : undefined
+            }
+          >
+            {refusal.text}
+          </Refused>
         )}
       </section>
       {jobId && <ForkRun key={jobId} id={jobId} />}
@@ -177,6 +182,7 @@ export function ForkRun({ id }: { id: string }) {
   if (job?.status === "succeeded" && job.result) return <ForkCard job={job} />;
   return (
     <Loading
+      progress
       what={
         progress?.member
           ? `fork: member ${progress.member} of ${progress.members}, day ${progress.day} of ${progress.days}`

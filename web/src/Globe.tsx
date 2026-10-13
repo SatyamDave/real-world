@@ -2,6 +2,7 @@ import type { Country } from "@real-world/sdk";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactGlobe, { type GlobeMethods } from "react-globe.gl";
 import { pct, prefersReducedMotion, topicLabel } from "./App";
+import { THEME_EVENT } from "./theme";
 
 interface Feature {
   properties: { iso3: string; name: string };
@@ -73,12 +74,14 @@ export default function Globe({
     const mq = matchMedia("(prefers-color-scheme: dark)");
     const onTheme = () => setColors(palette());
     mq.addEventListener("change", onTheme);
+    addEventListener(THEME_EVENT, onTheme);
     const ro = new ResizeObserver(([e]) =>
       setSize({ width: e.contentRect.width, height: e.contentRect.height }),
     );
     if (box.current) ro.observe(box.current);
     return () => {
       mq.removeEventListener("change", onTheme);
+      removeEventListener(THEME_EVENT, onTheme);
       ro.disconnect();
     };
   }, []);

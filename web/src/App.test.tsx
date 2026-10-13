@@ -237,7 +237,7 @@ test("the fork form shows an acceptable-use refusal inline", async () => {
   await until(() => expect(button("Run fork").disabled).toBe(false));
   await act(async () => button("Run fork").click());
   await until(() => expect(el.textContent).toContain(`${detail} See acceptable use.`));
-  expect(el.querySelector(".bad a")?.getAttribute("href")).toBe("/acceptable-use");
+  expect(el.querySelector(".callout-refused a")?.getAttribute("href")).toBe("/acceptable-use");
 });
 
 test("the fork form shows a spend refusal's sentence", async () => {

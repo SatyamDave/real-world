@@ -43,5 +43,5 @@ function seo(): Plugin {
 export default defineConfig(({ command, mode }) => ({
   plugins: [seo(), ...(command === "build" && mode === "production" ? [noFixtureQuestions()] : [])],
   // Vitest blanks CSS by default; theme.test.ts reads the font rules and share.ts the tokens as text.
-  test: { css: { include: [/fonts\.css/, /tokens\.css/] } },
+  test: { css: { include: [/fonts\.css/, /tokens(-dark)?\.css/] } },
 }));

@@ -8,6 +8,7 @@ import {
   Loading,
   pct,
   plural,
+  Refused,
   shortDate,
   useLoad,
 } from "./App";
@@ -48,15 +49,15 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
   if (loaded.error)
     return (
       <section className="card daily">
-        <LoadError what="today's question" error={loaded.error} retry={loaded.retry} />
+        <LoadError what="today's question" error={loaded.error} retry={loaded.retry} shape="card" />
       </section>
     );
   const q = loaded.data?.question;
   const reveal = after ?? loaded.data?.reveal;
   if (!q || !loaded.data)
     return (
-      <section className="card daily skeleton" aria-busy="true">
-        <Loading what="today's question" />
+      <section className="card daily" aria-busy="true">
+        <Loading what="today's question" shape="card" />
       </section>
     );
   const date = loaded.data.date;
@@ -158,11 +159,7 @@ export function DailyQuestion({ tiers }: { tiers: string[] }) {
           <button type="submit" className="primary" disabled={busy}>
             Submit {value}%
           </button>
-          {status && (
-            <p className="small load-error" role="alert">
-              {status}
-            </p>
-          )}
+          {status && <Refused>{status}</Refused>}
         </form>
       )}
     </section>

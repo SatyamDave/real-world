@@ -1,6 +1,6 @@
 import type { ReceiptDay, ReceiptEntry, Skill } from "@real-world/sdk";
 import { useEffect, useState } from "react";
-import { Disclosure, FORECASTER, LoadError, Loading, pct, plural, useLoad } from "./App";
+import { Disclosure, Empty, FORECASTER, LoadError, Loading, pct, plural, useLoad } from "./App";
 import { rw } from "./api";
 import { verifyChain } from "./verify";
 
@@ -95,9 +95,9 @@ export function ReceiptsStrip() {
           Verify all receipts
         </a>
       </div>
-      {error && <LoadError what="receipts" error={error} retry={retry} />}
-      {!data && !error && <Loading what="receipts" />}
-      {data && !data.length && <p className="muted small">No forecasts committed yet.</p>}
+      {error && <LoadError what="receipts" error={error} retry={retry} shape="rows" />}
+      {!data && !error && <Loading what="receipts" shape="rows" />}
+      {data && !data.length && <Empty>No forecasts committed yet.</Empty>}
       <ul className="strip-rows">
         {data?.map((r) => (
           <li key={r.leaf_hash}>
@@ -243,8 +243,8 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
         <p className="muted small">
           Brier score: lower is better. A constant 50% forecast scores 0.25 on every question.
         </p>
-        {sc.error && <LoadError what="scores" error={sc.error} retry={sc.retry} />}
-        {!sc.data && !sc.error && <Loading what="scores" />}
+        {sc.error && <LoadError what="scores" error={sc.error} retry={sc.retry} shape="rows" />}
+        {!sc.data && !sc.error && <Loading what="scores" shape="rows" />}
         <div className="skills">
           <SkillCard name="Market" s={sc.data?.market} />
           <SkillCard name="Plain LLM" s={sc.data?.plain_llm} />
@@ -252,9 +252,13 @@ export function ReceiptsPage({ tiers }: { tiers: string[] }) {
       </section>
 
       <h2>Day records</h2>
-      {all.error && <LoadError what="receipts" error={all.error} retry={all.retry} />}
-      {!all.data && !all.error && <Loading what="receipts" />}
-      {all.data && !all.data.length && <p className="muted">No day records committed yet.</p>}
+      {all.error && <LoadError what="receipts" error={all.error} retry={all.retry} shape="rows" />}
+      {!all.data && !all.error && <Loading what="receipts" shape="rows" />}
+      {all.data && !all.data.length && (
+        <Empty action={{ label: "Open today's question", href: "/" }}>
+          No day records committed yet.
+        </Empty>
+      )}
       {all.data?.map((d) => (
         <section key={d.day.date} id={d.day.date} className="card receipt day">
           <div className="receipt-top">

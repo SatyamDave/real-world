@@ -1,7 +1,7 @@
 import { ApiError, type Population } from "@real-world/sdk";
 import { useState } from "react";
 import { ApiCall } from "../ApiCall";
-import { Disclosure, LoadError, Loading, pct, plural, TierBadge, useLoad } from "../App";
+import { Disclosure, Empty, LoadError, Loading, pct, plural, TierBadge, useLoad } from "../App";
 import { rw } from "../api";
 import { Bars } from "../Chart";
 import { Method } from "../Method";
@@ -305,8 +305,9 @@ function World({ p }: { p: Population }) {
 export default function Page() {
   const r = useLoad(() => rw.population());
   if (r.error instanceof ApiError && r.error.status === 404)
-    return <p className="muted">No world snapshot yet. The first daily cycle creates one.</p>;
-  if (r.error) return <LoadError what="the population" error={r.error} retry={r.retry} />;
-  if (!r.data) return <Loading what="the population" />;
+    return <Empty>No world snapshot yet. The first daily cycle creates one.</Empty>;
+  if (r.error)
+    return <LoadError what="the population" error={r.error} retry={r.retry} shape="rows" />;
+  if (!r.data) return <Loading what="the population" shape="rows" />;
   return <World p={r.data} />;
 }
