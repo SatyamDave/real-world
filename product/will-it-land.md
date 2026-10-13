@@ -2,7 +2,7 @@
 
 ## What it does
 
-The Reaction primitive of the [playground](playground.md) (`/playground`). A person pastes a post of up to 500 characters (a tweet, a caption, a headline, a hook), picks who should see it (every simulated country by default, or some countries and age bands), and says what their gut expects: "It lands" or "It flops". "Test it" returns, in a few seconds on a real model:
+The post test of the [simulator](playground.md) (`/simulate`, or the post box on `/`). A person pastes a post of up to 500 characters (a tweet, a caption, a headline, a hook), picks who should see it (every simulated country by default, or some countries and age bands), and says what their gut expects: "It lands" or "It flops". "Test it" returns, in a few seconds on a real model:
 
 - **Landing chance**: the share of that audience who would like or share it, shown as a percentage with its spread across segments (p10 to p90) and the line "Uncalibrated until 100 marked tests".
 - **Reaction mix**: scroll past, read, like, share, as shares that add to 100%.
@@ -31,7 +31,7 @@ Creators, founders and anyone about to post something they care about, deciding 
 - Contract: `POST /v1/tests` takes `{text, countries?, age_bands?, gut?}` and returns the result; with a live session it also returns `seal` (`sha256`, `sealed_at`, `id`). `POST /v1/tests/retrospective` takes `{posts: [{text, outcome}], countries?, age_bands?}` (one to five posts) and stores nothing. Fields are in `api/openapi.json`.
 - The seal is SHA-256 over the canonical JSON of the stored test (text, audience, gut, result, sealed time). The database refuses an update to any sealed column (`api/rw_api/sql/tests.sql` triggers). Tests in `api/tests/test_tests.py`: `test_a_signed_in_test_is_sealed_and_the_seal_recomputes`, `test_a_sealed_test_cannot_be_changed`, `test_a_signed_out_test_is_not_stored`, `test_the_retrospective_check_stores_nothing`.
 - Every test is checked against a cost cap before it runs and against the day's shared budget (`TEST_MAX_COST_USD`, `FORK_DAILY_BUDGET_USD` in `engine/rw/settings.py`), and against a per-address daily count (`TEST_ANON_PER_DAY`) when signed out; a check that cannot be read refuses the test. Test: `test_a_test_over_its_cap_is_refused_and_spends_nothing`.
-- Engine: `engine/rw/reaction.py` asks one decision call per segment of the chosen audience (up to `TEST_SEGMENTS`, the most populous first) and weights segments by their share of the world snapshot. Test: `engine/tests/test_reaction.py`.
+- Engine: `engine/rw/reaction.py` asks one decision call per segment of the chosen audience (up to `TEST_SEGMENTS`, spread across its countries: round-robin, each country's most populous segment first) and weights the picked segments by their agent counts in the world snapshot. Test: `engine/tests/test_reaction.py`.
 - Measured after launch: share of signed-in people who mark at least three tests within 14 days, and the engine's Brier against the people's gut on marked tests ([0012](../research/decisions/0012-will-it-land-and-call-it.md)).
 
 ## What it is not

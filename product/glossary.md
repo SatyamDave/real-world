@@ -26,8 +26,9 @@ One definition per term. Specs, code comments and UI copy use these words with t
 | Run log | The recorded steps, model calls, tokens and cost of one daily cycle, from `stage_runs` and `llm_calls`. | |
 | Account | A person's free sign-in, made by email, holding their sessions and sealed post tests ([accounts](accounts.md)). | |
 | Record | One account's sealed post tests with their marks, scored engine against gut, and one browser's calls against the AI on resolved questions ([track record](track-record.md)). | |
-| Primitive | One kind of simulation the playground runs: Reaction (a post test), Event (a fork) or Call (a sealed probability) ([home and playground](playground.md)). | |
-| Use case | A prepared playground input for one real decision, in `web/src/usecases.ts`. | |
+| Primitive | One kind of simulation the simulator runs: Reaction (a post test), Event (a fork) or Call (a sealed probability) ([home and simulator](playground.md)). | |
+| Use case | A prepared simulator input for one real decision, in `web/src/usecases.ts`, grouped by who it serves. | |
+| Ledger tape | The one mono line under the top bar on every page, from `GET /v1/status`: the last cycle, the ledger head, the anchor, the model and today's spend. | |
 | Post test | One run of a post through the engine for a chosen audience: landing chance, reaction mix, best and worst segments, two simulated accounts and a rewrite ([will it land](will-it-land.md)). | |
 | Landing chance | The share of the chosen audience, weighted by population, that would like or share a post, with its p10-p90 across segments. Uncalibrated until 100 marked post tests. | |
 | Seal | The SHA-256 of a stored post test's canonical JSON, made when the test is made; the database refuses changes to a sealed test. | |

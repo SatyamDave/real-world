@@ -1,7 +1,7 @@
 # 0013: The app is a console with a playground of three simulation primitives and ready use cases
 
 - Date: 2026-10-13
-- Status: accepted (founder decision, Satyam, in chat on 2026-10-13, with screenshots of console.typesafe.ai as the reference)
+- Status: superseded by 0014
 - Rests on: [market/004-jev-typesafe](../market/004-jev-typesafe.md), [product/108-consumer-wedge](../product/108-consumer-wedge.md), [product/076-viral-simulations](../product/076-viral-simulations.md), [0012](0012-will-it-land-and-call-it.md)
 
 ## Decision

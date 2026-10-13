@@ -2,12 +2,12 @@
 
 ## What it does
 
-A console ([decision 0013](../research/decisions/0013-console-and-playground.md)): a left sidebar and a main pane, described in [home and playground](playground.md). `/` is the home: three simulation primitives and the use cases. `/playground` runs them; its Reaction primitive is [Will this land?](will-it-land.md): paste a post, pick an audience, record your gut, test it. `/call` is [Call it](daily-question.md): today's question against the AI, whose call is sealed first. `/record` is [your record](track-record.md): sealed post tests to mark, and your calls against the AI. The sidebar links Home, Playground, Call it and Your record, then under "Proof" Scores `/scores` and Receipts `/receipts`, with today's spend and the account at its foot. Every result links the proof it rests on.
+A ledger desk ([decision 0014](../research/decisions/0014-ledger-desk.md)): a top bar and, under it, the ledger tape, one mono line from `GET /v1/status`, described in [home and simulator](playground.md). `/` is the home: "Will this land?" with a post box, today's simulated populations and the use cases. `/simulate` runs a post test or a fork; its post test is [Will this land?](will-it-land.md): paste a post, pick an audience, record your gut, test it. `/call` is [Call it](daily-question.md): today's question against the AI, whose call is sealed first. `/record` is [your record](track-record.md): sealed post tests to mark, and your calls against the AI. The top bar links Simulate, Call it, Your record, Receipts `/receipts` and Scores `/scores`, and the account; today's spend is on the tape. Every result links the proof it rests on.
 
 | Route | Needs sign-in | Spec |
 | --- | --- | --- |
-| `/` | no | [home and playground](playground.md) |
-| `/playground` | no; sealing a test needs it | [home and playground](playground.md), [will it land](will-it-land.md), [simulate API](simulate-api.md) |
+| `/` | no | [home and simulator](playground.md) |
+| `/simulate` | no; sealing a test needs it | [home and simulator](playground.md), [will it land](will-it-land.md), [simulate API](simulate-api.md) |
 | `/call` | no | [call it](daily-question.md) |
 | `/record` | yes | [track record](track-record.md) |
 | `/sign-in` | no | [accounts](accounts.md) |
@@ -36,7 +36,7 @@ People deciding whether a post will land, people who want to call today's questi
 
 ## What it is not
 
-- No globe, world, cycle, research or developer pages; the fork appears only as the playground's Event primitive ([0013](../research/decisions/0013-console-and-playground.md)).
+- No globe, world, cycle, research or developer pages; the fork appears only as the simulator's Event ([0014](../research/decisions/0014-ledger-desk.md)).
 - No popups, tours or sign-up walls; no teams, plans or billing.
 - No mobile app. The page works at phone width.
 
