@@ -11,7 +11,7 @@ function makeFetch() {
   return vi.fn(async (..._args: unknown[]) => new Response("{}"));
 }
 function sent(f: ReturnType<typeof makeFetch>) {
-  return JSON.parse(String((f.mock.calls[0]?.[1] as RequestInit).body));
+  return JSON.parse(String((f.mock.calls[0][1] as RequestInit).body));
 }
 
 test("staging and production events carry their environment", async () => {
