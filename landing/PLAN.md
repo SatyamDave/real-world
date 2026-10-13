@@ -106,13 +106,20 @@ Waitlist is the only call to action; v1 is not connected before ads. Decisions f
 Order: Phase 1, then 2, then 3, then Finish. Commit after each phase. Resume from the first unchecked box. Decisions follow the protocol in DECISIONS.md (Milestone C).
 
 ### Phase 1: Tally instead of Typeform (`landing/8-tally`, off `landing/7-sections`, draft PR on top of #93)
-- [ ] Verify Tally facts from docs: hidden fields on the free plan and how they reach the embed; the `Tally-Signature` header and what it signs; payload shape; retries and duplicates; CSP the embed needs
-- [ ] Screenshot and report the free-plan "Made with Tally" badge
-- [ ] Replace the Typeform webhook and embed with Tally (signature, replay, tamper, idempotency); remove Typeform code and `TYPEFORM_TOKEN`
-- [ ] Per-environment secrets and form ids; `set-prod-secrets.sh`, RUNBOOK, go-live checklist
-- [ ] `landing/tally/FORM_SPEC.md`: click-by-click for two forms (staging, prod)
-- [ ] Privacy page and LEGAL_REVIEW.md: Tally is a processor
-- [ ] Commit, push, draft PR
+- [x] Verify Tally facts from docs: hidden fields on the free plan and how they reach the embed; the `Tally-Signature` header and what it signs; payload shape; retries and duplicates; CSP the embed needs
+- [x] Screenshot and report the free-plan "Made with Tally" badge (not possible: no free-plan form to load; reported in DECISIONS C1 and FORM_SPEC step 9)
+- [x] Replace the Typeform webhook and embed with Tally (signature, replay, tamper, idempotency); remove Typeform code and `TYPEFORM_TOKEN`
+- [x] Per-environment secrets and form ids; `set-prod-secrets.sh`, RUNBOOK, go-live checklist
+- [x] `landing/tally/FORM_SPEC.md`: click-by-click for two forms (staging, prod)
+- [x] Privacy page and LEGAL_REVIEW.md: Tally is a processor
+- [x] Commit, push, draft PR [#98](https://github.com/SatyamDave/real-world/pull/98)
+
+### Satyam sync (added mid-run)
+- [x] Fetched origin/main; Satyam merged main into the landing stack and added a cookie notice; Phase 1 rebased onto `origin/landing/7-sections` (SYNC.md)
+- [x] Screenshots of his UI and ours in `design/satyam-diff/`
+- [ ] `design/SATYAM_DIFF.md`: every difference that makes his better, and why
+- [ ] Adopt the improvements as tokens and patterns (not his components); log each in DECISIONS.md
+- [ ] Tell Rohit what to copy from his agent workflow
 
 ### Phase 2: Milestone C, an award-level page (`landing/9-wow`, off `landing/8-tally`, draft PR)
 - [ ] Audit first, no code: `design/UI_AUDIT.md` (screenshots at 390x844 and 1440x900, ruthless critique); references listed in `INSPIRATION.md`
