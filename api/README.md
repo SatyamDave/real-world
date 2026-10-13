@@ -34,13 +34,14 @@ Open http://localhost:8000/docs, or http://localhost:8000/llms.txt for the same 
 | `GET /v1/scores` | Skill of the `sim` forecaster against each baseline over resolved questions. |
 | `GET /v1/research` | Every pre-registered experiment with its registered and current hash, hypothesis, primary metric, kill criterion and committed runs, and the eight papers with links to their sources ([research](../product/research.md)). Read from the repository files; no stored state. |
 | `GET /v1/scoreboard` | The public scoreboard: protocol and hash, resolved and open question counts, mean Brier and log score per forecaster with a day-block bootstrap interval from 10 resolved questions, skill against each baseline, reliability bins, every scored question-day newest first and the five worst `sim` forecasts. |
+| `POST /v1/auth/email`, `POST /v1/auth/verify`, `POST /v1/auth/sign-out`, `GET /v1/me`, `DELETE /v1/me` | Email sign-in with a link and a six-digit code, the `rw_session` cookie, sign-out (`?everywhere=true` for every session) and account deletion; tag `account`, not in the SDKs ([accounts](../product/accounts.md)). State-changing routes take only JSON from an allowed `Origin` (`403 cross_origin`). With no `RW_EMAIL_API_KEY` the email goes to `$RW_HOME/outbox/` and the log, and the API refuses to start on a non-local origin. |
 | `GET /healthz` | `{"ok": true}` |
 
-Every error is a JSON object with a one-sentence `detail`. A refusal adds `code` (`409` closed or already done, `422` refused or invalid, `402` over a cost cap, `503` a check could not run, `401` bad key, `429` rate limit); `404` carries `detail` only.
+Every error is a JSON object with a one-sentence `detail`. A refusal adds `code` (`409` closed or already done, `422` refused or invalid, `402` over a cost cap, `503` a check could not run, `401` bad key or signed out, `400` a wrong, used or expired sign-in, `403` a cross-origin account change, `429` rate limit); `404` carries `detail` only.
 
 ## State
 
-`rw_api/schema.sql` owns `jobs`, `job_events`, `idempotency_keys`, `fork_clients`, `api_keys`, `key_forks`, `key_screens` and `daily_answers`, in the engine's SQLite file under `$RW_HOME`. `uv run python -m rw_api.keys create --label <name> --cap-usd <n>` makes an API key and prints it once; `list` and `revoke --id <n>` manage them. An idempotency key is honoured for 24 hours. On startup, forks left `queued` or `running` are marked `failed` with a sentence saying the server restarted.
+`rw_api/sql/accounts.sql` owns `users`, `sessions`, `sign_in_tokens` and `sign_in_attempts`; every file in `rw_api/sql/` is applied after `schema.sql`. `rw_api/schema.sql` owns `jobs`, `job_events`, `idempotency_keys`, `fork_clients`, `api_keys`, `key_forks`, `key_screens` and `daily_answers`, in the engine's SQLite file under `$RW_HOME`. `uv run python -m rw_api.keys create --label <name> --cap-usd <n>` makes an API key and prints it once; `list` and `revoke --id <n>` manage them. An idempotency key is honoured for 24 hours. On startup, forks left `queued` or `running` are marked `failed` with a sentence saying the server restarted.
 
 ## Research
 

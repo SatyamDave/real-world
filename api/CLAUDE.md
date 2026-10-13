@@ -5,13 +5,13 @@ The FastAPI app `rw_api`: HTTP, fork jobs, idempotency, server-sent events, the 
 ## Specs and research
 
 - Product: [research](../product/research.md), [simulate-api](../product/simulate-api.md), [daily-question](../product/daily-question.md), [receipts](../product/receipts.md), [benchmark](../product/benchmark.md)
-- Decisions: [0001-architecture](../research/decisions/0001-architecture.md), [0002-benchmark-and-receipts](../research/decisions/0002-benchmark-and-receipts.md)
+- Decisions: [0001-architecture](../research/decisions/0001-architecture.md), [0002-benchmark-and-receipts](../research/decisions/0002-benchmark-and-receipts.md), [0011-consumer-product-and-api](../research/decisions/0011-consumer-product-and-api.md)
 - Research: [engineering/069](../research/engineering/069-api-design.md), [engineering/074](../research/engineering/074-abuse-and-safety.md), [product/077](../research/product/077-daily-question-mechanics.md), [engineering/070](../research/engineering/070-commit-reveal-timestamping.md)
 
 ## Boundaries
 
 - Only `api/` speaks HTTP. It calls engine functions; simulation, forecasting, scoring and ledger logic stay in `engine/rw/`.
-- `rw_api/schema.sql` owns `jobs`, `job_events`, `idempotency_keys` and `daily_answers`. The API never writes engine tables.
+- `rw_api/schema.sql` owns `jobs`, `job_events`, `idempotency_keys` and `daily_answers`; `rw_api/sql/accounts.sql` owns the account tables. The API never writes engine tables.
 - Model calls go through `llm.decide` or `llm.complete_json` with a `Budget`; a cost that cannot be checked refuses.
 - Every simulate result carries `simulated: true`; every agent account carries its simulated label.
 - Numbers shown for a forecast (`sim`, `market`) come from committed ledger entries, never recomputed.
