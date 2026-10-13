@@ -1,5 +1,6 @@
 /// <reference types="vitest/config" />
 import { defineConfig, type Plugin, runnerImport } from "vite";
+import { publicOrigin, robotsTxt, sitemapXml } from "./src/seo.ts";
 
 type Check = typeof import("./src/liveCheck");
 
@@ -21,8 +22,26 @@ function noFixtureQuestions(): Plugin {
   };
 }
 
+// Absolute URLs need the public origin. A production build without a valid VITE_PUBLIC_ORIGIN fails;
+// dev and `--mode fixtures` fall back to localhost. Also writes robots.txt and sitemap.xml.
+function seo(): Plugin {
+  let origin = "";
+  return {
+    name: "seo",
+    configResolved(config) {
+      const production = config.command === "build" && config.mode === "production";
+      origin = publicOrigin(config.env.VITE_PUBLIC_ORIGIN, production);
+    },
+    transformIndexHtml: (html) => html.replaceAll("__ORIGIN__", origin),
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: "robots.txt", source: robotsTxt(origin) });
+      this.emitFile({ type: "asset", fileName: "sitemap.xml", source: sitemapXml(origin) });
+    },
+  };
+}
+
 export default defineConfig(({ command, mode }) => ({
-  plugins: command === "build" && mode === "production" ? [noFixtureQuestions()] : [],
+  plugins: [seo(), ...(command === "build" && mode === "production" ? [noFixtureQuestions()] : [])],
   // Vitest blanks CSS by default; theme.test.ts reads the font rules and share.ts the tokens as text.
   test: { css: { include: [/fonts\.css/, /tokens\.css/] } },
 }));

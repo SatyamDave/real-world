@@ -80,7 +80,7 @@ e2e: ## seed fixtures into a temp RW_HOME, serve the API on a free port, run bot
 web-build-refuses-fixtures: ## a production web build against an API serving fixture questions fails; a fixtures-mode build passes
 	@set -e; out=$$(mktemp -d); trap 'rm -rf "$$out"' EXIT; \
 	VITE_API_URL=$(RW_API_URL) pnpm --filter web exec vite build --mode fixtures --outDir "$$out/fixtures" > /dev/null 2>&1; \
-	if log=$$(VITE_API_URL=$(RW_API_URL) pnpm --filter web exec vite build --outDir "$$out/prod" 2>&1); then \
+	if log=$$(VITE_API_URL=$(RW_API_URL) VITE_PUBLIC_ORIGIN=https://rw.example pnpm --filter web exec vite build --outDir "$$out/prod" 2>&1); then \
 		echo "a production web build shipped the fixture questions served at $(RW_API_URL)"; exit 1; fi; \
 	echo "$$log" | grep -q "fixture id" || { echo "$$log"; exit 1; }; \
 	echo "Production web build refused the fixture questions at $(RW_API_URL)."
