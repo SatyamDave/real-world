@@ -4,7 +4,7 @@ How the company runs: the north-star metric, the plan, risks, cadence, and the d
 
 ## A great contribution
 
-- It changes the plan because something was learned, and links what was learned: a result, a research note, a buyer call, a missed gate.
+- It changes the plan because something was learned, and links what was learned: a result, a research note, a founder call, a missed gate.
 - Every metric names its definition, where it is computed from, its current value with date, and its target. "Not measured yet" is a valid value; a guess is not.
 - Every risk has one owner seat, a mitigation with a date, and the signal that tells us it is happening.
 - A gate in `plan-to-nov-2.md` is marked passed, failed or slipped with evidence. A failed gate triggers its kill criterion, written down in the same PR.

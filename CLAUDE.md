@@ -4,18 +4,20 @@ Read this file before any change. Then read the `CLAUDE.md` in every folder you 
 
 ## Mission
 
-Real World is "Simulations with receipts.": message testing for startups and companies. Test a launch, a price, a headline or an announcement on the simulated public of 16 countries, split by age and education, before you ship it (decision 0015); the engine's own daily calls against the news are sealed first and scored in public ([decision 0012](research/decisions/0012-will-it-land-and-call-it.md)). Under both jobs runs the engine: simulated populations of 16 countries that take in each morning's news, polls and markets, a typed decision per segment, and a ledger that seals every forecast before its outcome and scores it in public, misses included. Every result carries a coverage tier and the label AI-simulated. Our job is to make the product something a person finishes in a minute and comes back to, and to keep the record behind it honest and hard to beat.
+Real World is message testing for consumer (B2C) founders. A founder writes what they are building in one line, describes their ideal customer, and tests a message on 27 simulated segments of that customer (attitude to new products x price sensitivity x familiarity with the category) before shipping it; every test also runs a plain Jev baseline, and the founder's real results score both ([decision 0016](research/decisions/0016-icp-audiences.md)). Businesses and enterprise are served only on special request and are not in the product. Under it runs the engine, which also forecasts real events every day, seals each forecast before its outcome and scores it in public, misses included; that public record is the track record behind the product, not the product ([decision 0012](research/decisions/0012-will-it-land-and-call-it.md)). Every result carries the label AI-simulated. Our job is to make the test something a founder finishes in a minute and comes back to mark, and to keep the record behind it honest and hard to beat.
 
 ## Product rules
 
-These hold for every surface, including the landing page, ads, share text and READMEs ([decision 0012](research/decisions/0012-will-it-land-and-call-it.md), [research/product/108](research/product/108-consumer-wedge.md)).
+These hold for every surface, including the landing page, ads, share text and READMEs ([decision 0016](research/decisions/0016-icp-audiences.md)).
 
-- The product is message testing for founders and companies (a message test, from the message box on `/` or the simulator), with "Your tests" and the public proof (receipts, scores, question pages); "Call it" (the daily question against the AI) stays as a secondary way to see the engine scored in public (decision 0015). A new job or primitive needs a decision record first.
+- The product is the message test (from the message box on `/` or the simulator), its backtest of up to 10 past messages, "Your tests" with real results marked Landed or Flopped, and one "Public record" link to receipts and scores. The daily question, forks and the ledger are the track record's interface, not product surfaces: no Event tab, no "Call it" in navigation or on the home, no ledger tape, no country selectors or population lists. A new job or primitive needs a decision record first.
+- B2C only. No surface pitches businesses, B2B buyers, teams or enterprise plans; "Enterprise on request" is the only mention.
 - One job per screen, finishable in under a minute, with one next action. No tours, popups or walls.
-- Earn trust with proof, not claims: seal a person's call when it is made, show the seal, and score it when the outcome is known. Compare the engine with the person's own gut, the baseline they actually use. A retrospective check is labelled "Retrospective: not on your record" and never enters any record.
-- The app runs three simulation kinds, Reaction, Event and Call, from the simulator, taught through use cases grouped by who ([decision 0014](research/decisions/0014-ledger-desk.md)). The world, the daily cycle, the SDKs and API keys stay infrastructure; no surface pitches them to consumers.
+- Earn trust with proof, not claims: seal a test when it is made, show the seal, and score it when the founder marks it. Compare the engine with the plain baseline and with the founder's own gut. A backtest is labelled "Backtest: not on your record" and never enters any record; a mark is immutable once made.
+- Results say "AI-simulated" and "Simulated from your description, not real customers". The coverage tier stays on country results in the public record only.
+- The world, the daily cycle, the SDKs and API keys stay infrastructure; no surface pitches them to consumers.
 - The landing page sells the same product in the same words; [product/landing-page.md](product/landing-page.md) holds its positioning rules.
-- Keep only what the two jobs, the record or the engine need. Delete a surface, file or doc section that serves none of them; `research/`, `papers/`, `experiments/` and `gtm/` stay and are kept current instead.
+- Keep only what the message test, the record or the engine need. Delete a surface, file or doc section that serves none of them; `research/`, `papers/`, `experiments/` and `gtm/` stay and are kept current instead.
 
 ## Folder map
 
@@ -25,7 +27,7 @@ These hold for every surface, including the landing page, ads, share text and RE
 | `product/` | One spec per user-facing surface | `product/CLAUDE.md` |
 | `experiments/` | Pre-registered experiments, their hashes in `REGISTRY.md`, and committed results | `experiments/CLAUDE.md` |
 | `papers/` | Public papers built only from committed artifacts | `papers/CLAUDE.md` |
-| `gtm/` | Launch plan, users, pricing, messaging and allowed claims; B2B material marked paused | `gtm/CLAUDE.md` |
+| `gtm/` | Launch plan, users, pricing, messaging and allowed claims for consumer founders | `gtm/CLAUDE.md` |
 | `company/` | North-star metric, the plan to Nov 2, risks, cadence, and decisions only the founder can make | `company/CLAUDE.md` |
 | `.claude/commands/`, `.claude/agents/` | Slash commands that walk a session through each loop step; the `consistency-reviewer` agent | this file |
 | `scripts/` | Repo checks: `check_links.py`, `check_design.py`, `check_glossary.py`, `check_sdk_parity.py` | this file |

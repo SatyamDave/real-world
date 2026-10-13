@@ -6,7 +6,7 @@ A public page and API that list every forecast we committed, before its outcome 
 
 ## Who it is for
 
-Skeptics: HN readers, forecasting researchers, YC partners and pilot buyers who want to know whether this works. It is the page we link when someone asks "how accurate is it?".
+Skeptics: HN readers, forecasting researchers, YC partners and consumer founders who want to know whether this works. It is the page we link when someone asks "how accurate is it?".
 
 ## How we know it works
 

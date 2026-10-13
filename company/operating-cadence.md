@@ -22,7 +22,7 @@ A missed daily root is an incident: write down why the same day and fix the caus
 | Monday | Risk review against [`risks.md`](risks.md) | Changed rows, with evidence | CRO | [`risks.md`](risks.md) |
 | Weekly | Canary questions re-run to detect model drift; model ids pinned and logged with every hash | Canary results committed | CTO | [silicon samples](../research/science/016-silicon-samples.md) |
 | Weekly | Check that ensemble spread is calibrated | Spread-skill numbers committed | CTO | [data assimilation for ABMs](../research/science/022-data-assimilation-abm.md) |
-| Weekly | Buyer-call tally: calls held, what the last study cost, which survey we would replace, commitments | Updated counts in `north-star.md` input 5 | CRO | [who buys](../research/market/014-who-buys.md) |
+| Weekly | Founder-call tally: calls held, what they last shipped, what really happened, tests marked | Updated counts in `north-star.md` input 5 | CPO | [0016](../research/decisions/0016-icp-audiences.md) |
 | Weekly, Nov 3 onward for four weeks | One named public post | The post, linking committed results only | CPO | [API launch playbooks](../research/product/078-api-launch-playbooks.md), [CPO lens](../research/lenses/cpo.md) |
 
 ## Every month

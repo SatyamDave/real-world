@@ -27,6 +27,7 @@ Nobody visits "the world" directly. Visitors meet it through the globe and an ag
 ## What it is not
 
 - Not 100,000 minds. The model is called per segment and per news cluster; agents are rows of numbers. We say how many calls ran.
+- Not a product surface: the world is the public record's engine, and message tests simulate the founder's ideal customer instead ([0016](../research/decisions/0016-icp-audiences.md)).
 - Not the whole world in the base build: 16 countries from illustrative sample marginals, labelled as such. Real populations come from GLOPOP-S once its licence row is cleared.
 - No social graph, neighbour talk, twins, native-language prompts or fine-tuning.
 - Not the world's news. Live news is GDELT's English GKG feed, which leans toward outlets that publish online in English, and its theme and location tags are machine-assigned and noisy ([research/data/050](../research/data/050-gdelt.md)). Live days carry no polls yet.

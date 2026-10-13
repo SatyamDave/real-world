@@ -17,15 +17,15 @@ Founder direction: the look of a top-tier deep-tech product: precise type, gener
 3. Polish only: no claim, number, logo, customer, funding or traction appears that is not on the allowed list in [messaging](../gtm/messaging.md) or traced to a committed artifact. No testimonial or "trusted by" row, ever.
 4. A change to these rules lands here first, in its own PR, citing a research note; then in each surface.
 
-## Identity: message testing on a public ledger (2026-10-12)
+## Identity: message testing for consumer founders (2026-10-13)
 
-Real World is message testing for startups and companies: test a launch, a price, a headline or an announcement on the simulated public of 16 countries before you ship it (decision 0015). Every run is a result card from a public ledger of simulated countries ([decision 0014](../research/decisions/0014-ledger-desk.md)).
+Real World is message testing for consumer (B2C) founders: test a launch, a price, a headline or an ad line on your ideal customer, in 27 segments beside a plain baseline, before you ship it ([decision 0016](../research/decisions/0016-icp-audiences.md)). Every run is a result card; the sealed public record of daily forecasts is the track record behind it.
 
-- The ledger is the chrome: no sidebar. A top bar, and under it the ledger tape, one mono 12px `--muted` line on `--paper-2` with the last cycle, the latest receipt, the anchor, the model and today's spend. Every page sits under it except the home, where it follows the content so the first screen says who the product is for.
-- The founder or team is the hero: the home's first screen says who it is for, what it simulates for them and what to do ("Test your launch on the public before you ship it.", "Test my message"), with a labelled example result beside the message box. The 16 simulated countries, their tiers and the day record follow below it.
+- The top bar is the chrome: no sidebar and no ledger tape. The first screen says who the product is for.
+- The founder is the hero: the home's first screen says who it is for, what it simulates for them and what to do ("Test your message on your ideal customer before you ship it.", "Test my message"), with a labelled example result beside the message box. The public record is one link.
 - Each result is a plain card: a header row with its kind and a status pill, the input quoted on a `--paper-2` fill, the population drawn as data, the seal small at the foot.
 - The seal is visible: `SealGrid` draws the 64 hex digits of a SHA-256 as an 8 x 8 grid in `--paper-2`, `--line`, `--muted` and `--accent`; unsealed is the same grid empty with `--line` outlines.
-- Mono for numbers, hashes, ISO codes and the tape only; a tier badge wherever a country appears; the accent for sealed, verified and "would like or share"; amber only for pending and warnings. Status pills ("Sealed", "Not sealed", "Resolved") are small: neutral on `--paper-2`, or accent-tinted for a good state. No all-caps, no letter-spaced eyebrow.
+- Mono for numbers and hashes only; a tier badge wherever a country appears in the public record; the accent for sealed, verified and "would like or share"; amber only for pending and warnings. Status pills ("Sealed", "Not sealed", "Resolved") are small: neutral on `--paper-2`, or accent-tinted for a good state. No all-caps, no letter-spaced eyebrow.
 - Retired phrases, on no surface: "Learn to simulate", "Real World in action", "Quickstart", "Primitive", "Playground", "Example requests", "Walkthrough lessons", "Real-life use cases", "Instructions", "Example output". "Primitive" stays only as an internal type name and glossary term.
 
 ## Tokens
@@ -94,7 +94,7 @@ One implementation per pattern; a second button, card, badge, disclaimer, loader
 | Table | full width, no vertical rules, 1px `--line` between rows, header row 12px `--muted` on `--paper-2`, 48px row height at 1024px and up, mono right-aligned numerals, sticky header when the body scrolls; at 390px a row becomes a stacked card list or the table scrolls inside its block with the first column sticky |
 | Nav item (docs, settings) | 14px, 36px row; active has `--accent-wash` fill and 2px `--accent` left rule |
 | Callout | `--paper-2` fill, 1px `--line` border, 14px text; the only coloured variant is amber `--accent-2` for a refusal or an error; no icon, no emoji |
-| Header | a top bar with the ledger tape beneath it. `.topbar`: 56px high, bottom `--line`, brand, nav (Simulate, Call it, Your record, Receipts, Scores) with `aria-current="page"` underlined 2px `--ink`, then Sign in or the account; sticky. At 720px and below the nav takes a second row that scrolls inside itself. `.tape`: the ledger tape, one line with ellipsis at 720px and up, wrapping below |
+| Header | a top bar. `.topbar`: 56px high, bottom `--line`, brand, nav (Simulate, Your tests, Public record, How it works) with `aria-current="page"` underlined 2px `--ink`, then Sign in or the account; sticky. At 720px and below the nav takes a second row that scrolls inside itself |
 | `SealRow` | `App.tsx`: the one seal line: a `.lg` `SealGrid` left, 12px gap, `align-items: center`, then two lines: a 14px 500 title and a mono 12px line with the hash and where to check it. Used on the home's day record and Today's question, on Call it and at the foot of the post test |
 | `.button` | a link drawn as the button (`.button.primary` filled), for the one next action when it is a page: "Make your call", "Sign in to start your record" |
 | `SealGrid` | `App.tsx`: a SHA-256 as 8 x 8 cells of 8px (`.lg` 12px), shades `s0`..`s3` from `--paper-2`, `--line`, `--muted`, `--accent`; empty with `--line` outlines when there is no hash (4px cells in a receipts day row). On the sealed message test, the AI's sealed call and the home's day record |
@@ -111,10 +111,10 @@ One implementation per pattern; a second button, card, badge, disclaimer, loader
 
 Since [decision 0012](../research/decisions/0012-will-it-land-and-call-it.md) the landing page and the app's home tell one story, in this order; [landing-page.md](landing-page.md) holds the positioning rules. Each block is a headline, one lead sentence, and one artefact from real data; no stock imagery, no decoration.
 
-1. Hero: "Test your launch on the public before you ship it.", who it is for, what it simulates, and the message box itself as the one primary action ("Test my message"). The still globe poster may sit beside it as decoration, never as the action.
-2. The result: a real post test card (landing chance with its range, best and worst audiences with tiers, two simulated accounts, the rewrite) and the seal line.
-3. Call it: today's question with "The AI's call is sealed" and its leaf hash.
-4. Proof: the latest receipts and the score card with its n, "No claim yet" until the rule allows one, linking `/receipts` and `/scores`.
+1. Hero: "Test your message on your ideal customer before you ship it.", who it is for, what it simulates, and the message box itself as the one primary action ("Test my message"). The still globe poster may sit beside it as decoration, never as the action.
+2. The result: a real message test card (would act with its range, the baseline beside it, the objections, best and worst segments, the rewrite) and the seal line.
+3. Real results: a marked test with its real metric, and the backtest.
+4. Proof: the latest receipts and the score card with its n, "No claim yet" until the rule allows one, linking `/receipts` and `/scores` as the "Public record".
 
 Never on this page: customer or investor mentions, a "trusted by" or logo row, testimonials, user counts, a speed, cost or accuracy comparison, "world model", "beats the market", any backtest number.
 

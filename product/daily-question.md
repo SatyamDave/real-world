@@ -1,12 +1,12 @@
-# Call it (daily question)
+# Daily question (public record API)
 
-## What it does
+Since [decision 0016](../research/decisions/0016-icp-audiences.md) this is part of the public record, not a product surface, and the web app has no `/call` page: it is not in the top bar or on the home. The engine's daily forecasts, seals, scoring and the answers API below are unchanged; the page described below returns only if a decision restores it.
 
 `/call`: one question a day, the same for everyone, that resolves within 1 to 7 days ("Will the ECB cut rates on Oct 29?"), framed as the visitor against the AI. The page is two slips, side by side at 1024px and up and stacked below with yours first. "Your call": the question, "The AI's call" ("Shown after you call" until then) and when and where it resolves, and the slider. "The AI's call": the stamp "Sealed", the seal grid beside "The AI's call is sealed" and "<first 12 characters of the `sim` forecast's leaf hash> · day record <date>" linking that day's receipts, and "Its number is hidden until you call. The hash above was written <date>, before you could answer."; after the call, the AI's number large with "Sealed <date> · hash <12>". The slider starts unset: it reads "–" and the button, disabled, reads "Move the slider to call it", so no one calls 50% by one tap; after the first move it reads "Call it <n>%". Within a second they see four numbers side by side: their call, the crowd of other visitors, the AI (the simulated world's committed forecast), and the market price. Once questions resolve, the reveal carries their running record against the AI: "You <brier> · AI <brier> on <n> resolved questions · you beat the AI on <k>". When the question resolves, everyone's answer is scored, and the reveal draws you, the AI and the outcome on one 0-100% track ("You <n>% · AI <n>% · Outcome Yes/No") with "Closer: you / the AI, by <pts> pts." or "Closer: tie." A streak counts the days you submitted, not the days you were right. A share line gives a 7-square grid of your week plus a link to the receipt.
 
 ## Who it is for
 
-First-time visitors from Show HN and X, who need something to do in under a minute without signing up, and returning players who come back to see how they scored. Each answer also feeds the human panel, the one data set that grows only with time.
+Skeptics and forecasting-minded visitors who want to test the engine against their own call without signing up, and returning players who come back to see how they scored. Each answer also feeds the human panel, the one data set that grows only with time.
 
 ## How we know it works
 
@@ -22,7 +22,7 @@ First-time visitors from Show HN and X, who need something to do in under a minu
 
 ## What it is not
 
-- No sign-in to answer. The streak and the record against the AI live with the browser's player id; the signed-in [record](track-record.md) shows post tests.
+- No sign-in to answer. The streak and the record against the AI live with the browser's player id; the signed-in [record](track-record.md) shows message tests.
 - No leagues, friend streaks, notifications or prizes.
 - No questions without a fixed, free resolution source and tie-break rule.
 - Player answers are not shown individually and are labelled "self-selected visitors", never "a poll".
