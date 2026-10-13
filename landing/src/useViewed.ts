@@ -5,7 +5,10 @@ import { track } from "./analytics";
 export function useViewed(ref: RefObject<Element | null>, section: string): void {
   useEffect(() => {
     const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
+    if (!el) return;
+    // The pointer tracker finds sections by this attribute (src/sectionTracker.ts).
+    if (el instanceof HTMLElement) el.dataset.section = section;
+    if (typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;

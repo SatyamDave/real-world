@@ -29,7 +29,7 @@ export function CookieNotice() {
     if (value === "accepted") void initAnalytics();
   };
   return (
-    <section className="cookie-notice" aria-label="Cookies">
+    <section className="cookie-notice" aria-label="Cookies" data-section="cookie">
       <p>
         With your consent we count visits and clicks with Amplitude, Reddit and X cookies. Nothing
         is sent unless you accept. <a href="/privacy">Privacy</a>

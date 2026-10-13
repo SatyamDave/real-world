@@ -29,7 +29,7 @@ function focusEmail(location: string) {
 
 function SiteHeader({ cta = false }: { cta?: boolean }) {
   return (
-    <header className="site-header wrap">
+    <header className="site-header wrap" data-section="header">
       <div className="brand">
         {BRAND.name}
         <span className="brand-dot" aria-hidden="true">
