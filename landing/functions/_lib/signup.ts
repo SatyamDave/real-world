@@ -48,16 +48,14 @@ export async function handleSignup(
   const inserted = await deps.db(
     `INSERT INTO waitlist_signups
        (email, headline_variant, utm_source, utm_medium, utm_campaign, utm_content, utm_term,
-        referrer, landing_path, amplitude_device_id, country, consent_text_version)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+        amplitude_device_id, country, consent_text_version)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
      ON CONFLICT (email) DO NOTHING
      RETURNING id`,
     [
       email,
       variant,
       ...UTM_KEYS.map((k) => clip(utm[k], 200)),
-      clip(body.referrer, 500),
-      clip(body.landingPath, 200),
       deviceId,
       request.headers.get("CF-IPCountry"),
       clip(body.consentVersion, 40),

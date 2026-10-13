@@ -12,8 +12,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export interface SignupInput {
   email: string;
   utm: Record<string, string>;
-  referrer: string;
-  landingPath: string;
   consentVersion: string;
   deviceId: string | null;
   headlineVariant: string;
@@ -108,8 +106,6 @@ export function SignupForm({
       const result = await submit({
         email: email.trim(),
         utm: collectUtm(),
-        referrer: document.referrer,
-        landingPath: window.location.pathname,
         consentVersion: CONSENT_VERSION,
         deviceId: getDeviceId(),
         headlineVariant: getHeadlineVariant(),
