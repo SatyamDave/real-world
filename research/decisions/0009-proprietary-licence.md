@@ -1,7 +1,7 @@
 # 0009: The repository and every package are proprietary
 
 - Date: 2026-10-12
-- Status: accepted
+- Status: superseded by 0018
 - Rests on: [business/092-moat-theory](../business/092-moat-theory.md), [VC lens](../lenses/vc.md), [open-source/035-classic-abm](../open-source/035-classic-abm.md)
 
 ## Decision

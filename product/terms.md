@@ -24,7 +24,7 @@ Published forecasts and receipts are public and permanent, and are never changed
 
 ## Ownership
 
-The Real World code and data are proprietary, all rights reserved. No licence to them is granted. You may quote results with their label.
+The Real World code is open source under the Apache License 2.0 ([LICENSE](../LICENSE)). Third-party data keeps its own licence ([data/sources.csv](../data/sources.csv)). You may quote results with their label.
 
 ## No warranty
 
@@ -40,4 +40,4 @@ Provisional: no contact address is published yet. One will be added here before 
 
 ## Why
 
-[decision 0009](../research/decisions/0009-proprietary-licence.md) (proprietary), [product/acceptable-use.md](acceptable-use.md), [product/accounts.md](accounts.md), [research/business/091-regulation.md](../research/business/091-regulation.md), [gtm/messaging.md](../gtm/messaging.md) (the label and the allowed claims).
+[decision 0018](../research/decisions/0018-apache-licence.md) (Apache-2.0), [product/acceptable-use.md](acceptable-use.md), [product/accounts.md](accounts.md), [research/business/091-regulation.md](../research/business/091-regulation.md), [gtm/messaging.md](../gtm/messaging.md) (the label and the allowed claims).

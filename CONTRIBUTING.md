@@ -1,5 +1,7 @@
 # Contributing
 
+Real World is open source under the [Apache License 2.0](LICENSE). By opening a pull request you agree that your contribution is licensed under the same terms.
+
 Every change lands through a pull request that a reviewer can judge without asking the author anything. The full operating manual is [CLAUDE.md](CLAUDE.md); read it and the `CLAUDE.md` of every folder you touch.
 
 ## Before you open a PR
