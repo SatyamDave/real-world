@@ -43,8 +43,8 @@ export default function Terms() {
 
       <h2>Ownership</h2>
       <p>
-        The Real World code and data are proprietary, all rights reserved. No licence to them is
-        granted. You may quote results with their label.
+        The Real World code is open source under the Apache License 2.0. Third-party data keeps its
+        own licence. You may quote results with their label.
       </p>
 
       <h2>No warranty</h2>

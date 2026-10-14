@@ -105,3 +105,7 @@ The layout and module boundaries come from [decision 0001](research/decisions/00
 - Every change goes through a pull request. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening one.
 - A feature PR names the research note or decision it rests on. If the research does not exist yet, write it first.
 - Forecasts are published as hashes before their outcome exists. Nothing in this repo may rewrite a published forecast.
+
+## Licence
+
+Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE); third-party components keep their own licences ([THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)). Decision: [0018](research/decisions/0018-apache-licence.md).

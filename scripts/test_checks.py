@@ -195,8 +195,8 @@ def test_sdk_parity_reports_a_camel_case_method(tmp_path):
 
 
 LICENCE_CLEAN = {
-    "package.json": '{"name": "a", "private": true, "license": "UNLICENSED"}\n',
-    "engine/pyproject.toml": '[project]\nname = "a"\nlicense = { text = "Proprietary" }\n',
+    "package.json": '{"name": "a", "private": true, "license": "Apache-2.0"}\n',
+    "engine/pyproject.toml": '[project]\nname = "a"\nlicense = { text = "Apache-2.0" }\n',
     "pyproject.toml": '[tool.uv.workspace]\nmembers = ["engine"]\n',
 }
 
@@ -216,7 +216,7 @@ def test_licence_passes_a_clean_tree(tmp_path):
     "rel, text, expected",
     [
         ("web/package.json", '{"name": "w", "private": true}\n', "web/package.json: needs"),
-        ("sdk/package.json", '{"name": "s", "license": "UNLICENSED"}\n', "sdk/package.json: needs"),
+        ("sdk/package.json", '{"name": "s", "license": "MIT"}\n', "sdk/package.json: needs"),
         ("api/pyproject.toml", '[project]\nname = "x"\n', "api/pyproject.toml: needs"),
     ],
 )

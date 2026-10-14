@@ -1,7 +1,7 @@
 {
   "name": "real-world",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "packageManager": "pnpm@11.2.2",
   "engines": {
     "node": ">=22.13"
